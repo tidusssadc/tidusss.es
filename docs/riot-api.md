@@ -131,7 +131,37 @@ interna y no inicia bucles. Si existe una entrada stale válida, se devuelve con
 
 Configura `RIOT_API_KEY` como secreto privado del proyecto y el resto como
 variables normales. No añadas la clave al repositorio, a `.dev.vars` versionado
-ni a variables públicas. El proyecto debe publicarse por HTTPS.
+ni a variables públicas. Configúralas para el entorno **Production** y vuelve a
+desplegar después de cualquier cambio: los bindings se incorporan al deployment,
+no se aplican retroactivamente. El proyecto debe publicarse por HTTPS.
+
+La Function lee las cinco variables exclusivamente desde `context.env` en cada
+petición. El build estático no solicita datos a Riot ni necesita estas variables.
+
+## Diagnóstico seguro en producción
+
+Los eventos con `scope: "riot-overview"` incluyen:
+
+- presencia, banda de longitud y validez estructural de `RIOT_API_KEY`;
+- presencia de las otras cuatro variables, nunca sus valores;
+- fase `account`, `summoner`, `league` o `matches`;
+- endpoint anonimizado mediante placeholders;
+- intento, status HTTP y código interno normalizado;
+- distinción entre timeout y fallo de red/runtime.
+
+No se registran API keys, PUUID, summoner IDs, Riot IDs, respuestas completas ni
+headers. La respuesta del endpoint conserva únicamente el error público
+normalizado.
+
+Para seguir el último deployment de producción desde la raíz del proyecto:
+
+```bash
+npx wrangler pages deployment tail --project-name tidusss-es --environment production --search riot-overview
+```
+
+Si el nombre del proyecto en Cloudflare es distinto, sustituye `tidusss-es`.
+Después abre `/api/riot/overview` para generar una invocación. En el dashboard:
+**Workers & Pages → proyecto → deployment → View details → Functions**.
 
 Antes de producción quedan pendientes:
 

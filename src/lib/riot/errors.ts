@@ -6,11 +6,15 @@ export type RiotErrorCode =
   | 'RIOT_TEMPORARILY_UNAVAILABLE'
   | 'RIOT_INVALID_RESPONSE';
 
+export type RiotRequestPhase =
+  'configuration' | 'account' | 'summoner' | 'league' | 'matches';
+
 export class RiotApiError extends Error {
   constructor(
     public readonly code: RiotErrorCode,
     public readonly status: number,
     public readonly retryAfterSeconds?: number,
+    public readonly phase?: RiotRequestPhase,
   ) {
     super(code);
     this.name = 'RiotApiError';

@@ -5,7 +5,7 @@ import {
 } from '../../config/riot';
 import { analyzeRecentSoloQueue } from './analytics';
 import { cached } from './cache';
-import { createRiotClient } from './client';
+import { createRiotClient, type RiotDiagnosticLogger } from './client';
 import { dataDragonUrls, getDataDragonVersion } from './datadragon';
 import { RiotApiError } from './errors';
 import { normalizeMatch, normalizeRanked } from './normalize';
@@ -23,10 +23,17 @@ const HOUR = 60 * MINUTE;
 
 export const getRiotOverview = async (
   environment: RiotEnvironment,
+  diagnostics?: RiotDiagnosticLogger,
 ): Promise<RiotOverview> => {
   const config = getRiotConfig(environment);
-  if (!config.apiKey) throw new RiotApiError('RIOT_API_KEY_MISSING', 503);
-  const client = createRiotClient({ apiKey: config.apiKey });
+  if (!config.apiKey)
+    throw new RiotApiError(
+      'RIOT_API_KEY_MISSING',
+      503,
+      undefined,
+      'configuration',
+    );
+  const client = createRiotClient({ apiKey: config.apiKey, diagnostics });
   const regionalBase = `https://${config.regionalRoute}.api.riotgames.com`;
   const platformBase = `https://${config.platformRoute}.api.riotgames.com`;
 
@@ -37,26 +44,44 @@ export const getRiotOverview = async (
     () =>
       client.get<RiotAccountDto>(
         `${regionalBase}/riot/account/v1/accounts/by-riot-id/${encode(config.gameName)}/${encode(config.tagLine)}`,
+        {
+          phase: 'account',
+          endpoint:
+            'ACCOUNT-V1 /riot/account/v1/accounts/by-riot-id/{gameName}/{tagLine}',
+        },
       ),
   );
   const puuid = account.value.puuid;
-  if (!puuid) throw new RiotApiError('RIOT_INVALID_RESPONSE', 502);
+  if (!puuid)
+    throw new RiotApiError('RIOT_INVALID_RESPONSE', 502, undefined, 'account');
 
   const [summoner, leagueEntries, matchIds, dataDragonVersion] =
     await Promise.all([
       cached(`riot:summoner:${puuid}`, 6 * HOUR, 12 * HOUR, () =>
         client.get<RiotSummonerDto>(
           `${platformBase}/lol/summoner/v4/summoners/by-puuid/${encode(puuid)}`,
+          {
+            phase: 'summoner',
+            endpoint: 'SUMMONER-V4 /lol/summoner/v4/summoners/by-puuid/{puuid}',
+          },
         ),
       ),
       cached(`riot:ranked:${puuid}`, 10 * MINUTE, 6 * HOUR, () =>
         client.get<RiotLeagueEntryDto[]>(
           `${platformBase}/lol/league/v4/entries/by-puuid/${encode(puuid)}`,
+          {
+            phase: 'league',
+            endpoint: 'LEAGUE-V4 /lol/league/v4/entries/by-puuid/{puuid}',
+          },
         ),
       ),
       cached(`riot:matches:${puuid}`, 5 * MINUTE, HOUR, () =>
         client.get<string[]>(
           `${regionalBase}/lol/match/v5/matches/by-puuid/${encode(puuid)}/ids?start=0&count=${riotDefaults.recentMatchIds}`,
+          {
+            phase: 'matches',
+            endpoint: 'MATCH-V5 /lol/match/v5/matches/by-puuid/{puuid}/ids',
+          },
         ),
       ),
       getDataDragonVersion(),
@@ -68,6 +93,10 @@ export const getRiotOverview = async (
       cached(`riot:match:${matchId}`, 24 * HOUR, 7 * 24 * HOUR, () =>
         client.get<RiotMatchDto>(
           `${regionalBase}/lol/match/v5/matches/${encode(matchId)}`,
+          {
+            phase: 'matches',
+            endpoint: 'MATCH-V5 /lol/match/v5/matches/{matchId}',
+          },
         ),
       ),
     ),
@@ -129,4 +158,5 @@ export * from './analytics';
 export * from './cache';
 export * from './errors';
 export * from './normalize';
+export type { RiotDiagnosticEvent, RiotDiagnosticLogger } from './client';
 export type * from './types';

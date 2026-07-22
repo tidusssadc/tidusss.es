@@ -1,17 +1,6 @@
 ---
 import { integrationEndpoints } from '../../config/platforms';
-import { getRiotOverview, type RiotOverview } from '../../lib/riot';
-import MatchRow from './MatchRow.astro';
-import RankedSummary from './RankedSummary.astro';
 import RiotSkeleton from './RiotSkeleton.astro';
-
-let initialOverview: RiotOverview | undefined;
-try {
-  initialOverview = await getRiotOverview(import.meta.env);
-} catch {
-  initialOverview = undefined;
-}
-const recent = initialOverview?.recent;
 ---
 
 <section
@@ -34,83 +23,9 @@ const recent = initialOverview?.recent;
       data-riot-overview
       data-endpoint={integrationEndpoints.riot}
       aria-live="polite"
-      aria-busy={initialOverview ? 'false' : 'true'}
+      aria-busy="true"
     >
-      {
-        initialOverview ? (
-          <div class="riot-overview">
-            <div class="riot-summary-grid">
-              <RankedSummary
-                profile={initialOverview.profile}
-                ranked={initialOverview.ranked}
-              />
-              <article class="riot-recent">
-                <p class="riot-kicker">Forma reciente</p>
-                <h3>Últimas {recent?.sampleSize ?? 0} partidas</h3>
-                {recent?.sampleSize ? (
-                  <>
-                    <div class="riot-recent-score">
-                      <strong>{recent.winRate ?? '—'}%</strong>
-                      <span>
-                        {recent.wins}W <i>•</i> {recent.losses}L
-                      </span>
-                    </div>
-                    <div class="riot-recent-metrics">
-                      <span>
-                        <b>{recent.averageKda ?? '—'}</b> KDA
-                      </span>
-                      <span>
-                        <b>{recent.averageCsPerMinute ?? '—'}</b> CS/min
-                      </span>
-                    </div>
-                    <div class="riot-champion-focus">
-                      <span>Más jugado</span>
-                      <strong>
-                        {recent.mostPlayedChampion?.championName ?? '—'}
-                      </strong>
-                      {recent.mostPlayedChampion ? (
-                        <p>
-                          {recent.mostPlayedChampion.games} partidas
-                          <b>{recent.mostPlayedChampion.winRate}% WR</b>
-                        </p>
-                      ) : null}
-                    </div>
-                  </>
-                ) : (
-                  <p class="riot-inline-state">
-                    No hay partidas recientes de Solo Queue en esta muestra.
-                  </p>
-                )}
-              </article>
-            </div>
-            {recent?.matches.length ? (
-              <div class="riot-matches-block">
-                <header>
-                  <h3>Últimas partidas</h3>
-                  <span>Solo Queue</span>
-                </header>
-                <ol class="riot-match-list">
-                  {recent.matches.slice(0, 4).map((match) => (
-                    <MatchRow match={match} />
-                  ))}
-                </ol>
-              </div>
-            ) : null}
-            <footer class="riot-data-footer">
-              <time datetime={initialOverview.updatedAt} data-sync-time>
-                Última sincronización:{' '}
-                {new Intl.DateTimeFormat('es-ES', {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                }).format(new Date(initialOverview.updatedAt))}
-              </time>
-              {initialOverview.stale && <span>Últimos datos disponibles</span>}
-            </footer>
-          </div>
-        ) : (
-          <RiotSkeleton />
-        )
-      }
+      <RiotSkeleton />
     </div>
   </div>
 </section>

@@ -19,9 +19,9 @@ export const riotDefaults = {
 } as const;
 
 export const getRiotConfig = (env: RiotEnvironment) => ({
-  apiKey: env.RIOT_API_KEY,
-  gameName: env.RIOT_GAME_NAME || riotDefaults.gameName,
-  tagLine: env.RIOT_TAG_LINE || riotDefaults.tagLine,
-  platformRoute: env.RIOT_PLATFORM_ROUTE || riotDefaults.platformRoute,
-  regionalRoute: env.RIOT_REGIONAL_ROUTE || riotDefaults.regionalRoute,
+  apiKey: env.RIOT_API_KEY?.trim() || undefined,
+  gameName: env.RIOT_GAME_NAME?.trim() || riotDefaults.gameName,
+  tagLine: env.RIOT_TAG_LINE?.trim() || riotDefaults.tagLine,
+  platformRoute: env.RIOT_PLATFORM_ROUTE?.trim() || riotDefaults.platformRoute,
+  regionalRoute: env.RIOT_REGIONAL_ROUTE?.trim() || riotDefaults.regionalRoute,
 });
