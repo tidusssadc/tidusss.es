@@ -14,5 +14,7 @@ export const platforms = {
 
 export const integrationEndpoints = {
   youtube: '/api/youtube',
+  youtubeStats: '/api/youtube/channel-stats',
   riot: '/api/riot/overview',
+  twitch: '/api/twitch/status',
 } as const;

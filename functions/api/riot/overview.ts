@@ -30,7 +30,7 @@ export const onRequest = async ({ request, env }: PagesContext) => {
   if (request.method !== 'GET') {
     return new Response('Method not allowed', {
       status: 405,
-      headers: { Allow: 'GET' },
+      headers: { Allow: 'GET', 'X-Robots-Tag': 'noindex, nofollow' },
     });
   }
   const apiKey = env.RIOT_API_KEY?.trim() || '';
@@ -49,9 +49,14 @@ export const onRequest = async ({ request, env }: PagesContext) => {
   });
   try {
     const data = await getRiotOverview(env, logDiagnostic);
-    const body: RiotPublicResponse = { ok: true, data };
+    const body: RiotPublicResponse = {
+      ok: true,
+      data,
+      meta: { cached: data.stale, updatedAt: data.updatedAt, source: 'riot' },
+    };
     return Response.json(body, {
       headers: {
+        'X-Robots-Tag': 'noindex, nofollow',
         'Cache-Control':
           'public, max-age=60, s-maxage=300, stale-while-revalidate=3600, stale-if-error=86400',
       },
@@ -74,6 +79,7 @@ export const onRequest = async ({ request, env }: PagesContext) => {
     return Response.json(body, {
       status,
       headers: {
+        'X-Robots-Tag': 'noindex, nofollow',
         'Cache-Control':
           status === 404 ? 'public, s-maxage=900' : 'public, s-maxage=60',
         ...(retryAfter ? { 'Retry-After': retryAfter } : {}),

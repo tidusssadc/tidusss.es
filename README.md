@@ -2,7 +2,7 @@
 
 Web oficial de Tidusss, creador de contenido español de League of Legends y jugador Master ADC especializado en Lucian.
 
-Esta primera versión contiene la base técnica del sitio: Astro, TypeScript estricto, Tailwind CSS, ESLint y Prettier. La landing completa se desarrollará posteriormente.
+La portada presenta la marca y `/live` reúne la actividad actual de YouTube, Twitch y SoloQ en una vista ligera construida con Astro y JavaScript nativo.
 
 ## Requisitos
 
@@ -22,6 +22,13 @@ npm run dev
 ```
 
 Astro mostrará la URL local, normalmente `http://localhost:4321`.
+
+Las rutas de `functions/` son Cloudflare Pages Functions y no las ejecuta el servidor de Astro. Para probar la experiencia completa en local:
+
+```bash
+npm run build
+npx wrangler pages dev dist
+```
 
 ## Verificación
 
@@ -70,9 +77,10 @@ src/
 
 ## Contenido dinámico de YouTube
 
-Define `YOUTUBE_API_KEY` en un archivo `.env` local y como variable privada de
-Cloudflare Pages. Nunca uses el prefijo `PUBLIC_`: la clave solo se consume
-durante la compilación y dentro de la Function de Cloudflare.
+Define `YOUTUBE_API_KEY` y, opcionalmente, `YOUTUBE_CHANNEL_ID` en `.dev.vars`
+para Wrangler y como variables privadas de Cloudflare Pages. Nunca uses el
+prefijo `PUBLIC_`: la clave solo se consume dentro de Pages Functions. La
+renderización inicial usa RSS como fallback y no evalúa secretos durante el build.
 
 La integración resuelve `@tidussstwitch` y realiza tres consultas agrupadas:
 
@@ -91,6 +99,20 @@ La duración se normaliza desde ISO 8601. Debido a que la API no ofrece una
 propiedad oficial y estable para identificar Shorts, los contenidos de 60
 segundos o menos se clasifican como candidatos a Short. Si falla la consulta de
 detalles, se conservan los datos básicos del RSS sin inventar duración ni tipo.
+
+## Estado de Twitch
+
+El módulo de directo necesita `TWITCH_CLIENT_ID`, `TWITCH_CLIENT_SECRET` y
+`TWITCH_USER_LOGIN`. Las credenciales se leen únicamente en la Function. Si no
+están configuradas, la interfaz muestra un estado no disponible y mantiene el
+enlace oficial al canal, sin simular que está offline.
+
+## Página Live
+
+`/live` consulta los endpoints propios del proyecto y actualiza los módulos en
+paralelo. Si un proveedor falla, los demás siguen funcionando y los últimos
+datos renderizados se conservan. El resumen diario usa partidas Solo/Duo (cola 420) según la fecha de Madrid. La variación de LP queda explícitamente sin dato
+hasta disponer de snapshots persistentes; no se estima con datos inventados.
 
 ## Datos competitivos de Riot
 

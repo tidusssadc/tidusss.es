@@ -1,6 +1,9 @@
 ---
 import { navigation, site } from '../data/site';
 import { platforms } from '../config/platforms';
+const onHome = Astro.url.pathname === '/';
+const navHref = (href: string) =>
+  href.startsWith('#') && !onHome ? `/${href}` : href;
 ---
 
 <header
@@ -12,7 +15,7 @@ import { platforms } from '../config/platforms';
     aria-label="Navegación principal"
   >
     <a
-      href="#inicio"
+      href={onHome ? '#inicio' : '/'}
       class="brand-mark text-lg font-black tracking-[0.24em] text-white"
       aria-label="Tidusss, inicio">{site.name}</a
     >
@@ -21,7 +24,7 @@ import { platforms } from '../config/platforms';
         navigation.map((item) => (
           <a
             class="nav-link text-sm text-slate-300"
-            href={item.href}
+            href={navHref(item.href)}
             data-nav-link
           >
             {item.label}
@@ -48,7 +51,7 @@ import { platforms } from '../config/platforms';
           navigation.map((item) => (
             <a
               class="block rounded-sm px-4 py-3 text-sm text-slate-200 hover:bg-white/5"
-              href={item.href}
+              href={navHref(item.href)}
             >
               {item.label}
             </a>
@@ -77,6 +80,7 @@ import { platforms } from '../config/platforms';
     ...document.querySelectorAll<HTMLAnchorElement>('[data-nav-link]'),
   ];
   const sections = links
+    .filter((link) => link.hash)
     .map((link) => document.querySelector<HTMLElement>(link.hash))
     .filter((section): section is HTMLElement => Boolean(section));
   const setActiveLink = (id: string) => {

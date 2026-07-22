@@ -58,7 +58,7 @@ export const normalizeMatch = (
   const info = match.info;
   const participant = info?.participants?.find((item) => item.puuid === puuid);
   const matchId = match.metadata?.matchId;
-  if (!info || !participant || !matchId) return null;
+  if (!info || !participant || !matchId || !info.gameCreation) return null;
   const durationSeconds = Math.max(1, info.gameDuration ?? 0);
   const kills = Math.max(0, participant.kills ?? 0);
   const deaths = Math.max(0, participant.deaths ?? 0);
@@ -97,5 +97,6 @@ export const normalizeMatch = (
     playedAt: new Date(info.gameCreation ?? 0).toISOString(),
     items,
     itemImageUrls: items.map(itemUrl),
+    remake: Boolean(participant.gameEndedInEarlySurrender),
   };
 };

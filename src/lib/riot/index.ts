@@ -3,7 +3,7 @@ import {
   riotDefaults,
   type RiotEnvironment,
 } from '../../config/riot';
-import { analyzeRecentSoloQueue } from './analytics';
+import { analyzeRecentSoloQueue, analyzeTodaySoloQueue } from './analytics';
 import { cached } from './cache';
 import { createRiotClient, type RiotDiagnosticLogger } from './client';
 import { dataDragonUrls, getDataDragonVersion } from './datadragon';
@@ -112,6 +112,7 @@ export const getRiotOverview = async (
     return match ? [match] : [];
   });
   const recent = analyzeRecentSoloQueue(normalizedMatches);
+  const today = analyzeTodaySoloQueue(normalizedMatches);
   const ranked = normalizeRanked(leagueEntries.value);
   const partial =
     matchResults.some((result) => result.status === 'rejected') ||
@@ -141,6 +142,7 @@ export const getRiotOverview = async (
     },
     ranked,
     recent,
+    today,
     updatedAt: new Date().toISOString(),
     stale,
     state: partial

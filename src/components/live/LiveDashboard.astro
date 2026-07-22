@@ -1,0 +1,642 @@
+---
+import { goals } from '../../config/goals';
+import { integrationEndpoints, platforms } from '../../config/platforms';
+---
+
+<main
+  class="live-page"
+  data-live-root
+  data-youtube={integrationEndpoints.youtube}
+  data-youtube-stats={integrationEndpoints.youtubeStats}
+  data-riot={integrationEndpoints.riot}
+  data-twitch={integrationEndpoints.twitch}
+>
+  <section class="live-intro">
+    <div class="live-container">
+      <p class="eyebrow">Tidusss 2.0 / Live</p>
+      <h1>Centro de actividad competitiva.</h1>
+      <p>SoloQ, canal y directo. Datos actuales, sin ruido.</p>
+      <img
+        class="live-hero-signature"
+        src="/images/brand/lucian/lucian-high-noon-standing.webp"
+        width="634"
+        height="792"
+        alt=""
+        aria-hidden="true"
+        decoding="async"
+        fetchpriority="high"
+      />
+    </div>
+  </section>
+
+  <div class="live-container live-grid">
+    <section class="live-module live-module--wide" aria-labelledby="solo-title">
+      <header class="live-module-head">
+        <div>
+          <span>01 / Competitivo</span><h2 id="solo-title">Hoy en SoloQ</h2>
+        </div>
+        <small data-riot-updated aria-live="polite">Conectando con Riot</small>
+      </header>
+      <div class="profile-context">
+        <strong data-riot-id>Tidusss#FFX</strong><span>EUW · Solo/Duo</span>
+      </div>
+      <div class="today-rank">
+        <div>
+          <strong data-rank class="data-skeleton">Cargando</strong><span data-lp
+          ></span>
+        </div>
+        <p data-activity>Consultando actividad</p>
+        <img
+          class="rank-emblem"
+          data-rank-emblem
+          width="640"
+          height="512"
+          alt=""
+          aria-hidden="true"
+          decoding="async"
+          hidden
+        />
+      </div>
+      <div class="today-metrics" data-today-metrics hidden>
+        <div><strong data-today-games></strong><span>Partidas</span></div>
+        <div>
+          <strong data-today-record></strong><span>Victorias · Derrotas</span>
+        </div>
+        <div><strong data-today-wr></strong><span>Win rate</span></div>
+        <div><strong data-today-kda></strong><span>KDA medio</span></div>
+      </div>
+      <div class="today-foot" data-today-foot hidden>
+        <p><span>Campeón del día</span><strong data-today-champion></strong></p>
+        <p><span>Racha actual</span><strong data-today-streak></strong></p>
+        <p>
+          <span>Variación de LP</span><strong data-lp-delta
+            >Sin snapshot previo</strong
+          >
+          <small
+            >La variación aparecerá cuando exista una medición anterior
+            comparable.</small
+          >
+        </p>
+      </div>
+      <div class="today-empty" data-today-empty hidden>
+        <strong>Sin clasificatorias hoy.</strong>
+        <p>
+          Todavía no hay actividad de Solo/Duo registrada desde las 00:00 en
+          Europe/Madrid.
+        </p>
+        <p data-last-competitive hidden></p>
+        <img
+          class="today-empty-signature"
+          data-today-empty-signature
+          width="669"
+          height="714"
+          alt=""
+          aria-hidden="true"
+          decoding="async"
+          loading="lazy"
+          hidden
+        />
+      </div>
+      <div class="live-empty" data-riot-error hidden>
+        <strong>Clasificación temporalmente no disponible.</strong>
+        <p>El resto del centro Live sigue funcionando.</p>
+      </div>
+    </section>
+
+    <section class="live-module" aria-labelledby="twitch-title">
+      <header class="live-module-head">
+        <div><span>02 / Twitch</span><h2 id="twitch-title">Directo</h2></div>
+        <i class="live-dot" aria-hidden="true"></i>
+      </header>
+      <div class="stream-status">
+        <strong data-stream-state class="data-skeleton">Comprobando</strong>
+        <p data-stream-copy>Consultando el estado del canal.</p>
+        <small data-stream-meta></small>
+      </div>
+      <a
+        class="live-action"
+        href={platforms.twitch.url}
+        target="_blank"
+        rel="noreferrer"
+        data-stream-link>Visitar Twitch ↗</a
+      >
+    </section>
+
+    <section class="live-module" aria-labelledby="youtube-title">
+      <header class="live-module-head">
+        <div><span>03 / YouTube</span><h2 id="youtube-title">Canal</h2></div>
+        <small>Dato proporcionado por YouTube</small>
+      </header>
+      <div class="youtube-number">
+        <strong data-subscribers class="data-skeleton">Cargando</strong><span
+          >Suscriptores</span
+        >
+      </div>
+      <p class="provider-state" data-youtube-state hidden></p>
+      <div data-youtube-details hidden>
+        <div class="goal-line">
+          <span>Próximo objetivo <b data-subscriber-goal></b></span><strong
+            data-subscriber-progress></strong>
+        </div>
+        <div class="progress-track"><span data-subscriber-bar></span></div>
+        <div class="channel-metrics">
+          <span><b data-views></b> visualizaciones</span><span
+            ><b data-video-count></b> vídeos</span
+          >
+        </div>
+      </div>
+      <small class="live-updated" data-youtube-updated
+        >Consultando estadísticas</small
+      >
+    </section>
+
+    <section
+      class="live-module live-module--wide"
+      aria-labelledby="matches-title"
+    >
+      <header class="live-module-head">
+        <div>
+          <span>04 / Sesión</span><h2 id="matches-title">Últimas partidas</h2>
+        </div><small>Solo/Duo ranked</small>
+      </header>
+      <ol class="live-match-list" data-live-matches aria-live="polite">
+        <li class="live-loading">Consultando partidas…</li>
+      </ol>
+    </section>
+
+    <section class="live-module" aria-labelledby="goals-title">
+      <header class="live-module-head">
+        <div><span>05 / Progreso</span><h2 id="goals-title">Objetivos</h2></div>
+      </header>
+      <div class="goals-list">
+        {
+          goals.map((goal) => (
+            <article
+              data-goal-source={goal.source}
+              data-goal-target={goal.target}
+              data-goal-id={goal.id}
+            >
+              <span>{goal.label}</span>
+              <strong data-goal-value>
+                {goal.description ??
+                  (goal.mode === 'automatic'
+                    ? 'Esperando datos'
+                    : 'Objetivo manual')}
+              </strong>
+              <small>
+                {goal.mode === 'automatic'
+                  ? 'Automático'
+                  : goal.mode === 'long-term'
+                    ? 'Manual · largo plazo'
+                    : 'Manual'}
+              </small>
+              {goal.target && (
+                <div data-goal-track hidden>
+                  <i />
+                </div>
+              )}
+            </article>
+          ))
+        }
+      </div>
+    </section>
+
+    <section class="live-module" aria-labelledby="activity-title">
+      <header class="live-module-head">
+        <div>
+          <span>06 / Ahora</span><h2 id="activity-title">Actividad reciente</h2>
+        </div>
+      </header>
+      <ol class="activity-list" data-activity-feed aria-live="polite">
+        <li class="live-loading">Buscando actividad verificable…</li>
+      </ol>
+    </section>
+
+    <section
+      class="live-module live-module--wide profile-refresh"
+      aria-labelledby="profile-title"
+    >
+      <header class="live-module-head">
+        <div>
+          <span>07 / Perfil</span><h2 id="profile-title">
+            Consultar perfil competitivo
+          </h2>
+        </div><small>Tidusss#FFX · EUW</small>
+      </header>
+      <div class="profile-refresh-body">
+        <p>
+          Actualiza el rango, las partidas y la actividad competitiva de
+          Tidusss#FFX.
+        </p>
+        <button type="button" data-profile-refresh>Actualizar perfil</button>
+      </div>
+      <p
+        class="profile-refresh-state"
+        data-profile-refresh-state
+        aria-live="polite"
+      >
+      </p>
+    </section>
+  </div>
+</main>
+
+<script>
+  import { buildActivity } from '../../lib/activity';
+  import { elapsedDuration, madridTime, relativeTime } from '../../lib/time';
+  import { goalProgress } from '../../config/goals';
+  import { rankAssetFor } from '../../config/rank-assets';
+  import type { RiotPublicResponse } from '../../lib/riot';
+  import type {
+    TwitchStatusResponse,
+    YouTubeStatsResponse,
+  } from '../../types/platforms';
+  import type { YouTubeFeedResult } from '../../types/content';
+
+  const root = document.querySelector<HTMLElement>('[data-live-root]');
+  const text = (selector: string, value: string) => {
+    const node = root?.querySelector<HTMLElement>(selector);
+    if (node) node.textContent = value;
+  };
+  const visible = (selector: string, show: boolean) => {
+    const node = root?.querySelector<HTMLElement>(selector);
+    if (node) node.hidden = !show;
+  };
+  const number = (value?: number) =>
+    value === undefined
+      ? undefined
+      : new Intl.NumberFormat('es-ES').format(value);
+  const percent = (value?: number) =>
+    value === undefined ? undefined : `${String(value).replace('.', ',')} %`;
+  const appendEmpty = (
+    container: Element,
+    titleCopy: string,
+    detailCopy: string,
+  ) => {
+    const item = document.createElement('li');
+    item.className = 'compact-empty';
+    const title = document.createElement('strong');
+    title.textContent = titleCopy;
+    const detail = document.createElement('span');
+    detail.textContent = detailCopy;
+    item.append(title, detail);
+    container.append(item);
+  };
+  let riotData: Extract<RiotPublicResponse, { ok: true }>['data'] | undefined;
+  let youtubeData:
+    Extract<YouTubeStatsResponse, { ok: true }>['data'] | undefined;
+  let videos: YouTubeFeedResult['videos'] = [];
+  let fetching = false;
+
+  const loadRiot = async () => {
+    const response = await fetch(root!.dataset.riot!);
+    const payload = (await response.json()) as RiotPublicResponse;
+    if (!payload.ok) throw new Error(payload.error.code);
+    riotData = payload.data;
+    const { profile, ranked, today, recent } = payload.data;
+    text('[data-riot-id]', profile.riotId);
+    text('[data-rank]', ranked.tier ?? 'Sin clasificación');
+    root?.querySelector('[data-rank]')?.classList.remove('data-skeleton');
+    text(
+      '[data-lp]',
+      ranked.leaguePoints === undefined
+        ? 'Sin LP disponibles'
+        : `${ranked.leaguePoints} LP`,
+    );
+    text(
+      '[data-riot-updated]',
+      `Actualizado ${relativeTime(payload.data.updatedAt) ?? 'recientemente'}`,
+    );
+    visible('[data-riot-error]', false);
+    visible('[data-today-metrics]', today.games > 0);
+    visible('[data-today-foot]', today.games > 0);
+    visible('[data-today-empty]', today.games === 0);
+    const emblem = root?.querySelector<HTMLImageElement>('[data-rank-emblem]');
+    const emptySignature = root?.querySelector<HTMLImageElement>(
+      '[data-today-empty-signature]',
+    );
+    const rankAsset = rankAssetFor(ranked.tier);
+    if (emblem) {
+      emblem.hidden = today.games === 0 || !rankAsset;
+      if (
+        !emblem.hidden &&
+        rankAsset &&
+        emblem.src !== new URL(rankAsset.src, location.href).href
+      )
+        emblem.src = rankAsset.src;
+    }
+    if (emptySignature) {
+      emptySignature.hidden = today.games > 0;
+      if (!emptySignature.hidden && !emptySignature.src)
+        emptySignature.src = '/images/brand/lucian/lucian-high-noon-ready.webp';
+    }
+
+    if (today.games > 0) {
+      text(
+        '[data-activity]',
+        today.lastPlayedAt
+          ? `Última partida ${relativeTime(today.lastPlayedAt) ?? ''}`.trim()
+          : 'Actividad registrada hoy',
+      );
+      text('[data-today-games]', String(today.games));
+      text('[data-today-record]', `${today.wins}V · ${today.losses}D`);
+      text(
+        '[data-today-wr]',
+        today.winRate === undefined ? 'Sin dato' : `${today.winRate}%`,
+      );
+      text(
+        '[data-today-kda]',
+        today.averageKda === undefined ? 'Sin dato' : String(today.averageKda),
+      );
+      text(
+        '[data-today-champion]',
+        today.mostPlayedChampion?.championName ?? 'Sin dato',
+      );
+      text(
+        '[data-today-streak]',
+        today.streak
+          ? `${today.streak.games} ${today.streak.result === 'win' ? 'victorias' : 'derrotas'}`
+          : 'Sin racha',
+      );
+    } else {
+      text('[data-activity]', 'Sin clasificatorias hoy');
+      const last = recent.matches[0]?.playedAt;
+      const lastCopy = last
+        ? `Última actividad competitiva: ${relativeTime(last) ?? ''} · ${madridTime(last) ?? ''}`
+        : '';
+      text('[data-last-competitive]', lastCopy);
+      visible('[data-last-competitive]', Boolean(lastCopy));
+    }
+
+    const list = root?.querySelector('[data-live-matches]');
+    if (list) {
+      const matches = today.matches.slice(0, 5);
+      list.replaceChildren(
+        ...matches.map((match) => {
+          const item = document.createElement('li');
+          const identity = document.createElement('div');
+          const champion = document.createElement('strong');
+          champion.textContent = match.championName;
+          const meta = document.createElement('span');
+          meta.textContent = `${match.queueLabel} · ${match.cs} CS · ${match.durationLabel} · ${relativeTime(match.playedAt) ?? ''}`;
+          identity.append(champion, meta);
+          const score = document.createElement('strong');
+          score.textContent = `${match.kills} / ${match.deaths} / ${match.assists}`;
+          const result = document.createElement('span');
+          result.textContent = match.win ? 'Victoria' : 'Derrota';
+          result.className = match.win ? 'is-win' : 'is-loss';
+          item.append(identity, score, result);
+          return item;
+        }),
+      );
+      if (!matches.length) {
+        appendEmpty(
+          list,
+          'Sin partidas clasificatorias hoy.',
+          'Las nuevas partidas aparecerán aquí automáticamente.',
+        );
+      }
+    }
+  };
+
+  const loadYouTube = async () => {
+    const response = await fetch(root!.dataset.youtubeStats!);
+    const payload = (await response.json()) as YouTubeStatsResponse;
+    if (!payload.ok) throw new Error(payload.error.code);
+    youtubeData = payload.data;
+    root
+      ?.querySelector('[data-subscribers]')
+      ?.classList.remove('data-skeleton');
+    if (payload.data.subscriberCount === undefined) {
+      text('[data-subscribers]', 'No visible');
+      text('[data-youtube-state]', 'Suscriptores no visibles públicamente.');
+      visible('[data-youtube-state]', true);
+    } else {
+      text('[data-subscribers]', number(payload.data.subscriberCount) ?? '');
+      visible('[data-youtube-state]', false);
+    }
+    visible('[data-youtube-details]', true);
+    text(
+      '[data-subscriber-goal]',
+      number(payload.data.nextGoal) ?? 'Hito máximo alcanzado',
+    );
+    text(
+      '[data-subscriber-progress]',
+      percent(payload.data.progress) ?? 'Sin porcentaje',
+    );
+    text('[data-views]', number(payload.data.viewCount) ?? 'No visibles');
+    text(
+      '[data-video-count]',
+      number(payload.data.videoCount) ?? 'No visibles',
+    );
+    text(
+      '[data-youtube-updated]',
+      `Actualizado ${relativeTime(payload.data.updatedAt) ?? 'recientemente'} · cifra redondeada por YouTube`,
+    );
+    const bar = root?.querySelector<HTMLElement>('[data-subscriber-bar]');
+    if (bar) bar.style.width = `${payload.data.progress ?? 0}%`;
+  };
+
+  const loadTwitch = async () => {
+    const response = await fetch(root!.dataset.twitch!);
+    const payload = (await response.json()) as TwitchStatusResponse;
+    if (!payload.ok) throw new Error(payload.error.code);
+    const status = payload.data;
+    root
+      ?.querySelector('[data-stream-state]')
+      ?.classList.remove('data-skeleton');
+    root?.toggleAttribute('data-stream-live', status.state === 'online');
+    if (status.state === 'online') {
+      text('[data-stream-state]', 'En directo');
+      text('[data-stream-copy]', status.title ?? 'Tidusss está en directo.');
+      text(
+        '[data-stream-meta]',
+        [
+          status.category,
+          status.viewerCount === undefined
+            ? undefined
+            : `${number(status.viewerCount)} espectadores`,
+          status.startedAt
+            ? `${elapsedDuration(status.startedAt) ?? ''} en directo`
+            : undefined,
+        ]
+          .filter(Boolean)
+          .join(' · '),
+      );
+      text('[data-stream-link]', 'Ver directo ↗');
+    } else if (status.state === 'offline') {
+      text('[data-stream-state]', 'Ahora mismo no estoy en directo.');
+      text(
+        '[data-stream-copy]',
+        'Pásate por el canal o revisa la actividad reciente.',
+      );
+      text('[data-stream-meta]', '');
+      text('[data-stream-link]', 'Visitar Twitch ↗');
+    } else {
+      text('[data-stream-state]', 'Conexión con Twitch pendiente.');
+      text(
+        '[data-stream-copy]',
+        'El canal sigue disponible desde el enlace inferior.',
+      );
+      text('[data-stream-meta]', '');
+    }
+  };
+
+  const loadFeed = async () => {
+    const response = await fetch(root!.dataset.youtube!);
+    if (!response.ok) return;
+    const feed = (await response.json()) as YouTubeFeedResult;
+    videos = feed.videos;
+  };
+
+  const updateGoals = () =>
+    root
+      ?.querySelectorAll<HTMLElement>('[data-goal-source]')
+      .forEach((item) => {
+        const source = item.dataset.goalSource;
+        const dynamicTarget =
+          source === 'youtube'
+            ? youtubeData?.nextGoal
+            : Number(item.dataset.goalTarget) || undefined;
+        const current =
+          source === 'riot'
+            ? riotData?.ranked.leaguePoints
+            : source === 'youtube-videos'
+              ? youtubeData?.videoCount
+              : source === 'youtube'
+                ? youtubeData?.subscriberCount
+                : undefined;
+        const value = item.querySelector<HTMLElement>('[data-goal-value]');
+        const track = item.querySelector<HTMLElement>('[data-goal-track]');
+        const bar = track?.querySelector<HTMLElement>('i');
+        if (source === 'manual') {
+          if (value) value.textContent = 'Objetivo a largo plazo';
+          return;
+        }
+        if (current === undefined || dynamicTarget === undefined) {
+          if (value)
+            value.textContent = source?.startsWith('youtube')
+              ? 'Esperando datos de YouTube'
+              : 'Esperando datos de Riot';
+          if (track) track.hidden = true;
+          return;
+        }
+        const progress = goalProgress(current, dynamicTarget);
+        if (source === 'youtube')
+          item.querySelector('span')!.textContent =
+            `${number(dynamicTarget)} suscriptores`;
+        if (value)
+          value.textContent = `${number(current)} / ${number(dynamicTarget)} · ${percent(progress)}`;
+        if (track) track.hidden = false;
+        if (bar) bar.style.width = `${progress ?? 0}%`;
+      });
+
+  const updateActivity = () => {
+    const feed = root?.querySelector('[data-activity-feed]');
+    if (!feed) return;
+    const events = buildActivity(
+      riotData?.recent.matches.slice(0, 3),
+      videos.slice(0, 3),
+    );
+    feed.replaceChildren(
+      ...events.map((event) => {
+        const item = document.createElement('li');
+        const copy = document.createElement('div');
+        const title = event.href
+          ? document.createElement('a')
+          : document.createElement('strong');
+        title.textContent = event.title;
+        if (title instanceof HTMLAnchorElement) {
+          title.href = event.href!;
+          title.target = '_blank';
+          title.rel = 'noreferrer';
+        }
+        const detail = document.createElement('span');
+        detail.textContent = event.detail;
+        copy.append(title, detail);
+        const time = document.createElement('time');
+        time.dateTime = event.timestamp;
+        time.textContent = relativeTime(event.timestamp) ?? '';
+        item.append(copy, time);
+        return item;
+      }),
+    );
+    if (!events.length) {
+      appendEmpty(
+        feed,
+        'Todavía no hay actividad reciente disponible.',
+        'Las nuevas partidas, vídeos y directos aparecerán aquí automáticamente.',
+      );
+    }
+  };
+
+  const refresh = async (manual = false) => {
+    if (fetching || (!manual && document.hidden)) return;
+    fetching = true;
+    const button = root?.querySelector<HTMLButtonElement>(
+      '[data-profile-refresh]',
+    );
+    if (button) button.disabled = true;
+    if (manual) text('[data-profile-refresh-state]', 'Actualizando perfil…');
+    const results = await Promise.allSettled([
+      loadRiot(),
+      loadYouTube(),
+      loadTwitch(),
+      loadFeed(),
+    ]);
+    if (results[0].status === 'rejected') {
+      visible('[data-riot-error]', true);
+      visible('[data-rank-emblem]', false);
+      visible('[data-today-empty-signature]', false);
+      text('[data-riot-updated]', 'Clasificación no disponible');
+    }
+    if (results[1].status === 'rejected') {
+      const code =
+        results[1].reason instanceof Error ? results[1].reason.message : '';
+      root
+        ?.querySelector('[data-subscribers]')
+        ?.classList.remove('data-skeleton');
+      text('[data-subscribers]', 'Sin datos');
+      text(
+        '[data-youtube-state]',
+        code === 'YOUTUBE_NOT_CONFIGURED'
+          ? 'Canal pendiente de conexión.'
+          : 'Datos del canal no disponibles temporalmente.',
+      );
+      visible('[data-youtube-state]', true);
+      text(
+        '[data-youtube-updated]',
+        'Se conservará el último dato válido cuando exista.',
+      );
+    }
+    if (results[2].status === 'rejected') {
+      root
+        ?.querySelector('[data-stream-state]')
+        ?.classList.remove('data-skeleton');
+      text('[data-stream-state]', 'Estado temporalmente no disponible.');
+      text(
+        '[data-stream-copy]',
+        'Pásate por el canal o revisa la actividad reciente.',
+      );
+    }
+    updateGoals();
+    updateActivity();
+    if (manual)
+      text(
+        '[data-profile-refresh-state]',
+        results[0].status === 'fulfilled'
+          ? 'Perfil actualizado.'
+          : 'No se ha podido actualizar el perfil ahora mismo.',
+      );
+    if (button) button.disabled = false;
+    fetching = false;
+  };
+
+  refresh();
+  window.setInterval(() => refresh(), 120_000);
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) refresh();
+  });
+  root
+    ?.querySelector('[data-profile-refresh]')
+    ?.addEventListener('click', () => refresh(true));
+</script>

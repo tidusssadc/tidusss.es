@@ -1,0 +1,15 @@
+---
+import Footer from '../components/Footer.astro';
+import LiveDashboard from '../components/live/LiveDashboard.astro';
+import Navbar from '../components/Navbar.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="Tidusss Live — SoloQ, estadísticas y directo"
+  description="Consulta la actividad competitiva de Tidusss, su rango actual, últimas partidas, objetivos, vídeos y estado del directo."
+>
+  <Navbar />
+  <LiveDashboard />
+  <Footer />
+</BaseLayout>

@@ -1,0 +1,89 @@
+---
+import { integrationEndpoints } from '../config/platforms';
+---
+
+<section
+  class="live-teaser"
+  data-live-teaser
+  data-riot={integrationEndpoints.riot}
+  data-youtube={integrationEndpoints.youtubeStats}
+  data-twitch={integrationEndpoints.twitch}
+  aria-label="Actividad actual de Tidusss"
+>
+  <div class="mx-auto max-w-7xl px-5 sm:px-8">
+    <div class="live-teaser-grid">
+      <div>
+        <span>Canal</span><strong data-teaser-subs>Actualizando</strong>
+      </div>
+      <div>
+        <span>Solo Queue</span><strong data-teaser-rank>Actualizando</strong>
+      </div>
+      <div>
+        <span>Twitch</span><strong data-teaser-twitch>Comprobando</strong>
+      </div>
+      <a href="/live"
+        ><span>Explorar Live</span><strong aria-hidden="true">↗</strong></a
+      >
+    </div>
+  </div>
+</section>
+<script>
+  import type { RiotPublicResponse } from '../lib/riot';
+  import type {
+    TwitchStatusResponse,
+    YouTubeStatsResponse,
+  } from '../types/platforms';
+  const teaser = document.querySelector<HTMLElement>('[data-live-teaser]');
+  const set = (selector: string, value: string) => {
+    const node = teaser?.querySelector(selector);
+    if (node) node.textContent = value;
+  };
+  if (teaser)
+    Promise.allSettled([
+      fetch(teaser.dataset.youtube!)
+        .then((response) => response.json() as Promise<YouTubeStatsResponse>)
+        .then((payload) => {
+          set(
+            '[data-teaser-subs]',
+            payload.ok
+              ? payload.data.subscriberCount === undefined
+                ? 'Dato privado'
+                : `${new Intl.NumberFormat('es-ES').format(payload.data.subscriberCount)} suscriptores`
+              : payload.error.code === 'YOUTUBE_NOT_CONFIGURED'
+                ? 'Canal pendiente de conexión'
+                : 'Datos del canal no disponibles',
+          );
+        })
+        .catch(() =>
+          set('[data-teaser-subs]', 'Datos del canal no disponibles'),
+        ),
+      fetch(teaser.dataset.riot!)
+        .then((response) => response.json() as Promise<RiotPublicResponse>)
+        .then((payload) => {
+          set(
+            '[data-teaser-rank]',
+            payload.ok
+              ? `${payload.data.ranked.tier ?? 'Sin rango'} · ${payload.data.ranked.leaguePoints ?? '—'} LP`
+              : 'Clasificación no disponible',
+          );
+        })
+        .catch(() => set('[data-teaser-rank]', 'Clasificación no disponible')),
+      fetch(teaser.dataset.twitch!)
+        .then((response) => response.json() as Promise<TwitchStatusResponse>)
+        .then((payload) => {
+          set(
+            '[data-teaser-twitch]',
+            payload.ok
+              ? payload.data.isLive
+                ? 'En directo'
+                : payload.data.state === 'not-configured'
+                  ? 'Conexión pendiente'
+                  : 'Offline'
+              : 'Estado temporalmente no disponible',
+          );
+        })
+        .catch(() =>
+          set('[data-teaser-twitch]', 'Estado temporalmente no disponible'),
+        ),
+    ]);
+</script>

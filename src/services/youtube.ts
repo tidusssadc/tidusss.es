@@ -63,6 +63,15 @@ export const parseYouTubeFeed = (xml: string, limit = 8): YouTubeVideo[] =>
 
 export const youtubeFeedUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${platforms.youtube.channelId}`;
 
+const getLatestFromYouTubeRss = async (channelId: string, limit: number) => {
+  const response = await fetch(
+    `https://www.youtube.com/feeds/videos.xml?channel_id=${encodeURIComponent(channelId)}`,
+    { headers: { accept: 'application/atom+xml' } },
+  );
+  if (!response.ok) return [];
+  return parseYouTubeFeed(await response.text(), limit);
+};
+
 interface Thumbnail {
   url?: string;
 }
@@ -71,6 +80,10 @@ interface YouTubeChannelResponse {
   items?: Array<{
     contentDetails?: { relatedPlaylists?: { uploads?: string } };
   }>;
+}
+
+interface YouTubeApiErrorResponse {
+  error?: { errors?: Array<{ reason?: string }> };
 }
 
 interface YouTubePlaylistResponse {
@@ -97,24 +110,55 @@ interface YouTubeDetailsResponse {
   }>;
 }
 
-const requestJson = async <T>(url: string): Promise<T | null> => {
+const requestJson = async <T>(
+  url: string,
+  phase: 'channels.list' | 'playlistItems.list' | 'videos.list',
+): Promise<T | null> => {
   const response = await fetch(url);
-  if (!response.ok) return null;
+  if (!response.ok) {
+    const payload = (await response
+      .json()
+      .catch(() => ({}))) as YouTubeApiErrorResponse;
+    const reason = payload.error?.errors?.[0]?.reason;
+    const code =
+      reason === 'quotaExceeded' || reason === 'dailyLimitExceeded'
+        ? 'YOUTUBE_QUOTA_EXCEEDED'
+        : reason === 'keyInvalid' || reason === 'accessNotConfigured'
+          ? 'YOUTUBE_AUTH_FAILED'
+          : response.status === 429
+            ? 'YOUTUBE_RATE_LIMIT'
+            : 'YOUTUBE_UNAVAILABLE';
+    console.error('[youtube-integration]', {
+      phase,
+      status: response.status,
+      code,
+    });
+    throw new Error(code);
+  }
   return (await response.json()) as T;
 };
 
 export const getLatestFromYouTubeApi = async (
   apiKey: string,
   limit = 8,
+  channelId: string = platforms.youtube.channelId,
 ): Promise<YouTubeFeedResult> => {
   const updatedAt = new Date().toISOString();
+  if (!/^UC[A-Za-z0-9_-]{22}$/.test(channelId)) {
+    console.error('[youtube-integration]', {
+      phase: 'configuration',
+      code: 'YOUTUBE_CHANNEL_ID_INVALID',
+    });
+    throw new Error('YOUTUBE_CHANNEL_ID_INVALID');
+  }
   const channelParams = new URLSearchParams({
     part: 'contentDetails',
-    forHandle: platforms.youtube.handle,
+    id: channelId,
     key: apiKey,
   });
   const channel = await requestJson<YouTubeChannelResponse>(
     `https://www.googleapis.com/youtube/v3/channels?${channelParams}`,
+    'channels.list',
   );
   const uploads =
     channel?.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
@@ -128,6 +172,7 @@ export const getLatestFromYouTubeApi = async (
   });
   const playlist = await requestJson<YouTubePlaylistResponse>(
     `https://www.googleapis.com/youtube/v3/playlistItems?${playlistParams}`,
+    'playlistItems.list',
   );
   const basicVideos = (playlist?.items ?? []).flatMap(({ snippet }) => {
     const id = snippet?.resourceId?.videoId;
@@ -160,6 +205,7 @@ export const getLatestFromYouTubeApi = async (
   });
   const details = await requestJson<YouTubeDetailsResponse>(
     `https://www.googleapis.com/youtube/v3/videos?${detailsParams}`,
+    'videos.list',
   );
   const durations = new Map(
     (details?.items ?? []).flatMap((item) => {
@@ -192,16 +238,26 @@ export const getLatestFromYouTubeApi = async (
 export const getLatestYouTubeVideos = async (
   limit = 8,
   apiKey?: string,
+  channelId: string = platforms.youtube.channelId,
 ): Promise<YouTubeFeedResult> => {
   if (apiKey) {
     try {
-      const result = await getLatestFromYouTubeApi(apiKey, limit);
+      const result = await getLatestFromYouTubeApi(apiKey, limit, channelId);
       if (result.videos.length || result.state === 'empty') return result;
-    } catch {
+    } catch (error) {
+      console.error('[youtube-feed]', {
+        code: error instanceof Error ? error.message : 'YOUTUBE_UNAVAILABLE',
+        fallback: 'rss',
+      });
       // El RSS conserva contenido básico si YouTube Data API falla.
     }
   }
-  const videos = await youtubeProvider.getLatest(limit);
+  let videos: YouTubeVideo[] = [];
+  try {
+    videos = await getLatestFromYouTubeRss(channelId, limit);
+  } catch {
+    // La respuesta normalizada del endpoint ya comunica la indisponibilidad.
+  }
   return {
     videos,
     state: videos.length
@@ -216,11 +272,7 @@ export const getLatestYouTubeVideos = async (
 export const youtubeProvider: ContentProvider<YouTubeVideo> = {
   async getLatest(limit = 8) {
     try {
-      const response = await fetch(youtubeFeedUrl, {
-        headers: { accept: 'application/atom+xml' },
-      });
-      if (!response.ok) return [];
-      return parseYouTubeFeed(await response.text(), limit);
+      return await getLatestFromYouTubeRss(platforms.youtube.channelId, limit);
     } catch {
       return [];
     }

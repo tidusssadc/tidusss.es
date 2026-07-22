@@ -2,29 +2,14 @@
 import { integrationEndpoints, platforms } from '../config/platforms';
 import { contentCards } from '../data/content';
 import { getLatestYouTubeVideos } from '../services/youtube';
+import { relativeTime } from '../lib/time';
 import SectionHeading from './SectionHeading.astro';
 
-const initialFeed = await getLatestYouTubeVideos(
-  8,
-  import.meta.env.YOUTUBE_API_KEY,
-);
+// RSS provides a useful no-JavaScript fallback without evaluating secrets at build time.
+const initialFeed = await getLatestYouTubeVideos(8);
 
-const formatPublishedAt = (value: string) => {
-  const published = new Date(value);
-  const days = Math.round((published.getTime() - Date.now()) / 86_400_000);
-  const relative = new Intl.RelativeTimeFormat('es-ES', { numeric: 'auto' });
-  if (Math.abs(days) < 1) {
-    const hours = Math.round((published.getTime() - Date.now()) / 3_600_000);
-    return relative.format(hours, 'hour');
-  }
-  if (Math.abs(days) < 14) return relative.format(days, 'day');
-  if (Math.abs(days) < 28) return relative.format(Math.round(days / 7), 'week');
-  return new Intl.DateTimeFormat('es-ES', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  }).format(published);
-};
+const formatPublishedAt = (value: string) =>
+  relativeTime(value) ?? 'Fecha no disponible';
 
 const emptyCopy =
   initialFeed.state === 'missing-key'
@@ -226,6 +211,7 @@ const emptyCopy =
 </section>
 
 <script>
+  import { relativeTime } from '../lib/time';
   import type { YouTubeFeedResult, YouTubeVideo } from '../types/content';
 
   const feed = document.querySelector<HTMLElement>('[data-youtube-feed]');
@@ -240,23 +226,8 @@ const emptyCopy =
   let activeFilter = 'all';
   let expanded = false;
 
-  const formatPublishedAt = (value: string) => {
-    const published = new Date(value);
-    const days = Math.round((published.getTime() - Date.now()) / 86_400_000);
-    const relative = new Intl.RelativeTimeFormat('es-ES', { numeric: 'auto' });
-    if (Math.abs(days) < 1) {
-      const hours = Math.round((published.getTime() - Date.now()) / 3_600_000);
-      return relative.format(hours, 'hour');
-    }
-    if (Math.abs(days) < 14) return relative.format(days, 'day');
-    if (Math.abs(days) < 28)
-      return relative.format(Math.round(days / 7), 'week');
-    return new Intl.DateTimeFormat('es-ES', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    }).format(published);
-  };
+  const formatPublishedAt = (value: string) =>
+    relativeTime(value) ?? 'Fecha no disponible';
 
   const svg = (path: string, filled = false) => {
     const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');

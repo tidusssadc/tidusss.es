@@ -41,6 +41,7 @@ export interface RecentMatch {
   playedAt: string;
   items: number[];
   itemImageUrls: string[];
+  remake: boolean;
 }
 
 export interface ChampionPerformance {
@@ -68,10 +69,26 @@ export interface RecentPerformance {
   matches: RecentMatch[];
 }
 
+export interface TodaySoloQueue {
+  games: number;
+  wins: number;
+  losses: number;
+  winRate?: number;
+  averageKda?: number;
+  mostPlayedChampion?: ChampionPerformance;
+  streak?: { result: 'win' | 'loss'; games: number };
+  lastPlayedAt?: string;
+  activity: 'recent' | 'inactive' | 'no-games';
+  lpDelta?: number;
+  lpDeltaEstimated: true;
+  matches: RecentMatch[];
+}
+
 export interface RiotOverview {
   profile: RiotProfile;
   ranked: RankedSummary;
   recent: RecentPerformance;
+  today: TodaySoloQueue;
   updatedAt: string;
   stale: boolean;
   state: RiotDataState;
@@ -79,7 +96,11 @@ export interface RiotOverview {
 }
 
 export type RiotPublicResponse =
-  | { ok: true; data: RiotOverview }
+  | {
+      ok: true;
+      data: RiotOverview;
+      meta?: { cached: boolean; updatedAt: string; source: 'riot' };
+    }
   | {
       ok: false;
       error: { code: string; message: string };
@@ -123,6 +144,7 @@ export interface RiotParticipantDto {
   item4?: number;
   item5?: number;
   item6?: number;
+  gameEndedInEarlySurrender?: boolean;
 }
 
 export interface RiotMatchDto {

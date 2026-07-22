@@ -4,7 +4,9 @@ import type {
   ChampionPerformance,
   RecentMatch,
   RecentPerformance,
+  TodaySoloQueue,
 } from './types';
+import { isToday, millisecondsSince } from '../time';
 
 const average = (values: number[]) =>
   values.length
@@ -44,7 +46,9 @@ export const analyzeRecentSoloQueue = (
   allMatches: RecentMatch[],
 ): RecentPerformance => {
   const matches = allMatches
-    .filter((match) => match.queueId === riotDefaults.soloQueueId)
+    .filter(
+      (match) => match.queueId === riotDefaults.soloQueueId && !match.remake,
+    )
     .slice(0, riotDefaults.recentSoloSample);
   const wins = matches.filter((match) => match.win).length;
   const byChampion = new Map<string, number>();
@@ -68,6 +72,50 @@ export const analyzeRecentSoloQueue = (
       ? championPerformance(mostPlayedName, matches)
       : undefined,
     lucian: championPerformance('Lucian', matches),
+    matches,
+  };
+};
+
+export const analyzeTodaySoloQueue = (
+  allMatches: RecentMatch[],
+): TodaySoloQueue => {
+  const matches = allMatches.filter(
+    (match) =>
+      match.queueId === riotDefaults.soloQueueId &&
+      !match.remake &&
+      isToday(match.playedAt),
+  );
+  const wins = matches.filter((match) => match.win).length;
+  const performance = analyzeRecentSoloQueue(matches);
+  const first = matches[0];
+  const streakGames = first
+    ? matches.findIndex((match) => match.win !== first.win)
+    : -1;
+  const streakLength = first
+    ? streakGames === -1
+      ? matches.length
+      : streakGames
+    : 0;
+  const elapsed = millisecondsSince(first?.playedAt) ?? Infinity;
+  return {
+    games: matches.length,
+    wins,
+    losses: matches.length - wins,
+    winRate: performance.winRate,
+    averageKda: performance.averageKda,
+    mostPlayedChampion: performance.mostPlayedChampion,
+    streak:
+      first && streakLength
+        ? { result: first.win ? 'win' : 'loss', games: streakLength }
+        : undefined,
+    lastPlayedAt: first?.playedAt,
+    activity: !first
+      ? 'no-games'
+      : elapsed <= 3 * 60 * 60_000
+        ? 'recent'
+        : 'inactive',
+    lpDelta: undefined,
+    lpDeltaEstimated: true,
     matches,
   };
 };
