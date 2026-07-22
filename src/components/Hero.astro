@@ -1,0 +1,82 @@
+---
+import { platforms } from '../config/platforms';
+import { brandPrinciple } from '../data/site';
+import HeroVisual from './HeroVisual.astro';
+---
+
+<section
+  id="inicio"
+  class="hero-section relative overflow-hidden pt-18"
+  data-hero
+>
+  <div
+    class="hero-layout mx-auto grid min-h-[calc(100svh-4.5rem)] max-w-7xl items-center gap-10 px-5 py-16 sm:px-8 sm:py-20 lg:grid-cols-[1.04fr_0.96fr] lg:gap-6 lg:py-24"
+  >
+    <div class="hero-copy relative z-10 max-w-3xl">
+      <p class="eyebrow animate-rise">
+        ADC competitivo <span class="text-slate-600">·</span> Master
+      </p>
+      <h1
+        class="hero-title animate-rise delay-1 mt-6 text-5xl leading-[0.94] font-black tracking-[-0.06em] text-white sm:text-7xl lg:text-[6.35rem]"
+      >
+        Cada combo<br /><span class="text-gradient">cuenta.</span>
+      </h1>
+      <p class="hero-thesis animate-rise delay-2">
+        <span>{brandPrinciple.lead}</span>
+        {brandPrinciple.conclusion}
+      </p>
+      <p
+        class="hero-lead animate-rise delay-2 mt-5 max-w-xl text-base leading-8 text-slate-300 sm:text-lg"
+      >
+        Gameplays y análisis sobre mecánicas, ritmo y decisiones. Te enseño qué
+        hago en cada jugada y, sobre todo, por qué.
+      </p>
+      <div class="animate-rise delay-3 mt-10 flex flex-col gap-3 sm:flex-row">
+        <a
+          class="button-primary justify-center px-6 py-3.5"
+          href={platforms.youtube.url}
+          target="_blank"
+          rel="noreferrer">Ver gameplays <span aria-hidden="true">↗</span></a
+        >
+        <a
+          class="button-secondary justify-center px-6 py-3.5"
+          href={platforms.twitch.url}
+          target="_blank"
+          rel="noreferrer">Ver directos <span aria-hidden="true">↗</span></a
+        >
+      </div>
+      <p class="hero-code animate-rise delay-3">{brandPrinciple.code}</p>
+    </div>
+    <div
+      class="hero-art animate-rise delay-2 mx-auto w-full max-w-xl lg:max-w-none"
+    >
+      <HeroVisual />
+    </div>
+  </div>
+  <a
+    class="scroll-cue"
+    href="#reconocimiento"
+    aria-label="Continuar a reconocimiento"><span></span></a
+  >
+</section>
+
+<script>
+  const hero = document.querySelector<HTMLElement>('[data-hero]');
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  hero?.addEventListener(
+    'pointermove',
+    (event) => {
+      if (reducedMotion.matches) return;
+      const bounds = hero.getBoundingClientRect();
+      hero.style.setProperty(
+        '--pointer-x',
+        `${((event.clientX - bounds.left) / bounds.width - 0.5) * 2}`,
+      );
+      hero.style.setProperty(
+        '--pointer-y',
+        `${((event.clientY - bounds.top) / bounds.height - 0.5) * 2}`,
+      );
+    },
+    { passive: true },
+  );
+</script>

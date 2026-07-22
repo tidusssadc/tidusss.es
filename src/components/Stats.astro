@@ -1,0 +1,31 @@
+---
+import { stats } from '../data/content';
+---
+
+<section
+  id="estadisticas"
+  class="border-y border-white/8 bg-white/[0.018]"
+  aria-label="Estadísticas destacadas"
+  data-stats
+  data-reveal
+>
+  <div class="mx-auto grid max-w-7xl grid-cols-2 px-5 sm:px-8 lg:grid-cols-4">
+    {
+      stats.map((stat, index) => (
+        <div
+          class="stat-item py-8 text-center sm:py-10"
+          style={`--item-index: ${index}`}
+        >
+          <>
+            <strong class="block text-2xl font-bold tracking-tight text-white sm:text-3xl">
+              {stat.value}
+            </strong>
+            <span class="mt-2 block text-[0.68rem] font-bold tracking-[0.2em] text-[#d6b56b] uppercase">
+              {stat.label}
+            </span>
+          </>
+        </div>
+      ))
+    }
+  </div>
+</section>

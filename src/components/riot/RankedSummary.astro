@@ -1,0 +1,61 @@
+---
+import {
+  formatRankLabel,
+  type RankedSummary,
+  type RiotProfile,
+} from '../../lib/riot';
+
+interface Props {
+  profile: RiotProfile;
+  ranked: RankedSummary;
+}
+const { profile, ranked } = Astro.props;
+const rankLabel = ranked.available
+  ? formatRankLabel(ranked.tier, ranked.rank)
+  : 'Sin clasificación';
+const totalGames = (ranked.wins ?? 0) + (ranked.losses ?? 0);
+const preciseWinRate = totalGames
+  ? (((ranked.wins ?? 0) / totalGames) * 100).toFixed(1).replace('.', ',')
+  : undefined;
+const winRateLabel =
+  preciseWinRate === undefined ? '—' : `${preciseWinRate}% Win Rate`;
+---
+
+<article class="riot-current">
+  <header class="riot-profile">
+    <div class="riot-avatar">
+      {
+        profile.profileIconUrl ? (
+          <img
+            src={profile.profileIconUrl}
+            alt={`Icono de invocador de ${profile.riotId}`}
+            width="96"
+            height="96"
+            loading="lazy"
+            decoding="async"
+          />
+        ) : (
+          <span aria-hidden="true">T</span>
+        )
+      }
+    </div>
+    <div class="riot-identity">
+      <h3>{profile.riotId}</h3>
+      <strong>{rankLabel} <span>•</span> {profile.region}</strong>
+      <small>Nivel {profile.summonerLevel ?? '—'}</small>
+    </div>
+  </header>
+  <div class="riot-rank">
+    <strong>{rankLabel}</strong>
+    {ranked.available && <b>{ranked.leaguePoints ?? '—'} LP</b>}
+  </div>
+  <div class="riot-season-record">
+    <strong>{winRateLabel}</strong>
+    <p>{ranked.wins ?? '—'}W <span>•</span> {ranked.losses ?? '—'}L</p>
+  </div>
+  <div class="riot-rank-meta" aria-label="Metadatos competitivos">
+    <span>Solo Queue</span>
+    <span>{profile.region}</span>
+    <span>Datos oficiales Riot Games</span>
+  </div>
+</article>

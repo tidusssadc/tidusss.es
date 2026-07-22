@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-labelledby="title description">
+  <title id="title">Tidusss — Cada combo cuenta.</title>
+  <desc id="description">Master ADC, contenido en YouTube y estado competitivo.</desc>
+  <rect width="1200" height="630" fill="#0B0B0C"/>
+  <path d="M72 72h1056M72 558h1056" stroke="#fff" stroke-opacity=".09"/>
+  <path d="M72 72v486M1128 72v486" stroke="#fff" stroke-opacity=".05"/>
+  <g transform="translate(72 72)">
+    <rect width="56" height="56" rx="10" fill="#fff"/>
+    <path fill="#0B0B0C" d="M12 12h32v8H12zM24 20h8v24h-8z"/>
+  </g>
+  <text x="152" y="108" fill="#fff" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="700" letter-spacing="7">TIDUSSS</text>
+  <text x="72" y="278" fill="#fff" font-family="Arial, Helvetica, sans-serif" font-size="92" font-weight="700" letter-spacing="-5">Cada combo cuenta.</text>
+  <text x="76" y="334" fill="#738097" font-family="Arial, Helvetica, sans-serif" font-size="24">Master ADC · EUW</text>
+  <g transform="translate(76 450)" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" letter-spacing="2.4">
+    <text fill="#d6b56b">YOUTUBE</text>
+    <circle cx="134" cy="-5" r="2" fill="#d6b56b"/>
+    <text x="160" fill="#738097">ESTADO COMPETITIVO</text>
+  </g>
+  <path d="M1008 474h120" stroke="#278cff" stroke-opacity=".72"/>
+  <path d="M1104 450h24v24" fill="none" stroke="#278cff" stroke-opacity=".72"/>
+  <text x="1010" y="510" fill="#738097" font-family="Arial, Helvetica, sans-serif" font-size="11" letter-spacing="2">ADC / 01</text>
+</svg>

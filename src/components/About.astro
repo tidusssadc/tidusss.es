@@ -1,0 +1,68 @@
+---
+import { authorityMethod, creatorMedia } from '../data/content';
+import SectionHeading from './SectionHeading.astro';
+---
+
+<section
+  id="sobre-mi"
+  class="section-shell coded-section"
+  data-code="ROL / ADC"
+  data-reveal
+>
+  <div
+    class="mx-auto grid max-w-7xl gap-14 px-5 sm:px-8 lg:grid-cols-[1fr_0.82fr] lg:items-center"
+  >
+    <div>
+      <SectionHeading
+        eyebrow="Sobre mí"
+        title="Jugar bien también es saber explicarlo."
+      />
+      <div
+        class="mt-8 max-w-2xl space-y-5 text-base leading-8 text-slate-400 sm:text-lg"
+      >
+        <p>
+          Soy Tidusss. Llevo años jugando ADC y sé que una pelea puede cambiar
+          por un paso, un segundo o un combo mal ejecutado.
+        </p>
+        <p>
+          Por eso comento mis partidas como las juego: explico qué estoy viendo,
+          cuándo decido entrar y qué habría hecho diferente.
+        </p>
+      </div>
+    </div>
+    <div class="authority-column">
+      {
+        creatorMedia.portraitSrc && (
+          <figure class="creator-portrait">
+            <img
+              src={creatorMedia.portraitSrc}
+              alt={creatorMedia.portraitAlt}
+              width="720"
+              height="900"
+              loading="lazy"
+              decoding="async"
+            />
+          </figure>
+        )
+      }
+      <aside class="profile-card method-card" aria-labelledby="method-title">
+        <p class="method-label">{authorityMethod.label}</p>
+        <h3 id="method-title" class="method-title">{authorityMethod.title}</h3>
+        <p class="method-description">{authorityMethod.description}</p>
+        <ol class="method-list">
+          {
+            authorityMethod.principles.map((principle) => (
+              <li>
+                <span>{principle.number}</span>
+                <div>
+                  <strong>{principle.label}</strong>
+                  <small>{principle.detail}</small>
+                </div>
+              </li>
+            ))
+          }
+        </ol>
+      </aside>
+    </div>
+  </div>
+</section>

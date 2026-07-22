@@ -1,0 +1,66 @@
+---
+import type { RecentMatch } from '../../lib/riot';
+
+interface Props {
+  match: RecentMatch;
+}
+const { match } = Astro.props;
+const compactAge = (value: string) => {
+  const elapsedHours = Math.max(
+    0,
+    Math.floor((Date.now() - new Date(value).getTime()) / 3_600_000),
+  );
+  if (elapsedHours < 1) return 'Hace < 1 h';
+  if (elapsedHours < 24) return `Hace ${elapsedHours} h`;
+  if (elapsedHours < 48) return 'Ayer';
+  return `Hace ${Math.floor(elapsedHours / 24)} d`;
+};
+---
+
+<li class:list={['riot-match', { 'is-win': match.win }]}>
+  <div class="riot-match-champion">
+    {
+      match.championImageUrl ? (
+        <img
+          src={match.championImageUrl}
+          alt=""
+          width="48"
+          height="48"
+          loading="lazy"
+          decoding="async"
+        />
+      ) : (
+        <span aria-hidden="true">{match.championName.slice(0, 1)}</span>
+      )
+    }
+    <div>
+      <strong>{match.championName}</strong><span>{match.queueLabel}</span>
+    </div>
+  </div>
+  <div class="riot-match-numbers">
+    <strong>{match.kills} / {match.deaths} / {match.assists}</strong>
+    <span>{match.kda.toFixed(2)} KDA</span>
+  </div>
+  <strong class="riot-result">{match.win ? 'Victoria' : 'Derrota'}</strong>
+  <div class="riot-items" aria-label="Objetos finales">
+    {
+      match.itemImageUrls
+        .slice(0, 6)
+        .map((url, index) => (
+          <img
+            src={url}
+            alt={`Objeto ${index + 1}`}
+            width="28"
+            height="28"
+            loading="lazy"
+            decoding="async"
+          />
+        ))
+    }
+  </div>
+  <div class="riot-match-time">
+    <time datetime={match.playedAt} data-relative-time
+      >{compactAge(match.playedAt)}</time
+    ><span>{match.durationLabel}</span>
+  </div>
+</li>

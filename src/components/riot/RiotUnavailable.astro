@@ -1,0 +1,13 @@
+---
+interface Props {
+  message?: string;
+}
+const {
+  message = 'Los datos competitivos no están disponibles en este momento.',
+} = Astro.props;
+---
+
+<div class="riot-unavailable" role="status">
+  <span aria-hidden="true"></span>
+  <p>{message}</p>
+</div>

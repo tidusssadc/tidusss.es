@@ -1,0 +1,36 @@
+---
+import { milestones } from '../data/content';
+import SectionHeading from './SectionHeading.astro';
+---
+
+<section
+  id="trayectoria"
+  class="section-shell coded-section"
+  data-code="SECCIÓN / TRAYECTORIA"
+  data-reveal
+>
+  <div class="mx-auto max-w-7xl px-5 sm:px-8">
+    <SectionHeading
+      eyebrow="Trayectoria"
+      title="Del primer vídeo a Master."
+      description="Los hitos de un canal que ha crecido compartiendo partidas, errores y mejoras reales."
+    />
+    <ol class="timeline mt-14">
+      {
+        milestones.map((milestone, index) => (
+          <li class="timeline-item" style={`--item-index: ${index}`}>
+            <>
+              <div class="timeline-node">
+                <span>{String(index + 1).padStart(2, '0')}</span>
+              </div>
+              <h3 class="mt-5 font-semibold text-white">{milestone.label}</h3>
+              <p class="mt-2 text-sm leading-6 text-slate-500">
+                {milestone.detail}
+              </p>
+            </>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</section>

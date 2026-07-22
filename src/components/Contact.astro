@@ -1,0 +1,47 @@
+---
+import { platforms } from '../config/platforms';
+
+const socialLinks = [
+  { name: 'YouTube', href: platforms.youtube.url },
+  { name: 'Twitch', href: platforms.twitch.url },
+  { name: 'Instagram', href: platforms.instagram.url },
+];
+---
+
+<section
+  id="contacto"
+  class="coded-section px-5 py-16 sm:px-8 sm:py-24"
+  data-code="CANAL / COMUNIDAD"
+  data-reveal
+>
+  <div
+    class="cta-panel mx-auto max-w-7xl px-6 py-14 text-center sm:px-12 sm:py-20"
+  >
+    <p class="eyebrow">Sigue el canal</p><h2
+      class="mt-5 text-3xl font-bold tracking-[-0.04em] text-white sm:text-5xl"
+    >
+      ¿Quieres mejorar como ADC?
+    </h2><p class="mx-auto mt-5 max-w-xl leading-7 text-slate-400">
+      Publico partidas, análisis y directos para ayudarte a jugar con más
+      precisión y mejores decisiones.
+    </p>
+    <div class="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
+      {
+        socialLinks.map(({ name, href }, index) => (
+          <a
+            class={
+              index === 0
+                ? 'button-primary justify-center px-6 py-3.5'
+                : 'button-secondary justify-center px-6 py-3.5'
+            }
+            href={href}
+            target="_blank"
+            rel="noreferrer"
+          >
+            {name} <span aria-hidden="true">↗</span>
+          </a>
+        ))
+      }
+    </div>
+  </div>
+</section>

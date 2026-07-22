@@ -1,0 +1,56 @@
+---
+import { recognition } from '../data/content';
+---
+
+<section
+  id="reconocimiento"
+  class="recognition-section section-shell"
+  data-code="SECCIÓN / CREDENCIALES"
+  data-reveal
+>
+  <div class="mx-auto max-w-7xl px-5 sm:px-8">
+    <div class="recognition-object">
+      <header class="recognition-intro">
+        <div class="recognition-seal" aria-hidden="true">
+          <span>T</span><b>07</b>
+        </div><div>
+          <p class="eyebrow">{recognition.label}</p><h2>
+            {recognition.headline}
+          </h2><p class="recognition-note">{recognition.description}</p>
+        </div>
+      </header>
+      <div
+        class="recognition-records"
+        role="list"
+        aria-label="Reconocimientos competitivos"
+      >
+        {
+          recognition.entries.map((entry, index) => (
+            <article
+              class="recognition-record"
+              role="listitem"
+              style={`--item-index: ${index}`}
+            >
+              <>
+                <span class="record-index">
+                  {String(index + 1).padStart(2, '0')}
+                </span>
+                <strong>{entry.value}</strong>
+                <div>
+                  <>
+                    <span>{entry.subject}</span>
+                    <small>{entry.source}</small>
+                  </>
+                </div>
+              </>
+            </article>
+          ))
+        }
+      </div>
+      <footer class="recognition-footer">
+        <span>{recognition.updatedLabel}</span><span>FUENTES / EXTERNAS</span>
+      </footer>
+      <p class="recognition-disclaimer">{recognition.disclaimer}</p>
+    </div>
+  </div>
+</section>

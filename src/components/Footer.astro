@@ -1,0 +1,18 @@
+---
+import { site } from '../data/site';
+const year = new Date().getFullYear();
+---
+
+<footer class="border-t border-white/8 px-5 py-8 sm:px-8">
+  <div
+    class="mx-auto flex max-w-7xl flex-col gap-5 text-center sm:flex-row sm:items-center sm:justify-between sm:text-left"
+  >
+    <p class="text-sm font-black tracking-[0.2em] text-white">
+      {site.name}
+      <span class="font-normal tracking-normal text-slate-600">© {year}</span>
+    </p><p class="max-w-2xl text-xs leading-5 text-slate-600">
+      League of Legends es una marca registrada de Riot Games. Este sitio no
+      está afiliado ni respaldado por Riot Games.
+    </p>
+  </div>
+</footer>

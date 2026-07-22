@@ -1,0 +1,100 @@
+---
+import { navigation, site } from '../data/site';
+import { platforms } from '../config/platforms';
+---
+
+<header
+  data-site-header
+  class="fixed inset-x-0 top-0 z-50 border-b border-white/8 bg-[#060913]/80 backdrop-blur-xl"
+>
+  <nav
+    class="mx-auto flex h-18 max-w-7xl items-center justify-between px-5 sm:px-8"
+    aria-label="Navegación principal"
+  >
+    <a
+      href="#inicio"
+      class="brand-mark text-lg font-black tracking-[0.24em] text-white"
+      aria-label="Tidusss, inicio">{site.name}</a
+    >
+    <div class="hidden items-center gap-7 lg:flex">
+      {
+        navigation.map((item) => (
+          <a
+            class="nav-link text-sm text-slate-300"
+            href={item.href}
+            data-nav-link
+          >
+            {item.label}
+          </a>
+        ))
+      }
+    </div>
+    <a
+      class="button-primary hidden px-5 py-2.5 text-sm lg:inline-flex"
+      href={platforms.youtube.url}
+      target="_blank"
+      rel="noreferrer">YouTube <span aria-hidden="true">↗</span></a
+    >
+    <details class="mobile-menu relative lg:hidden">
+      <summary
+        class="grid size-11 cursor-pointer list-none place-items-center rounded-sm border border-white/12 text-white"
+        aria-label="Abrir menú"
+        ><span class="menu-icon" aria-hidden="true"></span></summary
+      >
+      <div
+        class="absolute top-14 right-0 w-64 border border-white/10 bg-[#0a0f1d] p-3 shadow-2xl"
+      >
+        {
+          navigation.map((item) => (
+            <a
+              class="block rounded-sm px-4 py-3 text-sm text-slate-200 hover:bg-white/5"
+              href={item.href}
+            >
+              {item.label}
+            </a>
+          ))
+        }
+        <a
+          class="button-primary mt-3 flex justify-center px-5 py-3 text-sm"
+          href={platforms.youtube.url}
+          target="_blank"
+          rel="noreferrer">YouTube</a
+        >
+      </div>
+    </details>
+  </nav>
+</header>
+
+<script>
+  const header = document.querySelector<HTMLElement>('[data-site-header]');
+  const updateHeader = () =>
+    header?.toggleAttribute('data-scrolled', window.scrollY > 16);
+  updateHeader();
+  window.addEventListener('scroll', updateHeader, { passive: true });
+
+  requestAnimationFrame(() => header?.setAttribute('data-ready', ''));
+  const links = [
+    ...document.querySelectorAll<HTMLAnchorElement>('[data-nav-link]'),
+  ];
+  const sections = links
+    .map((link) => document.querySelector<HTMLElement>(link.hash))
+    .filter((section): section is HTMLElement => Boolean(section));
+  const setActiveLink = (id: string) => {
+    links.forEach((link) => {
+      const active = link.hash === `#${id}`;
+      link.toggleAttribute('data-active', active);
+      if (active) link.setAttribute('aria-current', 'location');
+      else link.removeAttribute('aria-current');
+    });
+  };
+  const sectionObserver = new IntersectionObserver(
+    (entries) => {
+      const visible = entries
+        .filter((entry) => entry.isIntersecting)
+        .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+      if (visible?.target.id) setActiveLink(visible.target.id);
+    },
+    { rootMargin: '-25% 0px -60% 0px', threshold: [0, 0.2, 0.6] },
+  );
+  sections.forEach((section) => sectionObserver.observe(section));
+</script>

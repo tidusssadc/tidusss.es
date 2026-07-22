@@ -1,0 +1,388 @@
+---
+import { integrationEndpoints } from '../../config/platforms';
+import { getRiotOverview, type RiotOverview } from '../../lib/riot';
+import MatchRow from './MatchRow.astro';
+import RankedSummary from './RankedSummary.astro';
+import RiotSkeleton from './RiotSkeleton.astro';
+
+let initialOverview: RiotOverview | undefined;
+try {
+  initialOverview = await getRiotOverview(import.meta.env);
+} catch {
+  initialOverview = undefined;
+}
+const recent = initialOverview?.recent;
+---
+
+<section
+  id="competitivo"
+  class="riot-section section-shell coded-section"
+  data-code="DATOS / RIOT GAMES"
+  data-reveal
+>
+  <div class="mx-auto max-w-7xl px-5 sm:px-8">
+    <header class="riot-section-heading">
+      <div>
+        <p class="eyebrow">Estado competitivo</p>
+        <h2>La partida, en números.</h2>
+      </div>
+      <p>Datos oficiales de Solo Queue y rendimiento reciente.</p>
+    </header>
+
+    <div
+      class="riot-live"
+      data-riot-overview
+      data-endpoint={integrationEndpoints.riot}
+      aria-live="polite"
+      aria-busy={initialOverview ? 'false' : 'true'}
+    >
+      {
+        initialOverview ? (
+          <div class="riot-overview">
+            <div class="riot-summary-grid">
+              <RankedSummary
+                profile={initialOverview.profile}
+                ranked={initialOverview.ranked}
+              />
+              <article class="riot-recent">
+                <p class="riot-kicker">Forma reciente</p>
+                <h3>Últimas {recent?.sampleSize ?? 0} partidas</h3>
+                {recent?.sampleSize ? (
+                  <>
+                    <div class="riot-recent-score">
+                      <strong>{recent.winRate ?? '—'}%</strong>
+                      <span>
+                        {recent.wins}W <i>•</i> {recent.losses}L
+                      </span>
+                    </div>
+                    <div class="riot-recent-metrics">
+                      <span>
+                        <b>{recent.averageKda ?? '—'}</b> KDA
+                      </span>
+                      <span>
+                        <b>{recent.averageCsPerMinute ?? '—'}</b> CS/min
+                      </span>
+                    </div>
+                    <div class="riot-champion-focus">
+                      <span>Más jugado</span>
+                      <strong>
+                        {recent.mostPlayedChampion?.championName ?? '—'}
+                      </strong>
+                      {recent.mostPlayedChampion ? (
+                        <p>
+                          {recent.mostPlayedChampion.games} partidas
+                          <b>{recent.mostPlayedChampion.winRate}% WR</b>
+                        </p>
+                      ) : null}
+                    </div>
+                  </>
+                ) : (
+                  <p class="riot-inline-state">
+                    No hay partidas recientes de Solo Queue en esta muestra.
+                  </p>
+                )}
+              </article>
+            </div>
+            {recent?.matches.length ? (
+              <div class="riot-matches-block">
+                <header>
+                  <h3>Últimas partidas</h3>
+                  <span>Solo Queue</span>
+                </header>
+                <ol class="riot-match-list">
+                  {recent.matches.slice(0, 4).map((match) => (
+                    <MatchRow match={match} />
+                  ))}
+                </ol>
+              </div>
+            ) : null}
+            <footer class="riot-data-footer">
+              <time datetime={initialOverview.updatedAt} data-sync-time>
+                Última sincronización:{' '}
+                {new Intl.DateTimeFormat('es-ES', {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                }).format(new Date(initialOverview.updatedAt))}
+              </time>
+              {initialOverview.stale && <span>Últimos datos disponibles</span>}
+            </footer>
+          </div>
+        ) : (
+          <RiotSkeleton />
+        )
+      }
+    </div>
+  </div>
+</section>
+
+<script>
+  import type {
+    RecentMatch,
+    RiotOverview,
+    RiotPublicResponse,
+  } from '../../lib/riot';
+  import { formatRankLabel } from '../../lib/riot';
+
+  const root = document.querySelector<HTMLElement>('[data-riot-overview]');
+  const endpoint = root?.dataset.endpoint;
+  const element = <K extends keyof HTMLElementTagNameMap>(
+    tag: K,
+    className?: string,
+    text?: string,
+  ) => {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text !== undefined) node.textContent = text;
+    return node;
+  };
+  const metric = (value: string, label: string) => {
+    const wrapper = element('span');
+    wrapper.append(element('b', undefined, value), ` ${label}`);
+    return wrapper;
+  };
+  const historicalWinRate = (wins?: number, losses?: number) => {
+    const total = (wins ?? 0) + (losses ?? 0);
+    return total
+      ? `${(((wins ?? 0) / total) * 100).toFixed(1).replace('.', ',')}% Win Rate`
+      : '—';
+  };
+  const relativeTime = (value: string, sync = false) => {
+    const date = new Date(value);
+    const minutes = Math.max(
+      0,
+      Math.floor((Date.now() - date.getTime()) / 60_000),
+    );
+    if (sync) {
+      if (minutes < 1) return 'Actualizado ahora';
+      if (minutes < 60) return `Actualizado hace ${minutes} min`;
+      return `Última sincronización: ${date.toLocaleTimeString('es-ES', {
+        hour: '2-digit',
+        minute: '2-digit',
+      })}`;
+    }
+    const hours = Math.floor(minutes / 60);
+    if (hours < 1) return 'Hace < 1 h';
+    if (hours < 24) return `Hace ${hours} h`;
+    if (hours < 48) return 'Ayer';
+    return `Hace ${Math.floor(hours / 24)} d`;
+  };
+  const image = (src: string | undefined, alt: string, size: number) => {
+    if (!src) return element('span', undefined, alt.slice(0, 1));
+    const node = document.createElement('img');
+    node.src = src;
+    node.alt = alt;
+    node.width = size;
+    node.height = size;
+    node.loading = 'lazy';
+    node.decoding = 'async';
+    node.addEventListener('error', () =>
+      node.replaceWith(element('span', undefined, alt.slice(0, 1))),
+    );
+    return node;
+  };
+  const renderMatch = (match: RecentMatch) => {
+    const row = element('li', `riot-match${match.win ? ' is-win' : ''}`);
+    const champion = element('div', 'riot-match-champion');
+    champion.append(image(match.championImageUrl, match.championName, 48));
+    const championText = element('div');
+    championText.append(
+      element('strong', undefined, match.championName),
+      element('span', undefined, match.queueLabel),
+    );
+    champion.append(championText);
+    const result = element(
+      'strong',
+      'riot-result',
+      match.win ? 'Victoria' : 'Derrota',
+    );
+    const numbers = element('div', 'riot-match-numbers');
+    numbers.append(
+      element(
+        'strong',
+        undefined,
+        `${match.kills} / ${match.deaths} / ${match.assists}`,
+      ),
+      element(
+        'span',
+        undefined,
+        `${match.kda.toFixed(2)} KDA · ${match.csPerMinute} CS/min`,
+      ),
+    );
+    const items = element('div', 'riot-items');
+    items.setAttribute('aria-label', 'Objetos finales');
+    match.itemImageUrls
+      .slice(0, 6)
+      .forEach((url, index) =>
+        items.append(image(url, `Objeto ${index + 1}`, 28)),
+      );
+    const time = element('div', 'riot-match-time');
+    const date = element('time', undefined, relativeTime(match.playedAt));
+    date.dateTime = match.playedAt;
+    date.dataset.relativeTime = '';
+    time.append(date, element('span', undefined, match.durationLabel));
+    row.append(champion, numbers, result, items, time);
+    return row;
+  };
+  const renderOverview = (overview: RiotOverview) => {
+    if (!root) return;
+    const wrapper = element('div', 'riot-overview');
+    const grid = element('div', 'riot-summary-grid');
+    const current = element('article', 'riot-current');
+    const profile = element('header', 'riot-profile');
+    const avatar = element('div', 'riot-avatar');
+    avatar.append(
+      image(overview.profile.profileIconUrl, overview.profile.riotId, 96),
+    );
+    const identity = element('div');
+    identity.append(
+      element('h3', undefined, overview.profile.riotId),
+      element(
+        'strong',
+        undefined,
+        `${overview.ranked.available ? formatRankLabel(overview.ranked.tier, overview.ranked.rank) : 'Sin clasificación'} • ${overview.profile.region}`,
+      ),
+      element(
+        'small',
+        undefined,
+        `Nivel ${overview.profile.summonerLevel ?? '—'}`,
+      ),
+    );
+    identity.className = 'riot-identity';
+    profile.append(avatar, identity);
+    const rank = element('div', 'riot-rank');
+    rank.append(
+      element(
+        'strong',
+        undefined,
+        overview.ranked.available
+          ? formatRankLabel(overview.ranked.tier, overview.ranked.rank)
+          : 'Sin clasificación',
+      ),
+    );
+    if (overview.ranked.available)
+      rank.append(
+        element('b', undefined, `${overview.ranked.leaguePoints ?? '—'} LP`),
+      );
+    const season = element('div', 'riot-season-record');
+    season.append(
+      element(
+        'strong',
+        undefined,
+        historicalWinRate(overview.ranked.wins, overview.ranked.losses),
+      ),
+      element(
+        'p',
+        undefined,
+        `${overview.ranked.wins ?? '—'}W • ${overview.ranked.losses ?? '—'}L`,
+      ),
+    );
+    const metadata = element('div', 'riot-rank-meta');
+    metadata.setAttribute('aria-label', 'Metadatos competitivos');
+    metadata.append(
+      element('span', undefined, 'Solo Queue'),
+      element('span', undefined, overview.profile.region),
+      element('span', undefined, 'Datos oficiales Riot Games'),
+    );
+    current.append(profile, rank, season, metadata);
+
+    const recent = element('article', 'riot-recent');
+    recent.append(
+      element('p', 'riot-kicker', 'Forma reciente'),
+      element(
+        'h3',
+        undefined,
+        `Últimas ${overview.recent.sampleSize} partidas`,
+      ),
+    );
+    if (overview.recent.sampleSize) {
+      const score = element('div', 'riot-recent-score');
+      score.append(
+        element('strong', undefined, `${overview.recent.winRate ?? '—'}%`),
+        element(
+          'span',
+          undefined,
+          `${overview.recent.wins}W • ${overview.recent.losses}L`,
+        ),
+      );
+      const metrics = element('div', 'riot-recent-metrics');
+      metrics.append(
+        metric(String(overview.recent.averageKda ?? '—'), 'KDA'),
+        metric(String(overview.recent.averageCsPerMinute ?? '—'), 'CS/min'),
+      );
+      const focus = element('div', 'riot-champion-focus');
+      const mostPlayed = overview.recent.mostPlayedChampion;
+      focus.append(
+        element('span', undefined, 'Más jugado'),
+        element('strong', undefined, mostPlayed?.championName ?? '—'),
+      );
+      if (mostPlayed) {
+        const detail = element('p');
+        detail.append(
+          `${mostPlayed.games} partidas`,
+          element('b', undefined, `${mostPlayed.winRate}% WR`),
+        );
+        focus.append(detail);
+      }
+      recent.append(score, metrics, focus);
+    } else {
+      recent.append(
+        element(
+          'p',
+          'riot-inline-state',
+          'No hay partidas recientes de Solo Queue en esta muestra.',
+        ),
+      );
+    }
+    grid.append(current, recent);
+    wrapper.append(grid);
+    if (overview.recent.matches.length) {
+      const matchesBlock = element('div', 'riot-matches-block');
+      const matchesHeader = element('header');
+      matchesHeader.append(
+        element('h3', undefined, 'Últimas partidas'),
+        element('span', undefined, 'Solo Queue'),
+      );
+      const list = element('ol', 'riot-match-list');
+      list.append(...overview.recent.matches.slice(0, 4).map(renderMatch));
+      matchesBlock.append(matchesHeader, list);
+      wrapper.append(matchesBlock);
+    }
+    const footer = element('footer', 'riot-data-footer');
+    const updated = element(
+      'time',
+      undefined,
+      relativeTime(overview.updatedAt, true),
+    );
+    updated.dateTime = overview.updatedAt;
+    updated.dataset.syncTime = '';
+    footer.append(updated);
+    if (overview.stale)
+      footer.append(element('span', undefined, 'Últimos datos disponibles'));
+    wrapper.append(footer);
+    root.replaceChildren(wrapper);
+    root.setAttribute('aria-busy', 'false');
+  };
+  const renderError = (message: string) => {
+    if (!root || root.querySelector('.riot-overview')) return;
+    const state = element('div', 'riot-unavailable');
+    state.setAttribute('role', 'status');
+    const mark = element('span');
+    mark.setAttribute('aria-hidden', 'true');
+    state.append(mark, element('p', undefined, message));
+    root.replaceChildren(state);
+    root.setAttribute('aria-busy', 'false');
+  };
+  if (root && endpoint) {
+    fetch(endpoint)
+      .then(async (response) => (await response.json()) as RiotPublicResponse)
+      .then((payload) => {
+        if (payload.ok) renderOverview(payload.data);
+        else renderError(payload.error.message);
+      })
+      .catch(() =>
+        renderError(
+          'Los datos competitivos no están disponibles en este momento.',
+        ),
+      );
+  }
+</script>
