@@ -1,16 +1,20 @@
 <script>
   import { startHomeStateEngine } from '../domain/home-state';
 
-  const context = document.querySelector<HTMLElement>('[data-home-context]');
-  const label = context?.querySelector<HTMLElement>(
-    '[data-home-context-label]',
-  );
-  const text = context?.querySelector<HTMLElement>('[data-home-context-text]');
-  const action = context?.querySelector<HTMLAnchorElement>(
-    '[data-home-context-action]',
-  );
+  const initializeHomeStateEngine = () => {
+    const context = document.querySelector<HTMLElement>('[data-home-context]');
+    const label = context?.querySelector<HTMLElement>(
+      '[data-home-context-label]',
+    );
+    const text = context?.querySelector<HTMLElement>(
+      '[data-home-context-text]',
+    );
+    const action = context?.querySelector<HTMLAnchorElement>(
+      '[data-home-context-action]',
+    );
 
-  if (context && label && text && action) {
+    if (!context || !label || !text || !action) return;
+
     const stop = startHomeStateEngine((state) => {
       document.body.dataset.homeState = state.id;
       document
@@ -38,5 +42,13 @@
       requestAnimationFrame(() => context.toggleAttribute('data-ready', true));
     });
     window.addEventListener('pagehide', stop, { once: true });
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeHomeStateEngine, {
+      once: true,
+    });
+  } else {
+    initializeHomeStateEngine();
   }
 </script>
