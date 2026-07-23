@@ -44,11 +44,5 @@
     window.addEventListener('pagehide', stop, { once: true });
   };
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeHomeStateEngine, {
-      once: true,
-    });
-  } else {
-    initializeHomeStateEngine();
-  }
+  window.setTimeout(initializeHomeStateEngine, 0);
 </script>
