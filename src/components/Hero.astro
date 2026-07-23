@@ -22,7 +22,7 @@ import HeroVisual from './HeroVisual.astro';
         Cada combo<br /><span class="text-gradient">cuenta.</span>
       </h1>
       <p class="hero-thesis animate-rise delay-2">
-        <span>{brandPrinciple.lead}</span>
+        <span>{brandPrinciple.lead}</span>{' '}
         {brandPrinciple.conclusion}
       </p>
       <p class="hero-identity animate-rise delay-2">
@@ -59,6 +59,12 @@ import HeroVisual from './HeroVisual.astro';
     <div
       class="hero-art animate-rise delay-2 mx-auto w-full max-w-xl lg:max-w-none"
     >
+      <div
+        class="hero-gameplay-fragments"
+        data-hero-gameplay
+        aria-hidden="true"
+      >
+      </div>
       <HeroVisual />
     </div>
   </div>

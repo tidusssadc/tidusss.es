@@ -184,8 +184,9 @@ import { integrationEndpoints, platforms } from '../config/platforms';
   const number = (value: number) =>
     new Intl.NumberFormat('es-ES').format(value);
 
-  const renderVideo = (video: YouTubeVideo) => {
+  const renderVideo = (video: YouTubeVideo, index: number) => {
     const link = document.createElement('a');
+    if (index === 0) link.className = 'is-featured';
     link.href = video.url;
     link.target = '_blank';
     link.rel = 'noopener noreferrer';
@@ -212,6 +213,26 @@ import { integrationEndpoints, platforms } from '../config/platforms';
     date.textContent = relativeTime(video.publishedAt) ?? '';
     link.append(media, title, date);
     return link;
+  };
+
+  const renderHeroFragments = (videos: YouTubeVideo[]) => {
+    const fragments = document.querySelector<HTMLElement>(
+      '[data-hero-gameplay]',
+    );
+    if (!fragments) return;
+    fragments.replaceChildren(
+      ...videos.slice(0, 3).map((video) => {
+        const image = document.createElement('img');
+        image.src = video.thumbnailUrl;
+        image.alt = '';
+        image.width = 480;
+        image.height = 270;
+        image.loading = 'eager';
+        image.decoding = 'async';
+        return image;
+      }),
+    );
+    fragments.toggleAttribute('data-ready', true);
   };
 
   if (showcase) {
@@ -355,8 +376,11 @@ import { integrationEndpoints, platforms } from '../config/platforms';
           const list = showcase.querySelector('[data-home-video-list]');
           const videos = payload.data.videos.slice(0, 4);
           if (!strip || !list || !videos.length) return;
-          list.replaceChildren(...videos.map(renderVideo));
+          list.replaceChildren(
+            ...videos.map((video, index) => renderVideo(video, index)),
+          );
           list.setAttribute('aria-busy', 'false');
+          renderHeroFragments(videos);
         })
         .catch(() => {
           const strip =

@@ -40,10 +40,10 @@ const goalDefinitions: GoalDefinition[] = [
     order: 2,
   },
   {
-    id: 'videos-300',
-    label: '300 vídeos publicados',
+    id: 'videos-500',
+    label: '500 vídeos publicados',
     source: 'youtube-videos',
-    target: 300,
+    target: 500,
     unit: 'vídeos',
     mode: 'automatic',
     status: 'active',

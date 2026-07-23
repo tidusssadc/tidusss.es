@@ -220,13 +220,7 @@ import PlayerProfile from './PlayerProfile.astro';
                     ? 'Esperando datos'
                     : 'Objetivo manual')}
               </strong>
-              <small>
-                {goal.mode === 'automatic'
-                  ? 'Automático'
-                  : goal.mode === 'long-term'
-                    ? 'Manual · largo plazo'
-                    : 'Manual'}
-              </small>
+              {goal.mode === 'long-term' && <small>Largo plazo</small>}
               {goal.target && (
                 <div data-goal-track hidden>
                   <i />
