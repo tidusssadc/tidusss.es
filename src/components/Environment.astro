@@ -1,0 +1,86 @@
+---
+import {
+  environments,
+  type EnvironmentId,
+  type EnvironmentLayer,
+} from '../data/environments';
+
+interface Props {
+  environment: EnvironmentId;
+}
+
+const { environment } = Astro.props;
+const definition = environments[environment];
+const hasLayer = (layer: EnvironmentLayer) => definition.layers.includes(layer);
+---
+
+<div
+  class="environment"
+  data-environment-root
+  data-environment={definition.id}
+  aria-hidden="true"
+>
+  <div class="environment-base"></div>
+  {hasLayer('grid') && <div class="environment-grid" />}
+  {hasLayer('noise') && <div class="environment-noise" />}
+  {
+    hasLayer('image') && definition.image && (
+      <div
+        class="environment-image"
+        style={`--environment-image: url("${definition.image.src}"); --environment-image-position: ${definition.image.position}; --environment-image-opacity: ${definition.image.opacity};`}
+      />
+    )
+  }
+  {hasLayer('mist') && <div class="environment-mist" />}
+  {hasLayer('glow') && <div class="environment-glow" />}
+  {hasLayer('rays') && <div class="environment-rays" />}
+  {
+    hasLayer('particles') && (
+      <div class="environment-particles">
+        <>
+          <i />
+          <i />
+          <i />
+          <i />
+          <i />
+          <i />
+        </>
+      </div>
+    )
+  }
+  <div class="environment-vignette"></div>
+</div>
+
+<script>
+  const root = document.querySelector<HTMLElement>('[data-environment-root]');
+  const hour = new Date().getHours();
+  document.documentElement.dataset.atmosphere =
+    hour >= 8 && hour < 19 ? 'day' : 'night';
+
+  if (
+    root &&
+    !window.matchMedia('(prefers-reduced-motion: reduce)').matches &&
+    window.matchMedia('(pointer: fine)').matches
+  ) {
+    let frame = 0;
+    const handlePointer = (event: PointerEvent) => {
+      if (frame) return;
+      frame = window.requestAnimationFrame(() => {
+        const x = event.clientX / window.innerWidth - 0.5;
+        const y = event.clientY / window.innerHeight - 0.5;
+        root.style.setProperty('--environment-x', x.toFixed(3));
+        root.style.setProperty('--environment-y', y.toFixed(3));
+        frame = 0;
+      });
+    };
+    window.addEventListener('pointermove', handlePointer, { passive: true });
+    window.addEventListener(
+      'pagehide',
+      () => {
+        window.removeEventListener('pointermove', handlePointer);
+        if (frame) window.cancelAnimationFrame(frame);
+      },
+      { once: true },
+    );
+  }
+</script>

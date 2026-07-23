@@ -1,12 +1,20 @@
 ---
 import '../styles/global.css';
 import { site } from '../data/site';
+import SoulEngine from '../components/SoulEngine.astro';
+import Environment from '../components/Environment.astro';
+import { resolveEnvironment, type EnvironmentId } from '../data/environments';
 
 interface Props {
   title?: string;
   description?: string;
+  environment?: EnvironmentId;
 }
-const { title = site.title, description = site.description } = Astro.props;
+const {
+  title = site.title,
+  description = site.description,
+  environment = resolveEnvironment(Astro.url.pathname),
+} = Astro.props;
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 const socialImageURL = new URL('/og-image.png', Astro.site);
 ---
@@ -55,5 +63,9 @@ const socialImageURL = new URL('/og-image.png', Astro.site);
     <link rel="canonical" href={canonicalURL} />
     <title>{title}</title>
   </head>
-  <body class="antialiased"><slot /></body>
+  <body class="antialiased" data-environment={environment}>
+    <Environment environment={environment} />
+    <div class="site-stage"><slot /></div>
+    <SoulEngine />
+  </body>
 </html>

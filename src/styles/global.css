@@ -13,11 +13,12 @@
     scroll-behavior: smooth;
   }
   body {
+    position: relative;
     min-width: 280px;
     min-height: 100vh;
     margin: 0;
     overflow-x: hidden;
-    background: #060913;
+    background: transparent;
     color: #cbd5e1;
   }
   ::selection {
@@ -30,6 +31,279 @@
   }
   section[id] {
     scroll-margin-top: 4.5rem;
+  }
+}
+
+/* Environment Engine
+   Route-aware atmospheric layers. Decorative only; content remains independent. */
+.site-stage {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+}
+.environment {
+  --environment-x: 0;
+  --environment-y: 0;
+  position: fixed;
+  z-index: 0;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background: #060913;
+  contain: strict;
+}
+.environment > div {
+  position: absolute;
+  inset: -1rem;
+}
+.environment-base {
+  background:
+    radial-gradient(circle at 72% 12%, rgb(31 92 157 / 14%), transparent 38rem),
+    radial-gradient(circle at 12% 62%, rgb(17 49 92 / 10%), transparent 42rem),
+    linear-gradient(155deg, #080d18 0%, #060913 48%, #050710 100%);
+}
+.environment-grid {
+  background-image:
+    linear-gradient(rgb(119 165 218 / 2.8%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(119 165 218 / 2.8%) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: linear-gradient(
+    to bottom,
+    #000 0%,
+    rgb(0 0 0 / 65%) 58%,
+    transparent
+  );
+  transform: translate3d(
+    calc(var(--environment-x) * -2px),
+    calc(var(--environment-y) * -2px),
+    0
+  );
+}
+.environment-noise {
+  opacity: 0.16;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.86' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.16'/%3E%3C/svg%3E");
+  mix-blend-mode: soft-light;
+}
+.environment-image {
+  inset: -2rem;
+  background-image: var(--environment-image);
+  background-position: var(--environment-image-position, 78% 18%);
+  background-repeat: no-repeat;
+  background-size: auto min(86vh, 58rem);
+  filter: blur(1.5px) saturate(0.68) contrast(0.9);
+  opacity: var(--environment-image-opacity, 0.08);
+  transform: translate3d(
+    calc(var(--environment-x) * 3px),
+    calc(var(--environment-y) * 3px),
+    0
+  );
+  mask-image: linear-gradient(
+    90deg,
+    transparent 36%,
+    rgb(0 0 0 / 70%) 62%,
+    #000 82%,
+    transparent 100%
+  );
+}
+.environment-mist {
+  inset: -12%;
+  background:
+    radial-gradient(ellipse at 72% 26%, rgb(54 129 204 / 8%), transparent 38%),
+    radial-gradient(ellipse at 24% 78%, rgb(183 148 76 / 3%), transparent 34%);
+  filter: blur(38px);
+  opacity: 0.72;
+  transform: translate3d(
+    calc(var(--environment-x) * 2px),
+    calc(var(--environment-y) * 2px),
+    0
+  );
+}
+.environment-glow {
+  background:
+    radial-gradient(circle at 78% 22%, rgb(39 140 255 / 8%), transparent 24rem),
+    radial-gradient(
+      circle at 17% 8%,
+      rgb(214 181 107 / 3.5%),
+      transparent 20rem
+    );
+}
+.environment-rays {
+  inset: -30% -20%;
+  background: linear-gradient(
+    112deg,
+    transparent 35%,
+    rgb(122 184 244 / 2.2%) 44%,
+    transparent 51%
+  );
+  filter: blur(7px);
+  transform: translate3d(calc(var(--environment-x) * -2px), 0, 0);
+}
+.environment-particles i {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: #93c5fd;
+  box-shadow: 0 0 8px rgb(147 197 253 / 45%);
+  opacity: 0.22;
+}
+.environment-particles i:nth-child(1) {
+  top: 14%;
+  left: 9%;
+}
+.environment-particles i:nth-child(2) {
+  top: 28%;
+  right: 18%;
+  background: #d6b56b;
+}
+.environment-particles i:nth-child(3) {
+  top: 56%;
+  left: 28%;
+}
+.environment-particles i:nth-child(4) {
+  right: 9%;
+  bottom: 29%;
+}
+.environment-particles i:nth-child(5) {
+  bottom: 18%;
+  left: 12%;
+  background: #d6b56b;
+}
+.environment-particles i:nth-child(6) {
+  top: 68%;
+  right: 37%;
+}
+.environment-vignette {
+  inset: 0;
+  background:
+    linear-gradient(
+      90deg,
+      rgb(2 4 9 / 42%),
+      transparent 18%,
+      transparent 82%,
+      rgb(2 4 9 / 42%)
+    ),
+    linear-gradient(180deg, transparent 58%, rgb(2 4 9 / 40%));
+}
+
+.environment[data-environment='home'] .environment-base {
+  background:
+    radial-gradient(
+      circle at 76% 16%,
+      rgb(45 120 199 / 17%),
+      transparent 36rem
+    ),
+    radial-gradient(circle at 17% 34%, rgb(188 151 74 / 5%), transparent 28rem),
+    linear-gradient(150deg, #09101e 0%, #060913 54%, #050710 100%);
+}
+.environment[data-environment='live'] .environment-base {
+  background:
+    linear-gradient(90deg, rgb(20 58 104 / 5%) 1px, transparent 1px),
+    radial-gradient(circle at 50% 4%, rgb(38 101 168 / 12%), transparent 34rem),
+    linear-gradient(160deg, #070c16, #050811 62%, #060913);
+  background-size:
+    24rem 100%,
+    auto,
+    auto;
+}
+.environment[data-environment='live'] .environment-grid {
+  background-size: 52px 52px;
+  opacity: 0.74;
+  mask-image: radial-gradient(ellipse at 50% 22%, #000, transparent 78%);
+}
+.environment[data-environment='live'] .environment-rays {
+  background: linear-gradient(
+    96deg,
+    transparent 24%,
+    rgb(70 145 222 / 2.4%) 42%,
+    transparent 55%
+  );
+}
+
+:root[data-atmosphere='day'] .environment {
+  filter: brightness(1.06) saturate(0.94);
+}
+:root[data-atmosphere='night'] .environment {
+  filter: contrast(1.045) saturate(1.04);
+}
+:root[data-atmosphere='night'] .environment-mist {
+  opacity: 0.9;
+}
+:root[data-atmosphere='night'] .environment-glow {
+  background:
+    radial-gradient(circle at 78% 22%, rgb(39 140 255 / 9%), transparent 24rem),
+    radial-gradient(circle at 17% 8%, rgb(214 181 107 / 5%), transparent 20rem);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .site-stage {
+    animation: environment-content-enter 420ms ease both;
+  }
+  .environment-mist {
+    animation: environment-drift 18s ease-in-out infinite alternate;
+  }
+  .environment-rays {
+    animation: environment-rays 22s ease-in-out infinite alternate;
+  }
+  .environment-particles i {
+    animation: environment-dust 12s ease-in-out infinite alternate;
+  }
+  .environment-particles i:nth-child(2n) {
+    animation-delay: -5s;
+  }
+  .environment-particles i:nth-child(3n) {
+    animation-delay: -9s;
+  }
+}
+@keyframes environment-content-enter {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes environment-drift {
+  to {
+    transform: translate3d(2px, -2px, 0);
+    opacity: 0.82;
+  }
+}
+@keyframes environment-rays {
+  to {
+    opacity: 0.66;
+    transform: translate3d(2px, 0, 0);
+  }
+}
+@keyframes environment-dust {
+  to {
+    opacity: 0.38;
+    transform: translate3d(1px, -3px, 0);
+  }
+}
+
+@media (max-width: 767px) {
+  .environment-image {
+    background-position: 82% 8%;
+    background-size: auto min(72vh, 38rem);
+    opacity: calc(var(--environment-image-opacity, 0.08) * 0.65);
+    mask-image: linear-gradient(
+      90deg,
+      transparent 26%,
+      rgb(0 0 0 / 75%) 62%,
+      transparent
+    );
+  }
+  .environment-grid {
+    background-size: 44px 44px;
+    opacity: 0.62;
+  }
+  .environment-particles i:nth-child(n + 5) {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .environment *,
+  .site-stage {
+    animation: none !important;
+    transform: none !important;
   }
 }
 
@@ -501,6 +775,84 @@
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* Soul Engine: one quiet, global surface for independent editorial Moments. */
+.soul-moment {
+  position: fixed;
+  z-index: 70;
+  right: clamp(1rem, 3vw, 2.5rem);
+  bottom: clamp(1rem, 3vw, 2.5rem);
+  width: min(25rem, calc(100vw - 2rem));
+  padding: 1rem 1.15rem 1.05rem;
+  border: 1px solid rgb(214 181 107 / 20%);
+  color: #dce3ed;
+  background:
+    linear-gradient(120deg, rgb(214 181 107 / 5%), transparent 42%),
+    rgb(7 10 17 / 94%);
+  box-shadow:
+    inset 0 1px rgb(255 255 255 / 5%),
+    0 18px 55px rgb(0 0 0 / 30%);
+  opacity: 0;
+  pointer-events: none;
+  transform: translate3d(0, 0.65rem, 0);
+  backdrop-filter: blur(16px);
+  transition:
+    opacity 320ms ease,
+    transform 360ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.soul-moment[data-visible] {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+.soul-moment > span {
+  display: block;
+  color: #d6b56b;
+  font-size: 0.56rem;
+  font-weight: 780;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.soul-moment > p {
+  margin-top: 0.45rem;
+  font-size: 0.82rem;
+  line-height: 1.6;
+}
+.soul-end-sentinel {
+  display: block;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+}
+.twitch-showcase[data-online] .platform-cta,
+[data-stream-live] [data-stream-link] {
+  animation: soul-live-breathe 3.8s ease-in-out infinite;
+}
+
+@keyframes soul-live-breathe {
+  50% {
+    border-color: rgb(145 70 255 / 42%);
+    box-shadow: 0 0 28px rgb(145 70 255 / 7%);
+  }
+}
+
+@media (max-width: 639px) {
+  .soul-moment {
+    right: 1rem;
+    bottom: 1rem;
+    left: 1rem;
+    width: auto;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .soul-moment {
+    transform: none;
+    transition: none;
+  }
+  .twitch-showcase[data-online] .platform-cta,
+  [data-stream-live] [data-stream-link] {
+    animation: none;
   }
 }
 

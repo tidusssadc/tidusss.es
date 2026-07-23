@@ -1,0 +1,28 @@
+<aside
+  class="soul-moment"
+  data-soul-moment
+  aria-live="polite"
+  aria-atomic="true"
+  hidden
+>
+  <span data-soul-label>Tidusss</span>
+  <p data-soul-message></p>
+</aside>
+<span class="soul-end-sentinel" data-soul-end aria-hidden="true"></span>
+
+<script>
+  import { brandReferences } from '../data/references';
+  import { startSoulEngine } from '../lib/soul-engine';
+
+  const root = document.querySelector<HTMLElement>('[data-soul-moment]');
+  const label = root?.querySelector<HTMLElement>('[data-soul-label]');
+  const message = root?.querySelector<HTMLElement>('[data-soul-message]');
+  const sentinel = document.querySelector<HTMLElement>('[data-soul-end]');
+
+  if (root && label && message && sentinel) {
+    const stop = startSoulEngine({ root, label, message, sentinel }, [
+      ...brandReferences,
+    ]);
+    window.addEventListener('pagehide', stop, { once: true });
+  }
+</script>
