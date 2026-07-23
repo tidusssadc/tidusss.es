@@ -15,14 +15,14 @@ import { integrationEndpoints, platforms } from '../config/platforms';
   <div class="mx-auto max-w-7xl px-5 sm:px-8">
     <header class="platform-showcase-heading">
       <div>
-        <p class="eyebrow">Contenido en activo</p>
+        <p class="eyebrow">Dos formas de seguir el proceso</p>
         <h2 id="platforms-title">
           Directo cuando ocurre. Vídeo cuando importa.
         </h2>
       </div>
       <p>
-        Twitch para vivir la partida. YouTube para entender qué ocurrió dentro
-        de ella.
+        En Twitch ves cómo tomo cada decisión. En YouTube vuelvo a la partida
+        para explicar qué ocurrió y qué se puede aprender de ella.
       </p>
     </header>
 
@@ -50,20 +50,21 @@ import { integrationEndpoints, platforms } from '../config/platforms';
         />
         <header>
           <div>
-            <span>02 / Twitch</span>
+            <span>01 / En directo</span>
             <h3>Directo cuando ocurre.</h3>
           </div>
-          <svg
+          <img
             class="platform-logo"
-            viewBox="0 0 32 32"
-            role="img"
-            aria-label="Twitch"
-          >
-            <path
-              d="M7 4h21v16l-7 7h-6l-4 4v-4H7V4Zm3 3v17h4v3l3-3h4l4-4V7H10Zm6 4h3v8h-3v-8Zm6 0h3v8h-3v-8Z"
-            ></path>
-          </svg>
+            src="/icons/twitch.svg"
+            width="48"
+            height="56"
+            alt="Twitch"
+          />
         </header>
+        <p class="platform-purpose">
+          SoloQ sin cortes: reacción, tensión y decisiones compartidas con la
+          comunidad.
+        </p>
         <div class="platform-status">
           <span class="platform-live-mark" aria-hidden="true"></span>
           <strong data-twitch-state class="showcase-skeleton">&nbsp;</strong>
@@ -87,19 +88,21 @@ import { integrationEndpoints, platforms } from '../config/platforms';
       <article class="platform-panel youtube-showcase" data-youtube-panel>
         <header>
           <div>
-            <span>03 / YouTube</span>
+            <span>02 / Para volver a verlo</span>
             <h3>Vídeo cuando importa.</h3>
           </div>
-          <svg
+          <img
             class="platform-logo"
-            viewBox="0 0 32 32"
-            role="img"
-            aria-label="YouTube"
-          >
-            <rect x="3" y="7" width="26" height="18" rx="5"></rect>
-            <path d="m13 12 8 4-8 4v-8Z"></path>
-          </svg>
+            src="/icons/youtube.svg"
+            width="48"
+            height="34"
+            alt="YouTube"
+          />
         </header>
+        <p class="platform-purpose">
+          Gameplays con contexto: mecánicas, errores y decisiones explicadas
+          para que la partida siga aportando después.
+        </p>
         <div class="youtube-showcase-main">
           <div>
             <strong data-youtube-subs class="showcase-skeleton">&nbsp;</strong>
