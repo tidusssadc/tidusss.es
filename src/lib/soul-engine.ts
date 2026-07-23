@@ -267,6 +267,21 @@ export const startSoulEngine = (
     window.removeEventListener('tidusss:moment', onExternalMoment),
   );
 
+  const onHomeState = (event: Event) => {
+    const state = (event as CustomEvent<{ id?: string }>).detail?.id;
+    if (
+      state === 'new-record' &&
+      !storage.sessionGet('tidusss:soul:new-record-seen')
+    ) {
+      storage.sessionSet('tidusss:soul:new-record-seen', 'true');
+      show('new-record', 6000);
+    }
+  };
+  window.addEventListener('tidusss:home-state-changed', onHomeState);
+  cleanups.push(() =>
+    window.removeEventListener('tidusss:home-state-changed', onHomeState),
+  );
+
   return () => {
     window.clearTimeout(hideTimer);
     window.clearTimeout(holdTimer);

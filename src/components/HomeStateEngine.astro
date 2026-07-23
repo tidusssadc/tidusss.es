@@ -1,0 +1,42 @@
+<script>
+  import { startHomeStateEngine } from '../domain/home-state';
+
+  const context = document.querySelector<HTMLElement>('[data-home-context]');
+  const label = context?.querySelector<HTMLElement>(
+    '[data-home-context-label]',
+  );
+  const text = context?.querySelector<HTMLElement>('[data-home-context-text]');
+  const action = context?.querySelector<HTMLAnchorElement>(
+    '[data-home-context-action]',
+  );
+
+  if (context && label && text && action) {
+    const stop = startHomeStateEngine((state) => {
+      document.body.dataset.homeState = state.id;
+      document
+        .querySelectorAll<HTMLElement>('[data-home-priority]')
+        .forEach((element) => element.removeAttribute('data-home-priority'));
+      document
+        .querySelector<HTMLElement>(`[data-home-target="${state.target}"]`)
+        ?.toggleAttribute('data-home-priority', true);
+
+      label.textContent = state.label;
+      text.textContent = state.text;
+      action.textContent = `${state.action.label} ${state.action.external ? '↗' : '→'}`;
+      if (state.action.href) {
+        action.href = state.action.href;
+        action.hidden = false;
+        if (state.action.external) {
+          action.target = '_blank';
+          action.rel = 'noopener noreferrer';
+        } else {
+          action.removeAttribute('target');
+          action.removeAttribute('rel');
+        }
+      } else action.hidden = true;
+      context.hidden = false;
+      requestAnimationFrame(() => context.toggleAttribute('data-ready', true));
+    });
+    window.addEventListener('pagehide', stop, { once: true });
+  }
+</script>

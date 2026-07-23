@@ -168,4 +168,14 @@ export const brandReferences: BrandReference[] = [
     priority: 50,
     language: 'es',
   },
+  {
+    id: 'new-record-next',
+    category: 'tidusss',
+    type: 'new-record',
+    text: 'Nuevo máximo registrado. El siguiente objetivo ya está en marcha.',
+    rarity: 'epic',
+    condition: 'home-state:new-record',
+    priority: 50,
+    language: 'es',
+  },
 ] as const;
