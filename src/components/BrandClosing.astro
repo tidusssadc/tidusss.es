@@ -1,3 +1,9 @@
+---
+import { getPrimaryConnection } from '../domain/content-graph';
+
+const next = getPrimaryConnection('creator-project:tidusss');
+---
+
 <section
   class="brand-closing"
   aria-labelledby="brand-closing-title"
@@ -7,8 +13,12 @@
     <p class="eyebrow">Tidusss</p>
     <h2 id="brand-closing-title">Cada combo cuenta.</h2>
     <p>Pero ninguna decisión ocurre sola.</p>
-    <a href="/live"
-      >Explorar el centro de actividad <span aria-hidden="true">→</span></a
-    >
+    {
+      next?.target.href && (
+        <a href={next.target.href}>
+          {next.relation.label} <span aria-hidden="true">→</span>
+        </a>
+      )
+    }
   </div>
 </section>

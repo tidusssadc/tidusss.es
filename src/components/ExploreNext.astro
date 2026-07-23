@@ -1,0 +1,55 @@
+---
+import {
+  getContentConnections,
+  type ContentEntityId,
+} from '../domain/content-graph';
+
+interface Props {
+  source: ContentEntityId;
+  eyebrow?: string;
+  title?: string;
+  limit?: number;
+}
+
+const {
+  source,
+  eyebrow = 'Sigue explorando',
+  title = 'Quizá también quieras ver…',
+  limit = 3,
+} = Astro.props;
+const connections = getContentConnections(source, { limit });
+---
+
+{
+  connections.length > 0 && (
+    <nav
+      class="explore-next"
+      aria-labelledby={`explore-next-${source.replace(':', '-')}`}
+    >
+      <div class="mx-auto max-w-7xl px-5 sm:px-8">
+        <header>
+          <p class="eyebrow">{eyebrow}</p>
+          <h2 id={`explore-next-${source.replace(':', '-')}`}>{title}</h2>
+        </header>
+        <ul>
+          {connections.map(({ relation, target }, index) => (
+            <li>
+              <a
+                href={target.href}
+                target={target.external ? '_blank' : undefined}
+                rel={target.external ? 'noopener noreferrer' : undefined}
+              >
+                <span>{String(index + 1).padStart(2, '0')}</span>
+                <div>
+                  <strong>{relation.label}</strong>
+                  <p>{relation.context ?? target.description}</p>
+                </div>
+                <b aria-hidden="true">{target.external ? '↗' : '→'}</b>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </nav>
+  )
+}

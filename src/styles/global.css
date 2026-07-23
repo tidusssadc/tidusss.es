@@ -825,6 +825,91 @@
   height: 1px;
   pointer-events: none;
 }
+
+/* Content Graph: a quiet continuation surface driven by verified relations. */
+.explore-next {
+  position: relative;
+  z-index: 1;
+  padding: clamp(5rem, 9vw, 8rem) 0;
+  border-top: 1px solid rgb(255 255 255 / 6%);
+}
+.explore-next header {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: clamp(2rem, 4vw, 3rem);
+}
+.explore-next h2 {
+  max-width: 15ch;
+  color: #fff;
+  font-size: clamp(2.2rem, 5vw, 4.5rem);
+  font-weight: 780;
+  letter-spacing: -0.055em;
+  line-height: 1;
+}
+.explore-next ul {
+  display: grid;
+  border-top: 1px solid rgb(255 255 255 / 8%);
+}
+.explore-next a {
+  display: grid;
+  grid-template-columns: 2rem minmax(0, 1fr) auto;
+  gap: clamp(1rem, 2.5vw, 2rem);
+  align-items: center;
+  padding: 1.5rem 0;
+  border-bottom: 1px solid rgb(255 255 255 / 8%);
+  color: #e9eef6;
+  transition:
+    color 180ms ease,
+    padding-left 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 180ms ease;
+}
+.explore-next a > span {
+  color: #4f5c71;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+.explore-next a strong {
+  display: block;
+  font-size: clamp(1rem, 2vw, 1.35rem);
+}
+.explore-next a p {
+  max-width: 42rem;
+  margin-top: 0.35rem;
+  color: #78859a;
+  font-size: 0.8rem;
+  line-height: 1.6;
+}
+.explore-next a b {
+  color: #d6b56b;
+  font-size: 1rem;
+  transition: transform 180ms ease;
+}
+.explore-next a:hover {
+  padding-left: 0.5rem;
+  border-color: rgb(214 181 107 / 22%);
+  color: #fff;
+}
+.explore-next a:hover b {
+  transform: translateX(3px);
+}
+
+@media (max-width: 639px) {
+  .explore-next a {
+    grid-template-columns: 1.5rem minmax(0, 1fr) auto;
+    gap: 0.75rem;
+  }
+  .explore-next a p {
+    font-size: 0.75rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .explore-next a,
+  .explore-next a b {
+    transition: none;
+  }
+}
+
 .twitch-showcase[data-online] .platform-cta,
 [data-stream-live] [data-stream-link] {
   animation: soul-live-breathe 3.8s ease-in-out infinite;
