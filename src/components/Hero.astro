@@ -14,7 +14,7 @@ import HeroVisual from './HeroVisual.astro';
   >
     <div class="hero-copy relative z-10 max-w-3xl">
       <p class="eyebrow animate-rise">
-        ADC competitivo <span class="text-slate-600">·</span> Master
+        Tidusss <span class="text-slate-600">·</span> Creador de contenido
       </p>
       <h1
         class="hero-title animate-rise delay-1 mt-6 text-5xl leading-[0.94] font-black tracking-[-0.06em] text-white sm:text-7xl lg:text-[6.35rem]"
@@ -25,13 +25,19 @@ import HeroVisual from './HeroVisual.astro';
         <span>{brandPrinciple.lead}</span>
         {brandPrinciple.conclusion}
       </p>
+      <p class="hero-identity animate-rise delay-2">
+        ADC Master <span>EUW</span>
+        <span>Lucian</span>
+      </p>
       <p
         class="hero-lead animate-rise delay-2 mt-5 max-w-xl text-base leading-8 text-slate-300 sm:text-lg"
       >
         Gameplays y análisis sobre mecánicas, ritmo y decisiones. Te enseño qué
         hago en cada jugada y, sobre todo, por qué.
       </p>
-      <div class="animate-rise delay-3 mt-10 flex flex-col gap-3 sm:flex-row">
+      <div
+        class="animate-rise delay-3 mt-10 flex flex-col gap-3 sm:flex-row sm:flex-wrap"
+      >
         <a
           class="button-primary justify-center px-6 py-3.5"
           href={platforms.youtube.url}
@@ -44,6 +50,9 @@ import HeroVisual from './HeroVisual.astro';
           target="_blank"
           rel="noreferrer">Ver directos <span aria-hidden="true">↗</span></a
         >
+        <a class="hero-live-link justify-center px-6 py-3.5" href="/live">
+          Centro Live <span aria-hidden="true">→</span>
+        </a>
       </div>
       <p class="hero-code animate-rise delay-3">{brandPrinciple.code}</p>
     </div>
@@ -55,8 +64,8 @@ import HeroVisual from './HeroVisual.astro';
   </div>
   <a
     class="scroll-cue"
-    href="#reconocimiento"
-    aria-label="Continuar a reconocimiento"><span></span></a
+    href="#competitivo-home"
+    aria-label="Continuar a la credencial competitiva"><span></span></a
   >
 </section>
 

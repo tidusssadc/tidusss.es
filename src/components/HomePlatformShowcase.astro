@@ -1,0 +1,373 @@
+---
+import { integrationEndpoints, platforms } from '../config/platforms';
+---
+
+<section
+  id="canales"
+  class="platform-showcase section-shell"
+  data-platform-showcase
+  data-twitch={integrationEndpoints.twitch}
+  data-youtube={integrationEndpoints.youtube}
+  data-youtube-stats={integrationEndpoints.youtubeStats}
+  data-reveal
+  aria-labelledby="platforms-title"
+>
+  <div class="mx-auto max-w-7xl px-5 sm:px-8">
+    <header class="platform-showcase-heading">
+      <div>
+        <p class="eyebrow">Contenido en activo</p>
+        <h2 id="platforms-title">
+          Directo cuando ocurre. Vídeo cuando importa.
+        </h2>
+      </div>
+      <p>
+        Twitch para vivir la partida. YouTube para entender qué ocurrió dentro
+        de ella.
+      </p>
+    </header>
+
+    <div class="platform-showcase-grid">
+      <article class="platform-panel twitch-showcase" data-twitch-panel>
+        <img
+          class="platform-signature"
+          src="/images/brand/lucian/lucian-high-noon-standing.webp"
+          width="634"
+          height="792"
+          alt=""
+          aria-hidden="true"
+          loading="lazy"
+          decoding="async"
+        />
+        <img
+          class="twitch-live-preview"
+          data-twitch-thumbnail
+          width="640"
+          height="360"
+          alt=""
+          loading="lazy"
+          decoding="async"
+          hidden
+        />
+        <header>
+          <div>
+            <span>02 / Twitch</span>
+            <h3>Directo</h3>
+          </div>
+          <svg
+            class="platform-logo"
+            viewBox="0 0 32 32"
+            role="img"
+            aria-label="Twitch"
+          >
+            <path
+              d="M7 4h21v16l-7 7h-6l-4 4v-4H7V4Zm3 3v17h4v3l3-3h4l4-4V7H10Zm6 4h3v8h-3v-8Zm6 0h3v8h-3v-8Z"
+            ></path>
+          </svg>
+        </header>
+        <div class="platform-status">
+          <span class="platform-live-mark" aria-hidden="true"></span>
+          <strong data-twitch-state class="showcase-skeleton">&nbsp;</strong>
+          <p data-twitch-copy class="showcase-skeleton">&nbsp;</p>
+          <dl data-twitch-meta hidden>
+            <div><dt>Categoría</dt><dd data-twitch-category></dd></div>
+            <div><dt>Espectadores</dt><dd data-twitch-viewers></dd></div>
+            <div><dt>Duración</dt><dd data-twitch-duration></dd></div>
+          </dl>
+        </div>
+        <small data-twitch-updated class="showcase-skeleton">&nbsp;</small>
+        <a
+          class="platform-cta"
+          href={platforms.twitch.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          data-twitch-cta>Visitar Twitch <span aria-hidden="true">↗</span></a
+        >
+      </article>
+
+      <article class="platform-panel youtube-showcase" data-youtube-panel>
+        <header>
+          <div>
+            <span>03 / YouTube</span>
+            <h3>Canal</h3>
+          </div>
+          <svg
+            class="platform-logo"
+            viewBox="0 0 32 32"
+            role="img"
+            aria-label="YouTube"
+          >
+            <rect x="3" y="7" width="26" height="18" rx="5"></rect>
+            <path d="m13 12 8 4-8 4v-8Z"></path>
+          </svg>
+        </header>
+        <div class="youtube-showcase-main">
+          <div>
+            <strong data-youtube-subs class="showcase-skeleton">&nbsp;</strong>
+            <span>Suscriptores</span>
+          </div>
+          <p data-youtube-state hidden></p>
+        </div>
+        <div class="youtube-goal" data-youtube-details hidden>
+          <p>
+            <span>Próximo objetivo <b data-youtube-goal></b></span>
+            <strong data-youtube-progress></strong>
+          </p>
+          <div><i data-youtube-bar></i></div>
+          <dl>
+            <div><dt>Visualizaciones</dt><dd data-youtube-views></dd></div>
+            <div><dt>Vídeos</dt><dd data-youtube-count></dd></div>
+          </dl>
+        </div>
+        <small data-youtube-updated class="showcase-skeleton">&nbsp;</small>
+        <a
+          class="platform-cta"
+          href={platforms.youtube.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          >Ver canal <span aria-hidden="true">↗</span></a
+        >
+      </article>
+    </div>
+
+    <div class="latest-video-strip" data-home-videos>
+      <header>
+        <div>
+          <span>Selección reciente</span>
+          <h3>Últimos vídeos</h3>
+        </div>
+        <a
+          href={platforms.youtube.url}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Ver todos <span aria-hidden="true">→</span>
+        </a>
+      </header>
+      <div data-home-video-list aria-busy="true">
+        {
+          Array.from({ length: 4 }, (_, index) => (
+            <div class="showcase-video-skeleton" aria-hidden="true">
+              <>
+                <span />
+                <i />
+                <small />
+              </>
+              <b class="sr-only">Cargando vídeo {index + 1}</b>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+
+    <a class="platform-live-cta" href="/live">
+      <span>
+        <small>Datos, partidas y actividad</small>
+        <strong>Explorar actividad completa</strong>
+      </span>
+      <b aria-hidden="true">→</b>
+    </a>
+  </div>
+</section>
+
+<script>
+  import { elapsedDuration, relativeTime, updatedAgo } from '../lib/time';
+  import type {
+    TwitchStatusResponse,
+    YouTubeStatsResponse,
+  } from '../types/platforms';
+  import type { YouTubeFeedResponse, YouTubeVideo } from '../types/content';
+
+  const showcase = document.querySelector<HTMLElement>(
+    '[data-platform-showcase]',
+  );
+  const setShowcase = (selector: string, value: string) => {
+    const node = showcase?.querySelector<HTMLElement>(selector);
+    if (!node) return;
+    node.textContent = value;
+    node.classList.remove('showcase-skeleton');
+  };
+  const number = (value: number) =>
+    new Intl.NumberFormat('es-ES').format(value);
+
+  const renderVideo = (video: YouTubeVideo) => {
+    const link = document.createElement('a');
+    link.href = video.url;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.setAttribute('aria-label', `Ver en YouTube: ${video.title}`);
+    const media = document.createElement('div');
+    const image = document.createElement('img');
+    image.src = video.thumbnailUrl;
+    image.alt = '';
+    image.width = 480;
+    image.height = 270;
+    image.loading = 'lazy';
+    image.decoding = 'async';
+    media.append(image);
+    if (video.durationLabel) {
+      const duration = document.createElement('span');
+      duration.textContent = video.durationLabel;
+      duration.setAttribute('aria-label', `Duración ${video.durationLabel}`);
+      media.append(duration);
+    }
+    const title = document.createElement('strong');
+    title.textContent = video.title;
+    const date = document.createElement('time');
+    date.dateTime = video.publishedAt;
+    date.textContent = relativeTime(video.publishedAt) ?? '';
+    link.append(media, title, date);
+    return link;
+  };
+
+  if (showcase) {
+    Promise.allSettled([
+      fetch(showcase.dataset.twitch!)
+        .then((response) => response.json() as Promise<TwitchStatusResponse>)
+        .then((payload) => {
+          if (!payload.ok) throw new Error(payload.error.code);
+          const { data } = payload;
+          const online = data.state === 'online';
+          showcase
+            .querySelector('[data-twitch-panel]')
+            ?.toggleAttribute('data-online', online);
+          setShowcase(
+            '[data-twitch-state]',
+            online
+              ? 'En directo'
+              : data.state === 'not-configured'
+                ? 'Conexión pendiente'
+                : 'Offline',
+          );
+          setShowcase(
+            '[data-twitch-copy]',
+            online
+              ? (data.title ?? 'Tidusss está en directo.')
+              : data.state === 'not-configured'
+                ? 'El canal sigue disponible mientras termina la conexión.'
+                : 'Ahora mismo no estoy en directo.',
+          );
+          const meta =
+            showcase.querySelector<HTMLElement>('[data-twitch-meta]');
+          if (meta) meta.hidden = !online;
+          if (online) {
+            const thumbnail = showcase.querySelector<HTMLImageElement>(
+              '[data-twitch-thumbnail]',
+            );
+            if (thumbnail && data.thumbnailUrl) {
+              thumbnail.src = data.thumbnailUrl;
+              thumbnail.alt = data.title
+                ? `Vista previa del directo: ${data.title}`
+                : 'Vista previa del directo de Tidusss';
+              thumbnail.hidden = false;
+            }
+            setShowcase(
+              '[data-twitch-category]',
+              data.category ?? 'Sin categoría',
+            );
+            setShowcase(
+              '[data-twitch-viewers]',
+              data.viewerCount === undefined
+                ? 'No visible'
+                : number(data.viewerCount),
+            );
+            setShowcase(
+              '[data-twitch-duration]',
+              elapsedDuration(data.startedAt) ?? 'Recién iniciado',
+            );
+            setShowcase('[data-twitch-cta]', 'Ver en Twitch ↗');
+          } else
+            setShowcase(
+              '[data-twitch-cta]',
+              data.state === 'not-configured'
+                ? 'Visitar Twitch ↗'
+                : 'Seguir en Twitch ↗',
+            );
+          setShowcase('[data-twitch-updated]', updatedAgo(data.updatedAt));
+        })
+        .catch(() => {
+          setShowcase('[data-twitch-state]', 'Estado no disponible');
+          setShowcase(
+            '[data-twitch-copy]',
+            'Puedes visitar el canal directamente desde aquí.',
+          );
+          setShowcase('[data-twitch-updated]', 'Actualización pendiente');
+        }),
+      fetch(showcase.dataset.youtubeStats!)
+        .then((response) => response.json() as Promise<YouTubeStatsResponse>)
+        .then((payload) => {
+          if (!payload.ok) throw new Error(payload.error.code);
+          const { data } = payload;
+          setShowcase(
+            '[data-youtube-subs]',
+            data.subscriberCount === undefined
+              ? 'No visible'
+              : number(data.subscriberCount),
+          );
+          const details = showcase.querySelector<HTMLElement>(
+            '[data-youtube-details]',
+          );
+          if (details) details.hidden = false;
+          setShowcase(
+            '[data-youtube-goal]',
+            data.nextGoal === undefined ? '—' : number(data.nextGoal),
+          );
+          setShowcase(
+            '[data-youtube-progress]',
+            data.progress === undefined
+              ? 'Sin porcentaje'
+              : `${String(data.progress).replace('.', ',')}%`,
+          );
+          const bar = showcase.querySelector<HTMLElement>('[data-youtube-bar]');
+          if (bar)
+            bar.style.width = `${Math.min(100, Math.max(0, data.progress ?? 0))}%`;
+          setShowcase(
+            '[data-youtube-views]',
+            data.viewCount === undefined
+              ? 'No visible'
+              : number(data.viewCount),
+          );
+          setShowcase(
+            '[data-youtube-count]',
+            data.videoCount === undefined
+              ? 'No visible'
+              : number(data.videoCount),
+          );
+          setShowcase(
+            '[data-youtube-updated]',
+            `${updatedAgo(data.updatedAt)} · cifra redondeada por YouTube`,
+          );
+        })
+        .catch(() => {
+          setShowcase('[data-youtube-subs]', 'Sin datos');
+          setShowcase(
+            '[data-youtube-updated]',
+            'El canal no se ha podido actualizar.',
+          );
+          const state = showcase.querySelector<HTMLElement>(
+            '[data-youtube-state]',
+          );
+          if (state) {
+            state.hidden = false;
+            state.textContent = 'Los vídeos siguen disponibles desde el canal.';
+          }
+        }),
+      fetch(showcase.dataset.youtube!)
+        .then((response) => response.json() as Promise<YouTubeFeedResponse>)
+        .then((payload) => {
+          if (!payload.ok) throw new Error(payload.error.code);
+          const strip =
+            showcase.querySelector<HTMLElement>('[data-home-videos]');
+          const list = showcase.querySelector('[data-home-video-list]');
+          const videos = payload.data.videos.slice(0, 4);
+          if (!strip || !list || !videos.length) return;
+          list.replaceChildren(...videos.map(renderVideo));
+          list.setAttribute('aria-busy', 'false');
+        })
+        .catch(() => {
+          const strip =
+            showcase.querySelector<HTMLElement>('[data-home-videos]');
+          if (strip) strip.hidden = true;
+        }),
+    ]);
+  }
+</script>

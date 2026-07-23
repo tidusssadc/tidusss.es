@@ -70,6 +70,51 @@ const fillItems = (root: ParentNode, selector: string, urls: string[]) => {
   });
 };
 
+const fillRunes = (card: HTMLElement, icons: MatchIcon[], matchId: string) => {
+  const container = query<HTMLElement>(card, '[data-match-runes]');
+  const tooltip = query<HTMLElement>(card, '[data-rune-tooltip]');
+  if (!container || !tooltip) return;
+  const tooltipId = `runes-${matchId.replaceAll(/[^a-zA-Z0-9_-]/g, '-')}`;
+  tooltip.id = tooltipId;
+
+  const showTooltip = (slot: HTMLElement) => {
+    tooltip.textContent = slot.getAttribute('aria-label') ?? '';
+    container.toggleAttribute('data-tooltip-visible', true);
+  };
+  const hideTooltip = () =>
+    container.toggleAttribute('data-tooltip-visible', false);
+
+  card
+    .querySelectorAll<HTMLElement>('[data-rune-slot]')
+    .forEach((slot, index) => {
+      const icon = icons[index];
+      const image = query<HTMLImageElement>(slot, 'img');
+      slot.hidden = !icon;
+      if (!icon || !image) return;
+      const context = index === 0 ? 'Árbol principal' : 'Árbol secundario';
+      const accessibleName = `${context}: ${icon.name}`;
+      slot.tabIndex = 0;
+      slot.setAttribute('role', 'img');
+      slot.setAttribute('aria-label', accessibleName);
+      slot.setAttribute('aria-describedby', tooltipId);
+      slot.toggleAttribute('data-secondary-rune', index > 0);
+      slot.toggleAttribute('data-missing-icon', !icon.imageUrl);
+      image.hidden = !icon.imageUrl;
+      image.src = icon.imageUrl ?? '';
+      image.alt = '';
+      slot.addEventListener('pointerenter', () => showTooltip(slot));
+      slot.addEventListener('pointerleave', () => {
+        const focused = container.querySelector<HTMLElement>(
+          '[data-rune-slot]:focus-visible',
+        );
+        if (focused) showTooltip(focused);
+        else hideTooltip();
+      });
+      slot.addEventListener('focus', () => showTooltip(slot));
+      slot.addEventListener('blur', hideTooltip);
+    });
+};
+
 const participantRow = (
   participant: MatchParticipant,
   formatNumber: (value: number) => string,
@@ -226,7 +271,7 @@ const renderCard = (
     time.textContent = options.relativeTime(match.playedAt) ?? '';
   }
   fillItems(card, '[data-item-slot]', match.itemImageUrls);
-  fillIcons(card, '[data-rune-slot]', match.runes);
+  fillRunes(card, match.runes, match.matchId);
   fillIcons(card, '[data-summoner-slot]', match.summonerSpells);
   const badges = query<HTMLElement>(card, '[data-match-badges]');
   if (badges) {
