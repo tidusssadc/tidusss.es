@@ -51,7 +51,7 @@ import { integrationEndpoints, platforms } from '../config/platforms';
         <header>
           <div>
             <span>02 / Twitch</span>
-            <h3>Directo</h3>
+            <h3>Directo cuando ocurre.</h3>
           </div>
           <svg
             class="platform-logo"
@@ -88,7 +88,7 @@ import { integrationEndpoints, platforms } from '../config/platforms';
         <header>
           <div>
             <span>03 / YouTube</span>
-            <h3>Canal</h3>
+            <h3>Vídeo cuando importa.</h3>
           </div>
           <svg
             class="platform-logo"
@@ -158,14 +158,6 @@ import { integrationEndpoints, platforms } from '../config/platforms';
         }
       </div>
     </div>
-
-    <a class="platform-live-cta" href="/live">
-      <span>
-        <small>Datos, partidas y actividad</small>
-        <strong>Explorar actividad completa</strong>
-      </span>
-      <b aria-hidden="true">→</b>
-    </a>
   </div>
 </section>
 
@@ -244,7 +236,7 @@ import { integrationEndpoints, platforms } from '../config/platforms';
               ? (data.title ?? 'Tidusss está en directo.')
               : data.state === 'not-configured'
                 ? 'El canal sigue disponible mientras termina la conexión.'
-                : 'Ahora mismo no estoy en directo.',
+                : 'Ahora mismo no estoy en directo. Pásate por el canal y sígueme para el próximo.',
           );
           const meta =
             showcase.querySelector<HTMLElement>('[data-twitch-meta]');

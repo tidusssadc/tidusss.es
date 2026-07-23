@@ -176,6 +176,20 @@ const fillTeam = (
     );
 };
 
+const killParticipation = (match: RecentMatch) => {
+  const team = match.teams.find(({ teamId }) => teamId === match.teamId);
+  if (!team) return undefined;
+  const teamKills = team.participants.reduce(
+    (total, participant) => total + participant.kills,
+    0,
+  );
+  if (teamKills <= 0) return undefined;
+  return Math.min(
+    100,
+    Math.round(((match.kills + match.assists) / teamKills) * 100),
+  );
+};
+
 const wireExpansion = (card: HTMLElement, matchId: string) => {
   const button = query<HTMLButtonElement>(card, '[data-match-expand]');
   const expanded = query<HTMLElement>(card, '[data-match-expanded]');
@@ -246,7 +260,14 @@ const renderCard = (
     '[data-match-damage]',
     options.formatNumber(match.damageToChampions),
   );
-  setText(card, '[data-match-duration]', match.durationLabel);
+  setText(card, '[data-match-gold]', options.formatNumber(match.goldEarned));
+  setText(card, '[data-match-vision]', String(match.visionScore));
+  const participation = killParticipation(match);
+  setText(
+    card,
+    '[data-match-participation]',
+    participation === undefined ? '—' : `${participation}%`,
+  );
   setText(
     card,
     '[data-match-lp]',

@@ -1,5 +1,8 @@
 ---
 import About from '../components/About.astro';
+import ActivityCenterCta from '../components/ActivityCenterCta.astro';
+import BrandClosing from '../components/BrandClosing.astro';
+import BrandManifesto from '../components/BrandManifesto.astro';
 import CompetitiveCredential from '../components/CompetitiveCredential.astro';
 import Contact from '../components/Contact.astro';
 import ContentSection from '../components/ContentSection.astro';
@@ -13,13 +16,14 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 ---
 
 <BaseLayout
-  title="Tidusss — ADC Master EUW, YouTube y Twitch"
-  description="Web oficial de Tidusss, creador de contenido y ADC Master en EUW especializado en Lucian. Gameplays, análisis, directos y actividad competitiva."
+  title="Tidusss — ADC Master, gameplays y SoloQ"
+  description="Web oficial de Tidusss, ADC Master en EUW. Gameplays, directos, análisis de SoloQ, últimas partidas y evolución competitiva."
 >
   <Navbar />
   <main>
-    <Hero /><CompetitiveCredential /><HomePlatformShowcase /><Recognition
-    /><ContentSection /><About /><Timeline /><Contact />
+    <Hero /><BrandManifesto /><ContentSection /><CompetitiveCredential
+    /><Recognition /><HomePlatformShowcase /><About /><Timeline
+    /><ActivityCenterCta /><Contact /><BrandClosing />
   </main>
   <Footer />
 </BaseLayout>
