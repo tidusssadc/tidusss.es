@@ -2,7 +2,7 @@ export const platforms = {
   youtube: {
     url: 'https://www.youtube.com/@tidussstwitch',
     handle: 'tidussstwitch',
-    channelId: 'UCIZS6HbLtXnAReUOxyLMCsb',
+    channelId: 'UCk3-zIWTjiK_XICSSxkVwIw',
   },
   instagram: {
     url: 'https://www.instagram.com/tidussstwitch/',

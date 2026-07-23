@@ -1,20 +1,22 @@
 ---
 import { integrationEndpoints, platforms } from '../config/platforms';
 import { contentCards } from '../data/content';
-import { getLatestYouTubeVideos } from '../services/youtube';
+import { youtubeProvider } from '../services/youtube';
 import { relativeTime } from '../lib/time';
 import SectionHeading from './SectionHeading.astro';
 
 // RSS provides a useful no-JavaScript fallback without evaluating secrets at build time.
-const initialFeed = await getLatestYouTubeVideos(8);
+const initialVideos = await youtubeProvider.getLatest(8);
+const initialFeed = {
+  videos: initialVideos,
+  state: initialVideos.length ? ('partial' as const) : ('empty' as const),
+  updatedAt: new Date().toISOString(),
+};
 
 const formatPublishedAt = (value: string) =>
   relativeTime(value) ?? 'Fecha no disponible';
 
-const emptyCopy =
-  initialFeed.state === 'missing-key'
-    ? 'El contenido del canal no está disponible en este momento.'
-    : 'No hay publicaciones disponibles ahora mismo.';
+const emptyCopy = 'No hay publicaciones disponibles ahora mismo.';
 ---
 
 <section
@@ -212,7 +214,11 @@ const emptyCopy =
 
 <script>
   import { relativeTime } from '../lib/time';
-  import type { YouTubeFeedResult, YouTubeVideo } from '../types/content';
+  import type {
+    YouTubeFeedResponse,
+    YouTubeFeedResult,
+    YouTubeVideo,
+  } from '../types/content';
 
   const feed = document.querySelector<HTMLElement>('[data-youtube-feed]');
   const filterWrap = document.querySelector<HTMLElement>(
@@ -348,7 +354,15 @@ const emptyCopy =
   };
 
   const activate = (result: YouTubeFeedResult) => {
-    if (!feed || !result.videos.length) return;
+    if (!feed) return;
+    if (!result.videos.length) {
+      const empty = feed.querySelector<HTMLElement>('[data-video-empty]');
+      const copy = empty?.querySelector('p');
+      if (copy) copy.textContent = 'El canal todavía no tiene vídeos públicos.';
+      feed.dataset.state = 'empty';
+      feed.setAttribute('aria-busy', 'false');
+      return;
+    }
     videos = result.videos;
     feed.replaceChildren(...videos.map(createVideoCard));
     feed.dataset.state = result.state;
@@ -396,6 +410,7 @@ const emptyCopy =
         durationSeconds: null,
         durationLabel: null,
         contentType: card.dataset.contentType === 'short' ? 'short' : 'video',
+        isShort: card.dataset.contentType === 'short',
       }),
     );
     const types = new Set(videos.map(({ contentType }) => contentType));
@@ -408,10 +423,28 @@ const emptyCopy =
     fetch(endpoint)
       .then((response) =>
         response.ok
-          ? (response.json() as Promise<YouTubeFeedResult>)
+          ? (response.json() as Promise<YouTubeFeedResponse>)
           : Promise.reject(),
       )
-      .then(activate)
-      .catch(() => feed.setAttribute('aria-busy', 'false'));
+      .then((payload) => {
+        if (!payload.ok) throw new Error(payload.error.code);
+        activate(payload.data);
+      })
+      .catch(() => {
+        feed.setAttribute('aria-busy', 'false');
+        if (!feed.querySelector('.video-card')) {
+          const emptyCopy = feed.querySelector<HTMLElement>(
+            '[data-video-empty] p',
+          );
+          if (emptyCopy)
+            emptyCopy.textContent =
+              'Los vídeos no están disponibles temporalmente.';
+        }
+        if (updateNote) {
+          updateNote.textContent =
+            'Los vídeos no se han podido actualizar. Se conserva el contenido disponible.';
+          updateNote.hidden = false;
+        }
+      });
   }
 </script>

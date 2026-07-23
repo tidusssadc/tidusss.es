@@ -13,13 +13,25 @@ import { integrationEndpoints } from '../config/platforms';
   <div class="mx-auto max-w-7xl px-5 sm:px-8">
     <div class="live-teaser-grid">
       <div>
-        <span>Canal</span><strong data-teaser-subs>Actualizando</strong>
+        <span>Canal</span><strong
+          data-teaser-subs
+          class="data-skeleton data-skeleton--teaser"
+          aria-label="Actualizando canal">&nbsp;</strong
+        >
       </div>
       <div>
-        <span>Solo Queue</span><strong data-teaser-rank>Actualizando</strong>
+        <span>Solo Queue</span><strong
+          data-teaser-rank
+          class="data-skeleton data-skeleton--teaser"
+          aria-label="Actualizando Solo Queue">&nbsp;</strong
+        >
       </div>
       <div>
-        <span>Twitch</span><strong data-teaser-twitch>Comprobando</strong>
+        <span>Twitch</span><strong
+          data-teaser-twitch
+          class="data-skeleton data-skeleton--teaser"
+          aria-label="Actualizando Twitch">&nbsp;</strong
+        >
       </div>
       <a href="/live"
         ><span>Explorar Live</span><strong aria-hidden="true">↗</strong></a
@@ -34,25 +46,65 @@ import { integrationEndpoints } from '../config/platforms';
     YouTubeStatsResponse,
   } from '../types/platforms';
   const teaser = document.querySelector<HTMLElement>('[data-live-teaser]');
+  const reducedMotion = window.matchMedia(
+    '(prefers-reduced-motion: reduce)',
+  ).matches;
   const set = (selector: string, value: string) => {
-    const node = teaser?.querySelector(selector);
-    if (node) node.textContent = value;
+    const node = teaser?.querySelector<HTMLElement>(selector);
+    if (!node) return;
+    node.classList.remove('data-skeleton', 'data-skeleton--teaser');
+    node.textContent = value;
+    if (!reducedMotion)
+      node.animate(
+        [
+          { opacity: 0, transform: 'translate3d(0, 3px, 0)' },
+          { opacity: 1, transform: 'translate3d(0, 0, 0)' },
+        ],
+        { duration: 420, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' },
+      );
+  };
+  const count = (
+    selector: string,
+    value: number,
+    render: (value: number) => string,
+  ) => {
+    const node = teaser?.querySelector<HTMLElement>(selector);
+    if (!node) return;
+    node.classList.remove('data-skeleton', 'data-skeleton--teaser');
+    if (reducedMotion) {
+      node.textContent = render(value);
+      return;
+    }
+    const startedAt = performance.now();
+    const frame = (now: number) => {
+      const progress = Math.min(1, (now - startedAt) / 800);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      node.textContent = render(value * eased);
+      if (progress < 1) requestAnimationFrame(frame);
+    };
+    requestAnimationFrame(frame);
   };
   if (teaser)
     Promise.allSettled([
       fetch(teaser.dataset.youtube!)
         .then((response) => response.json() as Promise<YouTubeStatsResponse>)
         .then((payload) => {
-          set(
-            '[data-teaser-subs]',
-            payload.ok
-              ? payload.data.subscriberCount === undefined
+          if (payload.ok && payload.data.subscriberCount !== undefined)
+            count(
+              '[data-teaser-subs]',
+              payload.data.subscriberCount,
+              (value) =>
+                `${new Intl.NumberFormat('es-ES').format(Math.round(value))} suscriptores`,
+            );
+          else
+            set(
+              '[data-teaser-subs]',
+              payload.ok
                 ? 'Dato privado'
-                : `${new Intl.NumberFormat('es-ES').format(payload.data.subscriberCount)} suscriptores`
-              : payload.error.code === 'YOUTUBE_NOT_CONFIGURED'
-                ? 'Canal pendiente de conexión'
-                : 'Datos del canal no disponibles',
-          );
+                : payload.error.code === 'YOUTUBE_NOT_CONFIGURED'
+                  ? 'Canal pendiente de conexión'
+                  : 'Datos del canal no disponibles',
+            );
         })
         .catch(() =>
           set('[data-teaser-subs]', 'Datos del canal no disponibles'),
@@ -60,17 +112,29 @@ import { integrationEndpoints } from '../config/platforms';
       fetch(teaser.dataset.riot!)
         .then((response) => response.json() as Promise<RiotPublicResponse>)
         .then((payload) => {
-          set(
-            '[data-teaser-rank]',
-            payload.ok
-              ? `${payload.data.ranked.tier ?? 'Sin rango'} · ${payload.data.ranked.leaguePoints ?? '—'} LP`
-              : 'Clasificación no disponible',
-          );
+          if (payload.ok && payload.data.ranked.leaguePoints !== undefined)
+            count(
+              '[data-teaser-rank]',
+              payload.data.ranked.leaguePoints,
+              (value) =>
+                `${payload.data.ranked.tier ?? 'Sin rango'} · ${Math.round(value)} LP`,
+            );
+          else
+            set(
+              '[data-teaser-rank]',
+              payload.ok
+                ? `${payload.data.ranked.tier ?? 'Sin rango'} · Sin LP`
+                : 'Clasificación no disponible',
+            );
         })
         .catch(() => set('[data-teaser-rank]', 'Clasificación no disponible')),
       fetch(teaser.dataset.twitch!)
         .then((response) => response.json() as Promise<TwitchStatusResponse>)
         .then((payload) => {
+          teaser.toggleAttribute(
+            'data-teaser-live',
+            payload.ok && payload.data.isLive,
+          );
           set(
             '[data-teaser-twitch]',
             payload.ok

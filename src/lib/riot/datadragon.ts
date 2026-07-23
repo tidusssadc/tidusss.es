@@ -26,4 +26,6 @@ export const dataDragonUrls = (version: string) => ({
     `https://ddragon.leagueoflegends.com/cdn/${version}/img/champion/${name}.png`,
   item: (id: number) =>
     `https://ddragon.leagueoflegends.com/cdn/${version}/img/item/${id}.png`,
+  summonerSpell: (name: string) =>
+    `https://ddragon.leagueoflegends.com/cdn/${version}/img/spell/${name}.png`,
 });

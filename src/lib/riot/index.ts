@@ -108,6 +108,7 @@ export const getRiotOverview = async (
       puuid,
       urls.champion,
       urls.item,
+      urls.summonerSpell,
     );
     return match ? [match] : [];
   });

@@ -1,0 +1,67 @@
+---
+import ChampionBadge from './ChampionBadge.astro';
+import ItemsRow from './ItemsRow.astro';
+import MatchExpanded from './MatchExpanded.astro';
+import MatchBadges from './MatchBadges.astro';
+import MatchStats from './MatchStats.astro';
+import MatchStatus from './MatchStatus.astro';
+import MatchVideoBadge from './MatchVideoBadge.astro';
+import MatchVideoPanel from './MatchVideoPanel.astro';
+import RunesRow from './RunesRow.astro';
+import SummonersRow from './SummonersRow.astro';
+---
+
+<template data-match-card-template>
+  <li class="match-card" data-match-card>
+    <article>
+      <img
+        class="match-card-backdrop"
+        data-match-backdrop
+        width="72"
+        height="72"
+        alt=""
+        aria-hidden="true"
+        loading="lazy"
+        decoding="async"
+      />
+      <div class="match-card-primary">
+        <MatchStatus />
+        <ChampionBadge />
+        <div class="match-performance">
+          <MatchStats />
+          <MatchBadges />
+          <MatchVideoBadge />
+        </div>
+        <div class="match-lp">
+          <span>Variación</span>
+          <strong data-match-lp>Pendiente</strong>
+        </div>
+      </div>
+      <div class="match-card-secondary">
+        <ItemsRow />
+        <RunesRow />
+        <SummonersRow />
+        <div class="match-context">
+          <p>
+            <span data-match-mode></span>
+            <time data-match-time></time>
+            <span data-match-context-duration></span>
+          </p>
+        </div>
+        <button
+          type="button"
+          class="match-expand-button"
+          data-match-expand
+          aria-expanded="false"
+        >
+          <span>Ver partida</span>
+          <i aria-hidden="true"></i>
+        </button>
+      </div>
+      <MatchExpanded>
+        <MatchVideoPanel />
+      </MatchExpanded>
+      <div data-match-related-content hidden></div>
+    </article>
+  </li>
+</template>

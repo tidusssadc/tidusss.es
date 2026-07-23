@@ -1,0 +1,74 @@
+<section
+  class="live-module live-module--wide player-profile"
+  aria-labelledby="player-profile-title"
+  data-player-profile
+>
+  <header class="live-module-head">
+    <div>
+      <span>01B / Perfil</span>
+      <h2 id="player-profile-title">Perfil competitivo</h2>
+    </div>
+    <small data-profile-sample>Actividad reciente</small>
+  </header>
+
+  <div class="player-profile-identity">
+    <div>
+      <span>Riot ID</span>
+      <strong data-profile-riot-id>Tidusss#FFX</strong>
+      <small>EUW · ADC · Solo/Duo</small>
+    </div>
+    <dl>
+      <div><dt>Rango</dt><dd data-profile-rank>Actualizando</dd></div>
+      <div><dt>Registro</dt><dd data-profile-record>Actualizando</dd></div>
+      <div><dt>Win rate</dt><dd data-profile-winrate>Actualizando</dd></div>
+      <div><dt>Rol detectado</dt><dd data-profile-role>Actualizando</dd></div>
+    </dl>
+  </div>
+
+  <div class="player-profile-summary">
+    <div>
+      <span>Lectura de la muestra</span>
+      <ul data-profile-editorial></ul>
+    </div>
+    <dl>
+      <div><dt>KDA medio</dt><dd data-profile-kda>—</dd></div>
+      <div><dt>CS / min</dt><dd data-profile-csm>—</dd></div>
+      <div><dt>Daño medio</dt><dd data-profile-damage>—</dd></div>
+      <div><dt>Últimos 7 días</dt><dd data-profile-week>—</dd></div>
+      <div><dt>Última partida</dt><dd data-profile-last>—</dd></div>
+    </dl>
+  </div>
+
+  <div class="recent-champions">
+    <div class="profile-subhead">
+      <h3>Campeones recientes</h3>
+      <small>Ordenados por partidas en la muestra disponible</small>
+    </div>
+    <ol data-profile-champions></ol>
+  </div>
+
+  <div class="profile-positions">
+    <div class="profile-subhead">
+      <h3>Posiciones recientes</h3>
+      <small data-profile-positions-note></small>
+    </div>
+    <ul data-profile-positions></ul>
+  </div>
+
+  <div class="related-gameplays" data-related-gameplays hidden>
+    <div class="profile-subhead">
+      <h3>Gameplays recientes</h3>
+      <small
+        >Contenido real del canal; no implica asociación con una partida.</small
+      >
+    </div>
+    <div data-related-gameplays-list></div>
+  </div>
+
+  <div class="compact-empty" data-player-profile-empty hidden>
+    <strong>La muestra reciente todavía no contiene partidas.</strong>
+    <span
+      >El perfil se completará cuando Riot devuelva actividad de Solo/Duo.</span
+    >
+  </div>
+</section>

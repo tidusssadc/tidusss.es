@@ -29,6 +29,7 @@ export const championPerformance = (
   const games = championMatches.length;
   return {
     championName: championMatches[0]?.championName || championName,
+    championImageUrl: championMatches[0]?.championImageUrl,
     games,
     wins,
     losses: games - wins,
@@ -59,19 +60,70 @@ export const analyzeRecentSoloQueue = (
     ),
   );
   const mostPlayedName = [...byChampion.entries()].sort(
-    (a, b) => b[1] - a[1],
+    (a, b) => b[1] - a[1] || a[0].localeCompare(b[0]),
   )[0]?.[0];
+  const champions = [...byChampion.keys()]
+    .map((champion) => championPerformance(champion, matches))
+    .filter((value): value is ChampionPerformance => Boolean(value))
+    .sort(
+      (a, b) =>
+        b.games - a.games ||
+        b.winRate - a.winRate ||
+        a.championName.localeCompare(b.championName),
+    );
+  const positionCounts = new Map<string, number>();
+  matches.forEach((match) => {
+    const position = match.position || 'Sin posición';
+    positionCounts.set(position, (positionCounts.get(position) ?? 0) + 1);
+  });
+  const positions = [...positionCounts.entries()]
+    .map(([position, games]) => ({
+      position,
+      games,
+      percentage: matches.length
+        ? Math.round((games / matches.length) * 100)
+        : 0,
+    }))
+    .sort((a, b) => b.games - a.games || a.position.localeCompare(b.position));
+  const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60_000;
+  const gamesLastSevenDays = matches.filter(
+    (match) => new Date(match.playedAt).getTime() >= sevenDaysAgo,
+  ).length;
+  const averageCsPerMinute = average(matches.map((match) => match.csPerMinute));
+  const editorialSummary: string[] = [];
+  const bottomGames = positionCounts.get('BOTTOM') ?? 0;
+  if (matches.length && bottomGames)
+    editorialSummary.push(
+      `${bottomGames} de las últimas ${matches.length} partidas fueron como ADC.`,
+    );
+  if (mostPlayedName)
+    editorialSummary.push(
+      `${mostPlayedName} es el campeón más jugado de la muestra (${byChampion.get(mostPlayedName)} partidas).`,
+    );
+  if (averageCsPerMinute !== undefined)
+    editorialSummary.push(
+      `Promedio de ${String(averageCsPerMinute).replace('.', ',')} CS/min en las últimas partidas.`,
+    );
   return {
     sampleSize: matches.length,
     wins,
     losses: matches.length - wins,
     winRate: safePercentage(wins, matches.length - wins),
     averageKda: average(matches.map((match) => match.kda)),
-    averageCsPerMinute: average(matches.map((match) => match.csPerMinute)),
+    averageCsPerMinute,
+    averageDamageToChampions: average(
+      matches.map((match) => match.damageToChampions),
+    ),
     mostPlayedChampion: mostPlayedName
       ? championPerformance(mostPlayedName, matches)
       : undefined,
     lucian: championPerformance('Lucian', matches),
+    champions,
+    positions,
+    primaryPosition: positions[0]?.position,
+    gamesLastSevenDays,
+    lastPlayedAt: matches[0]?.playedAt,
+    editorialSummary,
     matches,
   };
 };

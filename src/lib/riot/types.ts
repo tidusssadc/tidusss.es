@@ -41,11 +41,67 @@ export interface RecentMatch {
   playedAt: string;
   items: number[];
   itemImageUrls: string[];
+  damageToChampions: number;
+  goldEarned: number;
+  visionScore: number;
+  position: string;
+  summonerSpells: MatchIcon[];
+  runes: MatchIcon[];
+  teams: MatchTeam[];
+  teamId: number;
+  lpDelta?: number;
+  badges?: MatchBadge[];
   remake: boolean;
+}
+
+export type MatchBadge =
+  | 'MVP'
+  | 'Carry'
+  | 'Perfect CS'
+  | 'S+'
+  | 'Penta'
+  | 'Legendary'
+  | 'Hot Streak'
+  | 'New Record'
+  | 'Best Game Today';
+
+export interface MatchIcon {
+  id: number;
+  name: string;
+  imageUrl?: string;
+}
+
+export interface MatchParticipant {
+  displayName: string;
+  championName: string;
+  championImageUrl?: string;
+  teamId: number;
+  win: boolean;
+  kills: number;
+  deaths: number;
+  assists: number;
+  cs: number;
+  damageToChampions: number;
+  goldEarned: number;
+  visionScore: number;
+  items: number[];
+  itemImageUrls: string[];
+}
+
+export interface MatchTeam {
+  teamId: number;
+  win: boolean;
+  participants: MatchParticipant[];
+  objectives: {
+    towers: number;
+    dragons: number;
+    barons: number;
+  };
 }
 
 export interface ChampionPerformance {
   championName: string;
+  championImageUrl?: string;
   games: number;
   wins: number;
   losses: number;
@@ -64,8 +120,15 @@ export interface RecentPerformance {
   winRate?: number;
   averageKda?: number;
   averageCsPerMinute?: number;
+  averageDamageToChampions?: number;
   mostPlayedChampion?: ChampionPerformance;
   lucian?: ChampionPerformance;
+  champions: ChampionPerformance[];
+  positions: Array<{ position: string; games: number; percentage: number }>;
+  primaryPosition?: string;
+  gamesLastSevenDays: number;
+  lastPlayedAt?: string;
+  editorialSummary: string[];
   matches: RecentMatch[];
 }
 
@@ -135,8 +198,24 @@ export interface RiotParticipantDto {
   kills?: number;
   deaths?: number;
   assists?: number;
+  teamId?: number;
+  riotIdGameName?: string;
+  summonerName?: string;
+  individualPosition?: string;
+  teamPosition?: string;
   totalMinionsKilled?: number;
   neutralMinionsKilled?: number;
+  totalDamageDealtToChampions?: number;
+  goldEarned?: number;
+  visionScore?: number;
+  summoner1Id?: number;
+  summoner2Id?: number;
+  perks?: {
+    styles?: Array<{
+      style?: number;
+      selections?: Array<{ perk?: number }>;
+    }>;
+  };
   item0?: number;
   item1?: number;
   item2?: number;
@@ -147,6 +226,16 @@ export interface RiotParticipantDto {
   gameEndedInEarlySurrender?: boolean;
 }
 
+export interface RiotTeamDto {
+  teamId?: number;
+  win?: boolean;
+  objectives?: {
+    tower?: { kills?: number };
+    dragon?: { kills?: number };
+    baron?: { kills?: number };
+  };
+}
+
 export interface RiotMatchDto {
   metadata?: { matchId?: string };
   info?: {
@@ -154,5 +243,6 @@ export interface RiotMatchDto {
     gameDuration?: number;
     queueId?: number;
     participants?: RiotParticipantDto[];
+    teams?: RiotTeamDto[];
   };
 }

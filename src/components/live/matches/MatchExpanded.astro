@@ -1,0 +1,31 @@
+<div class="match-expanded" data-match-expanded aria-hidden="true">
+  <div class="match-expanded-inner">
+    <div class="match-expanded-summary">
+      <span data-expanded-mode></span>
+      <span data-expanded-duration></span>
+      <span data-expanded-played></span>
+    </div>
+    <div class="match-teams">
+      <section data-blue-section aria-label="Primer equipo">
+        <header>
+          <strong data-blue-label>Equipo azul</strong>
+          <span data-blue-result></span>
+        </header>
+        <div class="match-objectives" data-blue-objectives></div>
+        <ol data-blue-team></ol>
+      </section>
+      <section data-red-section aria-label="Segundo equipo">
+        <header>
+          <strong data-red-label>Equipo rojo</strong>
+          <span data-red-result></span>
+        </header>
+        <div class="match-objectives" data-red-objectives></div>
+        <ol data-red-team></ol>
+      </section>
+    </div>
+    <p class="match-future-note">
+      Preparado para variación de LP, clips, notas y comparativas.
+    </p>
+    <slot />
+  </div>
+</div>

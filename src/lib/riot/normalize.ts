@@ -1,9 +1,63 @@
 import type {
+  MatchIcon,
+  MatchParticipant,
   RankedSummary,
   RecentMatch,
   RiotLeagueEntryDto,
   RiotMatchDto,
+  RiotParticipantDto,
 } from './types';
+
+const summonerSpells: Record<number, { name: string; asset: string }> = {
+  1: { name: 'Cleanse', asset: 'SummonerBoost' },
+  3: { name: 'Exhaust', asset: 'SummonerExhaust' },
+  4: { name: 'Flash', asset: 'SummonerFlash' },
+  6: { name: 'Ghost', asset: 'SummonerHaste' },
+  7: { name: 'Heal', asset: 'SummonerHeal' },
+  11: { name: 'Smite', asset: 'SummonerSmite' },
+  12: { name: 'Teleport', asset: 'SummonerTeleport' },
+  14: { name: 'Ignite', asset: 'SummonerDot' },
+  21: { name: 'Barrier', asset: 'SummonerBarrier' },
+};
+
+const runeStyles: Record<number, { name: string; imageUrl: string }> = {
+  8000: {
+    name: 'Precisión',
+    imageUrl:
+      'https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Precision/Precision.png',
+  },
+  8100: {
+    name: 'Dominación',
+    imageUrl:
+      'https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Domination/Domination.png',
+  },
+  8200: {
+    name: 'Brujería',
+    imageUrl:
+      'https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Sorcery/Sorcery.png',
+  },
+  8300: {
+    name: 'Inspiración',
+    imageUrl:
+      'https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Inspiration/Inspiration.png',
+  },
+  8400: {
+    name: 'Valor',
+    imageUrl:
+      'https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Resolve/Resolve.png',
+  },
+};
+
+const participantItems = (participant: RiotParticipantDto) =>
+  [
+    participant?.item0,
+    participant?.item1,
+    participant?.item2,
+    participant?.item3,
+    participant?.item4,
+    participant?.item5,
+    participant?.item6,
+  ].filter((item): item is number => Boolean(item));
 
 const queueLabels: Record<number, string> = {
   400: 'Normal Draft',
@@ -54,6 +108,7 @@ export const normalizeMatch = (
   puuid: string,
   championUrl: (name: string) => string,
   itemUrl: (id: number) => string,
+  summonerSpellUrl: (name: string) => string,
 ): RecentMatch | null => {
   const info = match.info;
   const participant = info?.participants?.find((item) => item.puuid === puuid);
@@ -67,16 +122,73 @@ export const normalizeMatch = (
     Math.max(0, participant.totalMinionsKilled ?? 0) +
     Math.max(0, participant.neutralMinionsKilled ?? 0);
   const championName = participant.championName || 'Desconocido';
-  const items = [
-    participant.item0,
-    participant.item1,
-    participant.item2,
-    participant.item3,
-    participant.item4,
-    participant.item5,
-    participant.item6,
-  ].filter((item): item is number => Boolean(item));
+  const items = participantItems(participant);
   const queueId = info.queueId ?? 0;
+  const toParticipant = (
+    player: NonNullable<typeof info.participants>[number],
+  ): MatchParticipant => {
+    const playerItems = participantItems(player);
+    const playerChampion = player.championName || 'Desconocido';
+    return {
+      displayName: player.riotIdGameName || player.summonerName || 'Invocador',
+      championName: playerChampion,
+      championImageUrl:
+        playerChampion === 'Desconocido'
+          ? undefined
+          : championUrl(playerChampion),
+      teamId: player.teamId ?? 0,
+      win: Boolean(player.win),
+      kills: Math.max(0, player.kills ?? 0),
+      deaths: Math.max(0, player.deaths ?? 0),
+      assists: Math.max(0, player.assists ?? 0),
+      cs:
+        Math.max(0, player.totalMinionsKilled ?? 0) +
+        Math.max(0, player.neutralMinionsKilled ?? 0),
+      damageToChampions: Math.max(0, player.totalDamageDealtToChampions ?? 0),
+      goldEarned: Math.max(0, player.goldEarned ?? 0),
+      visionScore: Math.max(0, player.visionScore ?? 0),
+      items: playerItems,
+      itemImageUrls: playerItems.map(itemUrl),
+    };
+  };
+  const teams = (info.teams ?? []).map((team) => ({
+    teamId: team.teamId ?? 0,
+    win: Boolean(team.win),
+    participants: (info.participants ?? [])
+      .filter((player) => player.teamId === team.teamId)
+      .map(toParticipant),
+    objectives: {
+      towers: Math.max(0, team.objectives?.tower?.kills ?? 0),
+      dragons: Math.max(0, team.objectives?.dragon?.kills ?? 0),
+      barons: Math.max(0, team.objectives?.baron?.kills ?? 0),
+    },
+  }));
+  const spells = [participant.summoner1Id, participant.summoner2Id].flatMap(
+    (id): MatchIcon[] => {
+      if (!id) return [];
+      const spell = summonerSpells[id];
+      return [
+        {
+          id,
+          name: spell?.name ?? `Hechizo ${id}`,
+          imageUrl: spell ? summonerSpellUrl(spell.asset) : undefined,
+        },
+      ];
+    },
+  );
+  const runes = (participant.perks?.styles ?? []).flatMap(
+    ({ style }): MatchIcon[] => {
+      if (!style) return [];
+      const rune = runeStyles[style];
+      return [
+        {
+          id: style,
+          name: rune?.name ?? `Rama ${style}`,
+          imageUrl: rune?.imageUrl,
+        },
+      ];
+    },
+  );
   return {
     matchId,
     championId: participant.championId ?? 0,
@@ -97,6 +209,20 @@ export const normalizeMatch = (
     playedAt: new Date(info.gameCreation ?? 0).toISOString(),
     items,
     itemImageUrls: items.map(itemUrl),
+    damageToChampions: Math.max(
+      0,
+      participant.totalDamageDealtToChampions ?? 0,
+    ),
+    goldEarned: Math.max(0, participant.goldEarned ?? 0),
+    visionScore: Math.max(0, participant.visionScore ?? 0),
+    position:
+      participant.teamPosition ||
+      participant.individualPosition ||
+      'Sin posición',
+    summonerSpells: spells,
+    runes,
+    teams,
+    teamId: participant.teamId ?? 0,
     remake: Boolean(participant.gameEndedInEarlySurrender),
   };
 };

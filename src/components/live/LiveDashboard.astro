@@ -1,6 +1,9 @@
 ---
 import { goals } from '../../config/goals';
 import { integrationEndpoints, platforms } from '../../config/platforms';
+import MatchCard from './matches/MatchCard.astro';
+import MatchEmpty from './matches/MatchEmpty.astro';
+import PlayerProfile from './PlayerProfile.astro';
 ---
 
 <main
@@ -35,17 +38,25 @@ import { integrationEndpoints, platforms } from '../../config/platforms';
         <div>
           <span>01 / Competitivo</span><h2 id="solo-title">Hoy en SoloQ</h2>
         </div>
-        <small data-riot-updated aria-live="polite">Conectando con Riot</small>
+        <small
+          data-riot-updated
+          class="data-skeleton data-skeleton--meta"
+          aria-label="Actualizando datos competitivos"
+          aria-live="polite">&nbsp;</small
+        >
       </header>
       <div class="profile-context">
         <strong data-riot-id>Tidusss#FFX</strong><span>EUW · Solo/Duo</span>
       </div>
       <div class="today-rank">
         <div>
-          <strong data-rank class="data-skeleton">Cargando</strong><span data-lp
-          ></span>
+          <strong
+            data-rank
+            class="data-skeleton"
+            aria-label="Actualizando rango">&nbsp;</strong
+          ><span data-lp class="data-skeleton data-skeleton--line">&nbsp;</span>
         </div>
-        <p data-activity>Consultando actividad</p>
+        <p data-activity class="data-skeleton data-skeleton--copy">&nbsp;</p>
         <img
           class="rank-emblem"
           data-rank-emblem
@@ -103,16 +114,31 @@ import { integrationEndpoints, platforms } from '../../config/platforms';
       </div>
     </section>
 
+    <PlayerProfile />
+
     <section class="live-module" aria-labelledby="twitch-title">
       <header class="live-module-head">
         <div><span>02 / Twitch</span><h2 id="twitch-title">Directo</h2></div>
         <i class="live-dot" aria-hidden="true"></i>
       </header>
       <div class="stream-status">
-        <strong data-stream-state class="data-skeleton">Comprobando</strong>
-        <p data-stream-copy>Consultando el estado del canal.</p>
-        <small data-stream-meta></small>
+        <strong
+          data-stream-state
+          class="data-skeleton"
+          aria-label="Actualizando Twitch">&nbsp;</strong
+        >
+        <p data-stream-copy class="data-skeleton data-skeleton--copy">&nbsp;</p>
+        <small data-stream-meta hidden>
+          <span data-stream-category></span>
+          <span data-stream-viewers></span>
+          <span data-stream-duration></span>
+        </small>
       </div>
+      <small
+        class="live-updated data-skeleton data-skeleton--meta"
+        data-twitch-updated
+        aria-label="Actualizando estado de Twitch">&nbsp;</small
+      >
       <a
         class="live-action"
         href={platforms.twitch.url}
@@ -128,9 +154,11 @@ import { integrationEndpoints, platforms } from '../../config/platforms';
         <small>Dato proporcionado por YouTube</small>
       </header>
       <div class="youtube-number">
-        <strong data-subscribers class="data-skeleton">Cargando</strong><span
-          >Suscriptores</span
-        >
+        <strong
+          data-subscribers
+          class="data-skeleton"
+          aria-label="Actualizando suscriptores">&nbsp;</strong
+        ><span>Suscriptores</span>
       </div>
       <p class="provider-state" data-youtube-state hidden></p>
       <div data-youtube-details hidden>
@@ -145,8 +173,10 @@ import { integrationEndpoints, platforms } from '../../config/platforms';
           >
         </div>
       </div>
-      <small class="live-updated" data-youtube-updated
-        >Consultando estadísticas</small
+      <small
+        class="live-updated data-skeleton data-skeleton--meta"
+        data-youtube-updated
+        aria-label="Actualizando estadísticas">&nbsp;</small
       >
     </section>
 
@@ -160,8 +190,15 @@ import { integrationEndpoints, platforms } from '../../config/platforms';
         </div><small>Solo/Duo ranked</small>
       </header>
       <ol class="live-match-list" data-live-matches aria-live="polite">
-        <li class="live-loading">Consultando partidas…</li>
+        <li
+          class="live-loading live-loading--row match-card-skeleton"
+          aria-label="Actualizando partidas"
+        >
+          <i></i><i></i><i></i>
+        </li>
       </ol>
+      <MatchCard />
+      <MatchEmpty />
     </section>
 
     <section class="live-module" aria-labelledby="goals-title">
@@ -208,7 +245,12 @@ import { integrationEndpoints, platforms } from '../../config/platforms';
         </div>
       </header>
       <ol class="activity-list" data-activity-feed aria-live="polite">
-        <li class="live-loading">Buscando actividad verificable…</li>
+        <li
+          class="live-loading live-loading--row"
+          aria-label="Actualizando actividad"
+        >
+          <i></i><i></i>
+        </li>
       </ol>
     </section>
 
@@ -242,20 +284,136 @@ import { integrationEndpoints, platforms } from '../../config/platforms';
 
 <script>
   import { buildActivity } from '../../lib/activity';
-  import { elapsedDuration, madridTime, relativeTime } from '../../lib/time';
+  import {
+    elapsedDuration,
+    madridTime,
+    relativeTime,
+    updatedAgo,
+  } from '../../lib/time';
   import { goalProgress } from '../../config/goals';
   import { rankAssetFor } from '../../config/rank-assets';
+  import { renderMatchCards } from './matches/render';
   import type { RiotPublicResponse } from '../../lib/riot';
   import type {
     TwitchStatusResponse,
     YouTubeStatsResponse,
   } from '../../types/platforms';
-  import type { YouTubeFeedResult } from '../../types/content';
+  import type {
+    YouTubeFeedResponse,
+    YouTubeFeedResult,
+  } from '../../types/content';
 
   const root = document.querySelector<HTMLElement>('[data-live-root]');
+  const reducedMotion = window.matchMedia(
+    '(prefers-reduced-motion: reduce)',
+  ).matches;
+  const entered = new WeakSet<Element>();
+  const pendingAnimations = new WeakMap<
+    HTMLElement,
+    { values: number[]; render: (values: number[]) => string }
+  >();
+  const easing = (progress: number) => 1 - Math.pow(1 - progress, 3);
+  let valueObserver: IntersectionObserver | undefined;
+
+  const animateNow = (
+    node: HTMLElement,
+    values: number[],
+    render: (values: number[]) => string,
+  ) => {
+    const previous = (node.dataset.numericValue ?? '')
+      .split(',')
+      .map(Number)
+      .filter(Number.isFinite);
+    const from =
+      previous.length === values.length ? previous : values.map(() => 0);
+    node.dataset.numericValue = values.join(',');
+    if (reducedMotion) {
+      node.textContent = render(values);
+      return;
+    }
+    const startedAt = performance.now();
+    const duration = 850;
+    const frame = (now: number) => {
+      const progress = Math.min(1, (now - startedAt) / duration);
+      const eased = easing(progress);
+      node.textContent = render(
+        values.map((value, index) => {
+          const start = from[index] ?? 0;
+          return start + (value - start) * eased;
+        }),
+      );
+      if (progress < 1) requestAnimationFrame(frame);
+    };
+    requestAnimationFrame(frame);
+  };
+
+  const animateValues = (
+    selector: string,
+    values: number[],
+    render: (values: number[]) => string,
+  ) => {
+    const node = root?.querySelector<HTMLElement>(selector);
+    if (!node) return;
+    node.classList.remove('data-skeleton', 'data-skeleton--line');
+    if (entered.has(node) || reducedMotion) {
+      animateNow(node, values, render);
+      return;
+    }
+    pendingAnimations.set(node, { values, render });
+    valueObserver?.observe(node);
+  };
+
+  const animateBar = (
+    node: HTMLElement | null | undefined,
+    progress: number,
+  ) => {
+    if (!node) return;
+    const target = `${Math.max(0, Math.min(100, progress))}%`;
+    if (reducedMotion || node.dataset.progressReady) {
+      node.style.width = target;
+      return;
+    }
+    node.style.width = '0%';
+    node.dataset.progressReady = 'true';
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        node.style.width = target;
+      }),
+    );
+  };
+
+  if (!reducedMotion) {
+    valueObserver = new IntersectionObserver(
+      (entries) =>
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          const node = entry.target as HTMLElement;
+          entered.add(node);
+          valueObserver?.unobserve(node);
+          const pending = pendingAnimations.get(node);
+          if (pending) animateNow(node, pending.values, pending.render);
+          pendingAnimations.delete(node);
+        }),
+      { threshold: 0.2 },
+    );
+  }
+
   const text = (selector: string, value: string) => {
     const node = root?.querySelector<HTMLElement>(selector);
-    if (node) node.textContent = value;
+    if (!node || node.textContent === value) return;
+    node.textContent = value;
+    if (
+      !reducedMotion &&
+      !node.classList.contains('data-skeleton') &&
+      typeof node.animate === 'function'
+    )
+      node.animate(
+        [
+          { opacity: 0.45, transform: 'translate3d(0, 3px, 0)' },
+          { opacity: 1, transform: 'translate3d(0, 0, 0)' },
+        ],
+        { duration: 260, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' },
+      );
   };
   const visible = (selector: string, show: boolean) => {
     const node = root?.querySelector<HTMLElement>(selector);
@@ -287,6 +445,278 @@ import { integrationEndpoints, platforms } from '../../config/platforms';
   let videos: YouTubeFeedResult['videos'] = [];
   let fetching = false;
 
+  const positionLabel = (position?: string) =>
+    (
+      ({
+        BOTTOM: 'ADC',
+        UTILITY: 'Support',
+        MIDDLE: 'Mid',
+        TOP: 'Top',
+        JUNGLE: 'Jungle',
+      }) as Record<string, string>
+    )[position ?? ''] ??
+    position ??
+    'Sin dato';
+
+  const renderMatches = () => {
+    const list = root?.querySelector('[data-live-matches]');
+    if (!list || !riotData) return;
+    renderMatchCards(list, riotData.recent.matches.slice(0, 5), {
+      formatNumber: (value) => number(value) ?? String(value),
+      relativeTime,
+      reducedMotion,
+      videos,
+    });
+  };
+
+  const renderPlayerProfile = () => {
+    if (!riotData) return;
+    const { profile, ranked, recent } = riotData;
+    const hasMatches = recent.sampleSize > 0;
+    const championGroups = new Map<string, typeof recent.matches>();
+    recent.matches.forEach((match) =>
+      championGroups.set(match.championName, [
+        ...(championGroups.get(match.championName) ?? []),
+        match,
+      ]),
+    );
+    const derivedChampions = [...championGroups.entries()]
+      .map(([championName, matches]) => {
+        const wins = matches.filter((match) => match.win).length;
+        const average = (values: number[]) =>
+          values.reduce((sum, value) => sum + value, 0) / values.length;
+        return {
+          championName,
+          championImageUrl: matches[0]?.championImageUrl,
+          games: matches.length,
+          wins,
+          losses: matches.length - wins,
+          winRate: Math.round((wins / matches.length) * 100),
+          averageKda: average(matches.map((match) => match.kda)),
+          averageCsPerMinute: average(
+            matches.map((match) => match.csPerMinute),
+          ),
+        };
+      })
+      .sort(
+        (a, b) =>
+          b.games - a.games || a.championName.localeCompare(b.championName),
+      );
+    const profileChampions = recent.champions ?? derivedChampions;
+    const positionGroups = new Map<string, number>();
+    recent.matches.forEach((match) =>
+      positionGroups.set(
+        match.position,
+        (positionGroups.get(match.position) ?? 0) + 1,
+      ),
+    );
+    const derivedPositions = [...positionGroups.entries()]
+      .map(([position, games]) => ({
+        position,
+        games,
+        percentage: Math.round((games / recent.matches.length) * 100),
+      }))
+      .sort(
+        (a, b) => b.games - a.games || a.position.localeCompare(b.position),
+      );
+    const profilePositions = recent.positions ?? derivedPositions;
+    const primaryPosition =
+      recent.primaryPosition ?? recent.matches[0]?.position;
+    const gamesLastSevenDays =
+      recent.gamesLastSevenDays ??
+      recent.matches.filter(
+        (match) =>
+          new Date(match.playedAt).getTime() >=
+          Date.now() - 7 * 24 * 60 * 60_000,
+      ).length;
+    const averageDamage =
+      recent.averageDamageToChampions ??
+      (recent.matches.length
+        ? recent.matches.reduce(
+            (sum, match) => sum + match.damageToChampions,
+            0,
+          ) / recent.matches.length
+        : undefined);
+    const editorialSummary = recent.editorialSummary?.length
+      ? recent.editorialSummary
+      : [
+          recent.matches.length && (positionGroups.get('BOTTOM') ?? 0)
+            ? `${positionGroups.get('BOTTOM')} de las últimas ${recent.matches.length} partidas fueron como ADC.`
+            : undefined,
+          profileChampions[0]
+            ? `${profileChampions[0].championName} es el campeón más jugado de la muestra (${profileChampions[0].games} partidas).`
+            : undefined,
+          recent.averageCsPerMinute === undefined
+            ? undefined
+            : `Promedio de ${String(recent.averageCsPerMinute).replace('.', ',')} CS/min en las últimas partidas.`,
+        ].filter((value): value is string => Boolean(value));
+    visible('[data-player-profile-empty]', !hasMatches);
+    text('[data-profile-riot-id]', profile.riotId);
+    text(
+      '[data-profile-sample]',
+      `${recent.sampleSize} ${recent.sampleSize === 1 ? 'partida' : 'partidas'} · muestra disponible`,
+    );
+    text(
+      '[data-profile-rank]',
+      ranked.available
+        ? `${ranked.tier ?? ''}${ranked.leaguePoints === undefined ? '' : ` · ${ranked.leaguePoints} LP`}`.trim()
+        : 'Sin clasificación',
+    );
+    text(
+      '[data-profile-record]',
+      ranked.wins === undefined || ranked.losses === undefined
+        ? 'Sin dato'
+        : `${ranked.wins}V · ${ranked.losses}D`,
+    );
+    text(
+      '[data-profile-winrate]',
+      ranked.winRate === undefined ? 'Sin dato' : `${ranked.winRate}%`,
+    );
+    text('[data-profile-role]', positionLabel(primaryPosition));
+    text(
+      '[data-profile-kda]',
+      recent.averageKda?.toFixed(2).replace('.', ',') ?? '—',
+    );
+    text(
+      '[data-profile-csm]',
+      recent.averageCsPerMinute === undefined
+        ? '—'
+        : String(recent.averageCsPerMinute).replace('.', ','),
+    );
+    text(
+      '[data-profile-damage]',
+      averageDamage === undefined
+        ? '—'
+        : (number(Math.round(averageDamage)) ?? '—'),
+    );
+    text(
+      '[data-profile-week]',
+      `${gamesLastSevenDays} ${gamesLastSevenDays === 1 ? 'partida' : 'partidas'}`,
+    );
+    text(
+      '[data-profile-last]',
+      (recent.lastPlayedAt ?? recent.matches[0]?.playedAt)
+        ? (relativeTime(recent.lastPlayedAt ?? recent.matches[0]?.playedAt) ??
+            '—')
+        : 'Sin actividad',
+    );
+
+    const editorial = root?.querySelector('[data-profile-editorial]');
+    editorial?.replaceChildren(
+      ...editorialSummary.map((summary) => {
+        const item = document.createElement('li');
+        item.textContent = summary;
+        return item;
+      }),
+    );
+    const championList = root?.querySelector('[data-profile-champions]');
+    championList?.replaceChildren(
+      ...profileChampions.slice(0, 5).map((champion) => {
+        const item = document.createElement('li');
+        if (champion.championImageUrl) {
+          const image = document.createElement('img');
+          image.src = champion.championImageUrl;
+          image.alt = '';
+          image.width = 44;
+          image.height = 44;
+          image.loading = 'lazy';
+          image.decoding = 'async';
+          item.append(image);
+        }
+        const identity = document.createElement('div');
+        const name = document.createElement('strong');
+        name.textContent = champion.championName;
+        const record = document.createElement('span');
+        record.textContent = `${champion.games} partidas · ${champion.wins}V · ${champion.losses}D`;
+        identity.append(name, record);
+        const metrics = document.createElement('p');
+        metrics.textContent = `${champion.winRate}% WR · ${champion.averageKda.toFixed(2).replace('.', ',')} KDA · ${String(champion.averageCsPerMinute).replace('.', ',')} CS/min`;
+        item.append(identity, metrics);
+        return item;
+      }),
+    );
+    const positionList = root?.querySelector('[data-profile-positions]');
+    positionList?.replaceChildren(
+      ...profilePositions.map((position) => {
+        const item = document.createElement('li');
+        const label = document.createElement('span');
+        label.textContent = positionLabel(position.position);
+        const bar = document.createElement('i');
+        bar.style.width = `${position.percentage}%`;
+        const value = document.createElement('strong');
+        value.textContent = `${position.games} · ${position.percentage}%`;
+        item.append(label, bar, value);
+        return item;
+      }),
+    );
+    text(
+      '[data-profile-positions-note]',
+      hasMatches
+        ? `Distribución calculada sobre ${recent.sampleSize} partidas recientes`
+        : 'Sin muestra suficiente',
+    );
+  };
+
+  const renderRelatedGameplays = () => {
+    const section = root?.querySelector<HTMLElement>(
+      '[data-related-gameplays]',
+    );
+    const list = root?.querySelector('[data-related-gameplays-list]');
+    if (!section || !list) return;
+    const gameplays = videos.filter((video) => !video.isShort).slice(0, 3);
+    section.hidden = gameplays.length === 0;
+    list.replaceChildren(
+      ...gameplays.map((video) => {
+        const link = document.createElement('a');
+        link.href = video.url;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.setAttribute('aria-label', `Ver en YouTube: ${video.title}`);
+        const image = document.createElement('img');
+        image.src = video.thumbnailUrl;
+        image.alt = `Miniatura de ${video.title}`;
+        image.width = 480;
+        image.height = 270;
+        image.loading = 'lazy';
+        image.decoding = 'async';
+        const copy = document.createElement('div');
+        const title = document.createElement('strong');
+        title.textContent = video.title;
+        const meta = document.createElement('span');
+        meta.textContent = [
+          relativeTime(video.publishedAt),
+          video.durationLabel,
+        ]
+          .filter(Boolean)
+          .join(' · ');
+        copy.append(title, meta);
+        link.append(image, copy);
+        return link;
+      }),
+    );
+  };
+
+  const updateRelativeLabels = () =>
+    root?.querySelectorAll<HTMLElement>('[data-updated-at]').forEach((node) => {
+      const suffix = node.dataset.updatedSuffix;
+      node.textContent = `${updatedAgo(node.dataset.updatedAt)}${suffix ? ` · ${suffix}` : ''}`;
+    });
+
+  const markUpdated = (
+    selector: string,
+    timestamp: string,
+    suffix?: string,
+  ) => {
+    const node = root?.querySelector<HTMLElement>(selector);
+    if (!node) return;
+    node.classList.remove('data-skeleton', 'data-skeleton--meta');
+    node.dataset.updatedAt = timestamp;
+    node.toggleAttribute('data-updated-at', true);
+    if (suffix) node.dataset.updatedSuffix = suffix;
+    else delete node.dataset.updatedSuffix;
+    node.textContent = `${updatedAgo(timestamp)}${suffix ? ` · ${suffix}` : ''}`;
+  };
+
   const loadRiot = async () => {
     const response = await fetch(root!.dataset.riot!);
     const payload = (await response.json()) as RiotPublicResponse;
@@ -296,16 +726,21 @@ import { integrationEndpoints, platforms } from '../../config/platforms';
     text('[data-riot-id]', profile.riotId);
     text('[data-rank]', ranked.tier ?? 'Sin clasificación');
     root?.querySelector('[data-rank]')?.classList.remove('data-skeleton');
-    text(
-      '[data-lp]',
-      ranked.leaguePoints === undefined
-        ? 'Sin LP disponibles'
-        : `${ranked.leaguePoints} LP`,
-    );
-    text(
-      '[data-riot-updated]',
-      `Actualizado ${relativeTime(payload.data.updatedAt) ?? 'recientemente'}`,
-    );
+    if (ranked.leaguePoints === undefined) {
+      root
+        ?.querySelector('[data-lp]')
+        ?.classList.remove('data-skeleton', 'data-skeleton--line');
+      text('[data-lp]', 'Sin LP disponibles');
+    } else
+      animateValues(
+        '[data-lp]',
+        [ranked.leaguePoints],
+        ([value]) => `${Math.round(value ?? 0)} LP`,
+      );
+    markUpdated('[data-riot-updated]', payload.data.updatedAt);
+    root
+      ?.querySelector('[data-activity]')
+      ?.classList.remove('data-skeleton', 'data-skeleton--copy');
     visible('[data-riot-error]', false);
     visible('[data-today-metrics]', today.games > 0);
     visible('[data-today-foot]', today.games > 0);
@@ -337,16 +772,27 @@ import { integrationEndpoints, platforms } from '../../config/platforms';
           ? `Última partida ${relativeTime(today.lastPlayedAt) ?? ''}`.trim()
           : 'Actividad registrada hoy',
       );
-      text('[data-today-games]', String(today.games));
-      text('[data-today-record]', `${today.wins}V · ${today.losses}D`);
-      text(
-        '[data-today-wr]',
-        today.winRate === undefined ? 'Sin dato' : `${today.winRate}%`,
+      animateValues('[data-today-games]', [today.games], ([value]) =>
+        String(Math.round(value ?? 0)),
       );
-      text(
-        '[data-today-kda]',
-        today.averageKda === undefined ? 'Sin dato' : String(today.averageKda),
+      animateValues(
+        '[data-today-record]',
+        [today.wins, today.losses],
+        ([wins, losses]) =>
+          `${Math.round(wins ?? 0)}V · ${Math.round(losses ?? 0)}D`,
       );
+      if (today.winRate === undefined) text('[data-today-wr]', 'Sin dato');
+      else
+        animateValues(
+          '[data-today-wr]',
+          [today.winRate],
+          ([value]) => `${Math.round(value ?? 0)}%`,
+        );
+      if (today.averageKda === undefined) text('[data-today-kda]', 'Sin dato');
+      else
+        animateValues('[data-today-kda]', [today.averageKda], ([value]) =>
+          (value ?? 0).toFixed(2).replace('.', ','),
+        );
       text(
         '[data-today-champion]',
         today.mostPlayedChampion?.championName ?? 'Sin dato',
@@ -367,35 +813,8 @@ import { integrationEndpoints, platforms } from '../../config/platforms';
       visible('[data-last-competitive]', Boolean(lastCopy));
     }
 
-    const list = root?.querySelector('[data-live-matches]');
-    if (list) {
-      const matches = today.matches.slice(0, 5);
-      list.replaceChildren(
-        ...matches.map((match) => {
-          const item = document.createElement('li');
-          const identity = document.createElement('div');
-          const champion = document.createElement('strong');
-          champion.textContent = match.championName;
-          const meta = document.createElement('span');
-          meta.textContent = `${match.queueLabel} · ${match.cs} CS · ${match.durationLabel} · ${relativeTime(match.playedAt) ?? ''}`;
-          identity.append(champion, meta);
-          const score = document.createElement('strong');
-          score.textContent = `${match.kills} / ${match.deaths} / ${match.assists}`;
-          const result = document.createElement('span');
-          result.textContent = match.win ? 'Victoria' : 'Derrota';
-          result.className = match.win ? 'is-win' : 'is-loss';
-          item.append(identity, score, result);
-          return item;
-        }),
-      );
-      if (!matches.length) {
-        appendEmpty(
-          list,
-          'Sin partidas clasificatorias hoy.',
-          'Las nuevas partidas aparecerán aquí automáticamente.',
-        );
-      }
-    }
+    renderPlayerProfile();
+    renderMatches();
   };
 
   const loadYouTube = async () => {
@@ -411,7 +830,11 @@ import { integrationEndpoints, platforms } from '../../config/platforms';
       text('[data-youtube-state]', 'Suscriptores no visibles públicamente.');
       visible('[data-youtube-state]', true);
     } else {
-      text('[data-subscribers]', number(payload.data.subscriberCount) ?? '');
+      animateValues(
+        '[data-subscribers]',
+        [payload.data.subscriberCount],
+        ([value]) => number(Math.round(value ?? 0)) ?? '',
+      );
       visible('[data-youtube-state]', false);
     }
     visible('[data-youtube-details]', true);
@@ -419,21 +842,38 @@ import { integrationEndpoints, platforms } from '../../config/platforms';
       '[data-subscriber-goal]',
       number(payload.data.nextGoal) ?? 'Hito máximo alcanzado',
     );
-    text(
-      '[data-subscriber-progress]',
-      percent(payload.data.progress) ?? 'Sin porcentaje',
-    );
-    text('[data-views]', number(payload.data.viewCount) ?? 'No visibles');
-    text(
-      '[data-video-count]',
-      number(payload.data.videoCount) ?? 'No visibles',
-    );
-    text(
+    if (payload.data.progress === undefined)
+      text('[data-subscriber-progress]', 'Sin porcentaje');
+    else
+      animateValues(
+        '[data-subscriber-progress]',
+        [payload.data.progress],
+        ([value]) =>
+          percent(Math.round((value ?? 0) * 10) / 10) ?? 'Sin porcentaje',
+      );
+    if (payload.data.viewCount === undefined)
+      text('[data-views]', 'No visibles');
+    else
+      animateValues(
+        '[data-views]',
+        [payload.data.viewCount],
+        ([value]) => number(Math.round(value ?? 0)) ?? '',
+      );
+    if (payload.data.videoCount === undefined)
+      text('[data-video-count]', 'No visibles');
+    else
+      animateValues(
+        '[data-video-count]',
+        [payload.data.videoCount],
+        ([value]) => number(Math.round(value ?? 0)) ?? '',
+      );
+    markUpdated(
       '[data-youtube-updated]',
-      `Actualizado ${relativeTime(payload.data.updatedAt) ?? 'recientemente'} · cifra redondeada por YouTube`,
+      payload.data.updatedAt,
+      'cifra redondeada por YouTube',
     );
     const bar = root?.querySelector<HTMLElement>('[data-subscriber-bar]');
-    if (bar) bar.style.width = `${payload.data.progress ?? 0}%`;
+    animateBar(bar, payload.data.progress ?? 0);
   };
 
   const loadTwitch = async () => {
@@ -444,32 +884,37 @@ import { integrationEndpoints, platforms } from '../../config/platforms';
     root
       ?.querySelector('[data-stream-state]')
       ?.classList.remove('data-skeleton');
+    root
+      ?.querySelector('[data-stream-copy]')
+      ?.classList.remove('data-skeleton', 'data-skeleton--copy');
     root?.toggleAttribute('data-stream-live', status.state === 'online');
+    markUpdated('[data-twitch-updated]', status.updatedAt);
     if (status.state === 'online') {
-      text('[data-stream-state]', 'En directo');
+      text('[data-stream-state]', 'EN DIRECTO');
       text('[data-stream-copy]', status.title ?? 'Tidusss está en directo.');
+      text('[data-stream-category]', status.category ?? '');
+      if (status.viewerCount === undefined) text('[data-stream-viewers]', '');
+      else
+        animateValues(
+          '[data-stream-viewers]',
+          [status.viewerCount],
+          ([value]) => `${number(Math.round(value ?? 0))} espectadores`,
+        );
       text(
-        '[data-stream-meta]',
-        [
-          status.category,
-          status.viewerCount === undefined
-            ? undefined
-            : `${number(status.viewerCount)} espectadores`,
-          status.startedAt
-            ? `${elapsedDuration(status.startedAt) ?? ''} en directo`
-            : undefined,
-        ]
-          .filter(Boolean)
-          .join(' · '),
+        '[data-stream-duration]',
+        status.startedAt
+          ? `${elapsedDuration(status.startedAt) ?? ''} en directo`
+          : '',
       );
+      visible('[data-stream-meta]', true);
       text('[data-stream-link]', 'Ver directo ↗');
     } else if (status.state === 'offline') {
-      text('[data-stream-state]', 'Ahora mismo no estoy en directo.');
+      text('[data-stream-state]', 'Offline');
       text(
         '[data-stream-copy]',
         'Pásate por el canal o revisa la actividad reciente.',
       );
-      text('[data-stream-meta]', '');
+      visible('[data-stream-meta]', false);
       text('[data-stream-link]', 'Visitar Twitch ↗');
     } else {
       text('[data-stream-state]', 'Conexión con Twitch pendiente.');
@@ -477,15 +922,17 @@ import { integrationEndpoints, platforms } from '../../config/platforms';
         '[data-stream-copy]',
         'El canal sigue disponible desde el enlace inferior.',
       );
-      text('[data-stream-meta]', '');
+      visible('[data-stream-meta]', false);
     }
   };
 
   const loadFeed = async () => {
     const response = await fetch(root!.dataset.youtube!);
-    if (!response.ok) return;
-    const feed = (await response.json()) as YouTubeFeedResult;
-    videos = feed.videos;
+    const payload = (await response.json()) as YouTubeFeedResponse;
+    if (!payload.ok) throw new Error(payload.error.code);
+    videos = payload.data.videos;
+    renderMatches();
+    renderRelatedGameplays();
   };
 
   const updateGoals = () =>
@@ -525,9 +972,14 @@ import { integrationEndpoints, platforms } from '../../config/platforms';
           item.querySelector('span')!.textContent =
             `${number(dynamicTarget)} suscriptores`;
         if (value)
-          value.textContent = `${number(current)} / ${number(dynamicTarget)} · ${percent(progress)}`;
+          animateValues(
+            `[data-goal-id="${item.dataset.goalId}"] [data-goal-value]`,
+            [current, dynamicTarget, progress ?? 0],
+            ([animatedCurrent, target, animatedProgress]) =>
+              `${number(Math.round(animatedCurrent ?? 0))} / ${number(Math.round(target ?? 0))} · ${percent(Math.round((animatedProgress ?? 0) * 10) / 10)}`,
+          );
         if (track) track.hidden = false;
-        if (bar) bar.style.width = `${progress ?? 0}%`;
+        animateBar(bar, progress ?? 0);
       });
 
   const updateActivity = () => {
@@ -587,6 +1039,19 @@ import { integrationEndpoints, platforms } from '../../config/platforms';
       visible('[data-riot-error]', true);
       visible('[data-rank-emblem]', false);
       visible('[data-today-empty-signature]', false);
+      root?.querySelector('[data-rank]')?.classList.remove('data-skeleton');
+      root
+        ?.querySelector('[data-lp]')
+        ?.classList.remove('data-skeleton', 'data-skeleton--line');
+      root
+        ?.querySelector('[data-activity]')
+        ?.classList.remove('data-skeleton', 'data-skeleton--copy');
+      text('[data-rank]', 'No disponible');
+      text('[data-lp]', 'Intentaremos actualizar pronto');
+      text('[data-activity]', 'Sin actividad reciente');
+      root
+        ?.querySelector('[data-riot-updated]')
+        ?.classList.remove('data-skeleton', 'data-skeleton--meta');
       text('[data-riot-updated]', 'Clasificación no disponible');
     }
     if (results[1].status === 'rejected') {
@@ -603,6 +1068,9 @@ import { integrationEndpoints, platforms } from '../../config/platforms';
           : 'Datos del canal no disponibles temporalmente.',
       );
       visible('[data-youtube-state]', true);
+      root
+        ?.querySelector('[data-youtube-updated]')
+        ?.classList.remove('data-skeleton', 'data-skeleton--meta');
       text(
         '[data-youtube-updated]',
         'Se conservará el último dato válido cuando exista.',
@@ -612,11 +1080,18 @@ import { integrationEndpoints, platforms } from '../../config/platforms';
       root
         ?.querySelector('[data-stream-state]')
         ?.classList.remove('data-skeleton');
+      root
+        ?.querySelector('[data-stream-copy]')
+        ?.classList.remove('data-skeleton', 'data-skeleton--copy');
+      root
+        ?.querySelector('[data-twitch-updated]')
+        ?.classList.remove('data-skeleton', 'data-skeleton--meta');
       text('[data-stream-state]', 'Estado temporalmente no disponible.');
       text(
         '[data-stream-copy]',
         'Pásate por el canal o revisa la actividad reciente.',
       );
+      text('[data-twitch-updated]', 'Intentaremos actualizar pronto');
     }
     updateGoals();
     updateActivity();
@@ -633,10 +1108,28 @@ import { integrationEndpoints, platforms } from '../../config/platforms';
 
   refresh();
   window.setInterval(() => refresh(), 120_000);
+  window.setInterval(updateRelativeLabels, 30_000);
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden) refresh();
   });
   root
     ?.querySelector('[data-profile-refresh]')
     ?.addEventListener('click', () => refresh(true));
+
+  root?.toggleAttribute('data-motion-ready', true);
+  const modules = root?.querySelectorAll<HTMLElement>('.live-module');
+  if (reducedMotion)
+    modules?.forEach((module) => module.classList.add('is-visible'));
+  else {
+    const moduleObserver = new IntersectionObserver(
+      (entries, observer) =>
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          entry.target.classList.add('is-visible');
+          observer.unobserve(entry.target);
+        }),
+      { threshold: 0.08 },
+    );
+    modules?.forEach((module) => moduleObserver.observe(module));
+  }
 </script>

@@ -64,6 +64,19 @@ export const relativeTime = (value?: string, now = new Date()) => {
       }).format(date);
 };
 
+export const updatedAgo = (value?: string, now = new Date()) => {
+  const elapsed = millisecondsSince(value, now);
+  if (elapsed === undefined) return 'Actualizado recientemente';
+  const minutes = Math.floor(elapsed / 60_000);
+  if (minutes < 1) return 'Actualizado hace unos segundos';
+  if (minutes === 1) return 'Actualizado hace 1 minuto';
+  if (minutes < 60) return `Actualizado hace ${minutes} minutos`;
+  const hours = Math.floor(minutes / 60);
+  if (hours === 1) return 'Actualizado hace 1 hora';
+  if (hours < 24) return `Actualizado hace ${hours} horas`;
+  return `Actualizado ${relativeTime(value, now) ?? 'recientemente'}`;
+};
+
 export const madridTime = (value?: string) => {
   const date = validDate(value);
   return date
