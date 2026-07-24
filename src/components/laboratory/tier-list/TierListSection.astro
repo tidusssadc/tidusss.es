@@ -1,0 +1,65 @@
+---
+import type {
+  LabChampion,
+  LabChampionId,
+  ReviewedTierListEntry,
+  Role,
+  TierGrade,
+} from '../../../domain/league-laboratory';
+import ChampionIdentity from '../ChampionIdentity.astro';
+import EditorialTakeCard from '../EditorialTakeCard.astro';
+import TierBadge from '../TierBadge.astro';
+
+interface Props {
+  tier: TierGrade;
+  entries: ReviewedTierListEntry[];
+  champions: Map<LabChampionId, LabChampion>;
+  role: Role;
+  dataDragonVersion: string;
+}
+const { tier, entries, champions, role, dataDragonVersion } = Astro.props;
+const slug = tier.toLowerCase().replace('+', '-plus');
+---
+
+{
+  entries.length > 0 && (
+    <section
+      class="tier-list-row"
+      data-tier={slug}
+      aria-labelledby={`tier-${slug}-heading`}
+    >
+      <header>
+        <TierBadge tier={tier} />
+        <h3 id={`tier-${slug}-heading`} class="sr-only">
+          Tier {tier}
+        </h3>
+      </header>
+      <ul>
+        {entries.map((entry) => {
+          const champion = champions.get(entry.championId);
+          return (
+            champion && (
+              <li
+                class="tier-list-entry"
+                data-champion={champion.slug}
+                id={`campeon-${champion.slug}`}
+              >
+                <ChampionIdentity
+                  champion={champion}
+                  role={role}
+                  dataDragonVersion={dataDragonVersion}
+                />
+                <EditorialTakeCard
+                  take={entry.editorialTake}
+                  reviewStatus="reviewed"
+                  strengths={entry.strengths}
+                  weaknesses={entry.weaknesses}
+                />
+              </li>
+            )
+          );
+        })}
+      </ul>
+    </section>
+  )
+}

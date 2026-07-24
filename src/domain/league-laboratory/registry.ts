@@ -18,64 +18,74 @@ import type {
 } from './types';
 
 export interface LabRegistry {
-  champions: LabChampion[];
-  patches: Patch[];
-  builds: Build[];
-  runePages: RunePage[];
-  matchups: Matchup[];
-  synergies: Synergy[];
-  concepts: Concept[];
-  articles: KnowledgeArticle[];
-  tierLists: TierList[];
-  metaStates: MetaState[];
+  champions: readonly LabChampion[];
+  patches: readonly Patch[];
+  builds: readonly Build[];
+  runePages: readonly RunePage[];
+  matchups: readonly Matchup[];
+  synergies: readonly Synergy[];
+  concepts: readonly Concept[];
+  articles: readonly KnowledgeArticle[];
+  tierLists: readonly TierList[];
+  metaStates: readonly MetaState[];
 }
 
-export const labRegistry: LabRegistry = {
-  champions: [],
-  patches: [],
-  builds: [],
-  runePages: [],
-  matchups: [],
-  synergies: [],
-  concepts: [],
-  articles: [],
-  tierLists: [],
-  metaStates: [],
-};
+/**
+ * Construye un registro inmutable a partir de datos ya conocidos en build
+ * time. No hay estado compartido entre llamadas: cada página del Laboratorio
+ * construye el suyo con los datos que necesita y lo pasa explícitamente a
+ * las funciones de consulta. Ver ADR correspondiente en PLATFORM_BIBLE.md
+ * (sustituye al singleton mutable `labRegistry`/`hydrateLabRegistry` de la
+ * Phase 1, que arriesgaba interferencia entre páginas del Laboratorio en el
+ * mismo build).
+ */
+export const buildLabRegistry = (seed: Partial<LabRegistry>): LabRegistry => ({
+  champions: seed.champions ?? [],
+  patches: seed.patches ?? [],
+  builds: seed.builds ?? [],
+  runePages: seed.runePages ?? [],
+  matchups: seed.matchups ?? [],
+  synergies: seed.synergies ?? [],
+  concepts: seed.concepts ?? [],
+  articles: seed.articles ?? [],
+  tierLists: seed.tierLists ?? [],
+  metaStates: seed.metaStates ?? [],
+});
 
-export const getLabChampion = (id: LabChampionId) =>
-  labRegistry.champions.find((champion) => champion.id === id);
+export const getLabChampion = (registry: LabRegistry, id: LabChampionId) =>
+  registry.champions.find((champion) => champion.id === id);
 
-export const getPatch = (id: PatchId) =>
-  labRegistry.patches.find((patch) => patch.id === id);
+export const getPatch = (registry: LabRegistry, id: PatchId) =>
+  registry.patches.find((patch) => patch.id === id);
 
-export const getConcept = (id: ConceptId) =>
-  labRegistry.concepts.find((concept) => concept.id === id);
+export const getConcept = (registry: LabRegistry, id: ConceptId) =>
+  registry.concepts.find((concept) => concept.id === id);
 
 export const getChampionKnowledge = (
+  registry: LabRegistry,
   id: LabChampionId,
 ): ChampionKnowledge | undefined => {
-  const champion = getLabChampion(id);
+  const champion = getLabChampion(registry, id);
   if (!champion) return undefined;
   return {
     champion,
-    builds: labRegistry.builds.filter((build) => build.championId === id),
-    runePages: labRegistry.runePages.filter(
+    builds: registry.builds.filter((build) => build.championId === id),
+    runePages: registry.runePages.filter(
       (runePage) => runePage.championId === id,
     ),
-    matchups: labRegistry.matchups.filter(
+    matchups: registry.matchups.filter(
       (matchup) =>
         matchup.championId === id || matchup.opponentChampionId === id,
     ),
-    synergies: labRegistry.synergies.filter((synergy) =>
+    synergies: registry.synergies.filter((synergy) =>
       synergy.championIds.includes(id),
     ),
-    articles: labRegistry.articles.filter(
+    articles: registry.articles.filter(
       (article) =>
         article.relatedChampionIds?.includes(id) ||
         article.scope.championId === id,
     ),
-    tierListAppearances: labRegistry.tierLists.flatMap((tierList) => {
+    tierListAppearances: registry.tierLists.flatMap((tierList) => {
       const entry = tierList.entries.find(
         (candidate) => candidate.championId === id,
       );
@@ -84,47 +94,55 @@ export const getChampionKnowledge = (
   };
 };
 
-export const getPatchKnowledge = (id: PatchId): PatchKnowledge | undefined => {
-  const patch = getPatch(id);
+export const getPatchKnowledge = (
+  registry: LabRegistry,
+  id: PatchId,
+): PatchKnowledge | undefined => {
+  const patch = getPatch(registry, id);
   if (!patch) return undefined;
   return {
     patch,
-    metaState: labRegistry.metaStates.find((state) => state.patchId === id),
-    tierLists: labRegistry.tierLists.filter(
-      (tierList) => tierList.patchId === id,
-    ),
-    builds: labRegistry.builds.filter((build) => build.patchId === id),
-    runePages: labRegistry.runePages.filter(
-      (runePage) => runePage.patchId === id,
-    ),
-    articles: labRegistry.articles.filter(
-      (article) => article.scope.patchId === id,
-    ),
+    metaState: registry.metaStates.find((state) => state.patchId === id),
+    tierLists: registry.tierLists.filter((tierList) => tierList.patchId === id),
+    builds: registry.builds.filter((build) => build.patchId === id),
+    runePages: registry.runePages.filter((runePage) => runePage.patchId === id),
+    articles: registry.articles.filter((article) => article.scope.patchId === id),
   };
 };
 
-export const getMatchupsFor = (championId: LabChampionId, role?: Role) =>
-  labRegistry.matchups.filter(
+export const getMatchupsFor = (
+  registry: LabRegistry,
+  championId: LabChampionId,
+  role?: Role,
+) =>
+  registry.matchups.filter(
     (matchup) =>
       (matchup.championId === championId ||
         matchup.opponentChampionId === championId) &&
       (role === undefined || matchup.role === role),
   );
 
-export const getSynergiesFor = (championId: LabChampionId) =>
-  labRegistry.synergies.filter((synergy) =>
+export const getSynergiesFor = (
+  registry: LabRegistry,
+  championId: LabChampionId,
+) =>
+  registry.synergies.filter((synergy) =>
     synergy.championIds.includes(championId),
   );
 
-export const getTierList = (patchId: PatchId, role?: Role) =>
-  labRegistry.tierLists.find(
+export const getTierList = (
+  registry: LabRegistry,
+  patchId: PatchId,
+  role?: Role,
+) =>
+  registry.tierLists.find(
     (tierList) => tierList.patchId === patchId && tierList.role === role,
   );
 
-export const getMetaTimeline = () =>
-  labRegistry.metaStates
+export const getMetaTimeline = (registry: LabRegistry) =>
+  registry.metaStates
     .map((state) => {
-      const patch = labRegistry.patches.find(
+      const patch = registry.patches.find(
         (candidate) => candidate.id === state.patchId,
       );
       return patch ? { patch, metaState: state } : undefined;
@@ -134,8 +152,11 @@ export const getMetaTimeline = () =>
     )
     .sort((a, b) => a.patch.sequence - b.patch.sequence);
 
-export const getGuides = (filter?: { championId?: LabChampionId; role?: Role }) =>
-  labRegistry.articles.filter(
+export const getGuides = (
+  registry: LabRegistry,
+  filter?: { championId?: LabChampionId; role?: Role },
+) =>
+  registry.articles.filter(
     (article) =>
       article.format === 'guide' &&
       (filter?.championId === undefined ||

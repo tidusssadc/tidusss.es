@@ -1,0 +1,149 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Navbar from '../components/Navbar.astro';
+import Footer from '../components/Footer.astro';
+import ExploreNext from '../components/ExploreNext.astro';
+import LaboratoryHero from '../components/laboratory/LaboratoryHero.astro';
+import LaboratoryMetadata from '../components/laboratory/LaboratoryMetadata.astro';
+import EmptyLaboratoryState from '../components/laboratory/EmptyLaboratoryState.astro';
+import TierListLegend from '../components/laboratory/tier-list/TierListLegend.astro';
+import TierListFilters from '../components/laboratory/tier-list/TierListFilters.astro';
+import TierListSection from '../components/laboratory/tier-list/TierListSection.astro';
+import TierListPendingSection from '../components/laboratory/tier-list/TierListPendingSection.astro';
+import {
+  buildLabRegistry,
+  getTierList,
+  type PlaceholderTierListEntry,
+  type ReviewedTierListEntry,
+  type Role,
+  type TierGrade,
+} from '../domain/league-laboratory';
+import {
+  adcTierListChampions,
+  leagueLaboratoryPatches,
+  officialAdcTierList,
+} from '../data/league-laboratory';
+
+const registry = buildLabRegistry({
+  champions: adcTierListChampions,
+  patches: leagueLaboratoryPatches,
+  tierLists: [officialAdcTierList],
+});
+
+const patch = leagueLaboratoryPatches.find(
+  (candidate) => candidate.id === officialAdcTierList.patchId,
+);
+const role: Role = officialAdcTierList.role ?? 'BOTTOM';
+const tierList = patch
+  ? getTierList(registry, officialAdcTierList.patchId, role)
+  : undefined;
+
+const championsById = new Map(
+  adcTierListChampions.map((champion) => [champion.id, champion] as const),
+);
+
+const reviewedEntries = (tierList?.entries ?? []).filter(
+  (entry): entry is ReviewedTierListEntry => entry.reviewStatus === 'reviewed',
+);
+const placeholderEntries = (tierList?.entries ?? []).filter(
+  (entry): entry is PlaceholderTierListEntry =>
+    entry.reviewStatus === 'placeholder',
+);
+
+const tierOrder: TierGrade[] = ['S+', 'S', 'A', 'B', 'C', 'D'];
+const entriesByTier = tierOrder.map((tier) => ({
+  tier,
+  entries: reviewedEntries.filter((entry) => entry.tier === tier),
+}));
+
+const dataDragonVersion = patch?.dataDragonVersion ?? '15.14.1';
+const roleLabelForCopy = role === 'BOTTOM' ? 'ADC' : role;
+const pageTitle = `${officialAdcTierList.title} · tidusss.es`;
+const pageDescription = patch
+  ? `Tier list ${roleLabelForCopy} de Tidusss para el parche ${patch.label}: criterio editorial de un jugador Master, no un promedio de win rate.`
+  : 'Tier list editorial de Tidusss, Master ADC en EUW.';
+---
+
+<BaseLayout title={pageTitle} description={pageDescription}>
+  <Navbar />
+  <main>
+    <LaboratoryHero
+      title="The Official Tidusss ADC Tier List"
+      description="Clasificación editorial de Tidusss, Master ADC en EUW. No es un promedio de win rate: es su criterio, explicado partida a partida."
+    />
+    <section
+      class="tier-list-page section-shell"
+      aria-labelledby="tier-list-title"
+    >
+      <div class="mx-auto max-w-7xl px-5 sm:px-8">
+        <header class="tier-list-header">
+          <p class="eyebrow">The League Laboratory · Tier List</p>
+          <h2 id="tier-list-title">{officialAdcTierList.title}</h2>
+          {
+            patch && (
+              <LaboratoryMetadata
+                patch={patch}
+                role={role}
+                queue={officialAdcTierList.queue}
+                updatedAt={officialAdcTierList.publishedAt}
+              />
+            )
+          }
+          {
+            officialAdcTierList.methodologyNote && (
+              <p class="tier-list-methodology">
+                {officialAdcTierList.methodologyNote}
+              </p>
+            )
+          }
+        </header>
+
+        {
+          tierList ? (
+            <>
+              <TierListLegend />
+              <TierListFilters />
+              <div class="tier-list-grid" data-tier-list-grid>
+                {entriesByTier.map(({ tier, entries }) => (
+                  <TierListSection
+                    tier={tier}
+                    entries={entries}
+                    champions={championsById}
+                    role={role}
+                    dataDragonVersion={dataDragonVersion}
+                  />
+                ))}
+              </div>
+              <TierListPendingSection
+                entries={placeholderEntries}
+                champions={championsById}
+                role={role}
+                dataDragonVersion={dataDragonVersion}
+              />
+            </>
+          ) : (
+            <EmptyLaboratoryState
+              title="Todavía no hay una Tier List publicada"
+              description="Esta clasificación se está preparando. Vuelve pronto para ver el criterio de Tidusss sobre el meta actual de ADC."
+            />
+          )
+        }
+
+        <div class="tier-list-cta">
+          <a class="button-secondary" href="/live">
+            Ver la actividad competitiva en directo <span aria-hidden="true">→</span>
+          </a>
+          <a class="button-secondary" href="/#canales">
+            Ver vídeos y análisis <span aria-hidden="true">→</span>
+          </a>
+        </div>
+      </div>
+    </section>
+    <ExploreNext
+      source="tier-list:official-adc"
+      eyebrow="Sigue explorando"
+      title="Relacionado con esta Tier List"
+    />
+  </main>
+  <Footer />
+</BaseLayout>

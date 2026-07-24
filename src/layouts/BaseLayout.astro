@@ -9,11 +9,14 @@ interface Props {
   title?: string;
   description?: string;
   environment?: EnvironmentId;
+  /** Solo para contenido todavía demasiado incompleto para indexarse (p. ej. una ficha de campeón sin perfil editorial). El resto del sitio nunca lo pasa. */
+  noindex?: boolean;
 }
 const {
   title = site.title,
   description = site.description,
   environment = resolveEnvironment(Astro.url.pathname),
+  noindex = false,
 } = Astro.props;
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 const socialImageURL = new URL('/og-image.png', Astro.site);
@@ -29,7 +32,10 @@ const socialImageURL = new URL('/og-image.png', Astro.site);
     <meta name="color-scheme" content="dark" />
     <meta name="msapplication-TileColor" content="#0B0B0C" />
     <meta name="msapplication-config" content="/browserconfig.xml" />
-    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta
+      name="robots"
+      content={noindex ? 'noindex, follow' : 'index, follow, max-image-preview:large'}
+    />
 
     <meta property="og:type" content="website" />
     <meta property="og:locale" content="es_ES" />

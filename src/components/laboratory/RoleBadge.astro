@@ -1,0 +1,13 @@
+---
+import { roleLabel, type Role } from '../../domain/league-laboratory';
+
+interface Props {
+  role: Role;
+}
+const { role } = Astro.props;
+---
+
+<span class="lab-badge lab-badge--role">
+  <span class="lab-badge-label">Rol</span>
+  <strong>{roleLabel(role)}</strong>
+</span>

@@ -1,5 +1,9 @@
 import { goals } from '../../config/goals';
 import { platforms } from '../../config/platforms';
+import {
+  leagueLaboratoryEntities,
+  leagueLaboratoryRelations,
+} from './league-laboratory-extension';
 import type {
   ContentConnection,
   ContentEntity,
@@ -57,14 +61,6 @@ const coreEntities: ContentEntity[] = [
     status: 'available',
   },
   {
-    id: 'champion:lucian',
-    kind: 'champion',
-    title: 'Lucian',
-    description: 'Especialidad competitiva actual de Tidusss.',
-    source: 'editorial',
-    status: 'available',
-  },
-  {
     id: 'achievement:master-euw',
     kind: 'achievement',
     title: 'Master EUW',
@@ -82,6 +78,7 @@ const coreEntities: ContentEntity[] = [
     source: goal.source === 'riot' ? 'riot' : 'editorial',
     status: goal.status === 'active' ? 'available' : 'planned',
   })),
+  ...leagueLaboratoryEntities,
 ];
 
 const relations: ContentRelation[] = [
@@ -154,6 +151,7 @@ const relations: ContentRelation[] = [
     priority: 40 - goal.order,
     source: 'editorial',
   })),
+  ...leagueLaboratoryRelations,
 ];
 
 export const contentGraph: ContentGraph = {

@@ -42,7 +42,9 @@ const connections = getContentConnections(source, { limit });
                 <span>{String(index + 1).padStart(2, '0')}</span>
                 <div>
                   <strong>{relation.label}</strong>
-                  <p>{relation.context ?? target.description}</p>
+                  {(relation.context ?? target.description) && (
+                    <p>{relation.context ?? target.description}</p>
+                  )}
                 </div>
                 <b aria-hidden="true">{target.external ? '↗' : '→'}</b>
               </a>

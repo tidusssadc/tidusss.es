@@ -14,6 +14,12 @@ export type SynergyType =
 
 export type MatchupDifficulty = 'easy' | 'even' | 'hard';
 
+export type CompetitiveQueue = 'solo-duo' | 'flex' | 'aram' | 'normal';
+
+export type EditorialReviewStatus = 'reviewed' | 'placeholder';
+
+export type ChampionDifficulty = 'low' | 'medium' | 'high';
+
 export type LabEntityKind =
   | 'champion'
   | 'patch'
@@ -51,15 +57,39 @@ export interface KnowledgeScope {
   patchId?: PatchId;
 }
 
+/**
+ * El perfil editorial de un campeón: quién es, por qué merece la pena
+ * jugarlo, qué opina Tidusss de él en general. Es deliberadamente distinto
+ * de un `TierListEntry`: el tier cambia cada parche, este perfil no. Un
+ * campeón puede llevar años en el canal sin que su identidad editorial
+ * cambie, aunque su tier suba o baje en cada Tier List.
+ */
+export interface ChampionProfile {
+  summary: string;
+  appeal: string;
+  editorialTake: EditorialTake;
+  strengths: readonly string[];
+  weaknesses: readonly string[];
+  commonMistakes: readonly string[];
+  powerSpikes: readonly string[];
+  difficulty: ChampionDifficulty;
+}
+
 export interface LabChampion {
   id: LabChampionId;
   slug: string;
   name: string;
+  /** Título oficial del campeón (p. ej. "El Purificador"). Opcional a propósito: solo se rellena cuando el título exacto está verificado. */
+  title?: string;
   roles: readonly Role[];
   signatureRole?: Role;
   isSignatureChampion: boolean;
   playstyleTags: readonly string[];
   signatureNote?: string;
+  /** Clave interna de Data Dragon (p. ej. "Kaisa"), solo para resolver assets. */
+  dataDragonKey?: string;
+  /** Ausente mientras no exista un perfil editorial real y revisado. */
+  profile?: ChampionProfile;
 }
 
 export interface Patch {
@@ -151,21 +181,35 @@ export type Guide = KnowledgeArticle & {
   scope: KnowledgeScope & { championId: LabChampionId; role: Role };
 };
 
-export interface TierListEntry {
+interface TierListEntryBase {
   championId: LabChampionId;
-  tier: TierGrade;
   editorialTake: EditorialTake;
-  trend?: 'rising' | 'falling' | 'stable';
+  strengths?: readonly string[];
+  weaknesses?: readonly string[];
   buildId?: BuildId;
   runePageId?: RunePageId;
 }
+
+export interface ReviewedTierListEntry extends TierListEntryBase {
+  reviewStatus: 'reviewed';
+  tier: TierGrade;
+  trend?: 'rising' | 'falling' | 'stable';
+}
+
+export interface PlaceholderTierListEntry extends TierListEntryBase {
+  reviewStatus: 'placeholder';
+}
+
+export type TierListEntry = ReviewedTierListEntry | PlaceholderTierListEntry;
 
 export interface TierList {
   id: TierListId;
   title: string;
   patchId: PatchId;
   role?: Role;
+  queue: CompetitiveQueue;
   entries: readonly TierListEntry[];
+  methodologyNote?: string;
   publishedAt?: string;
   status: 'draft' | 'published';
 }

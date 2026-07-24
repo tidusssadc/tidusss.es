@@ -1,0 +1,26 @@
+---
+import type { EditorialConfidence } from '../../domain/league-laboratory';
+
+interface Props {
+  confidence: EditorialConfidence;
+}
+const { confidence } = Astro.props;
+
+const levels: Record<EditorialConfidence, { label: string; filled: number }> = {
+  low: { label: 'Confianza baja', filled: 1 },
+  medium: { label: 'Confianza media', filled: 2 },
+  high: { label: 'Confianza alta', filled: 3 },
+};
+const { label, filled } = levels[confidence];
+---
+
+<span class="confidence-indicator" data-confidence={confidence}>
+  <span class="confidence-dots" aria-hidden="true">
+    {
+      Array.from({ length: 3 }, (_, index) => (
+        <i class:list={[{ 'is-filled': index < filled }]} />
+      ))
+    }
+  </span>
+  <span class="confidence-label">{label}</span>
+</span>

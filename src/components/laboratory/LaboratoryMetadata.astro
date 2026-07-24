@@ -1,0 +1,45 @@
+---
+import { queueLabel, type CompetitiveQueue, type Patch, type Role } from '../../domain/league-laboratory';
+import PatchBadge from './PatchBadge.astro';
+import RoleBadge from './RoleBadge.astro';
+
+interface Props {
+  patch: Patch;
+  role?: Role;
+  /** Ausente cuando el contexto no está ligado a una cola (p. ej. la ficha de un campeón). */
+  queue?: CompetitiveQueue;
+  updatedAt?: string;
+}
+const { patch, role, queue, updatedAt } = Astro.props;
+
+/**
+ * Fecha absoluta, no relativa: esta página es estática. Un "hace 2 días"
+ * calculado en build quedaría desactualizado hasta el siguiente despliegue.
+ */
+const updatedLabel = updatedAt
+  ? new Intl.DateTimeFormat('es-ES', {
+      dateStyle: 'long',
+      timeZone: 'Europe/Madrid',
+    }).format(new Date(updatedAt))
+  : undefined;
+---
+
+<div class="laboratory-metadata" aria-label="Contexto de esta clasificación">
+  <PatchBadge patch={patch} />
+  {role && <RoleBadge role={role} />}
+  {
+    queue && (
+      <span class="lab-badge lab-badge--queue">
+        <span class="lab-badge-label">Cola</span>
+        <strong>{queueLabel(queue)}</strong>
+      </span>
+    )
+  }
+  {
+    updatedLabel && (
+      <span class="laboratory-updated">
+        Actualizado el <time datetime={updatedAt}>{updatedLabel}</time>
+      </span>
+    )
+  }
+</div>

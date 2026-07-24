@@ -1,0 +1,26 @@
+---
+import TierBadge from '../TierBadge.astro';
+import type { TierGrade } from '../../../domain/league-laboratory';
+
+const legend: { tier: TierGrade; description: string }[] = [
+  { tier: 'S+', description: 'Pick de referencia: la especialidad de Tidusss.' },
+  { tier: 'S', description: 'Fuerte y fiable en la mayoría de las partidas.' },
+  { tier: 'A', description: 'Sólido, con alguna condición para brillar.' },
+  { tier: 'B', description: 'Viable, exige más precisión o contexto favorable.' },
+  { tier: 'C', description: 'Situacional; requiere una composición específica.' },
+  { tier: 'D', description: 'Débil en el estado actual del juego.' },
+];
+---
+
+<div class="tier-list-legend" aria-label="Leyenda de tiers">
+  <ul>
+    {
+      legend.map(({ tier, description }) => (
+        <li>
+          <TierBadge tier={tier} />
+          <span>{description}</span>
+        </li>
+      ))
+    }
+  </ul>
+</div>

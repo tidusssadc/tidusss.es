@@ -1,0 +1,44 @@
+---
+import EmptyLaboratoryState from './EmptyLaboratoryState.astro';
+
+interface Props {
+  id: string;
+  title: string;
+  hasContent: boolean;
+  emptyTitle: string;
+  emptyDescription: string;
+  emptyCtaHref?: string;
+  emptyCtaLabel?: string;
+  emptyCtaExternal?: boolean;
+}
+const {
+  id,
+  title,
+  hasContent,
+  emptyTitle,
+  emptyDescription,
+  emptyCtaHref,
+  emptyCtaLabel,
+  emptyCtaExternal,
+} = Astro.props;
+---
+
+<section
+  class="champion-knowledge-section"
+  aria-labelledby={`${id}-heading`}
+>
+  <h3 id={`${id}-heading`}>{title}</h3>
+  {
+    hasContent ? (
+      <slot />
+    ) : (
+      <EmptyLaboratoryState
+        title={emptyTitle}
+        description={emptyDescription}
+        ctaHref={emptyCtaHref}
+        ctaLabel={emptyCtaLabel}
+        ctaExternal={emptyCtaExternal}
+      />
+    )
+  }
+</section>

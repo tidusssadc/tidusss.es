@@ -1,0 +1,13 @@
+---
+import type { Patch } from '../../domain/league-laboratory';
+
+interface Props {
+  patch: Patch;
+}
+const { patch } = Astro.props;
+---
+
+<span class="lab-badge lab-badge--patch">
+  <span class="lab-badge-label">Parche</span>
+  <strong>{patch.label}</strong>
+</span>

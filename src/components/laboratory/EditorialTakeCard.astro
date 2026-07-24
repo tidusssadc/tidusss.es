@@ -1,0 +1,31 @@
+---
+import type { EditorialReviewStatus, EditorialTake } from '../../domain/league-laboratory';
+import ConfidenceIndicator from './ConfidenceIndicator.astro';
+import TraitList from './TraitList.astro';
+
+interface Props {
+  take: EditorialTake;
+  reviewStatus: EditorialReviewStatus;
+  strengths?: readonly string[];
+  weaknesses?: readonly string[];
+}
+const { take, reviewStatus, strengths, weaknesses } = Astro.props;
+---
+
+<div class="editorial-take" data-review-status={reviewStatus}>
+  {
+    reviewStatus === 'placeholder' && (
+      <span class="editorial-take-draft-flag">
+        Borrador · pendiente de revisión
+      </span>
+    )
+  }
+  <p class="editorial-take-verdict">{take.verdict}</p>
+  <details class="editorial-take-details">
+    <summary>Ver razonamiento</summary>
+    <p>{take.reasoning}</p>
+    <TraitList label="Fortalezas" items={strengths ?? []} />
+    <TraitList label="Debilidades" items={weaknesses ?? []} />
+  </details>
+  <ConfidenceIndicator confidence={take.confidence} />
+</div>

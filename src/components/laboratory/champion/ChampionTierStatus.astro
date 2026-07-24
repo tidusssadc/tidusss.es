@@ -1,0 +1,42 @@
+---
+import type { ChampionKnowledge } from '../../../domain/league-laboratory';
+import EmptyLaboratoryState from '../EmptyLaboratoryState.astro';
+import TierBadge from '../TierBadge.astro';
+
+interface Props {
+  championSlug: string;
+  tierListAppearances: ChampionKnowledge['tierListAppearances'];
+}
+const { championSlug, tierListAppearances } = Astro.props;
+const appearance = tierListAppearances[0];
+---
+
+{
+  appearance ? (
+    <a
+      class="champion-tier-status"
+      href={`/tier-list?champion=${championSlug}`}
+    >
+      {appearance.entry.reviewStatus === 'reviewed' ? (
+        <TierBadge tier={appearance.entry.tier} />
+      ) : (
+        <span class="tier-badge" data-tier="pending" aria-hidden="true">
+          ?
+        </span>
+      )}
+      <span>
+        <strong>{appearance.tierList.title}</strong>
+        <small>
+          {appearance.entry.reviewStatus === 'reviewed'
+            ? 'Ver en la Tier List oficial'
+            : 'Todavía sin clasificar — ver estado en la Tier List'}
+        </small>
+      </span>
+    </a>
+  ) : (
+    <EmptyLaboratoryState
+      title="Todavía no aparece en ninguna Tier List"
+      description="Se añadirá aquí en cuanto tenga una entrada publicada."
+    />
+  )
+}

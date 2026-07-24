@@ -1,0 +1,16 @@
+---
+interface Props {
+  eyebrow?: string;
+  title: string;
+  description: string;
+}
+const { eyebrow = 'The League Laboratory', title, description } = Astro.props;
+---
+
+<section class="laboratory-hero" aria-labelledby="laboratory-hero-title">
+  <div class="mx-auto max-w-7xl px-5 sm:px-8">
+    <p class="eyebrow">{eyebrow}</p>
+    <h1 id="laboratory-hero-title">{title}</h1>
+    <p class="laboratory-hero-lead">{description}</p>
+  </div>
+</section>

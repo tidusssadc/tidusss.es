@@ -86,12 +86,36 @@ export const guideDocumentsChampionRelation = (guide: Guide): ContentRelation =>
 export const tierListFeaturesChampionRelation = (
   tierList: TierList,
   championId: Build['championId'],
+  label = 'Ver el perfil completo del campeón',
 ): ContentRelation => ({
   from: tierListToContentEntity(tierList).id,
   to: championId,
   kind: 'features',
-  label: tierList.title,
+  label,
   priority: 70,
+  source: 'editorial',
+});
+
+export const tierListTracksPatchRelation = (
+  tierList: TierList,
+): ContentRelation => ({
+  from: tierListToContentEntity(tierList).id,
+  to: tierList.patchId,
+  kind: 'tracks',
+  label: `Parche de referencia`,
+  priority: 50,
+  source: 'editorial',
+});
+
+export const championAppearsInTierListRelation = (
+  tierList: TierList,
+  championId: Build['championId'],
+): ContentRelation => ({
+  from: championId,
+  to: tierListToContentEntity(tierList).id,
+  kind: 'tracks',
+  label: 'Ver en la Tier List oficial',
+  priority: 65,
   source: 'editorial',
 });
 

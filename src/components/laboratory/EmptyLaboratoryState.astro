@@ -1,0 +1,26 @@
+---
+interface Props {
+  title: string;
+  description: string;
+  ctaHref?: string;
+  ctaLabel?: string;
+  ctaExternal?: boolean;
+}
+const { title, description, ctaHref, ctaLabel, ctaExternal } = Astro.props;
+---
+
+<div class="empty-laboratory-state">
+  <strong>{title}</strong>
+  <p>{description}</p>
+  {
+    ctaHref && ctaLabel && (
+      <a
+        href={ctaHref}
+        target={ctaExternal ? '_blank' : undefined}
+        rel={ctaExternal ? 'noopener noreferrer' : undefined}
+      >
+        {ctaLabel} <span aria-hidden="true">{ctaExternal ? '↗' : '→'}</span>
+      </a>
+    )
+  }
+</div>

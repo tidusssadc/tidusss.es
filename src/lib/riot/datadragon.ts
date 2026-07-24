@@ -24,6 +24,9 @@ export const dataDragonUrls = (version: string) => ({
     `https://ddragon.leagueoflegends.com/cdn/${version}/img/profileicon/${id}.png`,
   champion: (name: string) =>
     `https://ddragon.leagueoflegends.com/cdn/${version}/img/champion/${name}.png`,
+  /** No depende de la versión: Data Dragon sirve el arte de carga sin prefijo de parche. */
+  championLoading: (name: string, skinNumber = 0) =>
+    `https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${name}_${skinNumber}.jpg`,
   item: (id: number) =>
     `https://ddragon.leagueoflegends.com/cdn/${version}/img/item/${id}.png`,
   summonerSpell: (name: string) =>

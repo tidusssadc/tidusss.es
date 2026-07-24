@@ -1,0 +1,11 @@
+---
+import type { TierGrade } from '../../domain/league-laboratory';
+
+interface Props {
+  tier: TierGrade;
+}
+const { tier } = Astro.props;
+const slug = tier.toLowerCase().replace('+', '-plus');
+---
+
+<span class="tier-badge" data-tier={slug}>{tier}</span>

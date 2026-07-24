@@ -1,0 +1,52 @@
+---
+import type { ChampionDifficulty, ChampionProfile } from '../../../domain/league-laboratory';
+import ConfidenceIndicator from '../ConfidenceIndicator.astro';
+import EmptyLaboratoryState from '../EmptyLaboratoryState.astro';
+import TraitList from '../TraitList.astro';
+
+interface Props {
+  profile?: ChampionProfile;
+  championName: string;
+}
+const { profile, championName } = Astro.props;
+
+const difficultyLabel: Record<ChampionDifficulty, string> = {
+  low: 'Baja',
+  medium: 'Media',
+  high: 'Alta',
+};
+---
+
+{
+  profile ? (
+    <div class="champion-profile">
+      <div class="champion-profile-copy">
+        <h2>¿Quién es {championName}?</h2>
+        <p>{profile.summary}</p>
+        <h3>¿Por qué merece la pena jugarlo?</h3>
+        <p>{profile.appeal}</p>
+      </div>
+      <div class="champion-profile-take">
+        <span class="lab-badge-label">Lo que piensa Tidusss</span>
+        <p class="champion-profile-verdict">{profile.editorialTake.verdict}</p>
+        <p class="champion-profile-reasoning">{profile.editorialTake.reasoning}</p>
+        <ConfidenceIndicator confidence={profile.editorialTake.confidence} />
+      </div>
+      <div class="champion-profile-traits">
+        <TraitList label="Fortalezas" items={profile.strengths} />
+        <TraitList label="Debilidades" items={profile.weaknesses} />
+        <TraitList label="Power spikes" items={profile.powerSpikes} />
+        <TraitList label="Errores frecuentes" items={profile.commonMistakes} />
+      </div>
+      <p class="champion-profile-difficulty">
+        <span class="lab-badge-label">Dificultad percibida</span>{' '}
+        <strong>{difficultyLabel[profile.difficulty]}</strong>
+      </p>
+    </div>
+  ) : (
+    <EmptyLaboratoryState
+      title={`El perfil editorial de ${championName} todavía no existe`}
+      description="Tidusss no ha escrito todavía por qué merece la pena jugarlo, cuándo es fuerte o qué errores suele ver. Este campeón ya es parte del Laboratorio — su ficha se completará con el tiempo."
+    />
+  )
+}

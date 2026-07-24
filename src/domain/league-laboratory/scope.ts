@@ -1,4 +1,35 @@
-import type { KnowledgeScope, LabChampionId, Patch, PatchId, Role } from './types';
+import type {
+  CompetitiveQueue,
+  KnowledgeScope,
+  LabChampionId,
+  Patch,
+  PatchId,
+  Role,
+} from './types';
+
+const roleLabels: Record<Role, string> = {
+  TOP: 'Top',
+  JUNGLE: 'Jungla',
+  MIDDLE: 'Mid',
+  BOTTOM: 'ADC',
+  UTILITY: 'Support',
+};
+
+/**
+ * Duplica deliberadamente `positionLabel` de `LiveDashboard.astro` (no se
+ * importa desde ahí para no tocar Live). Ambas listas deben mantenerse
+ * sincronizadas a mano — riesgo ya documentado en docs/league-laboratory.md.
+ */
+export const roleLabel = (role: Role) => roleLabels[role];
+
+const queueLabels: Record<CompetitiveQueue, string> = {
+  'solo-duo': 'Solo/Duo',
+  flex: 'Flexible',
+  aram: 'ARAM',
+  normal: 'Normal',
+};
+
+export const queueLabel = (queue: CompetitiveQueue) => queueLabels[queue];
 
 export const scopeMatchesChampion = (
   scope: KnowledgeScope,

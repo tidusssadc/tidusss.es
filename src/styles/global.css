@@ -5726,3 +5726,643 @@ body[data-home-state='near-goal'] .environment-rays {
     transform: none;
   }
 }
+
+/* League Laboratory — The Official Tidusss ADC Tier List
+   Tokens de tier: heredan la paleta existente (dorado/azul/neutros), nunca
+   colores nuevos fuera de esa familia. La jerarquía nunca depende solo del
+   color: cada tier también se distingue por el texto (S+/S/A/B/C/D) y por
+   un tamaño de insignia ligeramente decreciente. */
+:root {
+  --lab-tier-s-plus: #d6b56b;
+  --lab-tier-s: #edcf8d;
+  --lab-tier-a: #93c5fd;
+  --lab-tier-b: #4ba3ff;
+  --lab-tier-c: #78859a;
+  --lab-tier-d: #59667a;
+}
+
+.laboratory-hero {
+  padding-block: clamp(3.5rem, 8vw, 6rem) clamp(2rem, 5vw, 3rem);
+  text-align: center;
+}
+.laboratory-hero h1 {
+  margin-top: 1rem;
+  font-size: clamp(2rem, 5vw, 3.25rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: white;
+}
+.laboratory-hero-lead {
+  max-width: 42rem;
+  margin: 1.25rem auto 0;
+  font-size: clamp(1rem, 1.4vw, 1.15rem);
+  line-height: 1.7;
+  color: #9aa5b8;
+}
+.laboratory-hero .eyebrow {
+  justify-content: center;
+}
+.laboratory-hero .eyebrow::before {
+  display: none;
+}
+
+.tier-list-header {
+  max-width: 46rem;
+}
+.tier-list-header h2 {
+  margin-top: 0.9rem;
+  font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: white;
+}
+.tier-list-methodology {
+  margin-top: 1.25rem;
+  padding: 1rem 1.15rem;
+  border: 1px solid rgb(255 255 255 / 8%);
+  border-left: 2px solid #d6b56b;
+  background: rgb(255 255 255 / 2%);
+  font-size: 0.9rem;
+  line-height: 1.65;
+  color: #9aa5b8;
+}
+
+.lab-badge {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  padding: 0.4rem 0.75rem;
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 2px;
+  background: rgb(255 255 255 / 3%);
+  font-size: 0.8rem;
+  color: #cbd5e1;
+}
+.lab-badge-label {
+  color: #667388;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.lab-badge strong {
+  color: white;
+  font-weight: 700;
+}
+
+.laboratory-metadata {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem;
+  margin-top: 1.5rem;
+}
+.laboratory-updated {
+  font-size: 0.8rem;
+  color: #667388;
+}
+.laboratory-updated time {
+  color: #9aa5b8;
+}
+
+.tier-list-legend {
+  margin-top: 2.5rem;
+  padding: 1rem 1.15rem;
+  border: 1px solid rgb(255 255 255 / 6%);
+  background: rgb(255 255 255 / 1.5%);
+}
+.tier-list-legend ul {
+  display: grid;
+  gap: 0.6rem;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.tier-list-legend li {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.85rem;
+  color: #9aa5b8;
+}
+@media (min-width: 640px) {
+  .tier-list-legend ul {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (min-width: 1024px) {
+  .tier-list-legend ul {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.tier-list-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  padding-block: 1rem;
+  border-block: 1px solid rgb(255 255 255 / 8%);
+}
+.tier-list-filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.tier-list-filter-chips button {
+  min-height: 2.75rem;
+  padding: 0.4rem 0.9rem;
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: 2px;
+  background: transparent;
+  color: #9aa5b8;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease,
+    background-color 0.2s ease;
+}
+.tier-list-filter-chips button[aria-pressed='true'] {
+  border-color: #d6b56b;
+  background: rgb(214 181 107 / 12%);
+  color: #d6b56b;
+}
+@media (hover: hover) {
+  .tier-list-filter-chips button:hover {
+    border-color: rgb(75 163 255 / 55%);
+    color: white;
+  }
+}
+.tier-list-search {
+  display: inline-flex;
+}
+.tier-list-search input {
+  min-height: 2.75rem;
+  min-width: 12rem;
+  padding: 0.4rem 0.9rem;
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: 2px;
+  background: rgb(255 255 255 / 3%);
+  color: white;
+  font-size: 0.85rem;
+}
+.tier-list-search input::placeholder {
+  color: #667388;
+}
+
+.tier-list-grid {
+  display: grid;
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.tier-list-row header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+.tier-list-row ul {
+  display: grid;
+  gap: 1rem;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.tier-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.75rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: 2px;
+  color: #060913;
+  background: #78859a;
+  font-weight: 900;
+  letter-spacing: 0.01em;
+}
+.tier-badge[data-tier='s-plus'] {
+  background: var(--lab-tier-s-plus);
+  font-size: 1rem;
+}
+.tier-badge[data-tier='s'] {
+  background: var(--lab-tier-s);
+  font-size: 0.95rem;
+}
+.tier-badge[data-tier='a'] {
+  background: var(--lab-tier-a);
+  font-size: 0.9rem;
+}
+.tier-badge[data-tier='b'] {
+  background: var(--lab-tier-b);
+  font-size: 0.85rem;
+}
+.tier-badge[data-tier='c'] {
+  background: var(--lab-tier-c);
+  font-size: 0.85rem;
+}
+.tier-badge[data-tier='d'] {
+  background: var(--lab-tier-d);
+  font-size: 0.85rem;
+}
+
+.tier-list-entry {
+  display: grid;
+  gap: 1rem;
+  padding: 1.15rem;
+  border: 1px solid rgb(255 255 255 / 8%);
+  background: rgb(255 255 255 / 1.5%);
+}
+.tier-list-entry--placeholder {
+  border-style: dashed;
+  border-color: rgb(255 255 255 / 14%);
+  background: transparent;
+}
+@media (min-width: 768px) {
+  .tier-list-entry {
+    grid-template-columns: 14rem 1fr;
+    align-items: start;
+  }
+}
+
+.champion-identity {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+.champion-identity img {
+  border-radius: 2px;
+}
+.champion-identity-fallback {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: 50%;
+  color: #9aa5b8;
+  font-weight: 800;
+}
+.champion-identity strong {
+  display: block;
+  color: white;
+  font-size: 1.05rem;
+}
+.champion-identity .lab-badge {
+  margin-top: 0.35rem;
+  padding: 0.15rem 0.5rem;
+}
+
+.confidence-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+.confidence-dots {
+  display: inline-flex;
+  gap: 0.25rem;
+}
+.confidence-dots i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 14%);
+}
+.confidence-dots i.is-filled {
+  background: #4ba3ff;
+}
+.confidence-label {
+  font-size: 0.75rem;
+  color: #667388;
+}
+
+.editorial-take {
+  display: grid;
+  gap: 0.6rem;
+}
+.editorial-take-draft-flag {
+  display: inline-flex;
+  align-self: start;
+  padding: 0.2rem 0.55rem;
+  border: 1px solid rgb(255 255 255 / 14%);
+  border-radius: 999px;
+  color: #9aa5b8;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.editorial-take-verdict {
+  font-size: 0.98rem;
+  line-height: 1.6;
+  color: #dce4f0;
+}
+.editorial-take-details summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: #4ba3ff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  list-style: none;
+}
+.editorial-take-details summary::-webkit-details-marker {
+  display: none;
+}
+.editorial-take-details summary::after {
+  content: '+';
+  font-weight: 900;
+}
+.editorial-take-details[open] summary::after {
+  content: '−';
+}
+.editorial-take-details p {
+  margin-top: 0.6rem;
+  font-size: 0.88rem;
+  line-height: 1.65;
+  color: #9aa5b8;
+}
+.trait-list {
+  margin-top: 0.75rem;
+}
+.trait-list span {
+  display: block;
+  color: #667388;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.trait-list ul {
+  margin: 0.35rem 0 0;
+  padding-left: 1.1rem;
+  color: #9aa5b8;
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+.tier-list-pending {
+  margin-top: 2.5rem;
+  padding-top: 2rem;
+  border-top: 1px solid rgb(255 255 255 / 8%);
+}
+.tier-list-pending header h3 {
+  color: white;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+.tier-list-pending header p {
+  margin-top: 0.4rem;
+  max-width: 36rem;
+  font-size: 0.85rem;
+  color: #667388;
+}
+.tier-list-pending ul {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.25rem;
+  list-style: none;
+  padding: 0;
+}
+
+.empty-laboratory-state {
+  margin-top: 2rem;
+  padding: 2.5rem;
+  border: 1px dashed rgb(255 255 255 / 14%);
+  text-align: center;
+}
+.empty-laboratory-state strong {
+  display: block;
+  color: white;
+  font-size: 1.1rem;
+}
+.empty-laboratory-state p {
+  margin-top: 0.5rem;
+  color: #667388;
+}
+
+.tier-list-cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 3rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tier-list-filter-chips button {
+    transition: none;
+  }
+}
+
+/* Explorador de campeones
+   Deliberadamente más tranquilo que el resto del sitio: más aire entre
+   bloques, tipografía como jerarquía principal, sin reveals de scroll ni
+   animaciones de entrada. La calma es el efecto visual. */
+.champion-page {
+  padding-top: clamp(2rem, 5vw, 3.5rem);
+}
+
+.champion-header {
+  display: grid;
+  gap: 2rem;
+  align-items: center;
+}
+@media (min-width: 768px) {
+  .champion-header {
+    grid-template-columns: 14rem 1fr;
+    gap: 3rem;
+  }
+}
+.champion-header-portrait {
+  overflow: hidden;
+  aspect-ratio: 308 / 560;
+  max-width: 14rem;
+  border: 1px solid rgb(255 255 255 / 8%);
+  border-radius: 2px;
+}
+.champion-header-portrait img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.champion-header-portrait .champion-identity-fallback {
+  width: 100%;
+  height: 100%;
+  border: none;
+  border-radius: 0;
+  font-size: 3rem;
+}
+.champion-header-identity h1 {
+  margin-top: 0.75rem;
+  font-size: clamp(2.25rem, 5vw, 3.5rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: white;
+}
+.champion-header-title {
+  margin-top: 0.35rem;
+  color: #9aa5b8;
+  font-size: 1.05rem;
+  font-style: italic;
+}
+.champion-header-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1.25rem;
+}
+.lab-badge--signature strong {
+  color: #d6b56b;
+}
+.champion-header-status {
+  margin-top: 1.25rem;
+  color: #667388;
+  font-size: 0.8rem;
+}
+.champion-header-identity .confidence-indicator {
+  margin-top: 0.5rem;
+}
+
+.champion-tier-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.85rem;
+  margin-top: 2.5rem;
+  padding: 0.9rem 1.15rem;
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 2px;
+  color: inherit;
+  text-decoration: none;
+  transition:
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+.champion-tier-status strong {
+  display: block;
+  color: white;
+}
+.champion-tier-status small {
+  color: #667388;
+}
+.tier-badge[data-tier='pending'] {
+  background: transparent;
+  border: 1px dashed rgb(255 255 255 / 24%);
+  color: #9aa5b8;
+}
+@media (hover: hover) {
+  .champion-tier-status:hover {
+    border-color: rgb(214 181 107 / 45%);
+    transform: translateY(-2px);
+  }
+}
+
+.champion-profile {
+  display: grid;
+  gap: 2.5rem;
+  margin-top: 3rem;
+  padding-top: 2.5rem;
+  border-top: 1px solid rgb(255 255 255 / 8%);
+}
+.champion-profile-copy h2 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: white;
+}
+.champion-profile-copy h3 {
+  margin-top: 1.5rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: white;
+}
+.champion-profile-copy p {
+  margin-top: 0.75rem;
+  max-width: 42rem;
+  font-size: 1rem;
+  line-height: 1.75;
+  color: #b9c2d0;
+}
+.champion-profile-take {
+  padding: 1.5rem;
+  border-left: 2px solid #d6b56b;
+  background: rgb(255 255 255 / 2%);
+}
+.champion-profile-verdict {
+  margin-top: 0.6rem;
+  font-size: 1.05rem;
+  line-height: 1.6;
+  color: white;
+}
+.champion-profile-reasoning {
+  margin-top: 0.6rem;
+  font-size: 0.92rem;
+  line-height: 1.7;
+  color: #9aa5b8;
+}
+.champion-profile-take .confidence-indicator {
+  margin-top: 1rem;
+}
+.champion-profile-traits {
+  display: grid;
+  gap: 1.5rem;
+}
+@media (min-width: 640px) {
+  .champion-profile-traits {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+.champion-profile-difficulty {
+  font-size: 0.85rem;
+  color: #9aa5b8;
+}
+
+.champion-knowledge-grid {
+  display: grid;
+  gap: 1.5rem;
+  margin-top: 3rem;
+  padding-top: 2.5rem;
+  border-top: 1px solid rgb(255 255 255 / 8%);
+}
+@media (min-width: 768px) {
+  .champion-knowledge-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+.champion-knowledge-section h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: white;
+}
+.champion-knowledge-section .empty-laboratory-state {
+  margin-top: 0.85rem;
+  padding: 1.5rem;
+  text-align: left;
+}
+.champion-knowledge-section .empty-laboratory-state a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.85rem;
+  color: #4ba3ff;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+.champion-build-list {
+  margin-top: 0.85rem;
+  padding-left: 1.1rem;
+  color: #b9c2d0;
+  font-size: 0.9rem;
+  line-height: 1.7;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .champion-tier-status {
+    transition: none;
+  }
+}

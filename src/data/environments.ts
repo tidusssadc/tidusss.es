@@ -1,5 +1,12 @@
 export type EnvironmentId =
-  'home' | 'live' | 'match' | 'tier-list' | 'about' | 'youtube' | 'twitch';
+  | 'home'
+  | 'live'
+  | 'match'
+  | 'tier-list'
+  | 'champion'
+  | 'about'
+  | 'youtube'
+  | 'twitch';
 
 export type EnvironmentLayer =
   'grid' | 'noise' | 'mist' | 'image' | 'glow' | 'rays' | 'particles';
@@ -41,6 +48,11 @@ export const environments: Record<EnvironmentId, EnvironmentDefinition> = {
     label: 'Mesa de análisis',
     layers: ['grid', 'noise', 'mist', 'image', 'glow', 'rays'],
   },
+  champion: {
+    id: 'champion',
+    label: 'Estudio de campeón',
+    layers: ['noise', 'mist', 'glow'],
+  },
   about: {
     id: 'about',
     label: 'Retrato editorial',
@@ -62,6 +74,7 @@ export function resolveEnvironment(pathname: string): EnvironmentId {
   if (pathname.startsWith('/live')) return 'live';
   if (pathname.startsWith('/match')) return 'match';
   if (pathname.startsWith('/tier-list')) return 'tier-list';
+  if (pathname.startsWith('/campeones')) return 'champion';
   if (pathname.startsWith('/about')) return 'about';
   if (pathname.startsWith('/youtube')) return 'youtube';
   if (pathname.startsWith('/twitch')) return 'twitch';

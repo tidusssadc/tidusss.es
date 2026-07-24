@@ -1,0 +1,16 @@
+---
+interface Props {
+  label: string;
+  items: readonly string[];
+}
+const { label, items } = Astro.props;
+---
+
+{
+  items.length > 0 && (
+    <div class="trait-list">
+      <span>{label}</span>
+      <ul>{items.map((item) => <li>{item}</li>)}</ul>
+    </div>
+  )
+}

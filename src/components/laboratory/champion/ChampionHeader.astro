@@ -1,0 +1,64 @@
+---
+import type { LabChampion, Role } from '../../../domain/league-laboratory';
+import { dataDragonUrls } from '../../../lib/riot/datadragon';
+import ConfidenceIndicator from '../ConfidenceIndicator.astro';
+import RoleBadge from '../RoleBadge.astro';
+
+interface Props {
+  champion: LabChampion;
+  role: Role;
+  dataDragonVersion: string;
+}
+const { champion, role, dataDragonVersion } = Astro.props;
+const portraitUrl = champion.dataDragonKey
+  ? dataDragonUrls(dataDragonVersion).championLoading(champion.dataDragonKey)
+  : undefined;
+const hasProfile = Boolean(champion.profile);
+---
+
+<header class="champion-header" aria-labelledby="champion-name">
+  <div class="champion-header-portrait">
+    {
+      portraitUrl ? (
+        <img
+          src={portraitUrl}
+          width="308"
+          height="560"
+          alt=""
+          loading="eager"
+          decoding="async"
+          fetchpriority="high"
+        />
+      ) : (
+        <span class="champion-identity-fallback" aria-hidden="true">
+          {champion.name.slice(0, 1)}
+        </span>
+      )
+    }
+  </div>
+  <div class="champion-header-identity">
+    <p class="eyebrow">The League Laboratory · Explorador de campeones</p>
+    <h1 id="champion-name">{champion.name}</h1>
+    {champion.title && <p class="champion-header-title">{champion.title}</p>}
+    <div class="champion-header-badges">
+      <RoleBadge role={role} />
+      {
+        champion.isSignatureChampion && (
+          <span class="lab-badge lab-badge--signature">
+            <strong>Especialidad de Tidusss</strong>
+          </span>
+        )
+      }
+    </div>
+    <p class="champion-header-status">
+      {hasProfile
+        ? 'Perfil editorial completo'
+        : 'Perfil editorial pendiente de redacción'}
+    </p>
+    {
+      hasProfile && champion.profile && (
+        <ConfidenceIndicator confidence={champion.profile.editorialTake.confidence} />
+      )
+    }
+  </div>
+</header>

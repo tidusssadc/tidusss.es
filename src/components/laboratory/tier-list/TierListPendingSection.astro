@@ -1,0 +1,56 @@
+---
+import type {
+  LabChampion,
+  LabChampionId,
+  PlaceholderTierListEntry,
+  Role,
+} from '../../../domain/league-laboratory';
+import ChampionIdentity from '../ChampionIdentity.astro';
+import EditorialTakeCard from '../EditorialTakeCard.astro';
+
+interface Props {
+  entries: PlaceholderTierListEntry[];
+  champions: Map<LabChampionId, LabChampion>;
+  role: Role;
+  dataDragonVersion: string;
+}
+const { entries, champions, role, dataDragonVersion } = Astro.props;
+---
+
+{
+  entries.length > 0 && (
+    <section class="tier-list-pending" aria-labelledby="tier-list-pending-heading">
+      <header>
+        <h3 id="tier-list-pending-heading">Pendientes de revisión</h3>
+        <p>
+          Estos campeones ADC todavía no tienen una valoración publicada por
+          Tidusss. Se irán completando progresivamente.
+        </p>
+      </header>
+      <ul>
+        {entries.map((entry) => {
+          const champion = champions.get(entry.championId);
+          return (
+            champion && (
+              <li
+                class="tier-list-entry tier-list-entry--placeholder"
+                data-champion={champion.slug}
+                id={`campeon-${champion.slug}`}
+              >
+                <ChampionIdentity
+                  champion={champion}
+                  role={role}
+                  dataDragonVersion={dataDragonVersion}
+                />
+                <EditorialTakeCard
+                  take={entry.editorialTake}
+                  reviewStatus="placeholder"
+                />
+              </li>
+            )
+          );
+        })}
+      </ul>
+    </section>
+  )
+}

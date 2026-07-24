@@ -1,0 +1,111 @@
+---
+const grades = ['S+', 'S', 'A', 'B', 'C', 'D'] as const;
+/** Mismo slug que TierBadge.astro/TierListSection.astro (data-tier). */
+const tierSlug = (tier: string) => tier.toLowerCase().replace('+', '-plus');
+---
+
+<div
+  class="tier-list-filters"
+  data-tier-list-filters
+  role="search"
+  aria-label="Filtrar la tier list"
+>
+  <div class="tier-list-filter-chips" role="group" aria-label="Filtrar por tier">
+    <button type="button" data-tier-filter="all" aria-pressed="true">Todos</button>
+    {
+      grades.map((tier) => (
+        <button type="button" data-tier-filter={tierSlug(tier)} aria-pressed="false">
+          {tier}
+        </button>
+      ))
+    }
+    <button type="button" data-tier-filter="placeholder" aria-pressed="false">
+      Pendientes
+    </button>
+  </div>
+  <label class="tier-list-search">
+    <span class="sr-only">Buscar campeón</span>
+    <input
+      type="search"
+      data-tier-list-search
+      placeholder="Buscar campeón…"
+      autocomplete="off"
+    />
+  </label>
+</div>
+
+<script>
+  const root = document.querySelector<HTMLElement>('[data-tier-list-filters]');
+  const chips = [
+    ...(root?.querySelectorAll<HTMLButtonElement>('[data-tier-filter]') ?? []),
+  ];
+  const search = root?.querySelector<HTMLInputElement>('[data-tier-list-search]');
+  const entries = [
+    ...document.querySelectorAll<HTMLElement>('.tier-list-entry'),
+  ];
+  const rows = [...document.querySelectorAll<HTMLElement>('.tier-list-row')];
+  const pendingSection =
+    document.querySelector<HTMLElement>('.tier-list-pending');
+
+  let activeTier = 'all';
+
+  const championName = (entry: HTMLElement) =>
+    entry.querySelector('strong')?.textContent?.toLocaleLowerCase('es-ES') ??
+    '';
+
+  const applyFilters = () => {
+    const query = (search?.value ?? '').trim().toLocaleLowerCase('es-ES');
+    entries.forEach((entry) => {
+      const isPlaceholder = entry.classList.contains(
+        'tier-list-entry--placeholder',
+      );
+      const entryTier = entry.closest<HTMLElement>('.tier-list-row')?.dataset
+        .tier;
+      const matchesTier =
+        activeTier === 'all' ||
+        (activeTier === 'placeholder' && isPlaceholder) ||
+        entryTier === activeTier;
+      const matchesQuery = !query || championName(entry).includes(query);
+      entry.hidden = !(matchesTier && matchesQuery);
+    });
+    rows.forEach((row) => {
+      const visible = [
+        ...row.querySelectorAll<HTMLElement>('.tier-list-entry'),
+      ].some((entry) => !entry.hidden);
+      row.hidden = !visible;
+    });
+    if (pendingSection) {
+      const visible = [
+        ...pendingSection.querySelectorAll<HTMLElement>('.tier-list-entry'),
+      ].some((entry) => !entry.hidden);
+      pendingSection.hidden = !visible;
+    }
+  };
+
+  const selectChip = (chip: HTMLButtonElement) => {
+    activeTier = chip.dataset.tierFilter ?? 'all';
+    chips.forEach((candidate) =>
+      candidate.setAttribute('aria-pressed', String(candidate === chip)),
+    );
+    applyFilters();
+  };
+
+  chips.forEach((chip) => chip.addEventListener('click', () => selectChip(chip)));
+  search?.addEventListener('input', applyFilters);
+
+  const params = new URLSearchParams(location.search);
+  const initialTier = params.get('tier');
+  if (initialTier) {
+    const chip = chips.find(
+      (candidate) => candidate.dataset.tierFilter === initialTier,
+    );
+    if (chip) selectChip(chip);
+  }
+  const initialChampion =
+    params.get('champion') ?? location.hash.replace('#campeon-', '');
+  if (initialChampion) {
+    const target = document.getElementById(`campeon-${initialChampion}`);
+    target?.querySelector('details')?.setAttribute('open', '');
+    target?.scrollIntoView({ block: 'center' });
+  }
+</script>

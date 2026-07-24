@@ -1,0 +1,187 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Navbar from '../../components/Navbar.astro';
+import Footer from '../../components/Footer.astro';
+import ExploreNext from '../../components/ExploreNext.astro';
+import LaboratoryHero from '../../components/laboratory/LaboratoryHero.astro';
+import LaboratoryMetadata from '../../components/laboratory/LaboratoryMetadata.astro';
+import ChampionKnowledgeSection from '../../components/laboratory/ChampionKnowledgeSection.astro';
+import ChampionHeader from '../../components/laboratory/champion/ChampionHeader.astro';
+import ChampionProfileSection from '../../components/laboratory/champion/ChampionProfileSection.astro';
+import ChampionTierStatus from '../../components/laboratory/champion/ChampionTierStatus.astro';
+import {
+  buildLabRegistry,
+  getChampionKnowledge,
+  type LabChampion,
+} from '../../domain/league-laboratory';
+import {
+  adcTierListChampions,
+  leagueLaboratoryPatches,
+  officialAdcTierList,
+} from '../../data/league-laboratory';
+import { platforms } from '../../config/platforms';
+
+export function getStaticPaths() {
+  return adcTierListChampions.map((champion) => ({
+    params: { slug: champion.slug },
+    props: { champion },
+  }));
+}
+
+interface Props {
+  champion: LabChampion;
+}
+const { champion } = Astro.props;
+
+const registry = buildLabRegistry({
+  champions: adcTierListChampions,
+  patches: leagueLaboratoryPatches,
+  tierLists: [officialAdcTierList],
+});
+
+const knowledge = getChampionKnowledge(registry, champion.id);
+const patch = leagueLaboratoryPatches.find(
+  (candidate) => candidate.id === officialAdcTierList.patchId,
+);
+const role = champion.signatureRole ?? champion.roles[0];
+const hasProfile = Boolean(champion.profile);
+
+const pageTitle = `${champion.name}${champion.title ? ` — ${champion.title}` : ''} · The League Laboratory · tidusss.es`;
+const pageDescription = hasProfile
+  ? `Quién es ${champion.name}, por qué merece la pena jugarlo y qué piensa Tidusss realmente sobre él: criterio editorial, no estadísticas automatizadas.`
+  : `Ficha de ${champion.name} en The League Laboratory. Su perfil editorial todavía se está preparando.`;
+---
+
+<BaseLayout title={pageTitle} description={pageDescription} noindex={!hasProfile}>
+  <Navbar />
+  <main>
+    <LaboratoryHero
+      eyebrow="The League Laboratory"
+      title="Explorador de campeones"
+      description="Cada campeón, con su propia identidad: quién es, por qué jugarlo y qué opina Tidusss realmente."
+    />
+    <section class="champion-page section-shell" aria-labelledby="champion-name">
+      <div class="mx-auto max-w-6xl px-5 sm:px-8">
+        <ChampionHeader
+          champion={champion}
+          role={role}
+          dataDragonVersion={patch?.dataDragonVersion ?? '15.14.1'}
+        />
+
+        {
+          patch && (
+            <LaboratoryMetadata
+              patch={patch}
+              role={role}
+              updatedAt={officialAdcTierList.publishedAt}
+            />
+          )
+        }
+
+        <ChampionTierStatus
+          championSlug={champion.slug}
+          tierListAppearances={knowledge?.tierListAppearances ?? []}
+        />
+
+        <ChampionProfileSection
+          profile={champion.profile}
+          championName={champion.name}
+        />
+
+        <div class="champion-knowledge-grid">
+          <ChampionKnowledgeSection
+            id="videos"
+            title="Vídeos relacionados"
+            hasContent={false}
+            emptyTitle="Todavía no hay vídeos vinculados"
+            emptyDescription="El canal no etiqueta el contenido por campeón todavía. No inventamos una relación que no existe — mientras tanto, puedes ver el canal completo."
+            emptyCtaHref={platforms.youtube.url}
+            emptyCtaLabel="Ver el canal de YouTube"
+            emptyCtaExternal
+          />
+          <ChampionKnowledgeSection
+            id="matches"
+            title="Partidas relacionadas"
+            hasContent={false}
+            emptyTitle="Sin partidas vinculadas todavía"
+            emptyDescription="El historial de partidas en tiempo real de Tidusss vive en Live. Aquí solo se enlazarán asociaciones verificadas, nunca inferidas."
+            emptyCtaHref="/live"
+            emptyCtaLabel="Ver la actividad competitiva en directo"
+          />
+          <ChampionKnowledgeSection
+            id="builds"
+            title="Builds"
+            hasContent={(knowledge?.builds.length ?? 0) > 0}
+            emptyTitle="Todavía no hay una build publicada"
+            emptyDescription={`Tidusss no ha publicado todavía una build recomendada para ${champion.name}.`}
+          >
+            <ul class="champion-build-list">
+              {knowledge?.builds.map((build) => <li>{build.title}</li>)}
+            </ul>
+          </ChampionKnowledgeSection>
+          <ChampionKnowledgeSection
+            id="runes"
+            title="Runas"
+            hasContent={(knowledge?.runePages.length ?? 0) > 0}
+            emptyTitle="Todavía no hay una página de runas publicada"
+            emptyDescription={`Tidusss no ha publicado todavía runas recomendadas para ${champion.name}.`}
+          >
+            <ul class="champion-build-list">
+              {knowledge?.runePages.map((runePage) => <li>{runePage.title}</li>)}
+            </ul>
+          </ChampionKnowledgeSection>
+          <ChampionKnowledgeSection
+            id="matchups"
+            title="Matchups"
+            hasContent={(knowledge?.matchups.length ?? 0) > 0}
+            emptyTitle="Todavía no hay matchups analizados"
+            emptyDescription={`Ningún enfrentamiento de ${champion.name} tiene todavía un análisis publicado.`}
+          >
+            <ul class="champion-build-list">
+              {knowledge?.matchups.map((matchup) => (
+                <li>{matchup.opponentChampionId}</li>
+              ))}
+            </ul>
+          </ChampionKnowledgeSection>
+          <ChampionKnowledgeSection
+            id="synergies"
+            title="Sinergias"
+            hasContent={(knowledge?.synergies.length ?? 0) > 0}
+            emptyTitle="Todavía no hay sinergias documentadas"
+            emptyDescription="Las combinaciones con otros campeones se añadirán aquí cuando existan."
+          >
+            <ul class="champion-build-list">
+              {knowledge?.synergies.map((synergy) => <li>{synergy.type}</li>)}
+            </ul>
+          </ChampionKnowledgeSection>
+          <ChampionKnowledgeSection
+            id="concepts"
+            title="Conceptos relacionados"
+            hasContent={(knowledge?.articles.length ?? 0) > 0}
+            emptyTitle="Todavía no hay conceptos vinculados"
+            emptyDescription="Las ideas de juego (gestión de oleada, trading, visión...) se enlazarán aquí cuando existan en la Concept Library."
+          >
+            <ul class="champion-build-list">
+              {knowledge?.articles.map((article) => <li>{article.title}</li>)}
+            </ul>
+          </ChampionKnowledgeSection>
+        </div>
+
+        <div class="tier-list-cta">
+          <a class="button-secondary" href="/tier-list">
+            Volver a la Tier List <span aria-hidden="true">→</span>
+          </a>
+          <a class="button-secondary" href="/live">
+            Ver la actividad competitiva en directo <span aria-hidden="true">→</span>
+          </a>
+        </div>
+      </div>
+    </section>
+    <ExploreNext
+      source={champion.id}
+      eyebrow="Sigue explorando"
+      title={`Relacionado con ${champion.name}`}
+    />
+  </main>
+  <Footer />
+</BaseLayout>
