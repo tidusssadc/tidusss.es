@@ -1,63 +1,72 @@
 ---
-import type { LabChampion, Role } from '../../../domain/league-laboratory';
+import type {
+  ChampionCatalogEntry,
+  LabChampion,
+  Role,
+} from '../../../domain/league-laboratory';
 import { dataDragonUrls } from '../../../lib/riot/datadragon';
 import ConfidenceIndicator from '../ConfidenceIndicator.astro';
 import RoleBadge from '../RoleBadge.astro';
 
 interface Props {
-  champion: LabChampion;
-  role: Role;
+  catalogEntry: ChampionCatalogEntry;
+  labChampion?: LabChampion;
+  role?: Role;
   dataDragonVersion: string;
 }
-const { champion, role, dataDragonVersion } = Astro.props;
-const portraitUrl = champion.dataDragonKey
-  ? dataDragonUrls(dataDragonVersion).championLoading(champion.dataDragonKey)
-  : undefined;
-const hasProfile = Boolean(champion.profile);
+const { catalogEntry, labChampion, role, dataDragonVersion } = Astro.props;
+const portraitUrl = dataDragonUrls(dataDragonVersion).championLoading(
+  catalogEntry.dataDragonKey,
+);
+const hasProfile = Boolean(labChampion?.profile);
 ---
 
 <header class="champion-header" aria-labelledby="champion-name">
   <div class="champion-header-portrait">
-    {
-      portraitUrl ? (
-        <img
-          src={portraitUrl}
-          width="308"
-          height="560"
-          alt=""
-          loading="eager"
-          decoding="async"
-          fetchpriority="high"
-        />
-      ) : (
-        <span class="champion-identity-fallback" aria-hidden="true">
-          {champion.name.slice(0, 1)}
-        </span>
-      )
-    }
+    <img
+      src={portraitUrl}
+      width="308"
+      height="560"
+      alt=""
+      loading="eager"
+      decoding="async"
+      fetchpriority="high"
+    />
   </div>
   <div class="champion-header-identity">
-    <p class="eyebrow">The League Laboratory · Explorador de campeones</p>
-    <h1 id="champion-name">{champion.name}</h1>
-    {champion.title && <p class="champion-header-title">{champion.title}</p>}
+    <p class="eyebrow">El Laboratorio · Explorador de campeones</p>
+    <h1 id="champion-name">{catalogEntry.name}</h1>
+    <p class="champion-header-title">{catalogEntry.title}</p>
     <div class="champion-header-badges">
-      <RoleBadge role={role} />
+      {role && <RoleBadge role={role} />}
+      <span class="lab-badge lab-badge--class">
+        <span class="lab-badge-label">Clase</span>
+        <strong>{catalogEntry.tags.join(' · ')}</strong>
+      </span>
       {
-        champion.isSignatureChampion && (
+        labChampion?.isSignatureChampion && (
           <span class="lab-badge lab-badge--signature">
             <strong>Especialidad de Tidusss</strong>
           </span>
         )
       }
     </div>
+    <p class="champion-header-riot-difficulty">
+      Dificultad según Riot{' '}
+      <strong>{catalogEntry.riotDifficulty} / 10</strong>
+    </p>
     <p class="champion-header-status">
-      {hasProfile
-        ? 'Perfil editorial completo'
-        : 'Perfil editorial pendiente de redacción'}
+      {
+        hasProfile
+          ? 'Perfil editorial de Tidusss completo'
+          : 'Tidusss todavía no ha escrito su perfil editorial'
+      }
     </p>
     {
-      hasProfile && champion.profile && (
-        <ConfidenceIndicator confidence={champion.profile.editorialTake.confidence} />
+      hasProfile && labChampion?.profile && (
+        <ConfidenceIndicator
+          confidence={labChampion.profile.editorialTake.confidence}
+        />
       )
     }
   </div>

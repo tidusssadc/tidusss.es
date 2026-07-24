@@ -1,6 +1,6 @@
 # PLATFORM BIBLE — tidusss.es
 
-> **Estado:** v1.3 · Auditoría completa del código en la rama `main`, commit `4bcbee7` (24 jul. 2026). Actualizado el 24 jul. 2026 para incorporar el diseño de dominio de **The League Laboratory** (§5.13, §6 Capítulo III, ADR-004), su primera aplicación pública real, **The Official Tidusss ADC Tier List** en `/tier-list` (ADR-005), un refactor de arquitectura del registro del dominio (ADR-006) y su segunda aplicación real, el **Explorador de Campeones** en `/campeones/[slug]` (ADR-007) — ver [`docs/league-laboratory.md`](league-laboratory.md) §12-§13 para el detalle completo.
+> **Estado:** v1.5 · Auditoría completa del código en la rama `main`, commit `4bcbee7` (24 jul. 2026), con cambios de trabajo posteriores sin commitear documentados aquí. Historial: diseño de dominio de **The League Laboratory** (§5.13, §6 Capítulo III, ADR-004) → **The Official Tidusss ADC Tier List** en `/tier-list` (ADR-005) → refactor del registro a fábrica pura (ADR-006) → **Explorador de Campeones** con 4 campeones curados (ADR-007) → separación Catálogo/Editorial y escalado real a **173 campeones** generados desde Data Dragon (ADR-008, ADR-009) → blindaje del catálogo con pruebas automatizadas nativas (ADR-010) → **Centro de Campeones** en `/campeones` (ADR-011). Ver [`docs/league-laboratory.md`](league-laboratory.md) §12-§15 para el detalle completo.
 > **Naturaleza de este documento:** es la fuente de verdad del producto. No es un README ni una guía de instalación — eso sigue viviendo en [`README.md`](../README.md). Este documento describe **qué es** tidusss.es, **por qué** está construido como está, y **qué reglas** debe respetar cualquier trabajo futuro.
 > **Vive y muta.** Cada decisión arquitectónica relevante, cada capítulo de roadmap que se cierre, cada convención nueva, se añade aquí. No se reescribe la historia: se amplía. La sección 11 (Decisiones arquitectónicas) es un log append-only.
 > **Relación con la documentación existente:** `docs/content-graph.md`, `docs/environment-engine.md`, `docs/home-state-engine.md` y `docs/riot-api.md` **no se duplican aquí**. Este documento los referencia, los sitúa dentro del panorama completo y añade el contexto de producto que a ellos no les corresponde. Cuando haya conflicto, esos documentos técnicos ganan en detalle de implementación; este documento gana en intención y prioridad.
@@ -37,7 +37,7 @@ El producto tiene dos superficies hoy:
 
 El hilo conductor editorial, literal en el código (`src/components/BrandManifesto.astro`):
 
-> *"Juego para competir. Reviso para entender. Publico para compartirlo."*
+> _"Juego para competir. Reviso para entender. Publico para compartirlo."_
 
 ### Qué pretende ser
 
@@ -48,8 +48,8 @@ El hilo conductor editorial, literal en el código (`src/components/BrandManifes
 
 ### Qué nunca debe ser
 
-- **Un CMS.** El Content Graph registra entidades y relaciones *reales y verificadas*; nunca debe convertirse en una capa de contenido editable dinámicamente que sustituya la naturaleza estática del sitio. Esto está escrito explícitamente como riesgo a evitar en `docs/content-graph.md`.
-- **Una fuente de datos inventados.** Ningún sistema debe rellenar huecos de datos con ceros, estimaciones o relaciones inferidas por coincidencia de texto. Cuando un dato no existe (LP delta, Lucian reciente, relación vídeo↔partida), la interfaz debe decirlo explícitamente. Esto es un principio verificado repetidamente en el código (`lpDeltaEstimated: true` como *type*, no como valor calculado; `matchVideoLinks` vacío por defecto; `RiotOverview.state` incluye `'no-recent-matches'` en vez de forzar un `0%`).
+- **Un CMS.** El Content Graph registra entidades y relaciones _reales y verificadas_; nunca debe convertirse en una capa de contenido editable dinámicamente que sustituya la naturaleza estática del sitio. Esto está escrito explícitamente como riesgo a evitar en `docs/content-graph.md`.
+- **Una fuente de datos inventados.** Ningún sistema debe rellenar huecos de datos con ceros, estimaciones o relaciones inferidas por coincidencia de texto. Cuando un dato no existe (LP delta, Lucian reciente, relación vídeo↔partida), la interfaz debe decirlo explícitamente. Esto es un principio verificado repetidamente en el código (`lpDeltaEstimated: true` como _type_, no como valor calculado; `matchVideoLinks` vacío por defecto; `RiotOverview.state` incluye `'no-recent-matches'` en vez de forzar un `0%`).
 - **Una SPA con framework de UI.** No hay React, Vue, Svelte ni señales de que deba haberlas. La interactividad vive en Astro + TypeScript vanilla sobre APIs del navegador. Introducir un framework de componentes reactivo sería un cambio de arquitectura, no una funcionalidad — debe pasar por una ADR (§11), no por una PR silenciosa.
 - **Una plataforma que exponga datos de cuenta de terceros.** El endpoint Riot está deliberadamente cerrado a `Tidusss#FFX`; no acepta parámetros de cuenta y nunca debe aceptarlos sin una decisión de producto explícita (implicaría exponer un buscador público de invocadores, algo completamente fuera del alcance actual).
 - **Un sitio con estética "gaming" genérica.** El Environment Engine documenta explícitamente que Twitch e YouTube tienen ambientes propios que evitan depender del rojo/púrpura de marca de esas plataformas. La identidad visual es editorial y oscura, no neón.
@@ -68,13 +68,13 @@ El hilo conductor editorial, literal en el código (`src/components/BrandManifes
 ### 2.2 Principios de UX
 
 - **Todo dato dinámico se anuncia como lo que es.** Skeletons explícitos (`.data-skeleton`, `.showcase-skeleton`, `.riot-skeleton`) mientras se carga; estados de error legibles y en español, nunca un hueco en blanco o un `undefined` filtrado a la interfaz.
-- **Degradación nunca es fallo total.** Cada integración (Riot, YouTube, Twitch) tiene una ruta de fallback: caché *stale* servida con aviso, texto de "no disponible ahora mismo" en vez de romper el módulo, y el resto del centro Live sigue funcionando aunque un proveedor caiga (`Promise.allSettled` en `LiveDashboard.astro`).
+- **Degradación nunca es fallo total.** Cada integración (Riot, YouTube, Twitch) tiene una ruta de fallback: caché _stale_ servida con aviso, texto de "no disponible ahora mismo" en vez de romper el módulo, y el resto del centro Live sigue funcionando aunque un proveedor caiga (`Promise.allSettled` en `LiveDashboard.astro`).
 - **La portada sugiere, Live confirma.** El Home State Engine (§5.3) traduce señales en un contexto editorial breve y un único CTA; el detalle completo vive siempre en `/live`. Home nunca debe convertirse en una réplica de Live.
 - **Todo movimiento es opcional.** `prefers-reduced-motion: reduce` se respeta en absolutamente todos los sistemas con animación (Environment, Soul Engine, contadores animados, reveals de scroll). No es una función accesoria: es una condición de guarda repetida en cada script.
 
 ### 2.3 Principios técnicos
 
-- **El dominio no conoce el framework.** `src/domain/*` no importa nada de Astro, DOM ni fetch. Recibe señales y datos ya resueltos, y devuelve decisiones (qué estado mostrar, qué entidad conectar). Esto es lo que permite que `docs/home-state-engine.md` diga literalmente: *"El motor no conoce endpoints, respuestas HTTP ni componentes concretos."*
+- **El dominio no conoce el framework.** `src/domain/*` no importa nada de Astro, DOM ni fetch. Recibe señales y datos ya resueltos, y devuelve decisiones (qué estado mostrar, qué entidad conectar). Esto es lo que permite que `docs/home-state-engine.md` diga literalmente: _"El motor no conoce endpoints, respuestas HTTP ni componentes concretos."_
 - **Los secretos no salen del servidor.** Ninguna clave (`RIOT_API_KEY`, `TWITCH_CLIENT_SECRET`, `YOUTUBE_API_KEY`) se lee fuera de `functions/api/*`. El build estático nunca las necesita. Verificado: `.env` está en `.gitignore`, no está trackeado en git, y `env.d.ts`/`config/riot.ts` no exponen valores por defecto para la clave de Riot.
 - **Caché con intención, no como parche.** Cada integración caché por capas (memoria de proceso + `stale-while-revalidate` + cabeceras de borde de Cloudflare) con TTLs explícitamente distintos por tipo de dato (cuenta 24h, rango 10min, partida terminada 24h/7d stale — ver `docs/riot-api.md`). No hay una caché genérica de "todo 5 minutos".
 - **No inferir lo que no se puede verificar.** Repetido como principio explícito en tres sistemas distintos: Content Graph (no relaciones por texto parecido), match-video-links (solo asociación manual verificada), analítica de Riot (LP delta sin snapshot previo se deja `undefined`, nunca `0`).
@@ -91,16 +91,16 @@ El hilo conductor editorial, literal en el código (`src/components/BrandManifes
 
 ### 3.1 Stack
 
-| Capa | Tecnología | Versión (`package.json`) |
-| --- | --- | --- |
-| Framework | Astro | `^7.1.3`, output `static` |
-| Estilos | Tailwind CSS | `^4.3.3` (vía `@tailwindcss/vite`, CSS-first `@theme`) |
-| Lenguaje | TypeScript | `^6.0.3`, `astro/tsconfigs/strict` |
-| Lint | ESLint | `^10.7.0` + `typescript-eslint` + `eslint-plugin-astro` |
-| Formato | Prettier | `^3.9.6` + `prettier-plugin-astro` |
-| Runtime de datos dinámicos | Cloudflare Pages Functions | sin adaptador Astro — funciones sueltas en `functions/api/**` |
-| Hosting | Cloudflare Pages | build `npm run build`, salida `dist/` |
-| Node | ≥22.12 (README pide 24 LTS) | — |
+| Capa                       | Tecnología                  | Versión (`package.json`)                                      |
+| -------------------------- | --------------------------- | ------------------------------------------------------------- |
+| Framework                  | Astro                       | `^7.1.3`, output `static`                                     |
+| Estilos                    | Tailwind CSS                | `^4.3.3` (vía `@tailwindcss/vite`, CSS-first `@theme`)        |
+| Lenguaje                   | TypeScript                  | `^6.0.3`, `astro/tsconfigs/strict`                            |
+| Lint                       | ESLint                      | `^10.7.0` + `typescript-eslint` + `eslint-plugin-astro`       |
+| Formato                    | Prettier                    | `^3.9.6` + `prettier-plugin-astro`                            |
+| Runtime de datos dinámicos | Cloudflare Pages Functions  | sin adaptador Astro — funciones sueltas en `functions/api/**` |
+| Hosting                    | Cloudflare Pages            | build `npm run build`, salida `dist/`                         |
+| Node                       | ≥22.12 (README pide 24 LTS) | —                                                             |
 
 No hay framework de componentes de UI del lado del cliente (React/Vue/Svelte/Solid). La interactividad es TypeScript vanilla dentro de `<script>` en archivos `.astro`, usando APIs nativas del navegador.
 
@@ -171,9 +171,9 @@ En el navegador, tras recibir datos:
 ### 3.4 Servicios y adaptadores
 
 - **`src/services/twitch.ts`**: OAuth `client_credentials` con caché de token en memoria de módulo (no persistente entre invocaciones frías), consulta Helix `streams`.
-- **`src/services/youtube.ts`**: dos caminos — RSS público sin clave (`youtubeProvider.getLatest`, usado como *fallback* estático) y Data API v3 con clave (`channels.list` → `playlistItems.list` → `videos.list`, usado por las Functions para duración/Shorts/estadísticas).
+- **`src/services/youtube.ts`**: dos caminos — RSS público sin clave (`youtubeProvider.getLatest`, usado como _fallback_ estático) y Data API v3 con clave (`channels.list` → `playlistItems.list` → `videos.list`, usado por las Functions para duración/Shorts/estadísticas).
 - **`src/services/youtube-stats.ts`**: deriva progreso hacia el siguiente hito de suscriptores (`config/goals.ts`) a partir de `getYouTubeChannel`.
-- **`src/lib/riot/*`**: el adaptador más elaborado. `client.ts` (fetch con timeout + 1 reintento en 5xx), `cache.ts` (TTL + stale + de-dupe de *in-flight promises*), `normalize.ts` (DTO Riot crudo → modelos de dominio `RecentMatch`/`RankedSummary`), `analytics.ts` (agregados: rendimiento por campeón, resumen de sesión de hoy, racha), `datadragon.ts` (versión + URLs de assets), `errors.ts` (catálogo cerrado de errores + mensajes públicos), `index.ts` (`getRiotOverview`, el orquestador).
+- **`src/lib/riot/*`**: el adaptador más elaborado. `client.ts` (fetch con timeout + 1 reintento en 5xx), `cache.ts` (TTL + stale + de-dupe de _in-flight promises_), `normalize.ts` (DTO Riot crudo → modelos de dominio `RecentMatch`/`RankedSummary`), `analytics.ts` (agregados: rendimiento por campeón, resumen de sesión de hoy, racha), `datadragon.ts` (versión + URLs de assets), `errors.ts` (catálogo cerrado de errores + mensajes públicos), `index.ts` (`getRiotOverview`, el orquestador).
 
 ### 3.5 Modelos de dominio clave
 
@@ -186,7 +186,7 @@ En el navegador, tras recibir datos:
 
 ## 4. Design System
 
-> **No existe un archivo de tokens de Tailwind separado.** El `@theme` de `src/styles/global.css` solo define la familia tipográfica (`--font-sans: Inter, ...`). Todo lo demás —color, radios, sombras, animaciones— es **CSS artesanal** en `@layer components` y reglas sueltas, no utilidades generadas por Tailwind con tokens propios. Tailwind se usa en el *markup* para layout/spacing/tipografía (`grid`, `gap-10`, `text-5xl`, `sm:px-8`), pero la "piel" visual bespoke vive en `global.css`.
+> **No existe un archivo de tokens de Tailwind separado.** El `@theme` de `src/styles/global.css` solo define la familia tipográfica (`--font-sans: Inter, ...`). Todo lo demás —color, radios, sombras, animaciones— es **CSS artesanal** en `@layer components` y reglas sueltas, no utilidades generadas por Tailwind con tokens propios. Tailwind se usa en el _markup_ para layout/spacing/tipografía (`grid`, `gap-10`, `text-5xl`, `sm:px-8`), pero la "piel" visual bespoke vive en `global.css`.
 
 ### 4.1 Tipografía
 
@@ -195,21 +195,21 @@ En el navegador, tras recibir datos:
 
 ### 4.2 Paleta
 
-| Rol | Color | Uso |
-| --- | --- | --- |
-| Fondo base | `#060913` | `:root`, `.environment-base`, prácticamente todo el lienzo |
-| Texto principal | `#cbd5e1` | Cuerpo de texto sobre fondo oscuro |
-| Acento primario (CTA/dorado) | `#d6b56b` (hover `#edcf8d`) | Botón primario, eyebrows, valores destacados, LP/rango |
-| Acento secundario (azul) | `#278cff` / `#4ba3ff` / `#93c5fd` | Focus ring, glow, detalles interactivos, partículas |
-| Estado de derrota | `#c48b94` / `#d0a0a7` / `#70434c` | Tarjetas de partida perdida, estados negativos |
-| Marca de Twitch | `#9146ff` | Solo en contexto explícito de Twitch, nunca como acento general |
-| Neutros | familia `#69768c` → `#0a101d` | Texto secundario, bordes, superficies elevadas |
+| Rol                          | Color                             | Uso                                                             |
+| ---------------------------- | --------------------------------- | --------------------------------------------------------------- |
+| Fondo base                   | `#060913`                         | `:root`, `.environment-base`, prácticamente todo el lienzo      |
+| Texto principal              | `#cbd5e1`                         | Cuerpo de texto sobre fondo oscuro                              |
+| Acento primario (CTA/dorado) | `#d6b56b` (hover `#edcf8d`)       | Botón primario, eyebrows, valores destacados, LP/rango          |
+| Acento secundario (azul)     | `#278cff` / `#4ba3ff` / `#93c5fd` | Focus ring, glow, detalles interactivos, partículas             |
+| Estado de derrota            | `#c48b94` / `#d0a0a7` / `#70434c` | Tarjetas de partida perdida, estados negativos                  |
+| Marca de Twitch              | `#9146ff`                         | Solo en contexto explícito de Twitch, nunca como acento general |
+| Neutros                      | familia `#69768c` → `#0a101d`     | Texto secundario, bordes, superficies elevadas                  |
 
 **Regla de uso:** el dorado es el color de "esto importa / actúa aquí" (CTA, LP, credenciales). El azul es el color de "esto es interactivo / esto brilla". Nunca deben intercambiarse los roles.
 
 ### 4.3 Espaciados
 
-No hay una escala de espaciado propia declarada; se usa la escala por defecto de Tailwind (`gap-10`, `px-5`, `py-16`, etc.) más una utilidad propia recurrente: `.section-shell { padding-block: clamp(5rem, 10vw, 8.5rem); }` — el ritmo vertical entre secciones de la Home es *fluido* (clamp), no un valor fijo.
+No hay una escala de espaciado propia declarada; se usa la escala por defecto de Tailwind (`gap-10`, `px-5`, `py-16`, etc.) más una utilidad propia recurrente: `.section-shell { padding-block: clamp(5rem, 10vw, 8.5rem); }` — el ritmo vertical entre secciones de la Home es _fluido_ (clamp), no un valor fijo.
 
 ### 4.4 Bordes y radios
 
@@ -231,7 +231,7 @@ Sin sistema de `box-shadow` tokenizado; los usos son puntuales y siempre con col
 ### 4.7 Animaciones
 
 - Todas las animaciones CSS están definidas con `@keyframes` con nombres descriptivos (`environment-drift`, `live-dot-pulse`, `rank-emblem-in`, `soul-live-breathe`…) y **todas** están envueltas en `@media (prefers-reduced-motion: no-preference)`; el bloque `reduce` opuesto fuerza `animation: none !important; transform: none !important`.
-- Contadores numéricos (suscriptores, LP, estadísticas) **no usan una librería**: se animan a mano con `requestAnimationFrame` y un *easing* cúbico manual (`1 - Math.pow(1 - progress, 3)`), repetido de forma consistente en `LiveDashboard.astro`, `LiveTeaser.astro` y otros.
+- Contadores numéricos (suscriptores, LP, estadísticas) **no usan una librería**: se animan a mano con `requestAnimationFrame` y un _easing_ cúbico manual (`1 - Math.pow(1 - progress, 3)`), repetido de forma consistente en `LiveDashboard.astro`, `LiveTeaser.astro` y otros.
 - Reveals de entrada (`data-reveal` + `.is-visible`) se gestionan con `IntersectionObserver`, nunca con animación por scroll-position calculada a mano.
 
 ### 4.8 Responsive
@@ -274,16 +274,16 @@ Breakpoints observados en `global.css` (no son los defaults de Tailwind, están 
 
 **Qué es:** el sistema que hace que la portada reaccione a datos ya cargados por otros componentes, sin peticiones propias y sin que los componentes se conozcan entre sí.
 
-**Cómo funciona:** `domain/home-state/signals.ts` es un *pub/sub* mínimo (`publishHomeSignal` / `subscribeHomeSignals`) que guarda el último valor por tipo de señal. `engine.ts` define reglas (`homeStateDefinitions`) con prioridad numérica; `resolveHomeState()` evalúa todas y se queda con la de mayor prioridad activa. `HomeStateEngine.astro` consume el resultado, actualiza el bloque `[data-home-context]` del Hero, resalta la sección relevante (`data-home-priority`) y emite `tidusss:home-state-changed`.
+**Cómo funciona:** `domain/home-state/signals.ts` es un _pub/sub_ mínimo (`publishHomeSignal` / `subscribeHomeSignals`) que guarda el último valor por tipo de señal. `engine.ts` define reglas (`homeStateDefinitions`) con prioridad numérica; `resolveHomeState()` evalúa todas y se queda con la de mayor prioridad activa. `HomeStateEngine.astro` consume el resultado, actualiza el bloque `[data-home-context]` del Hero, resalta la sección relevante (`data-home-priority`) y emite `tidusss:home-state-changed`.
 
 **Prioridades actuales** (de `docs/home-state-engine.md`, verificado contra `engine.ts`):
 
-| Estado | Prioridad | Fuente |
-| --- | ---: | --- |
-| Directo activo | 100 | Twitch |
-| Nuevo vídeo | 80 | YouTube |
-| Objetivo cercano | 60 | YouTube o Riot |
-| Día normal (default) | 20 | Contexto local (hora) |
+| Estado               | Prioridad | Fuente                |
+| -------------------- | --------: | --------------------- |
+| Directo activo       |       100 | Twitch                |
+| Nuevo vídeo          |        80 | YouTube               |
+| Objetivo cercano     |        60 | YouTube o Riot        |
+| Día normal (default) |        20 | Contexto local (hora) |
 
 Estados **preparados pero inactivos** (esperan un `future-event` real): nuevo parche (70), nuevo récord (90), objetivo alcanzado (90), nuevo hito (65).
 
@@ -315,7 +315,7 @@ Estados **preparados pero inactivos** (esperan un `future-event` real): nuevo pa
 
 ### 5.7 YouTube
 
-**Qué es:** dos rutas de datos con propósitos distintos. RSS público (`youtubeProvider.getLatest`, sin clave, usado como *contenido* — feed de vídeos) y Data API v3 con clave (usada por las Functions para duración exacta, clasificación de Shorts y estadísticas del canal).
+**Qué es:** dos rutas de datos con propósitos distintos. RSS público (`youtubeProvider.getLatest`, sin clave, usado como _contenido_ — feed de vídeos) y Data API v3 con clave (usada por las Functions para duración exacta, clasificación de Shorts y estadísticas del canal).
 
 **Coste de cuota:** una actualización completa cuesta ~3 unidades (`channels.list` + `playlistItems.list` + `videos.list`), independientemente de cuántos vídeos se muestren (hasta 8 en el feed original, 12 en el endpoint de Function). Documentado con precisión en el `README.md`.
 
@@ -332,11 +332,11 @@ Estados **preparados pero inactivos** (esperan un `future-event` real): nuevo pa
 **Qué es:** la capa de **personalidad de marca** del sitio — un motor de "Moments" contextuales (`data/references.ts` + `lib/soul-engine.ts` + `SoulEngine.astro`) que aparecen como un toast discreto (`[data-soul-moment]`) en momentos concretos:
 
 - Saludo según hora del día (una vez por sesión).
-- *Hold* del logo (pointerenter/focus mantenido 2.2s).
+- _Hold_ del logo (pointerenter/focus mantenido 2.2s).
 - Directo de Twitch detectado (vía `MutationObserver` sobre atributos `data-online`/`data-stream-live`).
-- Hover sobre una tarjeta de partida (victoria/derrota, con *debounce* de 14s entre disparos).
+- Hover sobre una tarjeta de partida (victoria/derrota, con _debounce_ de 14s entre disparos).
 - Llegar al final del scroll (`IntersectionObserver` sobre un centinela).
-- **Código Konami** (↑↑↓↓←→←→ba) y **escribir "tidus"** — easter eggs literales, con textos que citan directamente Final Fantasy X (*"The dream has ended. But the story continues."*) y League of Legends (*"Lucian Mode. Coming soon."*).
+- **Código Konami** (↑↑↓↓←→←→ba) y **escribir "tidus"** — easter eggs literales, con textos que citan directamente Final Fantasy X (_"The dream has ended. But the story continues."_) y League of Legends (_"Lucian Mode. Coming soon."_).
 - Visitante recurrente (≥25 visitas via `localStorage`).
 - Nuevo récord — enganchado al evento `tidusss:home-state-changed`, en espera de que ese estado se active con datos reales.
 
@@ -364,7 +364,7 @@ Estados **preparados pero inactivos** (esperan un `future-event` real): nuevo pa
 
 **Documentación de referencia:** [`docs/league-laboratory.md`](league-laboratory.md) — diseño de dominio completo, justificación entidad por entidad, diagrama de relaciones, especificación de UI (layout/navegación/componentes/tarjetas/filtros sin implementar), roadmap interno y riesgos.
 
-**Estado real:** ya tiene dos aplicaciones públicas reales. **`/tier-list` — The Official Tidusss ADC Tier List** (ADR-005) y **`/campeones/[slug]` — Explorador de Campeones** (ADR-007), ambas construidas sobre las mismas entidades del dominio (`LabChampion`, `Patch`, `TierList`/`TierListEntry`, `EditorialTake`, `Role`) sin modelos paralelos. El registro del dominio se refactorizó de un singleton mutable (`labRegistry`/`hydrateLabRegistry`) a una fábrica pura sin estado compartido (`buildLabRegistry`, ADR-006) antes de construir la segunda herramienta, precisamente para evitar el riesgo que esa segunda herramienta habría expuesto. Cada campeón es ahora un nodo real del Content Graph con su propia página (`href: /campeones/<slug>`), y la Tier List enlaza a los perfiles de los campeones que clasifica — verificado que el HTML de Home y Live no cambió ni un byte. Sigue sin endpoints, sin Build/RunePage/Matchup/Synergy/Concept/MetaState con datos reales, y sin las demás herramientas del capítulo. Detalle completo, extensiones de modelo, componentes y limitaciones en [`docs/league-laboratory.md`](league-laboratory.md) §12-§13.
+**Estado real:** dos aplicaciones públicas reales. **`/tier-list` — The Official Tidusss ADC Tier List** (ADR-005) y **`/campeones/[slug]` — Explorador de Campeones**, que ya no genera 4 páginas de muestra (ADR-007) sino **una por cada uno de los ~170 campeones del juego** (ADR-008), a partir de un catálogo generado desde Data Dragon (`scripts/sync-champion-catalog.mjs`) completamente separado de la curación editorial de Tidusss (`LabChampion`, hoy 4 campeones). El registro del dominio se refactorizó de un singleton mutable (`labRegistry`/`hydrateLabRegistry`) a una fábrica pura sin estado compartido (`buildLabRegistry`, ADR-006). El Content Graph solo registra los campeones curados, nunca el catálogo completo (ADR-009). Verificado con datos reales: el build genera **176 páginas**, incluidos campeones publicados por Riot después del corte de conocimiento de quien hizo este cambio — la prueba de que añadir 30 campeones mañana no requiere tocar ni una línea de esta arquitectura. Sigue sin endpoints, sin Build/RunePage/Matchup/Synergy/MetaState con datos reales, y sin las demás herramientas del capítulo. Detalle completo en [`docs/league-laboratory.md`](league-laboratory.md) §12-§14.
 
 ---
 
@@ -388,13 +388,13 @@ Estados **preparados pero inactivos** (esperan un `future-event` real): nuevo pa
 - **Impacto:** el usuario que vuelve a la portada ve algo distinto según si hay directo, vídeo nuevo u objetivo cerca.
 - **Lo que falta para cerrar el capítulo:** activar los 4 estados "preparados" (`new-patch`, `new-record`, `goal-achieved`, `milestone`) con una fuente de datos real que hoy no existe — requiere que algún sistema (probablemente League Laboratory, capítulo III) empiece a publicar `future-event`.
 
-### Chapter III — League Laboratory (dominio + dos herramientas en producción)
+### Chapter III — League Laboratory (dominio + Tier List + Explorador de Campeones a escala real)
 
 - **Objetivo:** convertir el análisis de partidas/parches/campeones en contenido navegable propio (tier lists, guías, builds, matchups, sinergias, conceptos) en vez de vivir solo en YouTube — con criterio editorial como diferenciador frente a OP.GG/U.GG/Mobalytics.
-- **Arquitectura:** capa de dominio completa (`src/domain/league-laboratory/`, 10 entidades) **más dos aplicaciones públicas reales**: `/tier-list` (ADR-005) y `/campeones/[slug]` — el Explorador de Campeones (ADR-007), con fuente editorial separada (`src/data/league-laboratory/`) y componentes reutilizables en `src/components/laboratory/`. El registro del dominio pasó de singleton mutable a fábrica pura sin estado compartido (ADR-006). Detalle completo en [`docs/league-laboratory.md`](league-laboratory.md) §12-§13. Los ambientes `tier-list` y `champion` del Environment Engine ya se activan automáticamente para sus rutas respectivas.
-- **Dependencias:** Content Graph (satisfecha e integrada de verdad — cada campeón es ya un nodo real con su propia página, ver §12.4/§13.4 de `docs/league-laboratory.md`). Pendiente: decidir si `rune-page`, `synergy`, `concept` y `meta-state` necesitan su propio `ContentEntityKind` **[Decisión pendiente, ver docs/league-laboratory.md §9]**.
-- **Impacto:** 4 rutas públicas nuevas (`/tier-list` + 4 fichas de campeón, indexable solo Lucian por tener perfil editorial real; el resto `noindex, follow` hasta tener contenido propio). El campeón es ahora el nodo central del ecosistema del Laboratorio: la Tier List enlaza a cada perfil de campeón y cada perfil enlaza de vuelta a la Tier List, vía relaciones reales del Content Graph.
-- **Lo que falta para avanzar el capítulo:** Build Explorer, Rune Explorer y el resto de herramientas (roadmap interno en `docs/league-laboratory.md` §8); ampliar la cobertura editorial más allá de Lucian (perfiles de Kai'Sa, Jinx y Ezreal).
+- **Arquitectura:** capa de dominio completa (`src/domain/league-laboratory/`) **más dos aplicaciones públicas reales**: `/tier-list` (ADR-005) y `/campeones/[slug]` — el Explorador de Campeones, que ya genera **una página por cada uno de los ~170 campeones del juego** (ADR-008), no solo una muestra curada. El dominio separa el catálogo factual (generado desde Data Dragon, `scripts/sync-champion-catalog.mjs`) de la curación editorial (`LabChampion`, hoy 4 campeones) — el Content Graph solo registra estos últimos (ADR-009). El registro pasó de singleton mutable a fábrica pura sin estado compartido (ADR-006). Detalle completo en [`docs/league-laboratory.md`](league-laboratory.md) §12-§14. Los ambientes `tier-list` y `champion` del Environment Engine ya se activan automáticamente para sus rutas respectivas.
+- **Dependencias:** Content Graph (satisfecha e integrada de verdad para los campeones curados). Pendiente: decidir si `rune-page`, `synergy`, `concept` y `meta-state` necesitan su propio `ContentEntityKind` **[Decisión pendiente, ver docs/league-laboratory.md §9]**.
+- **Impacto:** 174 rutas públicas nuevas (`/tier-list` + 173 fichas de campeón; indexable solo Lucian por tener perfil editorial real, el resto `noindex, follow`). El campeón es, de forma verificada y a escala real, el nodo central del ecosistema del Laboratorio.
+- **Lo que falta para avanzar el capítulo:** Build Explorer, Rune Explorer y el resto de herramientas (roadmap interno en `docs/league-laboratory.md` §8); ampliar la cobertura editorial más allá de Lucian (perfiles de Kai'Sa, Jinx y Ezreal); posible página `/campeones/` índice (descartada por ahora, ver `docs/league-laboratory.md` §14.12).
 
 ### Chapter IV — Environment Engine ✅
 
@@ -457,8 +457,8 @@ Estados **preparados pero inactivos** (esperan un `future-event` real): nuevo pa
 - **Archivos de componente:** `PascalCase.astro` (`HeroVisual.astro`, `MatchExpanded.astro`).
 - **Módulos TypeScript:** `camelCase.ts` o `kebab-case.ts` según si exportan una función principal (`activity.ts`) o son un módulo de configuración de varias piezas (`match-video-links.ts`, `rank-assets.ts`) — el patrón dominante es **kebab-case para archivos, camelCase para lo que exportan**.
 - **Clases CSS:** kebab-case, semánticas (`.hero-section`, `.riot-match-champion`), nunca utilidades atómicas propias (esas ya las da Tailwind).
-- **Atributos `data-*`:** el mecanismo estándar para exponer *hooks* de comportamiento y estado al JS/CSS (`data-reveal`, `data-home-target`, `data-match-card`). Un componente que necesite JS **siempre** expone sus nodos vía `data-*`, nunca vía clases reutilizadas para otra cosa.
-- **Identificadores de dominio:** *template literal types* con prefijo de tipo (`ContentEntityId = \`${ContentEntityKind}:${string}\``, p. ej. `'champion:lucian'`, `'goal:soloqueue-700'`). Cualquier ID de dominio nuevo debe seguir este patrón `tipo:slug`.
+- **Atributos `data-*`:** el mecanismo estándar para exponer _hooks_ de comportamiento y estado al JS/CSS (`data-reveal`, `data-home-target`, `data-match-card`). Un componente que necesite JS **siempre** expone sus nodos vía `data-*`, nunca vía clases reutilizadas para otra cosa.
+- **Identificadores de dominio:** _template literal types_ con prefijo de tipo (`ContentEntityId = \`${ContentEntityKind}:${string}\``, p. ej. `'champion:lucian'`, `'goal:soloqueue-700'`). Cualquier ID de dominio nuevo debe seguir este patrón `tipo:slug`.
 - **Barrels (`index.ts`):** cada carpeta de dominio (`domain/content-graph`, `domain/home-state`, `lib/riot`) expone su superficie pública vía un `index.ts` con `export * from './modulo'`. Los consumidores externos importan del barrel, no de los archivos internos directamente — excepto cuando el propio dominio se importa a sí mismo internamente (ver detalle de imports abajo).
 
 ### 7.2 Componentes
@@ -487,7 +487,7 @@ Estados **preparados pero inactivos** (esperan un `future-event` real): nuevo pa
 
 ### 7.6 Imports
 
-- Rutas relativas (`../../lib/riot`), no hay *path aliases* configurados en `tsconfig.json`. Cualquier introducción de aliases (`@/lib/...`) es un cambio de convención que debe documentarse aquí, no aparecer solo en un `tsconfig.json` modificado.
+- Rutas relativas (`../../lib/riot`), no hay _path aliases_ configurados en `tsconfig.json`. Cualquier introducción de aliases (`@/lib/...`) es un cambio de convención que debe documentarse aquí, no aparecer solo en un `tsconfig.json` modificado.
 - Los tipos se importan con `import type` de forma consistente cuando el import es solo de tipo.
 
 ### 7.7 Buenas prácticas observadas (a mantener)
@@ -504,23 +504,23 @@ Estados **preparados pero inactivos** (esperan un `future-event` real): nuevo pa
 
 - Astro con salida 100% estática para todo lo que no depende de datos en tiempo real. El HTML de Home y Live se sirve pre-generado.
 - `<script>` vanilla con APIs nativas del navegador (`fetch`, `IntersectionObserver`, `MutationObserver`, `requestAnimationFrame`, Custom Events) como único mecanismo de interactividad.
-- Caché en capas: memoria de proceso (de-dupe de *in-flight promises* + TTL/stale) → cabeceras `Cache-Control`/`stale-while-revalidate` de Cloudflare. Cada integración externa nueva debe replicar este patrón de dos capas, no confiar solo en las cabeceras HTTP.
+- Caché en capas: memoria de proceso (de-dupe de _in-flight promises_ + TTL/stale) → cabeceras `Cache-Control`/`stale-while-revalidate` de Cloudflare. Cada integración externa nueva debe replicar este patrón de dos capas, no confiar solo en las cabeceras HTTP.
 - Imágenes con `width`/`height` explícitos siempre, `loading="lazy"` por defecto y `loading="eager"`/`fetchpriority="high"` reservado **solo** para el elemento visual principal above-the-fold (firma de Lucian en Hero/Live).
-- El patrón Template + Render (§4.6) para cualquier lista de tarjetas de datos densos — es más barato que instanciar N componentes Astro con hidratación individual (que, de hecho, ni siquiera existe como concepto en este proyecto: Astro aquí es *zero-hydration* por diseño).
+- El patrón Template + Render (§4.6) para cualquier lista de tarjetas de datos densos — es más barato que instanciar N componentes Astro con hidratación individual (que, de hecho, ni siquiera existe como concepto en este proyecto: Astro aquí es _zero-hydration_ por diseño).
 
 ### Qué no está permitido
 
 - **Ningún framework de UI reactivo** (React/Vue/Svelte/Solid/Alpine) sin pasar antes por una ADR — cambiaría el modelo de coste de JS de "cero por defecto" a "coste por isla", y contradice la Filosofía §2.3.
 - **Ninguna petición sin caché** a Riot, YouTube o Twitch. Toda integración nueva a una API externa debe definir su propio TTL fresco/stale antes de mezclarse con el resto del código, igual que hace `docs/riot-api.md`.
 - **Ninguna animación sin guarda de `prefers-reduced-motion`.**
-- **Ninguna imagen sin dimensiones explícitas** (evita *layout shift*).
+- **Ninguna imagen sin dimensiones explícitas** (evita _layout shift_).
 - **Ninguna dependencia de npm nueva "por comodidad"** para algo que ya resuelve una API nativa del navegador (fecha, animación, observación de intersección) — el proyecto entero demuestra que esto es deliberado (ni siquiera una librería de animación de conteo, que es de las más comunes de añadir "por defecto" en otros proyectos).
 
 ### Cómo deben hacerse futuras implementaciones
 
 1. Si el dato es estático/editorial → vive en `src/data` o `src/config`, se resuelve en build time.
 2. Si el dato requiere secreto o API externa → Function nueva en `functions/api/<proveedor>/<recurso>.ts`, que orquesta un servicio en `src/services` o `src/lib`, con su propio TTL fresco/stale documentado.
-3. Si el dato debe influir en la portada → publica una `HomeSignal` nueva (extendiendo el *union type*, no creando un canal paralelo).
+3. Si el dato debe influir en la portada → publica una `HomeSignal` nueva (extendiendo el _union type_, no creando un canal paralelo).
 4. Si el dato es una lista densa de tarjetas → evaluar el patrón Template + Render antes que N componentes Astro individuales.
 
 ---
@@ -579,7 +579,7 @@ Estados **preparados pero inactivos** (esperan un `future-event` real): nuevo pa
 ### ADR-003 — 2026-07-24 — El Content Graph reserva tipos de entidad para capítulos futuros
 
 **Contexto:** `ContentEntityKind` ya incluye `tier-list`, `build`, `guide`, `matchup`, `patch`, `tool`, `game` sin que exista ninguna entidad registrada de esos tipos.
-**Decisión:** se interpreta como una decisión de diseño deliberada (preparar el vocabulario antes que el contenido) y no como código muerto, a diferencia de ADR-002 — porque son *tipos*, no *componentes sin uso*, y el propio `docs/content-graph.md` documenta explícitamente cómo activarlos ("Añadir una Tier List").
+**Decisión:** se interpreta como una decisión de diseño deliberada (preparar el vocabulario antes que el contenido) y no como código muerto, a diferencia de ADR-002 — porque son _tipos_, no _componentes sin uso_, y el propio `docs/content-graph.md` documenta explícitamente cómo activarlos ("Añadir una Tier List").
 **Consecuencia:** el capítulo III (League Laboratory) del roadmap no requiere trabajo de modelado de dominio, solo contenido y rutas.
 
 ### ADR-004 — 2026-07-24 — Diseño del dominio League Knowledge / The League Laboratory
@@ -614,6 +614,47 @@ Estados **preparados pero inactivos** (esperan un `future-event` real): nuevo pa
 **Consecuencia:** el campeón es ahora, de verdad, el nodo central del ecosistema de League of Legends en tidusss.es — la Tier List y el Explorador de Campeones se enlazan mutuamente mediante relaciones reales, y cualquier herramienta futura (Build Explorer, Matchup Explorer) encontrará ya un perfil de campeón al que conectarse.
 **Documentación relacionada:** [`docs/league-laboratory.md`](league-laboratory.md) §13.
 
+### ADR-008 — 2026-07-24 — Separación Catálogo/Editorial: el Explorador de Campeones escala a ~170 campeones
+
+**Contexto:** se encargó rediseñar el Explorador de Campeones para soportar el roster completo de League of Legends (~170 campeones) sin que la arquitectura tuviera que cambiar si Riot añade campeones nuevos. El diseño de ADR-007 (4 campeones, cada uno un `LabChampion` escrito a mano con nombre/título/icono/slug) no superaba esa prueba: escalarlo a 170 habría exigido escribir 170 objetos a mano, y seguir haciéndolo cada vez que Riot ampliara el roster.
+**Decisión:** dividir `LabChampion` en dos tipos. `ChampionCatalogEntry` (nuevo) contiene los hechos objetivos y oficiales de Riot — nombre, título verificado, clases, dificultad oficial (1-10), clave de Data Dragon — y se genera automáticamente con un script nuevo, `scripts/sync-champion-catalog.mjs` (sin dependencias nuevas, `fetch` nativo de Node), que consulta Data Dragon y escribe `src/data/league-laboratory/catalog/champions.generated.ts`. `LabChampion` (recortado) queda exclusivamente para la curación editorial de Tidusss (roles seguidos, perfil, notas) y es opcional por campeón — hoy solo 4 lo tienen. `ChampionKnowledge` pasó de asumir siempre un `LabChampion` a `{ catalogEntry, labChampion?, ... }`. Se ejecutó el script de verdad contra Data Dragon (no es un ejercicio teórico): generó **173 campeones**, varios de ellos publicados por Riot después del corte de conocimiento de quien implementó este cambio — la prueba empírica de que la arquitectura no necesita saber nada sobre un campeón concreto para generarle una página correcta y honesta.
+**Por qué no se genera en el build:** el build estático de este proyecto nunca ha dependido de la red (ni siquiera para Riot/YouTube/Twitch, resueltos en tiempo de petición vía Functions). Generar el catálogo en cada `astro build` habría roto esa garantía para todo el sitio, incluidos Home y Live, ante cualquier caída puntual de Data Dragon. El script es una herramienta de desarrollo (`npm run sync:champions`) cuyo resultado se commitea como cualquier otro dato.
+**Rutas:** se evaluó y se descartó versionar la URL por parche (`/campeones/lucian/16.14`) y construir colecciones por clase (`/campeones/tirador/`) — ninguna estaba justificada todavía; el catálogo ya deja preparados los datos (`tags`) para la segunda si se decide construirla. `getStaticPaths()` pasó a iterar el catálogo completo en vez de los 4 campeones curados; ningún otro archivo de rutas cambió de forma.
+**Hallazgo que valida ADR-007:** el título real de Lucian es "El Destello Purificador", no "El Purificador" — la suposición razonable que se decidió NO publicar en ADR-007 por falta de verificación. Confirma que la cautela fue correcta.
+**Consecuencia:** `ChampionKnowledge.articles` (ambiguo: mezclaba guías y contenido editorial genérico) se separó en `guides` y `concepts` (estos últimos resueltos mediante una función nueva que recorre guías/matchups/sinergias del campeón). Las imágenes de campeón se desacoplaron del parche de la Tier List (ver ADR-009 para el detalle). Se detectó y eliminó CSS muerto (`.champion-identity-fallback`) al comprobar, durante la autocrítica final, que el catálogo garantiza un icono real para todo campeón y la rama de _fallback_ ya no era alcanzable.
+**Documentación relacionada:** [`docs/league-laboratory.md`](league-laboratory.md) §14.
+
+### ADR-009 — 2026-07-24 — El Content Graph no registra el catálogo completo, solo los campeones curados
+
+**Contexto:** al escalar el catálogo a ~170 campeones, era necesario decidir explícitamente si los ~166 sin curación editorial debían registrarse como nodos del Content Graph (cada uno con su página real) o quedar fuera de él.
+**Decisión:** mantener la misma política ya aplicada en ADR-007 a menor escala — el Content Graph solo registra campeones con curación editorial real (hoy 4). Un campeón de catálogo sin ninguna relación curada no tiene nada que ofrecer a "sigue explorando" y solo saturaría el grafo sin beneficio de navegación; su página sigue existiendo y siendo perfectamente visitable por URL directa o por el propio Explorador, solo no es un nodo navegable del grafo. `content-graph/league-laboratory-extension.ts` resuelve ahora el `ChampionCatalogEntry` de cada `LabChampion` curado para construir su `ContentEntity`, en lugar de leerlo del propio `LabChampion` (que ya no lleva esos datos).
+**Alternativa descartada:** registrar los 170 como `ContentEntity` con `href` real (ya que todos tienen página). Se descartó porque el Content Graph existe para relaciones editoriales curadas, no como índice exhaustivo de rutas — esa función ya la cumple el sitemap. Registrar 170 nodos sin ninguna relación real habría sido ruido, no arquitectura.
+**Consecuencia:** el criterio para "¿este campeón es un nodo del grafo?" queda fijado con independencia de la escala del catálogo — sigue siendo "¿tiene curación editorial?", no "¿tiene página?". Cualquier herramienta futura del Laboratorio debe aplicar el mismo criterio al decidir qué registra.
+**Documentación relacionada:** [`docs/league-laboratory.md`](league-laboratory.md) §14.6.
+
+### ADR-010 — 2026-07-24 — Blindaje del catálogo: pruebas automatizadas con `node:test` nativo, sin dependencias nuevas
+
+**Contexto:** el catálogo de 173 campeones (ADR-008) y sus URLs públicas (empezando por `/campeones/lucian`, ya indexada) no tenían ninguna prueba automatizada que garantizara su estabilidad — solo verificación manual. Se encargó "blindar" el catálogo con pruebas reales, con la condición explícita de justificar la elección de herramienta contra el `package.json`/versión de Node/TypeScript ya existentes antes de añadir Vitest, Jest o cualquier otro test runner.
+**Decisión:** usar `node:test` + `node:assert/strict`, nativos desde hace varias versiones de Node y ya cubiertos por el Node 24 instalado (`engines.node` exige `>=22.12.0`, donde `node:test` lleva siendo estable desde Node 20). Los archivos de dominio (`src/domain/league-laboratory/*.ts`) usan imports relativos sin extensión (`from './types'`) — convención ya establecida en todo el proyecto — que la resolución ESM nativa de Node no acepta tal cual. En vez de reescribir esos imports solo por los tests, se añadió `scripts/testing/register-ts-loader.mjs`: un hook de `module.registerHooks()` (la API síncrona actual, no `module.register()`, marcada `@deprecated` en `@types/node`) que reintenta con `.ts` o `.ts/index.ts` cuando la resolución nativa falla. Los tests importan así los archivos de dominio reales, sin modificarlos y sin transpilación. Se añadió `@types/node` como única dependencia nueva (de desarrollo, sin efecto en runtime ni en el bundle) porque `astro/tsconfigs/strict` no declara un `types` restrictivo y los tests usan tipos de Node (`node:test`, `node:assert/strict`) que sin ese paquete `astro check` no puede resolver.
+**Determinismo corregido:** al escribir las pruebas de estabilidad de slugs se detectó que `championCatalogGeneratedAt` (una marca de tiempo `new Date().toISOString()`) no tenía ningún consumidor en el código (confirmado por búsqueda exhaustiva) y rompía la reproducibilidad: dos ejecuciones de `npm run sync:champions` con los mismos datos de origen producían diffs espurios solo por la fecha. Se eliminó por completo — no se sustituyó por un hash ni por otro valor derivado, porque `championCatalogVersion` (la versión de Data Dragon) ya identifica de forma determinista y con significado real qué snapshot de datos representa el archivo. Verificado empíricamente: dos ejecuciones consecutivas del script producen un archivo con el mismo SHA-256.
+**Duplicación eliminada:** `scripts/sync-champion-catalog.mjs` tenía su propia copia de `slugify()`, idéntica a la que ya iba a necesitar la búsqueda del Centro de Campeones (ADR-011). Se extrajo una única función pura, `slugifyChampionKey`, a `src/domain/league-laboratory/normalize.ts` (junto con `normalizeSearchText`, ver ADR-011) — el script `.mjs` la importa directamente con extensión `.ts` explícita (no necesita el loader: Node ejecuta `.ts` nativamente con extensión explícita). El generador se refactorizó además para exponer `buildCatalogEntry`/`sortCatalogEntries`/`assertUniqueSlugs` como funciones puras testeables sin red, guardando la llamada real a Data Dragon detrás de una comprobación de "¿es este el módulo de entrada?" para que importarlas en un test no dispare ningún `fetch`.
+**Cobertura añadida (47 tests, `test/league-laboratory/*.test.ts`):** normalización de búsqueda (los 8 casos reales exigidos: Kai'Sa, Kog'Maw, Rek'Sai, Cho'Gath, Bel'Veth, Dr. Mundo, Jarvan IV, Miss Fortune) y generación de slugs; unicidad/formato/estabilidad de los 173 slugs reales y el contrato de `/campeones/lucian`; resolución del estado editorial (`resolveChampionEditorialStatus`, ver ADR-011); `getChampionKnowledge` con y sin curación editorial y sobre un registro vacío; la política de no-registro del Content Graph (ADR-009) verificada de forma ejecutable en vez de solo documentada; las relaciones reales de Lucian con la Tier List; y el determinismo del generador sin red.
+**Consecuencia:** `npm run test` (nuevo script) corre en local y puede añadirse a CI sin instalar nada adicional. `npm run build` no se modificó para no gatear los despliegues de Cloudflare Pages en este cambio — se deja documentado como recomendación de un paso futuro, no como algo decidido aquí.
+**Documentación relacionada:** [`docs/league-laboratory.md`](league-laboratory.md) §15.
+
+### ADR-011 — 2026-07-24 — Centro de Campeones (`/campeones`): el catálogo se convierte en un sistema explorable
+
+**Contexto:** con 173 campeones ya generados (ADR-008) pero sin ningún punto de entrada público que los agrupara, se encargó construir ese punto de entrada — explícitamente no como una parrilla genérica de 173 iconos ni como un clon del champion select de Riot, sino como una herramienta editorial honesta que distinga con claridad entre campeones revisados, en borrador y pendientes, con búsqueda y filtros reales.
+**Modelo de estado editorial:** se introdujo `ChampionEditorialStatus = 'reviewed' | 'draft' | 'pending'` (`types.ts`) resuelto por una única función pura, `resolveChampionEditorialStatus(labChampion)` (`registry.ts`): `reviewed` si tiene `profile`, `draft` si tiene `LabChampion` sin `profile`, `pending` si no tiene `LabChampion`. Ningún componente ni plantilla reimplementa este criterio con condicionales propios. Un archivo nuevo, `src/domain/league-laboratory/hub.ts`, añade `getCatalogCoverage` (cuenta real de campeones por estado, nunca escrita a mano), `resolveRiotDifficultyBucket` (agrupa la dificultad oficial 0-10 en baja/media/alta para que el filtro sea usable) e `isChampionInAnyTierList` — siguiendo el mismo patrón que `content-graph/league-laboratory-extension.ts` (ADR-006/009): cada herramienta nueva del Laboratorio amplía su propio archivo, no `registry.ts`.
+**Búsqueda y filtros — arquitectura sin dependencias nuevas:** la búsqueda reutiliza `normalizeSearchText` (NFD + `\p{Diacritic}` + strip de apóstrofes/puntos + colapso de espacios) desde un `<script>` de Astro que Vite procesa y empaqueta como cualquier import de cliente — no hay librería de fuzzy-search. Los filtros (estado editorial, clase oficial, dificultad, inicial, presencia en la Tier List oficial) se aplican en el cliente sobre los 173 `<li>` ya renderizados en el HTML, marcados con atributos `data-*`; combinables entre sí (AND), sincronizados con la URL vía `history.replaceState` (nunca `pushState`, para no llenar el historial en cada tecla) y restaurados al cargar la página desde `location.search` — un enlace `/campeones?estado=reviewed&tierlist=1` reproduce exactamente ese estado. Se descartó explícitamente un filtro de "rol editorial": ese dato solo existe para los 4 campeones curados, así que filtrar por rol sobre un catálogo de 173 habría dejado la inmensa mayoría fuera de cualquier selección — un filtro real pero inútil.
+**Degradación sin JavaScript:** los 173 campeones se renderizan siempre visibles en el HTML — el `<script>` de filtros nunca oculta contenido por defecto (a diferencia del patrón `[data-reveal]` de Home/Live, deliberadamente no reutilizado aquí). Sin JavaScript, los controles de búsqueda/filtro quedan presentes pero inertes: no rompen nada, simplemente no filtran. El estado "sin resultados" también se renderiza en el HTML con `hidden` estático, y solo el JavaScript lo muestra/oculta según haya coincidencias.
+**Content Graph:** se añadió una entidad `tool:champion-hub` (href `/campeones`) en `content-graph/league-laboratory-extension.ts`, con relaciones reales en ambas direcciones hacia la Tier List oficial y hacia cada uno de los 4 campeones curados — respetando ADR-009: los ~169 campeones sin curación no se registran en el grafo. Todas las 173 fichas de campeón llevan además un enlace plano (no una relación de grafo) de vuelta a `/campeones`, igual que ya llevaban uno a `/tier-list` y a `/live`.
+**Navegación principal:** se decidió NO añadir `/campeones` al nav principal (`src/data/site.ts`), por el mismo motivo ya aplicado a `/tier-list` en ADR-005 (que tampoco está en el nav pese a ser una página pública desde hace dos fases): el nav principal está curado en torno a las secciones de la portada de una sola página, y el descubrimiento de las herramientas del Laboratorio ocurre por Content Graph ("sigue explorando") y enlaces cruzados, no por el nav. Cambiar ese criterio para `/campeones` sin cambiarlo también para `/tier-list` habría sido inconsistente.
+**SEO:** `/campeones` es indexable (no pasa `noindex`, comportamiento por defecto de `BaseLayout`) porque aporta valor real de navegación y contenido único (recuento honesto de cobertura, campeones revisados con extracto editorial). El canónico se calcula solo a partir de `Astro.url.pathname` (ya excluye el query string por construcción, propiedad existente desde antes de este trabajo, no nueva), así que ninguna combinación de filtros en la URL puede generar un canónico duplicado. `public/sitemap.xml` gana una única línea nueva (`/campeones`) — se descartó deliberadamente añadir `@astrojs/sitemap` o generar dinámicamente un listado con las 173 URLs (169 de ellas `noindex`): no aporta valor SEO real y contradice la instrucción explícita de no reescribir el SEO existente por completo.
+**Corrección de idioma:** al construir esta página se detectó que "The League Laboratory" (nombre de producto en inglés) seguía apareciendo en texto visible ya publicado — `LaboratoryHero.astro` (valor por defecto), `/tier-list`, `/campeones/[slug]` (título, meta-descripción, eyebrow) y `champion/ChampionHeader.astro` — incumpliendo la instrucción vigente de usar terminología en español en todo texto editorial visible. Se corrigió a "El Laboratorio" en los cinco sitios, incluyendo `patches.ts` (`editorialSummary` de `patch1514`), para que el Centro de Campeones nuevo no introdujera una inconsistencia visible frente a páginas ya publicadas.
+**Consecuencia:** el catálogo completo (173 campeones) es ahora explorable desde un único punto de entrada honesto sobre su propio estado de cobertura editorial, sin haber añadido ninguna dependencia, base de datos, CMS ni framework de UI reactivo — vanilla TypeScript filtrando 173 elementos en el cliente es, en la práctica, instantáneo.
+**Documentación relacionada:** [`docs/league-laboratory.md`](league-laboratory.md) §15.
+
 ---
 
-*Fin del documento. Próxima entrada de ADR: la que corresponda a la siguiente decisión arquitectónica tomada sobre este proyecto.*
+_Fin del documento. Próxima entrada de ADR: la que corresponda a la siguiente decisión arquitectónica tomada sobre este proyecto._

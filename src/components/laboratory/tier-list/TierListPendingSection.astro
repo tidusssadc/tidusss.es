@@ -1,6 +1,6 @@
 ---
 import type {
-  LabChampion,
+  ChampionCatalogEntry,
   LabChampionId,
   PlaceholderTierListEntry,
   Role,
@@ -10,7 +10,7 @@ import EditorialTakeCard from '../EditorialTakeCard.astro';
 
 interface Props {
   entries: PlaceholderTierListEntry[];
-  champions: Map<LabChampionId, LabChampion>;
+  champions: Map<LabChampionId, ChampionCatalogEntry>;
   role: Role;
   dataDragonVersion: string;
 }

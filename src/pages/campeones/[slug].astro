@@ -12,66 +12,98 @@ import ChampionTierStatus from '../../components/laboratory/champion/ChampionTie
 import {
   buildLabRegistry,
   getChampionKnowledge,
-  type LabChampion,
+  type ChampionCatalogEntry,
 } from '../../domain/league-laboratory';
 import {
-  adcTierListChampions,
+  adcLabChampions,
+  championCatalog,
+  championCatalogVersion,
   leagueLaboratoryPatches,
   officialAdcTierList,
 } from '../../data/league-laboratory';
 import { platforms } from '../../config/platforms';
 
+/**
+ * Una ruta por cada campeón del catálogo generado (~170), no por los 4
+ * curados por Tidusss. Añadir 30 campeones nuevos a
+ * `catalog/champions.generated.ts` (vía `npm run sync:champions`) genera
+ * 30 páginas nuevas sin tocar esta página ni el dominio.
+ */
 export function getStaticPaths() {
-  return adcTierListChampions.map((champion) => ({
-    params: { slug: champion.slug },
-    props: { champion },
+  return championCatalog.map((catalogEntry) => ({
+    params: { slug: catalogEntry.slug },
+    props: { catalogEntry },
   }));
 }
 
 interface Props {
-  champion: LabChampion;
+  catalogEntry: ChampionCatalogEntry;
 }
-const { champion } = Astro.props;
+const { catalogEntry } = Astro.props;
 
 const registry = buildLabRegistry({
-  champions: adcTierListChampions,
+  catalog: championCatalog,
+  champions: adcLabChampions,
   patches: leagueLaboratoryPatches,
   tierLists: [officialAdcTierList],
 });
 
-const knowledge = getChampionKnowledge(registry, champion.id);
-const patch = leagueLaboratoryPatches.find(
-  (candidate) => candidate.id === officialAdcTierList.patchId,
-);
-const role = champion.signatureRole ?? champion.roles[0];
-const hasProfile = Boolean(champion.profile);
+const knowledge = getChampionKnowledge(registry, catalogEntry.id);
+const labChampion = knowledge?.labChampion;
+const hasProfile = Boolean(labChampion?.profile);
+const role = labChampion?.signatureRole ?? labChampion?.roles[0];
 
-const pageTitle = `${champion.name}${champion.title ? ` — ${champion.title}` : ''} · The League Laboratory · tidusss.es`;
+// El parche solo se muestra cuando hay contenido editorial anclado a él —
+// mostrar "Parche 15.14" en un campeón del que Tidusss no ha dicho nada
+// insinuaría un contexto que no existe.
+const lastReviewedPatchId =
+  labChampion?.profile?.editorialTake.lastReviewedPatch;
+const reviewPatch = lastReviewedPatchId
+  ? leagueLaboratoryPatches.find(
+      (candidate) => candidate.id === lastReviewedPatchId,
+    )
+  : undefined;
+
+// Las imágenes del campeón siempre usan la versión con la que se generó el
+// catálogo — no la del parche de la Tier List, que es un dato editorial
+// distinto y puede quedar desactualizado sin que las imágenes dejen de
+// resolverse (ver ADR correspondiente).
+const dataDragonVersion = championCatalogVersion;
+
+const pageTitle = `${catalogEntry.name} — ${catalogEntry.title} · El Laboratorio · tidusss.es`;
 const pageDescription = hasProfile
-  ? `Quién es ${champion.name}, por qué merece la pena jugarlo y qué piensa Tidusss realmente sobre él: criterio editorial, no estadísticas automatizadas.`
-  : `Ficha de ${champion.name} en The League Laboratory. Su perfil editorial todavía se está preparando.`;
+  ? `Quién es ${catalogEntry.name}, por qué merece la pena jugarlo y qué piensa Tidusss realmente sobre él: criterio editorial, no estadísticas automatizadas.`
+  : `Ficha de ${catalogEntry.name} (${catalogEntry.title}) en el Laboratorio. Su perfil editorial todavía se está preparando.`;
 ---
 
-<BaseLayout title={pageTitle} description={pageDescription} noindex={!hasProfile}>
+<BaseLayout
+  title={pageTitle}
+  description={pageDescription}
+  noindex={!hasProfile}
+>
   <Navbar />
   <main>
     <LaboratoryHero
-      eyebrow="The League Laboratory"
+      eyebrow="El Laboratorio"
       title="Explorador de campeones"
       description="Cada campeón, con su propia identidad: quién es, por qué jugarlo y qué opina Tidusss realmente."
     />
-    <section class="champion-page section-shell" aria-labelledby="champion-name">
+    <section
+      class="champion-page section-shell"
+      aria-labelledby="champion-name"
+    >
       <div class="mx-auto max-w-6xl px-5 sm:px-8">
         <ChampionHeader
-          champion={champion}
+          catalogEntry={catalogEntry}
+          labChampion={labChampion}
           role={role}
-          dataDragonVersion={patch?.dataDragonVersion ?? '15.14.1'}
+          dataDragonVersion={dataDragonVersion}
         />
 
         {
-          patch && (
+          reviewPatch && (
             <LaboratoryMetadata
-              patch={patch}
+              patch={reviewPatch}
               role={role}
               updatedAt={officialAdcTierList.publishedAt}
             />
@@ -79,13 +111,13 @@ const pageDescription = hasProfile
         }
 
         <ChampionTierStatus
-          championSlug={champion.slug}
+          championSlug={catalogEntry.slug}
           tierListAppearances={knowledge?.tierListAppearances ?? []}
         />
 
         <ChampionProfileSection
-          profile={champion.profile}
-          championName={champion.name}
+          profile={labChampion?.profile}
+          championName={catalogEntry.name}
         />
 
         <div class="champion-knowledge-grid">
@@ -113,7 +145,7 @@ const pageDescription = hasProfile
             title="Builds"
             hasContent={(knowledge?.builds.length ?? 0) > 0}
             emptyTitle="Todavía no hay una build publicada"
-            emptyDescription={`Tidusss no ha publicado todavía una build recomendada para ${champion.name}.`}
+            emptyDescription={`Tidusss no ha publicado todavía una build recomendada para ${catalogEntry.name}.`}
           >
             <ul class="champion-build-list">
               {knowledge?.builds.map((build) => <li>{build.title}</li>)}
@@ -124,10 +156,14 @@ const pageDescription = hasProfile
             title="Runas"
             hasContent={(knowledge?.runePages.length ?? 0) > 0}
             emptyTitle="Todavía no hay una página de runas publicada"
-            emptyDescription={`Tidusss no ha publicado todavía runas recomendadas para ${champion.name}.`}
+            emptyDescription={`Tidusss no ha publicado todavía runas recomendadas para ${catalogEntry.name}.`}
           >
             <ul class="champion-build-list">
-              {knowledge?.runePages.map((runePage) => <li>{runePage.title}</li>)}
+              {
+                knowledge?.runePages.map((runePage) => (
+                  <li>{runePage.title}</li>
+                ))
+              }
             </ul>
           </ChampionKnowledgeSection>
           <ChampionKnowledgeSection
@@ -135,12 +171,14 @@ const pageDescription = hasProfile
             title="Matchups"
             hasContent={(knowledge?.matchups.length ?? 0) > 0}
             emptyTitle="Todavía no hay matchups analizados"
-            emptyDescription={`Ningún enfrentamiento de ${champion.name} tiene todavía un análisis publicado.`}
+            emptyDescription={`Ningún enfrentamiento de ${catalogEntry.name} tiene todavía un análisis publicado.`}
           >
             <ul class="champion-build-list">
-              {knowledge?.matchups.map((matchup) => (
-                <li>{matchup.opponentChampionId}</li>
-              ))}
+              {
+                knowledge?.matchups.map((matchup) => (
+                  <li>{matchup.opponentChampionId}</li>
+                ))
+              }
             </ul>
           </ChampionKnowledgeSection>
           <ChampionKnowledgeSection
@@ -155,32 +193,48 @@ const pageDescription = hasProfile
             </ul>
           </ChampionKnowledgeSection>
           <ChampionKnowledgeSection
+            id="guides"
+            title="Guías"
+            hasContent={(knowledge?.guides.length ?? 0) > 0}
+            emptyTitle="Todavía no hay una guía publicada"
+            emptyDescription={`Tidusss no ha escrito todavía una guía dedicada a ${catalogEntry.name}.`}
+          >
+            <ul class="champion-build-list">
+              {knowledge?.guides.map((guide) => <li>{guide.title}</li>)}
+            </ul>
+          </ChampionKnowledgeSection>
+          <ChampionKnowledgeSection
             id="concepts"
             title="Conceptos relacionados"
-            hasContent={(knowledge?.articles.length ?? 0) > 0}
+            hasContent={(knowledge?.concepts.length ?? 0) > 0}
             emptyTitle="Todavía no hay conceptos vinculados"
             emptyDescription="Las ideas de juego (gestión de oleada, trading, visión...) se enlazarán aquí cuando existan en la Concept Library."
           >
             <ul class="champion-build-list">
-              {knowledge?.articles.map((article) => <li>{article.title}</li>)}
+              {knowledge?.concepts.map((concept) => <li>{concept.title}</li>)}
             </ul>
           </ChampionKnowledgeSection>
         </div>
 
         <div class="tier-list-cta">
+          <a class="button-secondary" href="/campeones">
+            Ver todo el catálogo de campeones <span aria-hidden="true">→</span>
+          </a>
           <a class="button-secondary" href="/tier-list">
             Volver a la Tier List <span aria-hidden="true">→</span>
           </a>
           <a class="button-secondary" href="/live">
-            Ver la actividad competitiva en directo <span aria-hidden="true">→</span>
+            Ver la actividad competitiva en directo <span aria-hidden="true"
+              >→</span
+            >
           </a>
         </div>
       </div>
     </section>
     <ExploreNext
-      source={champion.id}
+      source={catalogEntry.id}
       eyebrow="Sigue explorando"
-      title={`Relacionado con ${champion.name}`}
+      title={`Relacionado con ${catalogEntry.name}`}
     />
   </main>
   <Footer />

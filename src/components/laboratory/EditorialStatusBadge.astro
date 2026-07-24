@@ -1,0 +1,24 @@
+---
+import type { ChampionEditorialStatus } from '../../domain/league-laboratory';
+
+interface Props {
+  status: ChampionEditorialStatus;
+}
+const { status } = Astro.props;
+
+/**
+ * El texto es siempre la señal principal (nunca solo el color): alguien sin
+ * percepción de color debe poder distinguir los tres estados igual que
+ * alguien que sí la tiene.
+ */
+const labels: Record<ChampionEditorialStatus, string> = {
+  reviewed: 'Revisado',
+  draft: 'Borrador',
+  pending: 'Pendiente de revisión',
+};
+---
+
+<span class="editorial-status-badge" data-editorial-status={status}>
+  <i aria-hidden="true"></i>
+  {labels[status]}
+</span>

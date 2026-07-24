@@ -1,7 +1,7 @@
 # The League Laboratory
 
-> **Naturaleza de este documento:** diseño de dominio **y** registro de sus aplicaciones reales. Las secciones 1-11 describen el sistema (diseñado antes de construir nada). La sección 12 documenta **Phase 1 — The Official Tidusss ADC Tier List**. La sección 13 documenta **Phase 2 — Explorador de Campeones**, que además corrige una decisión de Phase 1 (el registro pasa de singleton mutable a fábrica pura — ver §13.3).
-> **Estado actual:** existen ya **dos rutas públicas reales**: `/tier-list` y `/campeones/[slug]` (una página por campeón: `lucian`, `kaisa`, `jinx`, `ezreal`). El campeón es ahora el nodo central del ecosistema del Laboratorio. El resto de herramientas (Build Explorer, Rune Explorer, Matchup Explorer…) siguen sin implementar.
+> **Naturaleza de este documento:** diseño de dominio **y** registro de sus aplicaciones reales. Las secciones 1-11 describen el sistema (diseñado antes de construir nada). La sección 12 documenta **Phase 1 — The Official Tidusss ADC Tier List**. La sección 13 documenta **Phase 2 — Explorador de Campeones** (4 campeones curados a mano). La sección 14 documenta **Phase 3 — el catálogo a escala real**: separación entre el catálogo factual (generado desde Data Dragon) y la curación editorial, que hizo posible pasar de 4 fichas de campeón a **173** sin tocar la arquitectura. La sección 15 documenta **Fase 4 — blindaje del catálogo con pruebas automatizadas y el Centro de Campeones** (`/campeones`), el punto de entrada público al catálogo completo.
+> **Estado actual:** existen ya **tres rutas públicas reales**: `/tier-list`, `/campeones` (el Centro de Campeones, índice explorable) y `/campeones/[slug]` — esta última genera **una página por cada uno de los ~170 campeones del juego**, no solo los curados. El campeón es, de forma literal y verificada, el nodo central del ecosistema del Laboratorio. El resto de herramientas (Build Explorer, Rune Explorer, Matchup Explorer…) siguen sin implementar.
 > **Relación con el resto de la documentación:** este dominio es un **consumidor** del [Content Graph](content-graph.md) (lo extiende, no lo sustituye) y aparece como capítulo III en el roadmap de [`PLATFORM_BIBLE.md`](PLATFORM_BIBLE.md). No duplica nada de `docs/content-graph.md`, `docs/home-state-engine.md` ni `docs/environment-engine.md`.
 
 ---
@@ -21,6 +21,8 @@
 11. [Estado real de implementación (dominio)](#11-estado-real-de-implementación-dominio)
 12. [Phase 1 — The Official Tidusss ADC Tier List](#12-phase-1--the-official-tidusss-adc-tier-list)
 13. [Phase 2 — Explorador de Campeones](#13-phase-2--explorador-de-campeones)
+14. [Phase 3 — El campeón como centro del ecosistema: catálogo a escala](#14-phase-3--el-campeón-como-centro-del-ecosistema-catálogo-a-escala-170-campeones)
+15. [Fase 4 — Blindaje del catálogo y Centro de Campeones](#15-fase-4--blindaje-del-catálogo-y-centro-de-campeones)
 
 ---
 
@@ -31,7 +33,7 @@
 - Que el laboratorio se integre con el Content Graph existente (§6) exactamente con el mismo patrón que ya usan Riot/YouTube (`domain/content-graph/adapters.ts`): un dominio rico y específico, proyectado hacia el grafo genérico mediante funciones puras de conversión.
 - Que **el criterio de Tidusss sea un dato de primera clase**, no una nota a pie de página. Esto se resuelve estructuralmente en el modelo, no en el copy (§2, §4.2).
 
-**Nombre del dominio vs. nombre de producto:** *League Knowledge* es el nombre conceptual de este dominio de producto (lo que se sabe y se opina). *The League Laboratory* es su identidad de marca de cara al usuario (dónde vive ese conocimiento). En el código, el módulo se llama `league-laboratory` porque es el nombre que va a aparecer en rutas, navegación y en este mismo documento — son la misma cosa vista desde dos ángulos, no dos sistemas distintos.
+**Nombre del dominio vs. nombre de producto:** _League Knowledge_ es el nombre conceptual de este dominio de producto (lo que se sabe y se opina). _The League Laboratory_ fue su identidad de marca original de cara al usuario. **Actualización (Fase 4, ver §15):** el texto editorial visible en el sitio dice "El Laboratorio" en español — "The League Laboratory" queda como nombre interno (módulo `league-laboratory`, este documento, comentarios de código), nunca como copy público. En el código, el módulo se sigue llamando `league-laboratory` porque es una convención técnica ya asentada en rutas e imports — son la misma cosa vista desde dos ángulos, no dos sistemas distintos.
 
 ## 2. Filosofía
 
@@ -64,19 +66,19 @@ Sigue exactamente la misma forma que `domain/content-graph/` y `domain/home-stat
 
 Ninguna de las diez herramientas listadas en el encargo (Tier List, Build Explorer, Rune Explorer, Champion Explorer, Patch Explorer, Matchup Explorer, Synergy Explorer, Guides, Concept Library, Meta Timeline) introduce un tipo de dato nuevo. Todas son **vistas distintas sobre las mismas diez entidades** (§4):
 
-| Herramienta | Entidad(es) que consume |
-| --- | --- |
-| Tier List | `TierList` (+ `Build`, `RunePage` referenciados por entrada) |
-| Build Explorer | `Build` |
-| Rune Explorer | `RunePage` |
-| Champion Explorer | `LabChampion` (+ agregación vía `getChampionKnowledge`) |
-| Patch Explorer | `Patch` (+ agregación vía `getPatchKnowledge`) |
-| Matchup Explorer | `Matchup` |
-| Synergy Explorer | `Synergy` |
-| Guides | `KnowledgeArticle` con `format: 'guide'` |
-| Concept Library | `Concept` |
-| Meta Timeline | `MetaState`, ordenado por `Patch.sequence` |
-| Draft Knowledge *(futura)* | composición de `MetaState` + `Matchup` + `Synergy` + `TierList`, sin entidad propia todavía (§9) |
+| Herramienta                | Entidad(es) que consume                                                                          |
+| -------------------------- | ------------------------------------------------------------------------------------------------ |
+| Tier List                  | `TierList` (+ `Build`, `RunePage` referenciados por entrada)                                     |
+| Build Explorer             | `Build`                                                                                          |
+| Rune Explorer              | `RunePage`                                                                                       |
+| Champion Explorer          | `LabChampion` (+ agregación vía `getChampionKnowledge`)                                          |
+| Patch Explorer             | `Patch` (+ agregación vía `getPatchKnowledge`)                                                   |
+| Matchup Explorer           | `Matchup`                                                                                        |
+| Synergy Explorer           | `Synergy`                                                                                        |
+| Guides                     | `KnowledgeArticle` con `format: 'guide'`                                                         |
+| Concept Library            | `Concept`                                                                                        |
+| Meta Timeline              | `MetaState`, ordenado por `Patch.sequence`                                                       |
+| Draft Knowledge _(futura)_ | composición de `MetaState` + `Matchup` + `Synergy` + `TierList`, sin entidad propia todavía (§9) |
 
 Esto es lo que hace innecesario "construir todas las herramientas": construir bien las diez entidades y las funciones de consulta (`registry.ts`) ya deja preparadas las diez vistas.
 
@@ -107,13 +109,13 @@ Se han diseñado **10 entidades**, no las 15 sugeridas en el encargo. Cada colap
 
 ### 4.1 Por qué 10 y no 15
 
-| Sugerido en el encargo | Decisión | Justificación |
-| --- | --- | --- |
-| `Lane` | **Fusionado en `Role`** | Riot ya expone una única cadena de posición (`TOP`/`JUNGLE`/`MIDDLE`/`BOTTOM`/`UTILITY`) que el proyecto **ya usa** en `lib/riot/types.ts` (`RecentMatch.position`) y en `LiveDashboard.astro` (`positionLabel`). Crear un segundo vocabulario "Lane" distinto de "Role" solo introduciría dos formas de decir lo mismo y el riesgo de que se desincronizaran. `Role` en el Laboratorio usa exactamente los mismos cinco valores. |
-| `PatchNote` | **Fusionado en `Patch`** | No vamos a re-alojar el changelog completo de Riot (eso ya existe en la web oficial de Riot; duplicarlo violaría el principio ya escrito en `docs/content-graph.md` de "no duplicar datos de proveedores"). Lo que sí aporta valor es la lectura editorial de qué cambió y por qué importa — eso es `Patch.editorialSummary`, un campo, no una entidad aparte. |
-| `Opinion` | **Convertido en value object `EditorialTake`** | Una opinión nunca existe de forma aislada: siempre es una opinión *sobre* un Build, un Matchup, una entrada de Tier List. Modelarla como entidad independiente con su propio ID habría obligado a toda consulta a hacer un salto extra (`Build → Opinion`) sin ganar nada. Como value object embebido, es más simple de consultar y, sobre todo, se puede hacer **obligatorio** en los campos que more importan (Build, RunePage, Matchup, Synergy, entrada de TierList) — eso es lo que convierte "mostrar criterio" en una regla estructural, no en una promesa de estilo. |
-| `Guide` | **Especialización de `KnowledgeArticle`**, no entidad separada | Un Guide es, estructuralmente, un `KnowledgeArticle` cuyo `scope.championId` y `scope.role` son obligatorios en vez de opcionales. En vez de duplicar campos (título, conceptos relacionados, estado de publicación) en dos interfaces distintas, `Guide` es un tipo TypeScript refinado (`KnowledgeArticle & { format: 'guide'; scope: { championId; role } }`). Esto es coherente con que `'guide'` ya es un `ContentEntityKind` reservado — no se necesita una segunda entidad de dominio para lo mismo. |
-| `KnowledgeArticle` | **Se mantiene**, como entidad base de todo el contenido editorial largo (guías, análisis, editoriales, explicaciones de concepto) | Es el contenedor genérico; `Guide` es su caso más restringido. |
+| Sugerido en el encargo | Decisión                                                                                                                          | Justificación                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Lane`                 | **Fusionado en `Role`**                                                                                                           | Riot ya expone una única cadena de posición (`TOP`/`JUNGLE`/`MIDDLE`/`BOTTOM`/`UTILITY`) que el proyecto **ya usa** en `lib/riot/types.ts` (`RecentMatch.position`) y en `LiveDashboard.astro` (`positionLabel`). Crear un segundo vocabulario "Lane" distinto de "Role" solo introduciría dos formas de decir lo mismo y el riesgo de que se desincronizaran. `Role` en el Laboratorio usa exactamente los mismos cinco valores.                                                                                                                                            |
+| `PatchNote`            | **Fusionado en `Patch`**                                                                                                          | No vamos a re-alojar el changelog completo de Riot (eso ya existe en la web oficial de Riot; duplicarlo violaría el principio ya escrito en `docs/content-graph.md` de "no duplicar datos de proveedores"). Lo que sí aporta valor es la lectura editorial de qué cambió y por qué importa — eso es `Patch.editorialSummary`, un campo, no una entidad aparte.                                                                                                                                                                                                               |
+| `Opinion`              | **Convertido en value object `EditorialTake`**                                                                                    | Una opinión nunca existe de forma aislada: siempre es una opinión _sobre_ un Build, un Matchup, una entrada de Tier List. Modelarla como entidad independiente con su propio ID habría obligado a toda consulta a hacer un salto extra (`Build → Opinion`) sin ganar nada. Como value object embebido, es más simple de consultar y, sobre todo, se puede hacer **obligatorio** en los campos que more importan (Build, RunePage, Matchup, Synergy, entrada de TierList) — eso es lo que convierte "mostrar criterio" en una regla estructural, no en una promesa de estilo. |
+| `Guide`                | **Especialización de `KnowledgeArticle`**, no entidad separada                                                                    | Un Guide es, estructuralmente, un `KnowledgeArticle` cuyo `scope.championId` y `scope.role` son obligatorios en vez de opcionales. En vez de duplicar campos (título, conceptos relacionados, estado de publicación) en dos interfaces distintas, `Guide` es un tipo TypeScript refinado (`KnowledgeArticle & { format: 'guide'; scope: { championId; role } }`). Esto es coherente con que `'guide'` ya es un `ContentEntityKind` reservado — no se necesita una segunda entidad de dominio para lo mismo.                                                                  |
+| `KnowledgeArticle`     | **Se mantiene**, como entidad base de todo el contenido editorial largo (guías, análisis, editoriales, explicaciones de concepto) | Es el contenedor genérico; `Guide` es su caso más restringido.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 
 El resto (`Champion`, `Patch`, `Build`, `RunePage`, `Matchup`, `Synergy`, `Concept`, `TierList`, `MetaState`) se mantienen como entidades propias porque cada una tiene una identidad, un ciclo de vida y una forma de consulta distintos — fusionar cualquiera de ellas habría obligado a modelar un campo condicional ("si es de tipo X entonces...") en vez de un tipo propio, que es justo el tipo de complejidad que se quiere evitar.
 
@@ -136,8 +138,8 @@ Definidas en [`src/domain/league-laboratory/types.ts`](../src/domain/league-labo
 
 ```ts
 interface EditorialTake {
-  verdict: string;        // la conclusión, en una frase
-  reasoning: string;      // el porqué
+  verdict: string; // la conclusión, en una frase
+  reasoning: string; // el porqué
   confidence: 'low' | 'medium' | 'high';
   lastReviewedPatch?: PatchId;
 }
@@ -194,7 +196,7 @@ Es una intuición correcta sobre qué está conectado, pero como cadena lineal n
     Match (Riot)     ──played-with──►  Champion   (ya existe hoy)
 ```
 
-**Lectura de las relaciones clave** (todas expresadas como *foreign keys* tipados dentro de cada entidad, no como una lista de aristas genérica — ver §5.1 para el porqué):
+**Lectura de las relaciones clave** (todas expresadas como _foreign keys_ tipados dentro de cada entidad, no como una lista de aristas genérica — ver §5.1 para el porqué):
 
 - `Build.championId`, `Build.role`, `Build.patchId` → una build siempre sabe de qué campeón/rol/parche habla.
 - `Build.runePageId` (opcional) → una build puede recomendar una página de runas concreta sin duplicar sus datos.
@@ -204,7 +206,7 @@ Es una intuición correcta sobre qué está conectado, pero como cadena lineal n
 - `KnowledgeArticle.relatedConceptIds` / `relatedChampionIds` → un artículo enlaza los conceptos y campeones que toca, sin que el Concept o el Champion tengan que "saber" qué artículos los mencionan (se resuelve en consulta, vía `getChampionKnowledge`).
 - `MetaState.patchId` + `Patch.sequence` → permite construir el Meta Timeline con un simple `sort`, sin fecha de calendario obligatoria.
 
-### 5.1 Por qué *foreign keys* tipados y no una lista de aristas genérica (a diferencia del Content Graph)
+### 5.1 Por qué _foreign keys_ tipados y no una lista de aristas genérica (a diferencia del Content Graph)
 
 El Content Graph usa una lista plana de `ContentRelation { from, to, kind, label, priority }` porque su propósito es **navegación editorial laxa** ("quizá también quieras ver…"), donde cualquier par de entidades puede conectarse con cualquier verbo. El Laboratorio necesita **consultas estructurales precisas** ("dame todos los matchups de Lucian en ADC", "dame la tier list de soporte del parche 14.15") — eso se resuelve mejor con campos tipados directos (`matchup.role`, `tierList.patchId`) que se pueden filtrar con `Array.prototype.filter` sin tener que interpretar un `kind` de relación genérico. Son dos modelos de relación distintos a propósito, para dos propósitos distintos — y se conectan entre sí mediante el puente del §6, no compartiendo un único esquema.
 
@@ -212,18 +214,18 @@ El Content Graph usa una lista plana de `ContentRelation { from, to, kind, label
 
 `src/domain/league-laboratory/content-graph-bridge.ts` contiene funciones puras que convierten entidades del Laboratorio en `ContentEntity`/`ContentRelation` del Content Graph — el mismo patrón exacto que ya usa `domain/content-graph/adapters.ts` para convertir un `RecentMatch` de Riot o un `YouTubeVideo` en una entidad navegable.
 
-| Entidad del Lab | `ContentEntityKind` reutilizado | ¿Ya reservado en `content-graph/types.ts`? |
-| --- | --- | --- |
-| `LabChampion` | `champion` | Sí |
-| `Patch` | `patch` | Sí |
-| `Build` | `build` | Sí |
-| `Guide` (`KnowledgeArticle` con `format: 'guide'`) | `guide` | Sí |
-| `Matchup` | `matchup` | Sí |
-| `TierList` | `tier-list` | Sí |
-| `RunePage` | — | **No** |
-| `Synergy` | — | **No** |
-| `Concept` | — | **No** |
-| `MetaState` | — | **No** |
+| Entidad del Lab                                    | `ContentEntityKind` reutilizado | ¿Ya reservado en `content-graph/types.ts`? |
+| -------------------------------------------------- | ------------------------------- | ------------------------------------------ |
+| `LabChampion`                                      | `champion`                      | Sí                                         |
+| `Patch`                                            | `patch`                         | Sí                                         |
+| `Build`                                            | `build`                         | Sí                                         |
+| `Guide` (`KnowledgeArticle` con `format: 'guide'`) | `guide`                         | Sí                                         |
+| `Matchup`                                          | `matchup`                       | Sí                                         |
+| `TierList`                                         | `tier-list`                     | Sí                                         |
+| `RunePage`                                         | —                               | **No**                                     |
+| `Synergy`                                          | —                               | **No**                                     |
+| `Concept`                                          | —                               | **No**                                     |
+| `MetaState`                                        | —                               | **No**                                     |
 
 Seis de las diez entidades bridgean hoy sin ningún cambio en `domain/content-graph/`, porque `ContentEntityKind` ya reservaba `build`, `champion`, `guide`, `matchup`, `patch` y `tier-list` desde la auditoría original (ver ADR-003 en `PLATFORM_BIBLE.md`). Las cuatro restantes (`RunePage`, `Synergy`, `Concept`, `MetaState`) **no tienen todavía un `ContentEntityKind` propio** — no se ha modificado `content-graph/types.ts` en este trabajo (el encargo pedía no tocar código existente), así que quedan documentadas como huecos a decidir antes de construir sus respectivos exploradores:
 
@@ -246,18 +248,18 @@ Una superficie propia (ruta futura, p. ej. `/laboratory`), construida sobre el `
 2. **Barra de alcance (`ScopeFilterBar`)** — selector de Patch + Role compartido por todas las herramientas, porque casi todas las entidades tienen `KnowledgeScope`. Se implementa una vez, la usan las diez herramientas.
 3. **Área de contenido** — la vista específica de la herramienta (grid de tarjetas, lista, timeline).
 
-**Ambiente visual:** se recomienda un único `EnvironmentId` de marca (`'laboratory'`, a añadir a `data/environments.ts` cuando se implemente la primera herramienta) compartido por *todas* las herramientas del Laboratorio, en vez de un ambiente distinto por herramienta. El `'tier-list'` ya reservado en el Environment Engine puede mantenerse como alias del mismo ambiente o retirarse en favor de uno solo — es una decisión de implementación, no de este documento, pero la recomendación de producto es **una sola atmósfera para todo el Laboratorio**, para que se sienta como un espacio propio y coherente (justo lo contrario de la sensación de "spreadsheet" de OP.GG/U.GG).
+**Ambiente visual:** se recomienda un único `EnvironmentId` de marca (`'laboratory'`, a añadir a `data/environments.ts` cuando se implemente la primera herramienta) compartido por _todas_ las herramientas del Laboratorio, en vez de un ambiente distinto por herramienta. El `'tier-list'` ya reservado en el Environment Engine puede mantenerse como alias del mismo ambiente o retirarse en favor de uno solo — es una decisión de implementación, no de este documento, pero la recomendación de producto es **una sola atmósfera para todo el Laboratorio**, para que se sienta como un espacio propio y coherente (justo lo contrario de la sensación de "spreadsheet" de OP.GG/U.GG).
 
 ### 7.2 Navegación
 
 - Entrada principal (futura, no implementada hoy): un ítem en `data/site.ts#navigation` apuntando a `/laboratory`.
-- Navegación secundaria *dentro* del Laboratorio: pestañas o barra lateral con las herramientas activas (inicialmente solo "Tier List"; el resto aparecen a medida que se construyen — nunca se muestra un enlace a una herramienta que no existe todavía, coherente con la regla del Content Graph de no publicar entidades `planned` navegables).
+- Navegación secundaria _dentro_ del Laboratorio: pestañas o barra lateral con las herramientas activas (inicialmente solo "Tier List"; el resto aparecen a medida que se construyen — nunca se muestra un enlace a una herramienta que no existe todavía, coherente con la regla del Content Graph de no publicar entidades `planned` navegables).
 
 ### 7.3 Componentes reutilizables (contratos, no implementación visual)
 
 - **`KnowledgeCard`** — la tarjeta base para Champion/Build/Matchup/Concept/Guide/entrada de Tier List. Se recomienda el mismo patrón **Template + Render** que ya usa el Match History (`live/matches/render.ts`): un `<template>` compuesto por subcomponentes de marcado puro, rellenado por una función de render compartida — cero coste de hidratación, ya validado en producción.
 - **`ScopeFilterBar`** — un único componente de filtro (Patch + Role) reutilizado por toda herramienta que consuma `KnowledgeScope`.
-- **`EditorialTakeBadge`** — el átomo visual que muestra `verdict` + `confidence` de forma consistente en cualquier tarjeta. Es, visualmente, la firma que diferencia al Laboratorio de un sitio de estadísticas — debe aparecer en *toda* tarjeta que tenga un `EditorialTake`, nunca ser opcional a nivel de diseño aunque el campo de dominio sea, en algunos value objects, opcional.
+- **`EditorialTakeBadge`** — el átomo visual que muestra `verdict` + `confidence` de forma consistente en cualquier tarjeta. Es, visualmente, la firma que diferencia al Laboratorio de un sitio de estadísticas — debe aparecer en _toda_ tarjeta que tenga un `EditorialTake`, nunca ser opcional a nivel de diseño aunque el campo de dominio sea, en algunos value objects, opcional.
 - **`SearchBox`** — filtrado en cliente sobre lo ya cargado (título, tags, nombre de campeón). Sin backend de búsqueda, sin dependencia nueva — coherente con el principio de rendimiento de la Bible (§8: "ninguna dependencia nueva por comodidad").
 
 ### 7.4 Jerarquía visual
@@ -298,18 +300,18 @@ El contrato de una tarjeta (qué campos necesita cualquier `KnowledgeCard`) se d
 
 ## 11. Estado real de implementación (dominio)
 
-| Elemento | Estado |
-| --- | --- |
-| `src/domain/league-laboratory/types.ts` | ✅ Creado (extendido en Phase 1, ver §12.2) |
-| `src/domain/league-laboratory/scope.ts` | ✅ Creado (extendido en Phase 1: `roleLabel`, `queueLabel`) |
-| `src/domain/league-laboratory/registry.ts` | ✅ Creado (extendido en Phase 1: `hydrateLabRegistry`) |
-| `src/domain/league-laboratory/content-graph-bridge.ts` | ✅ Creado — **ahora invocado en producción** desde `domain/content-graph/registry.ts` (Phase 1, §12.4) |
-| `src/domain/league-laboratory/index.ts` | ✅ Creado (barrel) |
-| Datos reales (campeones, parches, tier list) | ✅ Parcial desde Phase 1 — ver §12.3 (solo la Tier List ADC; Build/RunePage/Matchup/Synergy/Concept/KnowledgeArticle/MetaState siguen vacíos) |
-| Rutas públicas | ✅ `/tier-list` (Phase 1). `/laboratory` como hub todavía no existe |
-| Componentes visuales | ✅ Parcial — ver §12.5 (los de la Tier List). Build Explorer, Rune Explorer, etc. siguen sin construir |
-| Endpoints/Functions | ❌ No existen — la Tier List es contenido 100% estático, sin API propia |
-| Cambios en Home, Live, Match History o cualquier API existente | ❌ Ninguno, verificado (§12.4, §12.9) |
+| Elemento                                                       | Estado                                                                                                                                        |
+| -------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/domain/league-laboratory/types.ts`                        | ✅ Creado (extendido en Phase 1, ver §12.2)                                                                                                   |
+| `src/domain/league-laboratory/scope.ts`                        | ✅ Creado (extendido en Phase 1: `roleLabel`, `queueLabel`)                                                                                   |
+| `src/domain/league-laboratory/registry.ts`                     | ✅ Creado (extendido en Phase 1: `hydrateLabRegistry`)                                                                                        |
+| `src/domain/league-laboratory/content-graph-bridge.ts`         | ✅ Creado — **ahora invocado en producción** desde `domain/content-graph/registry.ts` (Phase 1, §12.4)                                        |
+| `src/domain/league-laboratory/index.ts`                        | ✅ Creado (barrel)                                                                                                                            |
+| Datos reales (campeones, parches, tier list)                   | ✅ Parcial desde Phase 1 — ver §12.3 (solo la Tier List ADC; Build/RunePage/Matchup/Synergy/Concept/KnowledgeArticle/MetaState siguen vacíos) |
+| Rutas públicas                                                 | ✅ `/tier-list` (Phase 1). `/laboratory` como hub todavía no existe                                                                           |
+| Componentes visuales                                           | ✅ Parcial — ver §12.5 (los de la Tier List). Build Explorer, Rune Explorer, etc. siguen sin construir                                        |
+| Endpoints/Functions                                            | ❌ No existen — la Tier List es contenido 100% estático, sin API propia                                                                       |
+| Cambios en Home, Live, Match History o cualquier API existente | ❌ Ninguno, verificado (§12.4, §12.9)                                                                                                         |
 
 ## 12. Phase 1 — The Official Tidusss ADC Tier List
 
@@ -347,7 +349,7 @@ Extensión adicional menor: `LabChampion.dataDragonKey?: string` — la clave in
 - `patches.ts` — 1 `Patch`: `15.14` (mismo valor que `FALLBACK_VERSION` de `lib/riot/datadragon.ts`, reutilizado deliberadamente en vez de inventar un número de parche distinto).
 - `official-adc-tier-list.ts` — la `TierList` completa: 1 entrada `reviewed` (Lucian, tier `S`) + 3 `placeholder`.
 
-**Por qué solo Lucian tiene una valoración real:** es el único campeón sobre el que el repositorio ya documenta información editorial explícita y verificable (título del sitio, `data/content.ts#recognition`, la entidad `champion:lucian` del Content Graph). Para el resto, el encargo prohíbe explícitamente inventar una opinión atribuida a Tidusss — así que se muestran como placeholder honesto en vez de fabricar una clasificación completa. El verdict de cada placeholder dice literalmente *"Placeholder editorial — pendiente de revisión por Tidusss"*; nunca se presenta como un veredicto real.
+**Por qué solo Lucian tiene una valoración real:** es el único campeón sobre el que el repositorio ya documenta información editorial explícita y verificable (título del sitio, `data/content.ts#recognition`, la entidad `champion:lucian` del Content Graph). Para el resto, el encargo prohíbe explícitamente inventar una opinión atribuida a Tidusss — así que se muestran como placeholder honesto en vez de fabricar una clasificación completa. El verdict de cada placeholder dice literalmente _"Placeholder editorial — pendiente de revisión por Tidusss"_; nunca se presenta como un veredicto real.
 
 **Separación de capas cumplida:** `src/data/league-laboratory/` (contenido) no importa nada de `src/components/` (presentación) ni depende de ninguna API externa; `src/domain/league-laboratory/` (tipos y consultas) no sabe que estos datos existen hasta que algo los pasa explícitamente a `hydrateLabRegistry()`. Sustituir esta fuente por un CMS o un panel editorial en el futuro no requeriría tocar `src/domain/` ni `src/components/laboratory/` — solo el módulo que llama a `hydrateLabRegistry()`.
 
@@ -384,7 +386,7 @@ La página `/tier-list` renderiza `<ExploreNext source="tier-list:official-adc" 
 
 - El comentario editorial se expande con `<details>/<summary>` nativo — sin JavaScript, ya funciona (abrir/cerrar, foco, `aria-expanded` implícito los da el navegador).
 - El filtro por tier y la búsqueda por campeón sí requieren JavaScript (vanilla, sin librería). **Sin JS, todos los campeones permanecen visibles** — el atributo `hidden` nunca se activa si el script no corre, así que la página sigue siendo completamente legible y útil.
-- **Hallazgo de auditoría aplicado:** el patrón `[data-reveal]` que Home/Live usan para el *reveal* al hacer scroll define `opacity: 0` por defecto en `global.css`, y solo se corrige a `opacity: 1` mediante JavaScript (incluso la rama de `prefers-reduced-motion` necesita JS para detectarlo y aplicar la clase). Es decir, ese patrón concreto **no** es seguro sin JavaScript. Se decidió **no reutilizarlo** en esta página precisamente para poder cumplir "la página debe seguir siendo útil sin JavaScript" de forma literal, no aproximada.
+- **Hallazgo de auditoría aplicado:** el patrón `[data-reveal]` que Home/Live usan para el _reveal_ al hacer scroll define `opacity: 0` por defecto en `global.css`, y solo se corrige a `opacity: 1` mediante JavaScript (incluso la rama de `prefers-reduced-motion` necesita JS para detectarlo y aplicar la clase). Es decir, ese patrón concreto **no** es seguro sin JavaScript. Se decidió **no reutilizarlo** en esta página precisamente para poder cumplir "la página debe seguir siendo útil sin JavaScript" de forma literal, no aproximada.
 - Deep link por parámetros de URL: `?tier=<slug>` y `?champion=<slug>` (o `#campeon-<slug>`) preseleccionan filtro y abren el comentario del campeón correspondiente. Verificado en navegador.
 - Se detectó y corrigió durante la verificación un bug real: las zapatillas (`data-tier-filter`) del filtro usaban el grado bonito (`"S"`) mientras que las filas de tier usaban el slug (`"s"`) — nunca coincidían. Corregido para que ambos usen la misma función de slug que `TierBadge`.
 
@@ -502,12 +504,14 @@ Se detectó, además del registro mutable, un segundo problema de acoplamiento y
 **Auditados y reutilizados sin cambios:** `PatchBadge`, `RoleBadge`, `ConfidenceIndicator`, `TierBadge`, `LaboratoryHero`, `BaseLayout`, `Navbar`, `Footer`, `ExploreNext`.
 
 **Reutilizados con una ampliación retrocompatible:**
+
 - `LaboratoryMetadata` — `queue` pasó de obligatorio a opcional (la ficha de un campeón no tiene cola competitiva propia; la Tier List sigue pasándolo igual que siempre).
 - `EmptyLaboratoryState` — se añadieron `ctaHref`/`ctaLabel`/`ctaExternal` opcionales, para los casos donde el estado vacío sí tiene un siguiente paso honesto (p. ej. "ver el canal de YouTube" en vez de nada).
 
 **Extraído para eliminar una duplicación que este trabajo estaba a punto de introducir:** `TraitList.astro` — el bloque "etiqueta + lista" que `EditorialTakeCard` ya dibujaba para fortalezas/debilidades. En vez de escribir la misma lista una segunda vez para power spikes/errores frecuentes en la ficha de campeón, se extrajo un átomo y `EditorialTakeCard` se reescribió para usarlo también — una simplificación real, no solo una adición.
 
 **Nuevos, deliberadamente NO exclusivos del Explorador de Campeones (`src/components/laboratory/`):**
+
 - `ChampionKnowledgeSection.astro` — "aquí va contenido real, o aquí va un estado vacío", con `hasContent` explícito (no se infiere de si hay children, para que el comportamiento sea evidente leyendo el componente, no adivinado). Es el patrón que Build Explorer, Matchup Explorer, etc. van a necesitar exactamente igual.
 
 **Nuevos, específicos de esta herramienta (`src/components/laboratory/champion/`):** `ChampionHeader`, `ChampionProfileSection`, `ChampionTierStatus`. No se generalizaron todavía porque solo tienen un consumidor — se revisará cuándo generalizarlos cuando exista un segundo.
@@ -524,7 +528,7 @@ No se añadió entrada en la navegación principal (`Navbar.astro`/`data/site.ts
 
 ### 13.9 Estados vacíos
 
-Cada uno de los 7 bloques de conocimiento (vídeos, partidas, builds, runas, matchups, sinergias, conceptos) tiene un estado vacío propio y honesto, nunca genérico: explica *por qué* está vacío (algunos, como partidas, explican explícitamente "no inventamos una relación que no existe") y, cuando tiene sentido, ofrece un siguiente paso real (canal de YouTube, Live). El perfil editorial ausente ("El perfil editorial de Kai'Sa todavía no existe") dice explícitamente que el campeón ya es parte del Laboratorio y que su ficha crecerá — nunca aparenta ser un error o contenido roto.
+Cada uno de los 7 bloques de conocimiento (vídeos, partidas, builds, runas, matchups, sinergias, conceptos) tiene un estado vacío propio y honesto, nunca genérico: explica _por qué_ está vacío (algunos, como partidas, explican explícitamente "no inventamos una relación que no existe") y, cuando tiene sentido, ofrece un siguiente paso real (canal de YouTube, Live). El perfil editorial ausente ("El perfil editorial de Kai'Sa todavía no existe") dice explícitamente que el campeón ya es parte del Laboratorio y que su ficha crecerá — nunca aparenta ser un error o contenido roto.
 
 ### 13.10 SEO
 
@@ -536,16 +540,16 @@ Jerarquía semántica correcta (`h1` el nombre del campeón, `h2`/`h3` dentro de
 
 ### 13.12 Rendimiento
 
-Retrato del campeón como único elemento `loading="eager"`/`fetchpriority="high"` (el elemento principal above-the-fold de esta página), con `width`/`height` explícitos (308×560, las dimensiones reales del asset) para evitar *layout shift*. El resto de imágenes (ninguna en esta página, ya que solo se usa el retrato) no aplica. Cero JavaScript de cliente nuevo: la página entera se renderiza en servidor, sin ningún `<script>` propio.
+Retrato del campeón como único elemento `loading="eager"`/`fetchpriority="high"` (el elemento principal above-the-fold de esta página), con `width`/`height` explícitos (308×560, las dimensiones reales del asset) para evitar _layout shift_. El resto de imágenes (ninguna en esta página, ya que solo se usa el retrato) no aplica. Cero JavaScript de cliente nuevo: la página entera se renderiza en servidor, sin ningún `<script>` propio.
 
 ### 13.13 Deuda técnica detectada
 
-| Elemento | Severidad | Descripción |
-| --- | --- | --- |
-| Duplicación de `Role`/`roleLabel` entre `LiveDashboard.astro` y `domain/league-laboratory/scope.ts` | Media | Ya detectada en Phase 1, sigue sin resolver — ahora con un segundo consumidor (`ChampionHeader`) además de la Tier List. Cuantos más consumidores, más cara será la eventual unificación. |
-| `champion.title` sin poblar en el dominio | Baja | Campo preparado pero vacío en las 4 entradas reales, por precaución ante localización no verificada (§13.4). No es deuda urgente, pero alguien debe rellenarlo con la fuente correcta antes de que se acumulen más campeones sin título. |
-| `ChampionHeader`/`ChampionProfileSection`/`ChampionTierStatus` sin generalizar todavía | Baja | Correcto para un solo consumidor; revisar en cuanto exista una segunda herramienta que muestre un campeón de forma prominente (Matchup Explorer, probablemente). |
-| Ausencia de tests automatizados para las funciones puras de `registry.ts` | Media | El refactor a fábrica pura (ADR-006) hace que estas funciones sean triviales de testear (sin mocks de estado global) — una oportunidad barata que sigue sin aprovecharse, heredada de la falta general de tests del proyecto (ya señalada en `PLATFORM_BIBLE.md` §8). |
+| Elemento                                                                                            | Severidad | Descripción                                                                                                                                                                                                                                                           |
+| --------------------------------------------------------------------------------------------------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Duplicación de `Role`/`roleLabel` entre `LiveDashboard.astro` y `domain/league-laboratory/scope.ts` | Media     | Ya detectada en Phase 1, sigue sin resolver — ahora con un segundo consumidor (`ChampionHeader`) además de la Tier List. Cuantos más consumidores, más cara será la eventual unificación.                                                                             |
+| `champion.title` sin poblar en el dominio                                                           | Baja      | Campo preparado pero vacío en las 4 entradas reales, por precaución ante localización no verificada (§13.4). No es deuda urgente, pero alguien debe rellenarlo con la fuente correcta antes de que se acumulen más campeones sin título.                              |
+| `ChampionHeader`/`ChampionProfileSection`/`ChampionTierStatus` sin generalizar todavía              | Baja      | Correcto para un solo consumidor; revisar en cuanto exista una segunda herramienta que muestre un campeón de forma prominente (Matchup Explorer, probablemente).                                                                                                      |
+| Ausencia de tests automatizados para las funciones puras de `registry.ts`                           | Media     | El refactor a fábrica pura (ADR-006) hace que estas funciones sean triviales de testear (sin mocks de estado global) — una oportunidad barata que sigue sin aprovecharse, heredada de la falta general de tests del proyecto (ya señalada en `PLATFORM_BIBLE.md` §8). |
 
 ### 13.14 Riesgos futuros
 
@@ -554,7 +558,7 @@ Retrato del campeón como único elemento `loading="eager"`/`fetchpriority="high
 
 ### 13.15 Verificación manual realizada
 
-`astro preview` en navegador real: contenido completo verificado en `/campeones/lucian` (perfil completo) y `/campeones/kaisa` (estado vacío honesto); `data-environment="champion"` confirmado; meta robots verificado por campeón (`index` solo Lucian); responsive a 375px sin *overflow* horizontal; sin errores de consola; capturas de pantalla revisadas como diseñador (ver crítica de diseño en el informe de entrega). Se detectó y corrigió durante esta verificación que el estado vacío de retrato (`champion-identity-fallback`, pensado para el icono pequeño de 56px de la Tier List) se habría visto diminuto dentro del marco grande del retrato — corregido con una regla con mayor especificidad, sin duplicar la regla base.
+`astro preview` en navegador real: contenido completo verificado en `/campeones/lucian` (perfil completo) y `/campeones/kaisa` (estado vacío honesto); `data-environment="champion"` confirmado; meta robots verificado por campeón (`index` solo Lucian); responsive a 375px sin _overflow_ horizontal; sin errores de consola; capturas de pantalla revisadas como diseñador (ver crítica de diseño en el informe de entrega). Se detectó y corrigió durante esta verificación que el estado vacío de retrato (`champion-identity-fallback`, pensado para el icono pequeño de 56px de la Tier List) se habría visto diminuto dentro del marco grande del retrato — corregido con una regla con mayor especificidad, sin duplicar la regla base.
 
 ### 13.16 Limitaciones explícitas de esta V1
 
@@ -570,3 +574,208 @@ Retrato del campeón como único elemento `loading="eager"`/`fetchpriority="high
 3. Build Explorer / Rune Explorer, ahora con un perfil de campeón real al que enlazar sus recomendaciones.
 4. Unificar `Role`/`roleLabel` entre Live y el Laboratorio si un tercer consumidor lo justifica.
 5. Tests unitarios para `registry.ts` ahora que sus funciones son puras y triviales de testear.
+
+## 14. Phase 3 — El campeón como centro del ecosistema: catálogo a escala (~170 campeones)
+
+### 14.1 La pregunta que se respondió antes de escribir código
+
+_"¿Cómo cambiaría mi arquitectura si mañana Riot añadiese 30 campeones nuevos?"_
+
+Con el diseño de Phase 2, la respuesta honesta era mala: **habría que escribir 30 objetos `LabChampion` a mano**, uno por campeón, copiando nombre/título/icono/slug de cada uno. Eso no es una arquitectura que "soporte 170+ campeones sin modificarse" — es una que exige trabajo manual proporcional al tamaño del roster, para siempre. Esa era la señal de que el modelo de Phase 2 mezclaba dos cosas que no debían vivir juntas: **el hecho de que un campeón existe** (nombre, título oficial, clase, icono — Riot ya lo sabe y lo publica) y **lo que Tidusss opina de él** (que por definición nunca puede generarse automáticamente).
+
+### 14.2 Decisión: separar el catálogo (factual) de la curación (editorial)
+
+Se dividió lo que antes era un único `LabChampion` en dos:
+
+- **`ChampionCatalogEntry`** — hechos objetivos y oficiales de Riot: `name`, `title` (verificado, no adivinado — ver §14.5), `tags` (clases oficiales), `riotDifficulty` (1-10, la propia escala de Riot), `dataDragonKey`. Existe para **los ~170 campeones del juego**. Se genera con `scripts/sync-champion-catalog.mjs` desde Data Dragon — nunca se escribe a mano.
+- **`LabChampion`** (recortado) — solo lo que Tidusss cura: `roles` (en qué posición sigue este sitio al campeón), `playstyleTags` (su propia lectura, distinta de las clases de Riot), `signatureNote`, `profile?` (el perfil editorial completo). Existe **solo para los campeones de los que el Laboratorio dice algo** — hoy 4, con vocación de crecer sin que la arquitectura cambie.
+
+`ChampionKnowledge` (la agregación que consume la página) pasó de asumir siempre un `LabChampion` a `{ catalogEntry, labChampion?, ... }` — `catalogEntry` siempre existe si el campeón es real; `labChampion` es ausente para la inmensa mayoría, y todo el resto de la página lo trata como tal, no como un error.
+
+**Por qué dos tipos y no uno con campos opcionales superpuestos:** con un único tipo, un futuro regenerado del catálogo tendría que fusionarse con cuidado para no pisar el trabajo editorial ya escrito. Con dos archivos completamente separados (`catalog/champions.generated.ts` vs `champions.ts`), el generador **físicamente no puede** tocar el trabajo de Tidusss — no porque se acuerde de tener cuidado, sino porque no importa ni conoce ese archivo. Es una garantía de diseño, no una norma de proceso.
+
+### 14.3 El generador: `scripts/sync-champion-catalog.mjs`
+
+Un script de Node (sin dependencias nuevas: usa `fetch` nativo) que:
+
+1. Consulta `https://ddragon.leagueoflegends.com/api/versions.json` para la versión vigente.
+2. Descarga `champion.json` en `es_ES` (el idioma del sitio) para esa versión.
+3. Convierte cada entrada en un `ChampionCatalogEntry`, con un slug derivado de forma determinista (`slugify`: inserta guiones en los cambios de minúscula→mayúscula y pasa a minúsculas — "AurelionSol" → "aurelion-sol", "JarvanIV" → "jarvan-iv", "KSante" → "k-sante").
+4. Verifica que no haya slugs duplicados (falla el script si los hay — nunca falla en silencio).
+5. Escribe `src/data/league-laboratory/catalog/champions.generated.ts`, con cabecera explícita de "generado, no editar a mano", versión y fecha.
+
+**Ejecutado de verdad durante este trabajo** (no es un ejercicio teórico): `npm run sync:champions` contra Data Dragon real generó **173 campeones**, incluidos varios publicados después del corte de conocimiento del autor de este cambio (Ambessa, Aurora, Mel, Yunara, Zaahen) — la prueba más directa posible de que la arquitectura no necesita saber nada sobre un campeón nuevo para generarle una página correcta.
+
+**Por qué no se hace en el build (`astro build`):** el build estático de este proyecto **nunca** depende de la red — ni siquiera para Riot/YouTube/Twitch, que se resuelven en tiempo de petición vía Cloudflare Pages Functions, jamás en build (principio ya documentado en `docs/riot-api.md` y `PLATFORM_BIBLE.md` §8). Si el catálogo se generase en cada build, una caída puntual de Data Dragon rompería el build **de todo el sitio**, incluidos Home y Live — que hoy son inmunes a que Riot esté caído. `npm run sync:champions` es una herramienta de desarrollo que un humano ejecuta cuando toca actualizar el catálogo; su resultado se commitea como cualquier otro cambio de datos, exactamente igual que `data/content.ts` cuando hay un hito nuevo.
+
+### 14.4 Sistema de rutas: por qué `/campeones/<slug>` seguía siendo suficiente
+
+Se evaluaron explícitamente las alternativas que planteaba el encargo:
+
+- **Versionado en la URL** (`/campeones/lucian/16.14`) — descartado. La identidad de un campeón no está versionada por parche; lo que cambia por parche es su valoración (ya vive en `TierListEntry`/`ChampionProfile.editorialTake.lastReviewedPatch`), no la URL de su ficha. Versionar la URL fragmentaría el SEO y el enlazado de un mismo campeón en N URLs sin necesidad real.
+- **Colecciones** (`/campeones/tirador/`, agrupando por clase) — no se construyeron todavía, pero el catálogo ya las deja preparadas (`tags` existe y es real para los 170). Es un candidato natural para un capítulo futuro, no para este.
+- **Contenido generado** — es exactamente lo que se construyó (§14.3).
+
+Lo que cambió no fue la forma de la ruta, sino **de dónde saca `getStaticPaths()` la lista de campeones**: antes, 4 objetos hechos a mano; ahora, los 173 del catálogo. Añadir 30 campeones mañana no toca `[slug].astro` en absoluto — solo regenera el catálogo.
+
+### 14.5 Un hallazgo que confirma por qué no se debe adivinar contenido
+
+En Phase 2 se dejó `LabChampion.title` sin rellenar para los 4 campeones, explícitamente por precaución ante no tener verificada la cadena exacta de localización. Con el catálogo real ya generado, se puede comprobar: el título real de Lucian en español es **"El Destello Purificador"**, no "El Purificador" (la suposición razonable, pero no verificada, que se había descartado a propósito en Phase 2). Es la validación empírica de aquella decisión — adivinar habría producido un dato incorrecto publicado en el sitio.
+
+### 14.6 Content Graph: se mantiene la política de Phase 2, ahora a propósito y documentada
+
+Los ~170 campeones del catálogo **no** se registran como nodos del Content Graph — solo los 4 con curación editorial (`adcLabChampions`), igual que en Phase 2. No es una limitación nueva: es la misma decisión, ahora puesta a prueba a una escala 40 veces mayor y confirmada como correcta (ver ADR-009 para la justificación completa). `content-graph/league-laboratory-extension.ts` ahora resuelve el `ChampionCatalogEntry` de cada `LabChampion` curado para construir su `ContentEntity` (nombre, slug), en vez de leerlo directamente del propio `LabChampion` (que ya no lo tiene).
+
+### 14.7 Desacoplo de versión de Data Dragon
+
+Antes (Phase 2), las imágenes de campeón usaban `patch.dataDragonVersion` — el parche declarado por la Tier List (`15.14.1`, ya desactualizado frente al real `16.14.1` en el momento de este trabajo). Ahora las imágenes de `/campeones/*` usan **`championCatalogVersion`** (la versión con la que se generó el catálogo, siempre coherente con los assets que describe), completamente desacoplada del parche editorial de la Tier List. Son dos conceptos distintos: "con qué versión de Data Dragon se resuelven las imágenes" vs. "de qué parche habla esta Tier List" — mezclarlos fue un acoplamiento accidental de Phase 2, corregido aquí sin tocar el contenido de la Tier List (que sigue diciendo "15.14", sin cambios, fuera de alcance de este trabajo).
+
+Consecuencia práctica: el bloque de metadatos ("Parche…") en la ficha de un campeón **solo se muestra cuando hay contenido realmente anclado a un parche** (`profile.editorialTake.lastReviewedPatch`) — antes se mostraba siempre el parche de la Tier List, incluso en campeones de los que no se ha dicho nada, insinuando un contexto que no existía.
+
+### 14.8 Conceptos y Guías: una ambigüedad de Phase 2 resuelta
+
+`ChampionKnowledge.articles` (Phase 2) mezclaba dos cosas que el propio encargo pide como conexiones distintas: "Guías" y "Conceptos". Se separó en `guides: readonly Guide[]` (artículos con `format: 'guide'`) y `concepts: readonly Concept[]` — estos últimos resueltos por una función nueva, `getRelatedConceptsFor()`, que recorre las guías, matchups y sinergias del campeón y reúne los `Concept` que mencionan, sin que ningún componente tenga que conocer esa cadena. La página del campeón pasó de 7 a **8 secciones de conocimiento**, alineadas 1:1 con la lista del encargo.
+
+### 14.9 Componentes: cambios y por qué
+
+| Componente                                                                                                                                 | Cambio                                                                         | Motivo                                                                                                                                                                                     |
+| ------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `ChampionIdentity.astro`                                                                                                                   | Prop `champion: LabChampion` → `champion: ChampionCatalogEntry`                | Solo necesitaba nombre e icono — datos que ahora viven en el catálogo. Se eliminó también la rama de _fallback_ sin icono: con el catálogo, `dataDragonKey` es siempre real.               |
+| `ChampionHeader.astro`                                                                                                                     | Reescrito: `catalogEntry` + `labChampion?` + `role?` (antes obligatorio)       | El rol ya no está garantizado para el 96% de los campeones. Se añadieron "Clase" (`tags`) y "Dificultad según Riot" — contenido real y significativo incluso sin ninguna curación.         |
+| `TierListSection.astro` / `TierListPendingSection.astro`                                                                                   | `Map<LabChampionId, LabChampion>` → `Map<LabChampionId, ChampionCatalogEntry>` | Mismo motivo que `ChampionIdentity`; cero cambio de lógica.                                                                                                                                |
+| `ChampionTierStatus.astro`, `ChampionProfileSection.astro`, `ChampionKnowledgeSection.astro`, `EditorialTakeCard.astro`, `TraitList.astro` | Sin cambios                                                                    | Ya estaban diseñados sobre datos genéricos (nombre de campeón como string, perfil opcional) — la auditoría previa a escribir código confirmó que no hacía falta tocarlos, y no se tocaron. |
+
+**CSS muerto detectado y eliminado durante la autocrítica final:** `.champion-identity-fallback` (dos reglas) dejó de tener ningún consumidor en cuanto `ChampionIdentity`/`ChampionHeader` dejaron de necesitar una rama sin icono. Se eliminó en vez de dejarlo "por si acaso".
+
+### 14.10 Verificación realizada
+
+Build real: **176 páginas** (173 campeones + Home + Live + Tier List) en menos de un segundo. Verificado en navegador: una ficha completamente sin curar (`/campeones/ambessa`, dificultad Riot 10/10, sin rol, sin badge de especialidad, sin indicador de confianza) muestra contenido real y honesto en cada uno de sus bloques, sin una sola afirmación inventada; responsive a 375px sin _overflow_; `data-environment="champion"` correcto; cero errores de consola. Comparación de HTML de `dist/index.html`, `dist/live/index.html` y `dist/tier-list/index.html` antes/después: Home y Live bit a bit idénticos; Tier List cambia únicamente en que sus enlaces a campeones apuntan a `/campeones/<slug>` en vez de a `/live` (cambio ya introducido en Phase 2, no en esta fase).
+
+### 14.11 Deuda técnica y riesgos (acumulado con Phase 1-2)
+
+| Elemento                                                                                                                                         | Severidad | Estado                                                                                                                                                                                                             |
+| ------------------------------------------------------------------------------------------------------------------------------------------------ | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Duplicación `Role`/`roleLabel` (Live vs. Laboratorio)                                                                                            | Media     | Sin resolver, ya señalada en Phase 1-2                                                                                                                                                                             |
+| `championCatalogGeneratedAt` exportado pero sin ningún consumidor todavía                                                                        | Baja      | **Resuelto en Fase 4 (ADR-010):** eliminado por completo — rompía el determinismo del generador sin aportar nada, ver §15                                                                                          |
+| Sin tests para `sync-champion-catalog.mjs` ni para las funciones de agregación de `registry.ts`                                                  | Media     | **Resuelto en Fase 4 (ADR-010):** 47 tests con `node:test` nativo, ver §15                                                                                                                                         |
+| El catálogo completo (173 entradas) se importa transitivamente en cualquier página que toque `content-graph/registry.ts` (Home y Live incluidas) | Baja      | Sin impacto de bytes de cliente verificado (todo se resuelve en build, ningún `<script>` lo transporta), pero es un acoplamiento de grafo de módulos a vigilar si el catálogo crece mucho más o gana lógica pesada |
+| Colecciones por clase (`/campeones/tirador/`, etc.)                                                                                              | —         | Deliberadamente no construidas — ver §14.4                                                                                                                                                                         |
+
+### 14.12 Recomendaciones para el próximo capítulo
+
+1. Antes de construir Build Explorer o Rune Explorer, decidir si necesitan iterar el catálogo completo (para "quién no tiene build todavía") o solo `adcLabChampions` — el registro ya soporta ambos casos sin cambios.
+2. Si se documenta una segunda Tier List (otro rol), revisar si el parche mostrado en la ficha de campeón debería poder proceder de más de una fuente además de `ChampionProfile.editorialTake.lastReviewedPatch`.
+3. Añadir un test que ejecute `slugify()` contra los 173 nombres reales y falle si Data Dragon cambia un `id` de forma que rompa una URL ya indexada (Lucian, hoy el único indexado, es el caso crítico a proteger).
+4. Considerar una página `/campeones/` (índice navegable del catálogo, filtrable por clase) como aplicación natural de las colecciones descartadas en §14.4 — solo cuando haya más de 4 fichas con contenido real, para no invitar a explorar 169 páginas vacías.
+
+**Las recomendaciones 3 y 4 de esta lista son exactamente lo que resuelve la Fase 4 (§15).**
+
+## 15. Fase 4 — Blindaje del catálogo y Centro de Campeones
+
+Con el catálogo a escala real (173 campeones, Fase 3) pero sin ninguna prueba automatizada ni ningún punto de entrada público que los agrupara, esta fase resuelve ambas carencias: primero "blinda" el catálogo con pruebas reales, y sobre esa base construye `/campeones` — el Centro de Campeones.
+
+### 15.1 Estrategia de testing: `node:test` nativo, sin dependencias nuevas
+
+Antes de escribir ningún test se auditó `package.json` (Node `>=22.12.0`, TypeScript `^6.0.3`, sin ningún test runner instalado) para justificar la herramienta en vez de asumirla. `node:test` + `node:assert/strict` son nativos y estables en el Node instalado (24.18.0); no se añadió Vitest, Jest ni ningún otro framework.
+
+**El obstáculo real:** los archivos de dominio usan imports relativos sin extensión (`from './types'`), convención ya asentada en todo `src/domain`. La resolución ESM nativa de Node exige extensión explícita o falla con `ERR_MODULE_NOT_FOUND`. Reescribir esos imports solo para que los tests los pudieran importar habría sido tocar código de producción por una necesidad puramente de tooling. Se optó por lo contrario: un hook de resolución (`scripts/testing/register-ts-loader.mjs`) que, cuando la resolución nativa falla para un especificador relativo sin extensión, reintenta primero como archivo (`./types` → `./types.ts`) y luego como directorio/barrel (`../league-laboratory` → `../league-laboratory/index.ts`) — el mismo comportamiento en dos pasos que Node ya aplica de forma nativa para `.js`. Se usa `module.registerHooks()` (API síncrona, en el mismo proceso) y no `module.register()` (marcada `@deprecated` en `@types/node`, exige un segundo archivo cargado en un hilo de hooks aparte).
+
+Se añadió `@types/node` como única dependencia nueva — de desarrollo, sin efecto en runtime ni en el bundle final — porque los tests importan `node:test`/`node:assert/strict` por su nombre y `astro/tsconfigs/strict` no restringe el campo `types`, así que sin el paquete `astro check` no podía resolver esos tipos.
+
+**Un bug real de la primera versión del loader:** un chequeo de "¿el especificador ya tiene extensión?" basado en `/\.[a-z]+$/i` confundía nombres de archivo con puntos internos (`champions.generated`) con una extensión real, y se saltaba el reintento. Se corrigió con una lista explícita de extensiones conocidas (`.ts`, `.tsx`, `.js`, `.mjs`, `.cjs`, `.json`, `.node`). Detectado y corregido durante la propia ejecución de los primeros tests, no por revisión de código.
+
+### 15.2 Determinismo del generador: `championCatalogGeneratedAt` eliminado
+
+Al escribir el test de estabilidad de slugs se comprobó (búsqueda exhaustiva de `championCatalogGeneratedAt` en todo el repo) que ese campo —una marca de tiempo `new Date().toISOString()` incluida en cada archivo generado— no tenía ningún consumidor. Además rompía la reproducibilidad: dos ejecuciones de `npm run sync:champions` con los mismos datos de Data Dragon producían un archivo distinto solo por la fecha de generación.
+
+**Decisión:** eliminarlo. No se sustituyó por un hash ni por ningún otro valor derivado — `championCatalogVersion` (la versión de Data Dragon) ya identifica el snapshot de datos de forma determinista y con significado real; un consumidor que quiera saber "cuándo se actualizó el catálogo" puede mirar el historial de git del archivo, que es la fuente de verdad real para esa pregunta. **Verificación empírica:** se ejecutó el script dos veces seguidas y se comparó el SHA-256 del archivo generado — idéntico byte a byte en ambas ejecuciones.
+
+De paso se eliminó la duplicación de `slugify()`: existía una copia idéntica dentro de `scripts/sync-champion-catalog.mjs` y otra iba a hacer falta para la búsqueda del Centro de Campeones (§15.4). Se extrajo una única función pura, `slugifyChampionKey`, a un archivo nuevo sin ninguna dependencia interna, `src/domain/league-laboratory/normalize.ts` (junto con `normalizeSearchText`, ver §15.4). El script `.mjs` la importa con extensión `.ts` explícita — no necesita el loader de tests, porque Node ya ejecuta `.ts` de forma nativa cuando la extensión es explícita.
+
+El generador se refactorizó además para exponer `buildCatalogEntry` (transforma un registro crudo de `champion.json` en un `ChampionCatalogEntry`), `sortCatalogEntries` y `assertUniqueSlugs` como funciones puras, y la llamada real a Data Dragon (`main()`) quedó protegida detrás de una comprobación de "¿es este archivo el punto de entrada del proceso?" (`import.meta.url === pathToFileURL(process.argv[1]).href`) — así, importar esas funciones desde un test nunca dispara una petición de red real.
+
+### 15.3 Cobertura de tests (47 → 52 tests tras añadir `hub.ts`, `test/league-laboratory/*.test.ts`)
+
+| Archivo                    | Qué prueba                                                                                                                                                                                                                                                                                                                                                                             |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `normalize.test.ts`        | Los 8 casos reales exigidos de búsqueda (Kai'Sa/kaisa, Kog'Maw/kogmaw, Rek'Sai/reksai, Cho'Gath/chogath, Bel'Veth/belveth, Dr. Mundo/dr mundo, Jarvan IV/jarvan, Miss Fortune/miss fortune) y la generación de slugs (`AurelionSol`, `JarvanIV`, `DrMundo`, `MissFortune`, `KSante`).                                                                                                  |
+| `catalog.test.ts`          | Tamaño realista (≥170), unicidad de slugs e ids, formato válido de slug (`^[a-z0-9]+(-[a-z0-9]+)*$`), formato `champion:<slug>`, estabilidad de la generación de slugs contra el catálogo real, el contrato **`/campeones/lucian` exacto**, 10 casos reales con apóstrofes/puntos/mayúsculas internas resueltos contra el catálogo real (no inventados), y ningún campo factual vacío. |
+| `editorial-status.test.ts` | `resolveChampionEditorialStatus` con Lucian (reviewed), Kai'Sa/Jinx/Ezreal (draft) y sin `LabChampion` (pending).                                                                                                                                                                                                                                                                      |
+| `registry.test.ts`         | `buildLabRegistry({})` produce colecciones vacías nunca `undefined`; `getChampionKnowledge` para un id fuera del catálogo, para Lucian (curado) y para un campeón real sin curación editorial.                                                                                                                                                                                         |
+| `hub.test.ts`              | `getCatalogCoverage` (los totales reales suman el tamaño del catálogo, y con un registro vacío no falla), `resolveRiotDifficultyBucket` (los 3 tramos), `isChampionInAnyTierList`.                                                                                                                                                                                                     |
+| `content-graph.test.ts`    | La política de ADR-009 comprobada de forma ejecutable (solo los campeones curados son nodos `champion`, nunca los 173), las relaciones reales de Lucian con la Tier List oficial, y que cada entidad de campeón tiene un `href` real a `/campeones/<slug>`.                                                                                                                            |
+| `sync-script.test.ts`      | `buildCatalogEntry` determinista y sin pérdida de campos, `sortCatalogEntries` estable, `assertUniqueSlugs` no lanza con slugs únicos y lanza ante una colisión real.                                                                                                                                                                                                                  |
+
+Ejecutable con `npm run test` (`node --import ./scripts/testing/register-ts-loader.mjs --test "test/**/*.test.ts"`). No se modificó `npm run build` para no gatear los despliegues de Cloudflare Pages con esta fase — queda como recomendación explícita para un paso futuro (§15.10), no como algo decidido aquí.
+
+### 15.4 Modelo de estado editorial: una sola función, tres estados
+
+Se introdujo `ChampionEditorialStatus = 'reviewed' | 'draft' | 'pending'` (`types.ts`) y `resolveChampionEditorialStatus(labChampion)` (`registry.ts`) como única fuente de verdad:
+
+```ts
+if (labChampion?.profile) return 'reviewed';
+if (labChampion) return 'draft';
+return 'pending';
+```
+
+Aplicado a los datos reales actuales: Lucian → `reviewed` (tiene `profile`); Kai'Sa, Jinx, Ezreal → `draft` (curados, sin `profile` todavía); los otros 169 → `pending` (ni siquiera tienen `LabChampion`). Ningún componente ni plantilla reimplementa este criterio con condicionales propios — `EditorialStatusBadge.astro` es el único lugar que traduce el estado a texto visible ("Revisado" / "Borrador" / "Pendiente de revisión"), y el texto es siempre la señal principal, nunca solo el color del badge.
+
+`src/domain/league-laboratory/hub.ts` (nuevo) añade lo que necesita el Centro de Campeones, siguiendo el mismo patrón que `content-graph/league-laboratory-extension.ts` (cada herramienta nueva amplía su propio archivo, no `registry.ts`): `getCatalogCoverage(registry)` (recuento real por estado, nunca escrito a mano), `resolveRiotDifficultyBucket(riotDifficulty)` (agrupa la dificultad oficial 0-10 en baja/media/alta — Riot sí usa 0 como valor real, no solo 1-10, corregido en el test tras un fallo real contra Akshan) e `isChampionInAnyTierList(registry, championId)`.
+
+### 15.5 El Centro de Campeones (`/campeones`): qué es y qué no es
+
+Explícitamente **no** es una parrilla genérica de 173 iconos sin jerarquía, **no** es un clon del champion select de Riot, y **no** es una lista plana indiferenciada. Es una herramienta editorial honesta sobre su propio estado de cobertura:
+
+1. **Recuento real** (`LaboratoryCoverageSummary.astro`): "173 campeones en el catálogo · 1 revisado · 3 en borrador · 169 pendientes de revisión" — siempre derivado de `getCatalogCoverage`, nunca tecleado a mano, más un párrafo honesto sobre el crecimiento progresivo del Laboratorio.
+2. **Destacados** (`ChampionEditorialCard.astro`, dos secciones): "Analizados por Tidusss" (hoy solo Lucian, con extracto real de su `editorialTake.verdict`) y "Presencia curada, perfil en preparación" (Kai'Sa, Jinx, Ezreal, con la misma frase honesta que ya usa `ChampionProfileSection.astro` para un perfil ausente).
+3. **Catálogo completo** (`ChampionCatalogRow.astro` × 173, dentro de `<ul data-champion-catalog-grid>`): fila compacta con icono, nombre, título, clases oficiales, badge de estado — cada fila es un `<a>` a `/campeones/<slug>`.
+4. **Búsqueda y filtros** (`LaboratorySearch.astro`, ver §15.6).
+5. **CTA** hacia `/tier-list` y `ExploreNext` hacia el resto del grafo (ver §15.7).
+
+### 15.6 Búsqueda y filtros: arquitectura vanilla, sin dependencias nuevas
+
+La búsqueda reutiliza `normalizeSearchText` (§15.2) desde un `<script>` de Astro — Vite lo procesa y empaqueta como cualquier import de cliente, sin necesidad de ningún loader especial porque `normalize.ts` no tiene imports internos. No hay librería de fuzzy-search: es la misma normalización simple aplicada por igual al texto y a la consulta.
+
+Los filtros disponibles —estado editorial, clase oficial (`tags` de Riot), dificultad (agrupada en 3 tramos), inicial (calculada de verdad sobre los nombres del catálogo, no una lista estática A-Z) y presencia en la Tier List oficial— se aplican en el cliente sobre los 173 `<li data-champion-catalog-row>` ya renderizados en el HTML, cada uno con atributos `data-status`, `data-tags`, `data-difficulty`, `data-initial`, `data-tierlist` y `data-search`. Son combinables entre sí (AND) y se sincronizan con la URL vía `history.replaceState` — nunca `pushState`, para no llenar el historial del navegador en cada tecla — y se restauran al cargar la página leyendo `location.search`: un enlace `/campeones?estado=reviewed&tierlist=1` reproduce exactamente ese estado (verificado en navegador). Un `<p role="status" aria-live="polite">` anuncia el recuento de resultados a lectores de pantalla en cada cambio.
+
+**Filtro descartado explícitamente: "rol editorial".** Ese dato (`LabChampion.roles`) solo existe para los 4 campeones curados; ofrecerlo como filtro sobre un catálogo de 173 habría dejado la inmensa mayoría fuera de cualquier selección posible — un control real pero inútil en la práctica actual. Queda como candidato para cuando la curación editorial crezca lo suficiente.
+
+**Degradación sin JavaScript:** los 173 elementos se renderizan siempre visibles — el script de filtros nunca los oculta por defecto. A diferencia del patrón `[data-reveal]` que usan Home/Live (oculto por defecto, visible solo tras una clase añadida por JS), aquí no hay ningún estado inicial oculto: sin JavaScript, los controles de búsqueda y filtro quedan presentes pero inertes — no filtran nada, pero tampoco rompen ni esconden contenido. El mensaje de "sin resultados" también existe en el HTML con `hidden` estático desde el servidor; solo JavaScript lo muestra u oculta según haya coincidencias.
+
+### 15.7 Content Graph y navegación
+
+Se añadió una entidad `tool:champion-hub` (href `/campeones`) en `content-graph/league-laboratory-extension.ts`, con relaciones reales en ambas direcciones hacia la Tier List oficial y hacia cada uno de los 4 campeones curados. Se respeta ADR-009 sin excepción: los ~169 campeones sin curación editorial no se registran en el grafo por esta fase — su única vía de descubrimiento sigue siendo el propio Centro de Campeones o el enlace directo. Además, las 173 fichas de campeón (`[slug].astro`) llevan ahora un enlace plano —no una relación de grafo— de vuelta a `/campeones`, en la misma fila de CTA donde ya vivían los enlaces a `/tier-list` y a `/live`.
+
+**Navegación principal:** se evaluó y se decidió **no** añadir `/campeones` a `src/data/site.ts` — el mismo criterio ya aplicado a `/tier-list` (tampoco está en el nav, pese a llevar dos fases publicada). El nav principal está curado en torno a las secciones de la portada de una sola página; el descubrimiento de las herramientas del Laboratorio ocurre por Content Graph y enlaces cruzados. Cambiar ese criterio solo para `/campeones` habría sido inconsistente con `/tier-list`.
+
+### 15.8 SEO y sitemap
+
+`/campeones` es indexable (no pasa `noindex` a `BaseLayout`, que por defecto es `false`) porque ofrece contenido único y real: el recuento honesto de cobertura y los extractos editoriales de los campeones destacados. El canónico se calcula solo a partir de `Astro.url.pathname` — propiedad que ya existía desde `BaseLayout.astro` original, no algo añadido en esta fase — así que ninguna combinación de `?q=`/`?estado=`/`?clase=`/etc. en la URL puede generar un canónico distinto ni fragmentar el SEO de la página.
+
+`public/sitemap.xml` gana una única línea nueva, `/campeones`. Se evaluó y se descartó explícitamente añadir `@astrojs/sitemap` o generar dinámicamente un listado con las 173 URLs del catálogo (169 de ellas `noindex`): no aporta valor SEO real (Google no necesita un sitemap para encontrar páginas ya enlazadas desde `/campeones`) y habría contradicho la instrucción explícita de no reescribir el SEO existente por completo en esta fase.
+
+### 15.9 Corrección de idioma en páginas ya publicadas
+
+Al construir el Centro de Campeones se detectó que "The League Laboratory" (nombre de producto en inglés) seguía apareciendo como texto visible en páginas **ya publicadas** antes de esta fase: el valor por defecto de `LaboratoryHero.astro`, el eyebrow de `/tier-list`, el título/meta-descripción/eyebrow de `/campeones/[slug]`, el eyebrow de `ChampionHeader.astro` y el `editorialSummary` de `patch1514`. Esto incumplía la instrucción vigente de usar terminología en español en todo texto editorial visible ("El Laboratorio", nunca "League Laboratory", en copy público). Se corrigió en los cinco sitios a "El Laboratorio" — un cambio de copy puro, sin impacto arquitectónico, necesario para que el Centro de Campeones nuevo no introdujera una inconsistencia visible frente a páginas ya en producción. El nombre interno del módulo (`league-laboratory`, este documento, comentarios de código) no cambia — sigue siendo una convención técnica ya asentada, no copy público.
+
+### 15.10 Verificación realizada
+
+`npx astro check` (134 archivos, 0 errores), `npm run lint` (sin salida), `npm run test` (52/52), `npm run build` (**177 páginas**: 173 campeones + `/campeones` + Home + Live + Tier List) — todo verificado tras cada bloque de cambios, no solo al final. Determinismo del generador verificado por hash SHA-256 en dos ejecuciones consecutivas.
+
+Verificación manual en navegador (servidor de desarrollo real, no solo el build): `/campeones` con recuentos reales (173/1/3/169) y las 173 filas visibles sin JavaScript; búsqueda de `kaisa`, `jarvan` (coincide con "Jarvan IV" como subcadena) y `dr mundo`, todas correctas; combinación `?estado=reviewed&tierlist=1` restaura exactamente el estado esperado (solo Lucian, botón y checkbox marcados); consulta sin resultados muestra el estado vacío; sin errores de consola en ninguna página tocada; `/campeones/lucian` y `/campeones/aatrox` (sin curación) ambas con el enlace nuevo a `/campeones` y el eyebrow correcto en español; `/tier-list`, `/` y `/live` verificados sin regresiones (sin errores de consola, contenido intacto). Responsive a 375px sin _overflow_ horizontal.
+
+### 15.11 Deuda técnica y riesgos (acumulado con Fases 1-3)
+
+| Elemento                                                                                                                 | Severidad | Estado                                                                                                                                        |
+| ------------------------------------------------------------------------------------------------------------------------ | --------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Duplicación `Role`/`roleLabel` (Live vs. Laboratorio)                                                                    | Media     | Sin resolver, ya señalada en fases anteriores                                                                                                 |
+| El catálogo completo (173 entradas) se importa transitivamente en cualquier página que toque `content-graph/registry.ts` | Baja      | Sin cambio — mismo riesgo ya documentado en Fase 3                                                                                            |
+| Filtro de "rol editorial" descartado por falta de datos suficientes                                                      | —         | Deliberado — ver §15.6, candidato cuando crezca la curación editorial                                                                         |
+| `npm run build` no ejecuta los tests nuevos antes de compilar                                                            | Baja      | Deliberado en esta fase (no se quería gatear el despliegue de Cloudflare Pages sin una decisión explícita) — recomendado como siguiente paso  |
+| Colecciones por clase (`/campeones/tirador/`, etc.)                                                                      | —         | Sigue sin construirse — el Centro de Campeones cubre parte de esa necesidad con el filtro de clase, pero no genera URLs propias por colección |
+
+### 15.12 Recomendaciones para el próximo capítulo
+
+1. Decidir explícitamente si `npm run test` debe pasar a ser parte de `npm run build` (o de un paso de CI separado) antes de que el catálogo vuelva a regenerarse con `npm run sync:champions` — hoy es una decisión pendiente, no tomada por esta fase.
+2. Si la curación editorial crece más allá de un puñado de campeones, reconsiderar el filtro de "rol editorial" descartado en §15.6.
+3. Antes de construir Build Explorer o Rune Explorer, decidir si necesitan su propia fila de filtro en `/campeones` (p. ej. "tiene build publicada") — el patrón de `hub.ts` ya soporta añadir un nuevo derivado sin tocar `registry.ts`.

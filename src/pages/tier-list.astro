@@ -19,13 +19,15 @@ import {
   type TierGrade,
 } from '../domain/league-laboratory';
 import {
-  adcTierListChampions,
+  adcLabChampions,
+  championCatalog,
   leagueLaboratoryPatches,
   officialAdcTierList,
 } from '../data/league-laboratory';
 
 const registry = buildLabRegistry({
-  champions: adcTierListChampions,
+  catalog: championCatalog,
+  champions: adcLabChampions,
   patches: leagueLaboratoryPatches,
   tierLists: [officialAdcTierList],
 });
@@ -39,7 +41,7 @@ const tierList = patch
   : undefined;
 
 const championsById = new Map(
-  adcTierListChampions.map((champion) => [champion.id, champion] as const),
+  championCatalog.map((champion) => [champion.id, champion] as const),
 );
 
 const reviewedEntries = (tierList?.entries ?? []).filter(
@@ -77,7 +79,7 @@ const pageDescription = patch
     >
       <div class="mx-auto max-w-7xl px-5 sm:px-8">
         <header class="tier-list-header">
-          <p class="eyebrow">The League Laboratory · Tier List</p>
+          <p class="eyebrow">El Laboratorio · Tier List</p>
           <h2 id="tier-list-title">{officialAdcTierList.title}</h2>
           {
             patch && (
@@ -131,7 +133,9 @@ const pageDescription = patch
 
         <div class="tier-list-cta">
           <a class="button-secondary" href="/live">
-            Ver la actividad competitiva en directo <span aria-hidden="true">→</span>
+            Ver la actividad competitiva en directo <span aria-hidden="true"
+              >→</span
+            >
           </a>
           <a class="button-secondary" href="/#canales">
             Ver vídeos y análisis <span aria-hidden="true">→</span>

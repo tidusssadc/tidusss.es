@@ -1,36 +1,21 @@
 ---
-import type { LabChampion, Role } from '../../domain/league-laboratory';
+import type { ChampionCatalogEntry, Role } from '../../domain/league-laboratory';
 import { dataDragonUrls } from '../../lib/riot/datadragon';
 import RoleBadge from './RoleBadge.astro';
 
 interface Props {
-  champion: LabChampion;
+  champion: ChampionCatalogEntry;
   role: Role;
   dataDragonVersion: string;
 }
 const { champion, role, dataDragonVersion } = Astro.props;
-const iconUrl = champion.dataDragonKey
-  ? dataDragonUrls(dataDragonVersion).champion(champion.dataDragonKey)
-  : undefined;
+const iconUrl = dataDragonUrls(dataDragonVersion).champion(
+  champion.dataDragonKey,
+);
 ---
 
 <div class="champion-identity">
-  {
-    iconUrl ? (
-      <img
-        src={iconUrl}
-        width="56"
-        height="56"
-        loading="lazy"
-        decoding="async"
-        alt=""
-      />
-    ) : (
-      <span class="champion-identity-fallback" aria-hidden="true">
-        {champion.name.slice(0, 1)}
-      </span>
-    )
-  }
+  <img src={iconUrl} width="56" height="56" loading="lazy" decoding="async" alt="" />
   <div>
     <strong>{champion.name}</strong>
     <RoleBadge role={role} />

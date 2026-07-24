@@ -1,6 +1,6 @@
 ---
 import type {
-  LabChampion,
+  ChampionCatalogEntry,
   LabChampionId,
   ReviewedTierListEntry,
   Role,
@@ -13,7 +13,7 @@ import TierBadge from '../TierBadge.astro';
 interface Props {
   tier: TierGrade;
   entries: ReviewedTierListEntry[];
-  champions: Map<LabChampionId, LabChampion>;
+  champions: Map<LabChampionId, ChampionCatalogEntry>;
   role: Role;
   dataDragonVersion: string;
 }

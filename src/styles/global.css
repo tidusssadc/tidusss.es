@@ -5997,16 +5997,6 @@ body[data-home-state='near-goal'] .environment-rays {
 .champion-identity img {
   border-radius: 2px;
 }
-.champion-identity-fallback {
-  display: grid;
-  place-items: center;
-  width: 56px;
-  height: 56px;
-  border: 1px solid rgb(255 255 255 / 12%);
-  border-radius: 50%;
-  color: #9aa5b8;
-  font-weight: 800;
-}
 .champion-identity strong {
   display: block;
   color: white;
@@ -6192,13 +6182,6 @@ body[data-home-state='near-goal'] .environment-rays {
   height: 100%;
   object-fit: cover;
 }
-.champion-header-portrait .champion-identity-fallback {
-  width: 100%;
-  height: 100%;
-  border: none;
-  border-radius: 0;
-  font-size: 3rem;
-}
 .champion-header-identity h1 {
   margin-top: 0.75rem;
   font-size: clamp(2.25rem, 5vw, 3.5rem);
@@ -6221,8 +6204,16 @@ body[data-home-state='near-goal'] .environment-rays {
 .lab-badge--signature strong {
   color: #d6b56b;
 }
+.champion-header-riot-difficulty {
+  margin-top: 0.85rem;
+  color: #667388;
+  font-size: 0.8rem;
+}
+.champion-header-riot-difficulty strong {
+  color: #9aa5b8;
+}
 .champion-header-status {
-  margin-top: 1.25rem;
+  margin-top: 0.5rem;
   color: #667388;
   font-size: 0.8rem;
 }
@@ -6363,6 +6354,350 @@ body[data-home-state='near-goal'] .environment-rays {
 
 @media (prefers-reduced-motion: reduce) {
   .champion-tier-status {
+    transition: none;
+  }
+}
+
+/* Centro de Campeones (/campeones)
+   Misma calma visual que el resto del Laboratorio: sin reveals de scroll,
+   más aire, tipografía como jerarquía principal. */
+.champion-hub-header {
+  max-width: 46rem;
+}
+.champion-hub-header h2 {
+  margin-top: 0.9rem;
+  font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: white;
+}
+.champion-hub-lead {
+  margin-top: 1.1rem;
+  max-width: 42rem;
+  font-size: 1rem;
+  line-height: 1.75;
+  color: #9aa5b8;
+}
+.champion-hub-lead code {
+  padding: 0.1rem 0.35rem;
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 2px;
+  background: rgb(255 255 255 / 4%);
+  font-size: 0.9em;
+  color: #cbd5e1;
+}
+
+.laboratory-coverage {
+  margin-top: 2rem;
+  padding: 1.25rem 1.5rem;
+  border: 1px solid rgb(255 255 255 / 8%);
+  background: rgb(255 255 255 / 1.5%);
+}
+.laboratory-coverage dl {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.25rem;
+  margin: 0;
+}
+@media (min-width: 640px) {
+  .laboratory-coverage dl {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+.laboratory-coverage dt {
+  color: #667388;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.laboratory-coverage dd {
+  margin: 0.35rem 0 0;
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: white;
+}
+.laboratory-coverage p {
+  margin-top: 1.25rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid rgb(255 255 255 / 8%);
+  max-width: 46rem;
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: #9aa5b8;
+}
+
+.editorial-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.6rem;
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #9aa5b8;
+  white-space: nowrap;
+}
+.editorial-status-badge i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.editorial-status-badge[data-editorial-status='reviewed'] {
+  border-color: rgb(214 181 107 / 45%);
+  color: #d6b56b;
+}
+.editorial-status-badge[data-editorial-status='draft'] {
+  border-color: rgb(75 163 255 / 45%);
+  color: #4ba3ff;
+}
+.editorial-status-badge[data-editorial-status='pending'] {
+  border-style: dashed;
+  color: #667388;
+}
+
+.champion-hub-featured {
+  margin-top: 2.5rem;
+}
+.champion-hub-featured h3,
+.champion-hub-catalog h3 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: white;
+}
+.champion-editorial-grid {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.25rem;
+}
+@media (min-width: 640px) {
+  .champion-editorial-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (min-width: 1024px) {
+  .champion-editorial-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.champion-editorial-card {
+  display: flex;
+  gap: 1rem;
+  padding: 1.15rem;
+  border: 1px solid rgb(255 255 255 / 8%);
+  background: rgb(255 255 255 / 1.5%);
+  color: inherit;
+  text-decoration: none;
+  transition:
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+.champion-editorial-card img {
+  flex-shrink: 0;
+  border-radius: 2px;
+}
+.champion-editorial-card-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+.champion-editorial-card-header strong {
+  font-size: 1.05rem;
+  color: white;
+}
+.champion-editorial-card-body small {
+  display: block;
+  margin-top: 0.15rem;
+  color: #667388;
+  font-size: 0.82rem;
+  font-style: italic;
+}
+.champion-editorial-card-role {
+  margin-top: 0.5rem;
+  color: #9aa5b8;
+  font-size: 0.78rem;
+}
+.champion-editorial-card-verdict {
+  margin-top: 0.6rem;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: #b9c2d0;
+}
+.champion-editorial-card-verdict--pending {
+  color: #667388;
+  font-style: italic;
+}
+@media (hover: hover) {
+  .champion-editorial-card:hover {
+    border-color: rgb(214 181 107 / 45%);
+    transform: translateY(-2px);
+  }
+}
+
+.champion-hub-catalog {
+  margin-top: 3rem;
+  padding-top: 2.5rem;
+  border-top: 1px solid rgb(255 255 255 / 8%);
+}
+
+.laboratory-search {
+  margin-top: 1.5rem;
+  display: grid;
+  gap: 1rem;
+}
+.laboratory-search-input input {
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.4rem 0.9rem;
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: 2px;
+  background: rgb(255 255 255 / 3%);
+  color: white;
+  font-size: 0.9rem;
+}
+.laboratory-search-input input::placeholder {
+  color: #667388;
+}
+.laboratory-search-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.85rem;
+}
+.laboratory-filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.laboratory-filter-chips button {
+  min-height: 2.75rem;
+  padding: 0.4rem 0.9rem;
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: 2px;
+  background: transparent;
+  color: #9aa5b8;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease,
+    background-color 0.2s ease;
+}
+.laboratory-filter-chips button[aria-pressed='true'] {
+  border-color: #d6b56b;
+  background: rgb(214 181 107 / 12%);
+  color: #d6b56b;
+}
+@media (hover: hover) {
+  .laboratory-filter-chips button:hover {
+    border-color: rgb(75 163 255 / 55%);
+    color: white;
+  }
+}
+.laboratory-search-select select {
+  min-height: 2.75rem;
+  padding: 0.4rem 0.9rem;
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: 2px;
+  background: rgb(255 255 255 / 3%);
+  color: white;
+  font-size: 0.85rem;
+}
+.laboratory-search-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  padding: 0.4rem 0.9rem;
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: 2px;
+  color: #9aa5b8;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+.laboratory-search-checkbox input {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+.laboratory-search-results {
+  margin: 0;
+  color: #667388;
+  font-size: 0.82rem;
+}
+
+.champion-catalog-grid {
+  display: grid;
+  gap: 0.6rem;
+  margin-top: 1.5rem;
+  list-style: none;
+  padding: 0;
+}
+.champion-catalog-row a {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  align-items: center;
+  gap: 0.85rem;
+  min-height: 2.75rem;
+  padding: 0.6rem 0.85rem;
+  border: 1px solid rgb(255 255 255 / 8%);
+  border-radius: 2px;
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 0.2s ease;
+}
+.champion-catalog-row img {
+  border-radius: 2px;
+}
+.champion-catalog-row-name {
+  min-width: 0;
+}
+.champion-catalog-row-name strong {
+  display: block;
+  color: white;
+  font-size: 0.95rem;
+}
+.champion-catalog-row-name small {
+  display: block;
+  overflow: hidden;
+  color: #667388;
+  font-size: 0.78rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.champion-catalog-row-tags {
+  display: none;
+  color: #667388;
+  font-size: 0.78rem;
+}
+@media (min-width: 768px) {
+  .champion-catalog-row-tags {
+    display: block;
+  }
+}
+@media (hover: hover) {
+  .champion-catalog-row a:hover {
+    border-color: rgb(75 163 255 / 45%);
+  }
+}
+.champion-catalog-empty {
+  margin-top: 1.5rem;
+  padding: 2rem;
+  border: 1px dashed rgb(255 255 255 / 14%);
+  text-align: center;
+  color: #667388;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .laboratory-filter-chips button,
+  .champion-editorial-card,
+  .champion-catalog-row a {
     transition: none;
   }
 }

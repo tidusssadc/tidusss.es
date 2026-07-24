@@ -1,15 +1,20 @@
 import type { LabChampion } from '../../domain/league-laboratory';
 
+/**
+ * Capa editorial: SOLO campeones de los que el Laboratorio dice algo. No
+ * duplica nombre/título/imagen — eso vive en el catálogo generado
+ * (`catalog/champions.generated.ts`). Añadir un campeón nuevo aquí no
+ * requiere que exista ya en ningún otro sitio del dominio: si el catálogo
+ * lo tiene (los ~170 lo tienen), esto solo aporta la curación de Tidusss.
+ */
+
 export const lucian: LabChampion = {
   id: 'champion:lucian',
-  slug: 'lucian',
-  name: 'Lucian',
   roles: ['BOTTOM'],
   signatureRole: 'BOTTOM',
   isSignatureChampion: true,
   playstyleTags: ['agresivo', 'combos', 'movilidad'],
   signatureNote: 'Especialidad competitiva actual de Tidusss.',
-  dataDragonKey: 'Lucian',
   profile: {
     summary:
       'Lucian es el campeón que define a Tidusss como jugador: velocidad de ejecución, combos precisos y una ventana de daño que hay que aprovechar sin dudar.',
@@ -45,32 +50,24 @@ export const lucian: LabChampion = {
 
 export const kaisa: LabChampion = {
   id: 'champion:kaisa',
-  slug: 'kaisa',
-  name: "Kai'Sa",
   roles: ['BOTTOM'],
   isSignatureChampion: false,
   playstyleTags: ['escalado', 'evolución de habilidades'],
-  dataDragonKey: 'Kaisa',
 };
 
 export const jinx: LabChampion = {
   id: 'champion:jinx',
-  slug: 'jinx',
-  name: 'Jinx',
   roles: ['BOTTOM'],
   isSignatureChampion: false,
   playstyleTags: ['daño sostenido', 'rango'],
-  dataDragonKey: 'Jinx',
 };
 
 export const ezreal: LabChampion = {
   id: 'champion:ezreal',
-  slug: 'ezreal',
-  name: 'Ezreal',
   roles: ['BOTTOM'],
   isSignatureChampion: false,
   playstyleTags: ['poke', 'movilidad'],
-  dataDragonKey: 'Ezreal',
 };
 
-export const adcTierListChampions: LabChampion[] = [lucian, kaisa, jinx, ezreal];
+/** Los campeones ADC curados — los mismos 4 de siempre, ahora sin duplicar datos del catálogo. */
+export const adcLabChampions: LabChampion[] = [lucian, kaisa, jinx, ezreal];

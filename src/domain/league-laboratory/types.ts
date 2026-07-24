@@ -7,16 +7,26 @@ export type EditorialConfidence = 'low' | 'medium' | 'high';
 export type ArticleFormat = 'guide' | 'analysis' | 'editorial' | 'explainer';
 
 export type SynergyType =
-  | 'lane-duo'
-  | 'team-comp'
-  | 'engage-combo'
-  | 'peel-combo';
+  'lane-duo' | 'team-comp' | 'engage-combo' | 'peel-combo';
 
 export type MatchupDifficulty = 'easy' | 'even' | 'hard';
 
 export type CompetitiveQueue = 'solo-duo' | 'flex' | 'aram' | 'normal';
 
 export type EditorialReviewStatus = 'reviewed' | 'placeholder';
+
+/**
+ * Estado editorial de un campeón dentro del Laboratorio, derivado siempre por
+ * `resolveChampionEditorialStatus` (registry.ts) a partir de la presencia de
+ * `LabChampion` y de `LabChampion.profile` — nunca decidido a mano ni
+ * duplicado con condicionales sueltos en componentes o páginas.
+ *
+ * - `reviewed`: tiene `LabChampion` con `profile` (análisis editorial real).
+ * - `draft`: tiene `LabChampion` pero sin `profile` todavía (presencia
+ *   curada — roles, playstyle — sin veredicto editorial completo).
+ * - `pending`: no tiene `LabChampion`; solo existe en el catálogo factual.
+ */
+export type ChampionEditorialStatus = 'reviewed' | 'draft' | 'pending';
 
 export type ChampionDifficulty = 'low' | 'medium' | 'high';
 
@@ -75,19 +85,42 @@ export interface ChampionProfile {
   difficulty: ChampionDifficulty;
 }
 
-export interface LabChampion {
+/**
+ * La capa FACTUAL de un campeón: hechos objetivos y oficiales de Riot
+ * (nombre, título, clases, dificultad según Riot, clave de Data Dragon).
+ * Existe para los ~170 campeones del juego, generada por
+ * `scripts/sync-champion-catalog.mjs` desde Data Dragon — nunca escrita a
+ * mano. No contiene ni una palabra de criterio de Tidusss: eso vive en
+ * `LabChampion`, que es opcional y mucho más escaso.
+ */
+export interface ChampionCatalogEntry {
   id: LabChampionId;
   slug: string;
   name: string;
-  /** Título oficial del campeón (p. ej. "El Purificador"). Opcional a propósito: solo se rellena cuando el título exacto está verificado. */
-  title?: string;
+  /** Título oficial de Riot (p. ej. "La Hija del Vacío"), verificado — nunca inventado. */
+  title: string;
+  /** Clases oficiales de Riot (p. ej. ["Marksman"]) — no confundir con `Role` (posición competitiva). */
+  tags: readonly string[];
+  /** Dificultad oficial de Riot, 1-10. Distinta de `ChampionProfile.difficulty`, que es el criterio propio de Tidusss. */
+  riotDifficulty: number;
+  dataDragonKey: string;
+}
+
+/**
+ * La capa EDITORIAL de un campeón: lo que Tidusss ha decidido curar sobre
+ * él. Existe solo para los campeones de los que el Laboratorio dice algo —
+ * hoy un puñado, con vocación de crecer sin que la arquitectura cambie.
+ * Referencia un `ChampionCatalogEntry` por `id`; nunca duplica sus datos.
+ */
+export interface LabChampion {
+  id: LabChampionId;
+  /** Roles en los que este sitio sigue al campeón (p. ej. ADC para Lucian). Vacío si todavía no se ha curado. */
   roles: readonly Role[];
   signatureRole?: Role;
   isSignatureChampion: boolean;
+  /** Lectura propia de Tidusss del estilo de juego — distinta de `ChampionCatalogEntry.tags` (las clases oficiales de Riot). */
   playstyleTags: readonly string[];
   signatureNote?: string;
-  /** Clave interna de Data Dragon (p. ej. "Kaisa"), solo para resolver assets. */
-  dataDragonKey?: string;
   /** Ausente mientras no exista un perfil editorial real y revisado. */
   profile?: ChampionProfile;
 }
@@ -224,12 +257,15 @@ export interface MetaState {
 }
 
 export interface ChampionKnowledge {
-  champion: LabChampion;
+  catalogEntry: ChampionCatalogEntry;
+  /** Ausente para la inmensa mayoría de campeones: todavía no tienen ninguna curación editorial. */
+  labChampion?: LabChampion;
   builds: readonly Build[];
   runePages: readonly RunePage[];
   matchups: readonly Matchup[];
   synergies: readonly Synergy[];
-  articles: readonly KnowledgeArticle[];
+  guides: readonly Guide[];
+  concepts: readonly Concept[];
   tierListAppearances: readonly { tierList: TierList; entry: TierListEntry }[];
 }
 

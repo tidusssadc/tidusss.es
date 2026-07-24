@@ -1,0 +1,309 @@
+---
+interface Props {
+  classOptions: readonly string[];
+  initialOptions: readonly string[];
+}
+const { classOptions, initialOptions } = Astro.props;
+
+const statusOptions = [
+  { value: 'all', label: 'Todos' },
+  { value: 'reviewed', label: 'Revisados' },
+  { value: 'draft', label: 'Borradores' },
+  { value: 'pending', label: 'Pendientes' },
+] as const;
+
+const difficultyOptions = [
+  { value: 'all', label: 'Todas' },
+  { value: 'low', label: 'Baja' },
+  { value: 'medium', label: 'Media' },
+  { value: 'high', label: 'Alta' },
+] as const;
+---
+
+<div
+  class="laboratory-search"
+  data-laboratory-search
+  role="search"
+  aria-label="Buscar y filtrar en el catálogo de campeones"
+>
+  <label class="laboratory-search-input">
+    <span class="sr-only">Buscar campeón por nombre</span>
+    <input
+      type="search"
+      data-hub-search
+      placeholder="Buscar campeón… (p. ej. kaisa, dr mundo, jarvan)"
+      autocomplete="off"
+    />
+  </label>
+
+  <div class="laboratory-search-filters">
+    <div
+      class="laboratory-filter-chips"
+      role="group"
+      aria-label="Filtrar por estado editorial"
+    >
+      {
+        statusOptions.map(({ value, label }) => (
+          <button
+            type="button"
+            data-hub-filter="status"
+            data-value={value}
+            aria-pressed={value === 'all' ? 'true' : 'false'}
+          >
+            {label}
+          </button>
+        ))
+      }
+    </div>
+
+    <div
+      class="laboratory-filter-chips"
+      role="group"
+      aria-label="Filtrar por dificultad oficial"
+    >
+      {
+        difficultyOptions.map(({ value, label }) => (
+          <button
+            type="button"
+            data-hub-filter="difficulty"
+            data-value={value}
+            aria-pressed={value === 'all' ? 'true' : 'false'}
+          >
+            {label}
+          </button>
+        ))
+      }
+    </div>
+
+    <label class="laboratory-search-select">
+      <span class="sr-only">Filtrar por clase oficial</span>
+      <select data-hub-class-select>
+        <option value="all">Todas las clases</option>
+        {
+          classOptions.map((tag) => (
+            <option value={tag.toLowerCase()}>{tag}</option>
+          ))
+        }
+      </select>
+    </label>
+
+    <label class="laboratory-search-select">
+      <span class="sr-only">Filtrar por inicial</span>
+      <select data-hub-initial-select>
+        <option value="all">Cualquier inicial</option>
+        {
+          initialOptions.map((letter) => (
+            <option value={letter}>{letter}</option>
+          ))
+        }
+      </select>
+    </label>
+
+    <label class="laboratory-search-checkbox">
+      <input type="checkbox" data-hub-tierlist-checkbox />
+      Solo en la Tier List oficial
+    </label>
+  </div>
+
+  <p
+    class="laboratory-search-results"
+    role="status"
+    aria-live="polite"
+    data-hub-results-count
+  >
+  </p>
+</div>
+
+<script>
+  import { normalizeSearchText } from '../../domain/league-laboratory';
+
+  const root = document.querySelector<HTMLElement>('[data-laboratory-search]');
+  const searchInput =
+    root?.querySelector<HTMLInputElement>('[data-hub-search]');
+  const classSelect = root?.querySelector<HTMLSelectElement>(
+    '[data-hub-class-select]',
+  );
+  const initialSelect = root?.querySelector<HTMLSelectElement>(
+    '[data-hub-initial-select]',
+  );
+  const tierListCheckbox = root?.querySelector<HTMLInputElement>(
+    '[data-hub-tierlist-checkbox]',
+  );
+  const resultsCount = root?.querySelector<HTMLElement>(
+    '[data-hub-results-count]',
+  );
+  const statusChips = [
+    ...(root?.querySelectorAll<HTMLButtonElement>(
+      '[data-hub-filter="status"]',
+    ) ?? []),
+  ];
+  const difficultyChips = [
+    ...(root?.querySelectorAll<HTMLButtonElement>(
+      '[data-hub-filter="difficulty"]',
+    ) ?? []),
+  ];
+  const rows = [
+    ...document.querySelectorAll<HTMLElement>('[data-champion-catalog-row]'),
+  ];
+  const emptyState = document.querySelector<HTMLElement>(
+    '[data-champion-catalog-empty]',
+  );
+
+  const state = {
+    status: 'all',
+    difficulty: 'all',
+    class: 'all',
+    initial: 'all',
+    tierlist: false,
+    query: '',
+  };
+
+  const applyFilters = () => {
+    let visibleCount = 0;
+    for (const row of rows) {
+      const matchesStatus =
+        state.status === 'all' || row.dataset.status === state.status;
+      const matchesDifficulty =
+        state.difficulty === 'all' ||
+        row.dataset.difficulty === state.difficulty;
+      const rowTags = (row.dataset.tags ?? '').split(',');
+      const matchesClass =
+        state.class === 'all' || rowTags.includes(state.class);
+      const matchesInitial =
+        state.initial === 'all' || row.dataset.initial === state.initial;
+      const matchesTierList =
+        !state.tierlist || row.dataset.tierlist === 'true';
+      const matchesQuery =
+        !state.query ||
+        normalizeSearchText(row.dataset.search ?? '').includes(
+          normalizeSearchText(state.query),
+        );
+      const visible =
+        matchesStatus &&
+        matchesDifficulty &&
+        matchesClass &&
+        matchesInitial &&
+        matchesTierList &&
+        matchesQuery;
+      row.hidden = !visible;
+      if (visible) visibleCount += 1;
+    }
+    if (resultsCount) {
+      resultsCount.textContent =
+        visibleCount === rows.length
+          ? `Mostrando los ${rows.length} campeones del catálogo.`
+          : `${visibleCount} de ${rows.length} campeones coinciden con estos filtros.`;
+    }
+    if (emptyState) emptyState.hidden = visibleCount > 0;
+  };
+
+  const syncUrl = () => {
+    const params = new URLSearchParams();
+    if (state.query) params.set('q', state.query);
+    if (state.status !== 'all') params.set('estado', state.status);
+    if (state.class !== 'all') params.set('clase', state.class);
+    if (state.difficulty !== 'all') params.set('dificultad', state.difficulty);
+    if (state.initial !== 'all') params.set('inicial', state.initial);
+    if (state.tierlist) params.set('tierlist', '1');
+    const query = params.toString();
+    const nextUrl = query ? `${location.pathname}?${query}` : location.pathname;
+    history.replaceState(null, '', nextUrl);
+  };
+
+  const update = () => {
+    applyFilters();
+    syncUrl();
+  };
+
+  const selectChip = (chips: HTMLButtonElement[], chip: HTMLButtonElement) => {
+    chips.forEach((candidate) =>
+      candidate.setAttribute('aria-pressed', String(candidate === chip)),
+    );
+  };
+
+  searchInput?.addEventListener('input', () => {
+    state.query = searchInput.value.trim();
+    update();
+  });
+  statusChips.forEach((chip) =>
+    chip.addEventListener('click', () => {
+      state.status = chip.dataset.value ?? 'all';
+      selectChip(statusChips, chip);
+      update();
+    }),
+  );
+  difficultyChips.forEach((chip) =>
+    chip.addEventListener('click', () => {
+      state.difficulty = chip.dataset.value ?? 'all';
+      selectChip(difficultyChips, chip);
+      update();
+    }),
+  );
+  classSelect?.addEventListener('change', () => {
+    state.class = classSelect.value;
+    update();
+  });
+  initialSelect?.addEventListener('change', () => {
+    state.initial = initialSelect.value;
+    update();
+  });
+  tierListCheckbox?.addEventListener('change', () => {
+    state.tierlist = tierListCheckbox.checked;
+    update();
+  });
+
+  // Estado inicial desde la URL: un enlace con `?estado=reviewed&clase=marksman`
+  // debe abrir la página ya filtrada igual que la vio quien lo compartió.
+  const params = new URLSearchParams(location.search);
+  const initialQuery = params.get('q');
+  if (initialQuery && searchInput) {
+    searchInput.value = initialQuery;
+    state.query = initialQuery;
+  }
+  const initialStatus = params.get('estado');
+  if (initialStatus) {
+    const chip = statusChips.find(
+      (candidate) => candidate.dataset.value === initialStatus,
+    );
+    if (chip) {
+      state.status = initialStatus;
+      selectChip(statusChips, chip);
+    }
+  }
+  const initialDifficulty = params.get('dificultad');
+  if (initialDifficulty) {
+    const chip = difficultyChips.find(
+      (candidate) => candidate.dataset.value === initialDifficulty,
+    );
+    if (chip) {
+      state.difficulty = initialDifficulty;
+      selectChip(difficultyChips, chip);
+    }
+  }
+  const initialClass = params.get('clase');
+  if (initialClass && classSelect) {
+    const option = [...classSelect.options].find(
+      (candidate) => candidate.value === initialClass,
+    );
+    if (option) {
+      classSelect.value = initialClass;
+      state.class = initialClass;
+    }
+  }
+  const initialInitial = params.get('inicial');
+  if (initialInitial && initialSelect) {
+    const option = [...initialSelect.options].find(
+      (candidate) => candidate.value === initialInitial,
+    );
+    if (option) {
+      initialSelect.value = initialInitial;
+      state.initial = initialInitial;
+    }
+  }
+  if (params.get('tierlist') === '1' && tierListCheckbox) {
+    tierListCheckbox.checked = true;
+    state.tierlist = true;
+  }
+
+  applyFilters();
+</script>

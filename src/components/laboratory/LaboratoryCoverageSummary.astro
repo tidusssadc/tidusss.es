@@ -1,0 +1,35 @@
+---
+import type { CatalogCoverage } from '../../domain/league-laboratory';
+
+interface Props {
+  coverage: CatalogCoverage;
+}
+const { coverage } = Astro.props;
+---
+
+<div class="laboratory-coverage" data-laboratory-coverage>
+  <dl>
+    <div>
+      <dt>Campeones en el catálogo</dt>
+      <dd>{coverage.total}</dd>
+    </div>
+    <div>
+      <dt>Revisados</dt>
+      <dd>{coverage.reviewed}</dd>
+    </div>
+    <div>
+      <dt>En borrador</dt>
+      <dd>{coverage.draft}</dd>
+    </div>
+    <div>
+      <dt>Pendientes de revisión</dt>
+      <dd>{coverage.pending}</dd>
+    </div>
+  </dl>
+  <p>
+    El Laboratorio crecerá progresivamente con el criterio de Tidusss: cada
+    campeón del catálogo ya tiene su propia página, pero solo unos pocos cuentan
+    hoy con un análisis editorial completo. El resto está disponible para
+    explorar mientras se revisa.
+  </p>
+</div>

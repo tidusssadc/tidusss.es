@@ -1,0 +1,53 @@
+---
+import type {
+  ChampionCatalogEntry,
+  ChampionEditorialStatus,
+  LabChampion,
+} from '../../../domain/league-laboratory';
+import { roleLabel } from '../../../domain/league-laboratory';
+import { dataDragonUrls } from '../../../lib/riot/datadragon';
+import EditorialStatusBadge from '../EditorialStatusBadge.astro';
+
+interface Props {
+  catalogEntry: ChampionCatalogEntry;
+  labChampion: LabChampion;
+  status: ChampionEditorialStatus;
+  dataDragonVersion: string;
+}
+const { catalogEntry, labChampion, status, dataDragonVersion } = Astro.props;
+const iconUrl = dataDragonUrls(dataDragonVersion).champion(
+  catalogEntry.dataDragonKey,
+);
+const role = labChampion.signatureRole ?? labChampion.roles[0];
+---
+
+<a class="champion-editorial-card" href={`/campeones/${catalogEntry.slug}`}>
+  <img
+    src={iconUrl}
+    width="64"
+    height="64"
+    loading="lazy"
+    decoding="async"
+    alt=""
+  />
+  <div class="champion-editorial-card-body">
+    <div class="champion-editorial-card-header">
+      <strong>{catalogEntry.name}</strong>
+      <EditorialStatusBadge status={status} />
+    </div>
+    <small>{catalogEntry.title}</small>
+    {role && <p class="champion-editorial-card-role">{roleLabel(role)}</p>}
+    {
+      status === 'reviewed' && labChampion.profile ? (
+        <p class="champion-editorial-card-verdict">
+          {labChampion.profile.editorialTake.verdict}
+        </p>
+      ) : (
+        <p class="champion-editorial-card-verdict champion-editorial-card-verdict--pending">
+          Presencia curada en el Laboratorio — el análisis editorial completo
+          todavía se está preparando.
+        </p>
+      )
+    }
+  </div>
+</a>

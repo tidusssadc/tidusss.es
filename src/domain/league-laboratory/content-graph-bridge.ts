@@ -1,16 +1,31 @@
 import type { ContentEntity, ContentRelation } from '../content-graph/types';
-import type { Build, Guide, LabChampion, Matchup, Patch, TierList } from './types';
+import type {
+  Build,
+  ChampionCatalogEntry,
+  Guide,
+  LabChampion,
+  Matchup,
+  Patch,
+  TierList,
+} from './types';
 
 const guideEntityId = (guide: Guide): ContentEntity['id'] =>
   `guide:${guide.id.slice('knowledge-article:'.length)}`;
 
+/**
+ * Solo tiene sentido registrar en el Content Graph los campeones con
+ * curación editorial real (`labChampion`) — el catálogo entero (~170) no
+ * tiene relaciones que ofrecer y saturaría el grafo sin ningún beneficio
+ * de navegación. Ver ADR correspondiente en PLATFORM_BIBLE.md.
+ */
 export const championToContentEntity = (
-  champion: LabChampion,
+  catalogEntry: ChampionCatalogEntry,
+  labChampion?: LabChampion,
 ): ContentEntity => ({
-  id: champion.id,
+  id: catalogEntry.id,
   kind: 'champion',
-  title: champion.name,
-  description: champion.signatureNote,
+  title: catalogEntry.name,
+  description: labChampion?.signatureNote,
   source: 'editorial',
   status: 'available',
 });

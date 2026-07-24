@@ -1,8 +1,11 @@
 import type {
   Build,
+  ChampionCatalogEntry,
+  ChampionEditorialStatus,
   ChampionKnowledge,
   Concept,
   ConceptId,
+  Guide,
   KnowledgeArticle,
   LabChampion,
   LabChampionId,
@@ -18,6 +21,9 @@ import type {
 } from './types';
 
 export interface LabRegistry {
+  /** El catálogo factual completo (~170 campeones), generado desde Data Dragon. */
+  catalog: readonly ChampionCatalogEntry[];
+  /** La capa editorial: solo los campeones de los que el Laboratorio dice algo. */
   champions: readonly LabChampion[];
   patches: readonly Patch[];
   builds: readonly Build[];
@@ -34,12 +40,10 @@ export interface LabRegistry {
  * Construye un registro inmutable a partir de datos ya conocidos en build
  * time. No hay estado compartido entre llamadas: cada página del Laboratorio
  * construye el suyo con los datos que necesita y lo pasa explícitamente a
- * las funciones de consulta. Ver ADR correspondiente en PLATFORM_BIBLE.md
- * (sustituye al singleton mutable `labRegistry`/`hydrateLabRegistry` de la
- * Phase 1, que arriesgaba interferencia entre páginas del Laboratorio en el
- * mismo build).
+ * las funciones de consulta. Ver ADR-006 en PLATFORM_BIBLE.md.
  */
 export const buildLabRegistry = (seed: Partial<LabRegistry>): LabRegistry => ({
+  catalog: seed.catalog ?? [],
   champions: seed.champions ?? [],
   patches: seed.patches ?? [],
   builds: seed.builds ?? [],
@@ -52,8 +56,26 @@ export const buildLabRegistry = (seed: Partial<LabRegistry>): LabRegistry => ({
   metaStates: seed.metaStates ?? [],
 });
 
+export const getCatalogEntry = (registry: LabRegistry, id: LabChampionId) =>
+  registry.catalog.find((entry) => entry.id === id);
+
 export const getLabChampion = (registry: LabRegistry, id: LabChampionId) =>
   registry.champions.find((champion) => champion.id === id);
+
+/**
+ * Única fuente de verdad para el estado editorial de un campeón. Ningún
+ * componente ni página debe reimplementar esta lógica con condicionales
+ * propios (`if (labChampion?.profile) ...`): siempre a través de esta
+ * función, para que el criterio "qué cuenta como revisado / borrador /
+ * pendiente" viva en un solo sitio.
+ */
+export const resolveChampionEditorialStatus = (
+  labChampion: LabChampion | undefined,
+): ChampionEditorialStatus => {
+  if (labChampion?.profile) return 'reviewed';
+  if (labChampion) return 'draft';
+  return 'pending';
+};
 
 export const getPatch = (registry: LabRegistry, id: PatchId) =>
   registry.patches.find((patch) => patch.id === id);
@@ -61,14 +83,60 @@ export const getPatch = (registry: LabRegistry, id: PatchId) =>
 export const getConcept = (registry: LabRegistry, id: ConceptId) =>
   registry.concepts.find((concept) => concept.id === id);
 
+const isGuide = (article: KnowledgeArticle): article is Guide =>
+  article.format === 'guide';
+
+/**
+ * Un campeón no tiene una lista de conceptos propia: los conceptos se
+ * alcanzan a través de lo que sí lo menciona (guías, matchups, sinergias).
+ * Esta función resuelve esa cadena una sola vez, para que ningún componente
+ * tenga que conocerla.
+ */
+const getRelatedConceptsFor = (
+  registry: LabRegistry,
+  id: LabChampionId,
+): Concept[] => {
+  const conceptIds = new Set<ConceptId>();
+  registry.articles
+    .filter((article) => article.relatedChampionIds?.includes(id))
+    .forEach((article) =>
+      article.relatedConceptIds?.forEach((c) => conceptIds.add(c)),
+    );
+  registry.matchups
+    .filter(
+      (matchup) =>
+        matchup.championId === id || matchup.opponentChampionId === id,
+    )
+    .forEach((matchup) =>
+      matchup.relatedConceptIds?.forEach((c) => conceptIds.add(c)),
+    );
+  registry.synergies
+    .filter((synergy) => synergy.championIds.includes(id))
+    .forEach((synergy) =>
+      synergy.relatedConceptIds?.forEach((c) => conceptIds.add(c)),
+    );
+  return [...conceptIds].flatMap((conceptId) => {
+    const concept = getConcept(registry, conceptId);
+    return concept ? [concept] : [];
+  });
+};
+
+/**
+ * Funciona para cualquiera de los ~170 campeones del catálogo, tenga o no
+ * curación editorial. Sin `LabChampion`, devuelve `labChampion: undefined`
+ * y listas vacías — nunca `undefined` para el conjunto entero, porque el
+ * campeón como sujeto siempre existe si está en el catálogo.
+ */
 export const getChampionKnowledge = (
   registry: LabRegistry,
   id: LabChampionId,
 ): ChampionKnowledge | undefined => {
-  const champion = getLabChampion(registry, id);
-  if (!champion) return undefined;
+  const catalogEntry = getCatalogEntry(registry, id);
+  if (!catalogEntry) return undefined;
+  const labChampion = getLabChampion(registry, id);
   return {
-    champion,
+    catalogEntry,
+    labChampion,
     builds: registry.builds.filter((build) => build.championId === id),
     runePages: registry.runePages.filter(
       (runePage) => runePage.championId === id,
@@ -80,11 +148,10 @@ export const getChampionKnowledge = (
     synergies: registry.synergies.filter((synergy) =>
       synergy.championIds.includes(id),
     ),
-    articles: registry.articles.filter(
-      (article) =>
-        article.relatedChampionIds?.includes(id) ||
-        article.scope.championId === id,
-    ),
+    guides: registry.articles.filter(
+      (article) => isGuide(article) && article.scope.championId === id,
+    ) as Guide[],
+    concepts: getRelatedConceptsFor(registry, id),
     tierListAppearances: registry.tierLists.flatMap((tierList) => {
       const entry = tierList.entries.find(
         (candidate) => candidate.championId === id,
@@ -106,7 +173,9 @@ export const getPatchKnowledge = (
     tierLists: registry.tierLists.filter((tierList) => tierList.patchId === id),
     builds: registry.builds.filter((build) => build.patchId === id),
     runePages: registry.runePages.filter((runePage) => runePage.patchId === id),
-    articles: registry.articles.filter((article) => article.scope.patchId === id),
+    articles: registry.articles.filter(
+      (article) => article.scope.patchId === id,
+    ),
   };
 };
 
@@ -157,8 +226,8 @@ export const getGuides = (
   filter?: { championId?: LabChampionId; role?: Role },
 ) =>
   registry.articles.filter(
-    (article) =>
-      article.format === 'guide' &&
+    (article): article is Guide =>
+      isGuide(article) &&
       (filter?.championId === undefined ||
         article.scope.championId === filter.championId) &&
       (filter?.role === undefined || article.scope.role === filter.role),

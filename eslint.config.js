@@ -10,4 +10,15 @@ export default defineConfig(
   {
     ignores: ['dist/', 'node_modules/', '.astro/', '.wrangler/'],
   },
+  {
+    files: ['scripts/**/*.mjs'],
+    languageOptions: {
+      globals: {
+        fetch: 'readonly',
+        URL: 'readonly',
+        console: 'readonly',
+        process: 'readonly',
+      },
+    },
+  },
 );

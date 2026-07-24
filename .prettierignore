@@ -3,3 +3,10 @@ node_modules/
 .astro/
 package-lock.json
 LICENSE
+
+# Generado por scripts/sync-champion-catalog.mjs — su formato exacto (JSON.stringify
+# con indentación de 2 espacios) lo decide el generador, no Prettier. Reformatearlo
+# aparte rompería el determinismo byte a byte verificado en ADR-010: dos ejecuciones
+# del script deben producir el mismo archivo, y un `prettier --write` intermedio
+# introduciría una diferencia que el propio script nunca reproduciría.
+src/data/league-laboratory/catalog/champions.generated.ts

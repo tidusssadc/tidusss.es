@@ -5,8 +5,7 @@ export const patch1514: Patch = {
   label: '15.14',
   sequence: 1,
   dataDragonVersion: '15.14.1',
-  editorialSummary:
-    'Parche de referencia para el lanzamiento de The League Laboratory.',
+  editorialSummary: 'Parche de referencia para el lanzamiento del Laboratorio.',
 };
 
 export const leagueLaboratoryPatches: Patch[] = [patch1514];
