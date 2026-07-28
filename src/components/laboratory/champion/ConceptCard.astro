@@ -1,0 +1,14 @@
+---
+import type { Concept } from '../../../domain/league-laboratory';
+
+interface Props {
+  concept: Concept;
+}
+const { concept } = Astro.props;
+---
+
+<li class="concept-card">
+  <span class="lab-badge-label">{concept.category}</span>
+  <strong>{concept.title}</strong>
+  <p>{concept.summary}</p>
+</li>

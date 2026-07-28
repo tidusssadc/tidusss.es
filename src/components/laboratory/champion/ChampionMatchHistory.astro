@@ -1,0 +1,195 @@
+---
+import RiotSkeleton from '../../riot/RiotSkeleton.astro';
+import RiotUnavailable from '../../riot/RiotUnavailable.astro';
+
+interface Props {
+  championName: string;
+  limit?: number;
+}
+const { championName, limit = 5 } = Astro.props;
+
+/**
+ * A diferencia del resto de esta página (contenido editorial estático,
+ * conocido en build time), esta sección muestra partidas reales de
+ * Tidusss — solo existen en tiempo de petición. Se resuelve en el cliente,
+ * vía `/api/riot/overview` (la misma Function que ya usa Live), filtrando
+ * por `championName` — genérico para cualquier campeón, no solo Lucian.
+ * Reutiliza `RiotSkeleton`/`RiotUnavailable` (antes sin ningún consumidor,
+ * ver ADR-002) en vez de inventar nuevos estados de carga/error.
+ */
+---
+
+<div
+  class="riot-matches-block champion-match-history"
+  data-champion-match-history
+  data-champion-name={championName}
+  data-limit={limit}
+>
+  <header>
+    <h3>Partidas recientes con {championName}</h3>
+    <span>Datos en vivo de la cuenta competitiva de Tidusss</span>
+  </header>
+
+  <div data-match-history-loading>
+    <RiotSkeleton />
+  </div>
+  <div data-match-history-error hidden>
+    <RiotUnavailable
+      message="No se han podido cargar las partidas recientes en este momento."
+    />
+  </div>
+  <p data-match-history-empty hidden class="champion-match-history-empty">
+    Sin partidas recientes con {championName} en la ventana de partidas rastreada
+    ahora mismo.
+  </p>
+  <ul data-match-history-list hidden></ul>
+
+  <template data-match-row-template>
+    <li class="riot-match">
+      <div class="riot-match-champion">
+        <img width="48" height="48" loading="lazy" decoding="async" alt="" />
+        <div>
+          <strong data-field="championName"></strong>
+          <span data-field="queueLabel"></span>
+        </div>
+      </div>
+      <div class="riot-match-numbers">
+        <strong data-field="kda"></strong>
+        <span data-field="kdaRatio"></span>
+      </div>
+      <strong class="riot-result" data-field="result"></strong>
+      <div class="riot-items" aria-label="Objetos finales" data-field="items">
+      </div>
+      <div class="riot-match-time">
+        <time data-field="playedAt"></time>
+        <span data-field="duration"></span>
+      </div>
+    </li>
+  </template>
+</div>
+
+<script>
+  import { integrationEndpoints } from '../../../config/platforms';
+  import type { RecentMatch, RiotPublicResponse } from '../../../lib/riot';
+
+  const root = document.querySelector<HTMLElement>(
+    '[data-champion-match-history]',
+  );
+  if (root) {
+    const championName = root.dataset.championName ?? '';
+    const limit = Number(root.dataset.limit ?? '5');
+    const loading = root.querySelector<HTMLElement>(
+      '[data-match-history-loading]',
+    );
+    const errorState = root.querySelector<HTMLElement>(
+      '[data-match-history-error]',
+    );
+    const emptyState = root.querySelector<HTMLElement>(
+      '[data-match-history-empty]',
+    );
+    const list = root.querySelector<HTMLUListElement>(
+      '[data-match-history-list]',
+    );
+    const template = root.querySelector<HTMLTemplateElement>(
+      '[data-match-row-template]',
+    );
+
+    const compactAge = (value: string) => {
+      const elapsedHours = Math.max(
+        0,
+        Math.floor((Date.now() - new Date(value).getTime()) / 3_600_000),
+      );
+      if (elapsedHours < 1) return 'Hace < 1 h';
+      if (elapsedHours < 24) return `Hace ${elapsedHours} h`;
+      if (elapsedHours < 48) return 'Ayer';
+      return `Hace ${Math.floor(elapsedHours / 24)} d`;
+    };
+
+    const renderMatch = (match: RecentMatch) => {
+      if (!template || !list) return;
+      const fragment = template.content.cloneNode(true) as DocumentFragment;
+      const li = fragment.querySelector('li');
+      li?.classList.toggle('is-win', match.win);
+
+      const img = fragment.querySelector('img');
+      if (img && match.championImageUrl) img.src = match.championImageUrl;
+
+      const setText = (field: string, value: string) => {
+        const el = fragment.querySelector<HTMLElement>(
+          `[data-field="${field}"]`,
+        );
+        if (el) el.textContent = value;
+      };
+      setText('championName', match.championName);
+      setText('queueLabel', match.queueLabel);
+      setText('kda', `${match.kills} / ${match.deaths} / ${match.assists}`);
+      setText('kdaRatio', `${match.kda.toFixed(2)} KDA`);
+      setText('result', match.win ? 'Victoria' : 'Derrota');
+      setText('duration', match.durationLabel);
+
+      const time = fragment.querySelector<HTMLTimeElement>(
+        '[data-field="playedAt"]',
+      );
+      if (time) {
+        time.dateTime = match.playedAt;
+        time.textContent = compactAge(match.playedAt);
+      }
+
+      const itemsContainer = fragment.querySelector('[data-field="items"]');
+      if (itemsContainer) {
+        match.itemImageUrls.slice(0, 6).forEach((url, index) => {
+          const itemImg = document.createElement('img');
+          itemImg.src = url;
+          itemImg.width = 28;
+          itemImg.height = 28;
+          itemImg.loading = 'lazy';
+          itemImg.decoding = 'async';
+          itemImg.alt = `Objeto ${index + 1}`;
+          itemsContainer.append(itemImg);
+        });
+      }
+
+      list.append(fragment);
+    };
+
+    const showError = () => {
+      if (loading) loading.hidden = true;
+      if (errorState) errorState.hidden = false;
+    };
+
+    fetch(integrationEndpoints.riot)
+      .then((response) => response.json())
+      .then((payload: RiotPublicResponse) => {
+        if (!payload.ok) throw new Error(payload.error.code);
+        const seen = new Set<string>();
+        const matches = [
+          ...payload.data.today.matches,
+          ...payload.data.recent.matches,
+        ]
+          .filter((match) => {
+            if (seen.has(match.matchId)) return false;
+            seen.add(match.matchId);
+            return true;
+          })
+          .filter(
+            (match) =>
+              match.championName.toLocaleLowerCase('es-ES') ===
+              championName.toLocaleLowerCase('es-ES'),
+          )
+          .sort(
+            (a, b) =>
+              new Date(b.playedAt).getTime() - new Date(a.playedAt).getTime(),
+          )
+          .slice(0, limit);
+
+        if (loading) loading.hidden = true;
+        if (matches.length === 0) {
+          if (emptyState) emptyState.hidden = false;
+          return;
+        }
+        matches.forEach(renderMatch);
+        if (list) list.hidden = false;
+      })
+      .catch(showError);
+  }
+</script>

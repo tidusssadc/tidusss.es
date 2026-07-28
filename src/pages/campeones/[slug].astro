@@ -9,6 +9,13 @@ import ChampionKnowledgeSection from '../../components/laboratory/ChampionKnowle
 import ChampionHeader from '../../components/laboratory/champion/ChampionHeader.astro';
 import ChampionProfileSection from '../../components/laboratory/champion/ChampionProfileSection.astro';
 import ChampionTierStatus from '../../components/laboratory/champion/ChampionTierStatus.astro';
+import BuildBlock from '../../components/laboratory/champion/BuildBlock.astro';
+import RuneBlock from '../../components/laboratory/champion/RuneBlock.astro';
+import MatchupCard from '../../components/laboratory/champion/MatchupCard.astro';
+import SynergyCard from '../../components/laboratory/champion/SynergyCard.astro';
+import ConceptCard from '../../components/laboratory/champion/ConceptCard.astro';
+import EditorialHistoryTimeline from '../../components/laboratory/champion/EditorialHistoryTimeline.astro';
+import ChampionMatchHistory from '../../components/laboratory/champion/ChampionMatchHistory.astro';
 import {
   buildLabRegistry,
   getChampionKnowledge,
@@ -18,7 +25,12 @@ import {
   adcLabChampions,
   championCatalog,
   championCatalogVersion,
+  leagueLaboratoryBuilds,
+  leagueLaboratoryConcepts,
+  leagueLaboratoryMatchups,
   leagueLaboratoryPatches,
+  leagueLaboratoryRunePages,
+  leagueLaboratorySynergies,
   officialAdcTierList,
 } from '../../data/league-laboratory';
 import { platforms } from '../../config/platforms';
@@ -46,6 +58,11 @@ const registry = buildLabRegistry({
   champions: adcLabChampions,
   patches: leagueLaboratoryPatches,
   tierLists: [officialAdcTierList],
+  builds: leagueLaboratoryBuilds,
+  runePages: leagueLaboratoryRunePages,
+  matchups: leagueLaboratoryMatchups,
+  synergies: leagueLaboratorySynergies,
+  concepts: leagueLaboratoryConcepts,
 });
 
 const knowledge = getChampionKnowledge(registry, catalogEntry.id);
@@ -70,10 +87,82 @@ const reviewPatch = lastReviewedPatchId
 // resolverse (ver ADR correspondiente).
 const dataDragonVersion = championCatalogVersion;
 
-const pageTitle = `${catalogEntry.name} — ${catalogEntry.title} · El Laboratorio · tidusss.es`;
-const pageDescription = hasProfile
-  ? `Quién es ${catalogEntry.name}, por qué merece la pena jugarlo y qué piensa Tidusss realmente sobre él: criterio editorial, no estadísticas automatizadas.`
-  : `Ficha de ${catalogEntry.name} (${catalogEntry.title}) en el Laboratorio. Su perfil editorial todavía se está preparando.`;
+// Builds: la principal primero, luego las alternativas — nunca al revés,
+// para que "esto es lo que compraría por defecto" sea siempre lo primero
+// que se lee.
+const builds = knowledge?.builds ?? [];
+const primaryBuilds = builds.filter((build) => build.variant === 'primary');
+const situationalBuilds = builds.filter(
+  (build) => build.variant === 'situational',
+);
+const orderedBuilds = [...primaryBuilds, ...situationalBuilds];
+const patchFor = (patchId: string) =>
+  leagueLaboratoryPatches.find((patch) => patch.id === patchId);
+
+// Matchups agrupados por dificultad real — nunca dos listas mantenidas a
+// mano, siempre derivadas de `matchup.difficulty`.
+const matchups = knowledge?.matchups ?? [];
+const easyMatchups = matchups.filter((m) => m.difficulty === 'easy');
+const evenMatchups = matchups.filter((m) => m.difficulty === 'even');
+const hardMatchups = matchups.filter((m) => m.difficulty === 'hard');
+const opponentFor = (opponentChampionId: string) =>
+  championCatalog.find((entry) => entry.id === opponentChampionId);
+
+const synergies = knowledge?.synergies ?? [];
+const partnersFor = (championIds: readonly string[]) =>
+  championIds
+    .filter((id) => id !== catalogEntry.id)
+    .flatMap((id) => {
+      const entry = championCatalog.find((candidate) => candidate.id === id);
+      return entry ? [entry] : [];
+    });
+
+const quickTips = labChampion?.profile?.quickTips ?? [];
+const editorialHistory = labChampion?.editorialHistory ?? [];
+
+// El título/descripción mencionan el parche y los objetos reales solo
+// cuando existe build publicada — leídos siempre de los datos reales, nunca
+// escritos a mano para un campeón concreto, para que esto siga siendo
+// genérico y reutilizable para cualquier otro campeón curado.
+const primaryBuild = orderedBuilds.find((build) => build.variant === 'primary');
+const primaryBuildPatch = primaryBuild
+  ? patchFor(primaryBuild.patchId)
+  : undefined;
+const coreItemNames = primaryBuild?.coreItems.map((item) => item.name) ?? [];
+const primaryRuneName = knowledge?.runePages[0]?.primaryRunes[0]?.name;
+const pageTitle =
+  hasProfile && primaryBuild && primaryBuildPatch
+    ? `${catalogEntry.name} ADC: Build y Runas del Parche ${primaryBuildPatch.label} — Guía de Tidusss`
+    : hasProfile
+      ? `${catalogEntry.name} ADC: Guía, Build y Runas — El Laboratorio de Tidusss`
+      : `${catalogEntry.name} — ${catalogEntry.title} · El Laboratorio · tidusss.es`;
+const pageDescription =
+  hasProfile && primaryBuild && primaryBuildPatch
+    ? `Guía de ${catalogEntry.name} ADC de Tidusss, Master ADC en EUW: build del parche ${primaryBuildPatch.label}${coreItemNames.length > 0 ? ` (${coreItemNames.join(', ')})` : ''}${primaryRuneName ? `, runa principal ${primaryRuneName}` : ''} y el criterio real detrás de cada decisión.`
+    : hasProfile
+      ? `Guía de ${catalogEntry.name} ADC por Tidusss, Master ADC en EUW: build, runas, matchups y el criterio real detrás de cada decisión — no solo estadísticas.`
+      : `Ficha de ${catalogEntry.name} (${catalogEntry.title}) en el Laboratorio. Su perfil editorial todavía se está preparando.`;
+
+// Datos estructurados (Article) solo cuando hay contenido editorial real que
+// describir — no tiene sentido marcar como "artículo" una ficha que todavía
+// dice "Pendiente de análisis" en casi todas sus secciones. Fechas reales,
+// tomadas del propio historial editorial — nunca inventadas.
+const sortedHistory = [...editorialHistory].sort((a, b) =>
+  a.date.localeCompare(b.date),
+);
+const structuredData = hasProfile
+  ? {
+      '@context': 'https://schema.org',
+      '@type': 'Article',
+      headline: pageTitle,
+      description: pageDescription,
+      author: { '@type': 'Person', name: 'Tidusss' },
+      ...(sortedHistory[0] && { datePublished: sortedHistory[0].date }),
+      ...(sortedHistory.at(-1) && {
+        dateModified: sortedHistory.at(-1)!.date,
+      }),
+    }
+  : undefined;
 ---
 
 <BaseLayout
@@ -81,6 +170,15 @@ const pageDescription = hasProfile
   description={pageDescription}
   noindex={!hasProfile}
 >
+  {
+    structuredData && (
+      <script
+        type="application/ld+json"
+        is:inline
+        set:html={JSON.stringify(structuredData)}
+      />
+    )
+  }
   <Navbar />
   <main>
     <LaboratoryHero
@@ -120,7 +218,174 @@ const pageDescription = hasProfile
           championName={catalogEntry.name}
         />
 
-        <div class="champion-knowledge-grid">
+        <div class="champion-guide-sections">
+          <ChampionKnowledgeSection
+            id="build"
+            title="Build"
+            hasContent={orderedBuilds.length > 0}
+            emptyTitle="Todavía no hay una build publicada"
+            emptyDescription={`Tidusss no ha publicado todavía una build recomendada para ${catalogEntry.name}. No es una tabla de objetos genérica lo que falta — es el razonamiento detrás de cada elección, y eso se escribe con calma.`}
+          >
+            <div class="build-block-list">
+              {
+                orderedBuilds.map((build) => (
+                  <BuildBlock
+                    build={build}
+                    dataDragonVersion={dataDragonVersion}
+                    patch={patchFor(build.patchId)}
+                  />
+                ))
+              }
+            </div>
+          </ChampionKnowledgeSection>
+
+          <ChampionKnowledgeSection
+            id="runas"
+            title="Runas"
+            hasContent={(knowledge?.runePages.length ?? 0) > 0}
+            emptyTitle="Todavía no hay una página de runas publicada"
+            emptyDescription={`Tidusss no ha publicado todavía runas recomendadas para ${catalogEntry.name}, con la explicación de cada elección — no solo los iconos.`}
+          >
+            <div class="rune-block-list">
+              {
+                knowledge?.runePages.map((runePage) => (
+                  <RuneBlock
+                    runePage={runePage}
+                    patch={patchFor(runePage.patchId)}
+                  />
+                ))
+              }
+            </div>
+          </ChampionKnowledgeSection>
+
+          <ChampionKnowledgeSection
+            id="matchups"
+            title="Matchups"
+            hasContent={matchups.length > 0}
+            emptyTitle="Todavía no hay matchups analizados"
+            emptyDescription={`Ningún enfrentamiento de ${catalogEntry.name} tiene todavía un análisis publicado. Aquí aparecerán como tarjetas — dificultad, explicación y consejos — nunca como una tabla de números.`}
+          >
+            <div class="matchup-groups">
+              {
+                hardMatchups.length > 0 && (
+                  <div class="matchup-group">
+                    <h4>Matchups difíciles</h4>
+                    <div class="matchup-card-grid">
+                      {hardMatchups.map((matchup) => {
+                        const opponent = opponentFor(
+                          matchup.opponentChampionId,
+                        );
+                        return (
+                          opponent && (
+                            <MatchupCard
+                              matchup={matchup}
+                              opponentCatalogEntry={opponent}
+                              dataDragonVersion={dataDragonVersion}
+                            />
+                          )
+                        );
+                      })}
+                    </div>
+                  </div>
+                )
+              }
+              {
+                evenMatchups.length > 0 && (
+                  <div class="matchup-group">
+                    <h4>Matchups parejos</h4>
+                    <div class="matchup-card-grid">
+                      {evenMatchups.map((matchup) => {
+                        const opponent = opponentFor(
+                          matchup.opponentChampionId,
+                        );
+                        return (
+                          opponent && (
+                            <MatchupCard
+                              matchup={matchup}
+                              opponentCatalogEntry={opponent}
+                              dataDragonVersion={dataDragonVersion}
+                            />
+                          )
+                        );
+                      })}
+                    </div>
+                  </div>
+                )
+              }
+              {
+                easyMatchups.length > 0 && (
+                  <div class="matchup-group">
+                    <h4>Matchups fáciles</h4>
+                    <div class="matchup-card-grid">
+                      {easyMatchups.map((matchup) => {
+                        const opponent = opponentFor(
+                          matchup.opponentChampionId,
+                        );
+                        return (
+                          opponent && (
+                            <MatchupCard
+                              matchup={matchup}
+                              opponentCatalogEntry={opponent}
+                              dataDragonVersion={dataDragonVersion}
+                            />
+                          )
+                        );
+                      })}
+                    </div>
+                  </div>
+                )
+              }
+            </div>
+          </ChampionKnowledgeSection>
+
+          <ChampionKnowledgeSection
+            id="sinergias"
+            title="Sinergias"
+            hasContent={synergies.length > 0}
+            emptyTitle="Todavía no hay sinergias documentadas"
+            emptyDescription="Las combinaciones con otros campeones (dúos de línea, combos de enganche o de protección) se añadirán aquí cuando existan, con consejos reales de ejecución."
+          >
+            <div class="matchup-card-grid">
+              {
+                synergies.map((synergy) => (
+                  <SynergyCard
+                    synergy={synergy}
+                    partnerCatalogEntries={partnersFor(synergy.championIds)}
+                    dataDragonVersion={dataDragonVersion}
+                  />
+                ))
+              }
+            </div>
+          </ChampionKnowledgeSection>
+
+          <ChampionKnowledgeSection
+            id="consejos-rapidos"
+            title="Consejos rápidos"
+            hasContent={quickTips.length > 0}
+            emptyTitle="Todavía no hay consejos rápidos publicados"
+            emptyDescription={`Recomendaciones cortas y accionables para jugar a ${catalogEntry.name} se añadirán aquí — distintas de los errores comunes, ya documentados arriba.`}
+          >
+            <ul class="champion-build-list">
+              {quickTips.map((tip) => <li>{tip}</li>)}
+            </ul>
+          </ChampionKnowledgeSection>
+
+          <ChampionKnowledgeSection
+            id="concepts"
+            title="Conceptos importantes"
+            hasContent={(knowledge?.concepts.length ?? 0) > 0}
+            emptyTitle="Todavía no hay conceptos vinculados"
+            emptyDescription="Las ideas de juego (spacing, power spike, snowball, trading, tempo, wave management...) se enlazarán aquí en cuanto sean relevantes para este campeón."
+          >
+            <ul class="concept-card-grid">
+              {
+                knowledge?.concepts.map((concept) => (
+                  <ConceptCard concept={concept} />
+                ))
+              }
+            </ul>
+          </ChampionKnowledgeSection>
+
           <ChampionKnowledgeSection
             id="videos"
             title="Vídeos relacionados"
@@ -131,67 +396,23 @@ const pageDescription = hasProfile
             emptyCtaLabel="Ver el canal de YouTube"
             emptyCtaExternal
           />
+
+          <div
+            class="champion-knowledge-section"
+            aria-labelledby="partidas-heading"
+          >
+            <h3 id="partidas-heading">Partidas donde aparece</h3>
+            <ChampionMatchHistory championName={catalogEntry.name} />
+          </div>
+
           <ChampionKnowledgeSection
-            id="matches"
-            title="Partidas relacionadas"
+            id="cambios-recientes"
+            title="Cambios recientes del campeón"
             hasContent={false}
-            emptyTitle="Sin partidas vinculadas todavía"
-            emptyDescription="El historial de partidas en tiempo real de Tidusss vive en Live. Aquí solo se enlazarán asociaciones verificadas, nunca inferidas."
-            emptyCtaHref="/live"
-            emptyCtaLabel="Ver la actividad competitiva en directo"
+            emptyTitle="Todavía no se rastrean los parches de Riot para este campeón"
+            emptyDescription="Los ajustes de balance oficiales de Riot (buffs, nerfs, reworks) se mostrarán aquí en cuanto exista una fuente real y verificada — nunca un resumen inventado de notas de parche."
           />
-          <ChampionKnowledgeSection
-            id="builds"
-            title="Builds"
-            hasContent={(knowledge?.builds.length ?? 0) > 0}
-            emptyTitle="Todavía no hay una build publicada"
-            emptyDescription={`Tidusss no ha publicado todavía una build recomendada para ${catalogEntry.name}.`}
-          >
-            <ul class="champion-build-list">
-              {knowledge?.builds.map((build) => <li>{build.title}</li>)}
-            </ul>
-          </ChampionKnowledgeSection>
-          <ChampionKnowledgeSection
-            id="runes"
-            title="Runas"
-            hasContent={(knowledge?.runePages.length ?? 0) > 0}
-            emptyTitle="Todavía no hay una página de runas publicada"
-            emptyDescription={`Tidusss no ha publicado todavía runas recomendadas para ${catalogEntry.name}.`}
-          >
-            <ul class="champion-build-list">
-              {
-                knowledge?.runePages.map((runePage) => (
-                  <li>{runePage.title}</li>
-                ))
-              }
-            </ul>
-          </ChampionKnowledgeSection>
-          <ChampionKnowledgeSection
-            id="matchups"
-            title="Matchups"
-            hasContent={(knowledge?.matchups.length ?? 0) > 0}
-            emptyTitle="Todavía no hay matchups analizados"
-            emptyDescription={`Ningún enfrentamiento de ${catalogEntry.name} tiene todavía un análisis publicado.`}
-          >
-            <ul class="champion-build-list">
-              {
-                knowledge?.matchups.map((matchup) => (
-                  <li>{matchup.opponentChampionId}</li>
-                ))
-              }
-            </ul>
-          </ChampionKnowledgeSection>
-          <ChampionKnowledgeSection
-            id="synergies"
-            title="Sinergias"
-            hasContent={(knowledge?.synergies.length ?? 0) > 0}
-            emptyTitle="Todavía no hay sinergias documentadas"
-            emptyDescription="Las combinaciones con otros campeones se añadirán aquí cuando existan."
-          >
-            <ul class="champion-build-list">
-              {knowledge?.synergies.map((synergy) => <li>{synergy.type}</li>)}
-            </ul>
-          </ChampionKnowledgeSection>
+
           <ChampionKnowledgeSection
             id="guides"
             title="Guías"
@@ -203,16 +424,15 @@ const pageDescription = hasProfile
               {knowledge?.guides.map((guide) => <li>{guide.title}</li>)}
             </ul>
           </ChampionKnowledgeSection>
+
           <ChampionKnowledgeSection
-            id="concepts"
-            title="Conceptos relacionados"
-            hasContent={(knowledge?.concepts.length ?? 0) > 0}
-            emptyTitle="Todavía no hay conceptos vinculados"
-            emptyDescription="Las ideas de juego (gestión de oleada, trading, visión...) se enlazarán aquí cuando existan en la Concept Library."
+            id="historial-editorial"
+            title="Historial editorial"
+            hasContent={editorialHistory.length > 0}
+            emptyTitle="Todavía no hay historial editorial"
+            emptyDescription="Aquí quedará constancia de cuándo y qué ha cambiado en el propio análisis de Tidusss sobre este campeón."
           >
-            <ul class="champion-build-list">
-              {knowledge?.concepts.map((concept) => <li>{concept.title}</li>)}
-            </ul>
+            <EditorialHistoryTimeline entries={editorialHistory} />
           </ChampionKnowledgeSection>
         </div>
 
@@ -224,9 +444,8 @@ const pageDescription = hasProfile
             Volver a la Tier List <span aria-hidden="true">→</span>
           </a>
           <a class="button-secondary" href="/live">
-            Ver la actividad competitiva en directo <span aria-hidden="true"
-              >→</span
-            >
+            Ver la actividad competitiva en directo
+            <span aria-hidden="true">→</span>
           </a>
         </div>
       </div>

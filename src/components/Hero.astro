@@ -60,6 +60,13 @@ import HeroVisual from './HeroVisual.astro';
         <p data-home-context-text></p>
         <a data-home-context-action hidden></a>
       </aside>
+      <div class="hero-live-embed" data-hero-live-embed hidden>
+        <p class="hero-live-embed-label">
+          <span class="platform-live-mark" aria-hidden="true"></span>
+          En directo ahora en Twitch
+        </p>
+        <div class="hero-live-embed-frame" data-hero-live-embed-frame></div>
+      </div>
     </div>
     <div
       class="hero-art animate-rise delay-2 mx-auto w-full max-w-xl lg:max-w-none"
@@ -99,4 +106,45 @@ import HeroVisual from './HeroVisual.astro';
     },
     { passive: true },
   );
+</script>
+
+<script>
+  import { platforms } from '../config/platforms';
+  import type { HomeState } from '../domain/home-state';
+
+  /**
+   * Reutiliza el evento que ya dispara el Home State Engine para el resto de
+   * la página (banner de contexto, prioridad visual del panel de Twitch) en
+   * vez de inventar un segundo mecanismo de detección de directo. Solo se
+   * añade el reproductor incrustado — nunca se sustituye la señal existente.
+   */
+  const container = document.querySelector<HTMLElement>(
+    '[data-hero-live-embed]',
+  );
+  const frame = document.querySelector<HTMLElement>(
+    '[data-hero-live-embed-frame]',
+  );
+
+  let embedded = false;
+  window.addEventListener('tidusss:home-state-changed', (event) => {
+    if (!container || !frame) return;
+    const state = (event as CustomEvent<HomeState>).detail;
+    const isLive = state.id === 'live';
+    container.hidden = !isLive;
+    if (isLive && !embedded) {
+      const iframe = document.createElement('iframe');
+      iframe.src = `https://player.twitch.tv/?channel=${platforms.twitch.handle}&parent=${location.hostname}&muted=true&autoplay=true`;
+      iframe.title = 'Directo de Tidusss en Twitch';
+      iframe.allowFullscreen = true;
+      iframe.setAttribute(
+        'allow',
+        'autoplay; fullscreen; encrypted-media; picture-in-picture',
+      );
+      frame.replaceChildren(iframe);
+      embedded = true;
+    } else if (!isLive && embedded) {
+      frame.replaceChildren();
+      embedded = false;
+    }
+  });
 </script>

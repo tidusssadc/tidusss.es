@@ -94,6 +94,16 @@ import { integrationEndpoints, platforms } from '../config/platforms';
         data-youtube-panel
         data-home-target="youtube"
       >
+        <img
+          class="youtube-video-preview"
+          data-youtube-thumbnail
+          width="640"
+          height="360"
+          alt=""
+          loading="lazy"
+          decoding="async"
+          hidden
+        />
         <header>
           <div>
             <span>02 / Para volver a verlo</span>
@@ -415,6 +425,14 @@ import { integrationEndpoints, platforms } from '../config/platforms';
           );
           list.setAttribute('aria-busy', 'false');
           renderHeroFragments(videos);
+          const youtubeThumbnail = showcase.querySelector<HTMLImageElement>(
+            '[data-youtube-thumbnail]',
+          );
+          if (youtubeThumbnail && videos[0]) {
+            youtubeThumbnail.src = videos[0].thumbnailUrl;
+            youtubeThumbnail.alt = `Miniatura del último vídeo: ${videos[0].title}`;
+            youtubeThumbnail.hidden = false;
+          }
           publishHomeSignal({
             type: 'latest-video',
             entity: videoToContentEntity(videos[0]),

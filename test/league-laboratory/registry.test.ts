@@ -12,6 +12,11 @@ import {
 } from '../../src/data/league-laboratory/champions.ts';
 import { officialAdcTierList } from '../../src/data/league-laboratory/official-adc-tier-list.ts';
 import { patch1514 } from '../../src/data/league-laboratory/patches.ts';
+import { leagueLaboratoryConcepts } from '../../src/data/league-laboratory/concepts.ts';
+import { leagueLaboratoryBuilds } from '../../src/data/league-laboratory/builds.ts';
+import { leagueLaboratoryRunePages } from '../../src/data/league-laboratory/rune-pages.ts';
+import { leagueLaboratorySynergies } from '../../src/data/league-laboratory/synergies.ts';
+import { kaisa } from '../../src/data/league-laboratory/champions.ts';
 
 test('buildLabRegistry sin seed produce colecciones vacías, nunca undefined', () => {
   const registry = buildLabRegistry({});
@@ -67,4 +72,63 @@ test('getChampionKnowledge para un campeón sin curación editorial no falla', (
   assert.equal(knowledge?.labChampion, undefined);
   assert.deepEqual(knowledge?.builds, []);
   assert.deepEqual(knowledge?.tierListAppearances, []);
+});
+
+/**
+ * Fase 5: `LabChampion.coreConceptIds` (curación editorial directa) debe
+ * fusionarse con los conceptos derivados de matchups/guías/sinergias — sin
+ * que ninguna de las dos vías se pise. Este test siembra el registro sin
+ * sinergias/matchups a propósito, para blindar específicamente que la vía
+ * directa (`coreConceptIds`) funciona por sí sola, con independencia de la
+ * otra vía (probada aparte en `content-graph.test.ts`/`synergies.test.ts`).
+ */
+test('getChampionKnowledge resuelve los conceptos curados directamente en LabChampion.coreConceptIds', () => {
+  const registry = buildLabRegistry({
+    catalog: championCatalog,
+    champions: adcLabChampions,
+    concepts: leagueLaboratoryConcepts,
+  });
+  const knowledge = getChampionKnowledge(registry, lucian.id);
+  assert.ok(knowledge);
+  const conceptIds = knowledge?.concepts.map((concept) => concept.id) ?? [];
+  assert.ok(lucian.coreConceptIds && lucian.coreConceptIds.length > 0);
+  for (const id of lucian.coreConceptIds ?? []) {
+    assert.ok(conceptIds.includes(id), `falta el concepto ${id}`);
+  }
+});
+
+test('getChampionKnowledge no falla si coreConceptIds referencia un concepto ausente del registro', () => {
+  const registry = buildLabRegistry({
+    catalog: championCatalog,
+    champions: adcLabChampions,
+    concepts: [], // deliberadamente sin sembrar ningún concepto
+  });
+  const knowledge = getChampionKnowledge(registry, lucian.id);
+  assert.deepEqual(knowledge?.concepts, []);
+});
+
+/**
+ * Fase 6: el criterio real de Tidusss para Lucian (build/runas/sinergias del
+ * parche 26.14) no debe "filtrarse" a ningún otro campeón, ni siquiera a
+ * otro campeón curado (Kai'Sa). Cada colección se filtra por `championId`
+ * dentro de `getChampionKnowledge` — este test lo comprueba con el registro
+ * real completo, no con datos de prueba aislados.
+ */
+test('el contenido real de Lucian (builds/runas/sinergias) no aparece en la ficha de otro campeón curado', () => {
+  const registry = buildLabRegistry({
+    catalog: championCatalog,
+    champions: adcLabChampions,
+    builds: leagueLaboratoryBuilds,
+    runePages: leagueLaboratoryRunePages,
+    synergies: leagueLaboratorySynergies,
+  });
+  const kaisaKnowledge = getChampionKnowledge(registry, kaisa.id);
+  assert.deepEqual(kaisaKnowledge?.builds, []);
+  assert.deepEqual(kaisaKnowledge?.runePages, []);
+  assert.deepEqual(kaisaKnowledge?.synergies, []);
+
+  const lucianKnowledge = getChampionKnowledge(registry, lucian.id);
+  assert.equal(lucianKnowledge?.builds.length, 2);
+  assert.equal(lucianKnowledge?.runePages.length, 1);
+  assert.equal(lucianKnowledge?.synergies.length, 6);
 });

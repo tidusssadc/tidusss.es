@@ -83,6 +83,8 @@ export interface ChampionProfile {
   commonMistakes: readonly string[];
   powerSpikes: readonly string[];
   difficulty: ChampionDifficulty;
+  /** Consejos rápidos y accionables, distintos de `commonMistakes` (qué evitar) y `strengths` (identidad). Ausente mientras no exista una lista real y propia. */
+  quickTips?: readonly string[];
 }
 
 /**
@@ -123,6 +125,17 @@ export interface LabChampion {
   signatureNote?: string;
   /** Ausente mientras no exista un perfil editorial real y revisado. */
   profile?: ChampionProfile;
+  /** Cuándo y qué ha cambiado en el propio análisis editorial de este campeón — nunca inventado, solo lo que realmente ha ocurrido. */
+  editorialHistory?: readonly EditorialHistoryEntry[];
+  /**
+   * Los conceptos del Laboratorio fundamentales para entender a este
+   * campeón — curación editorial directa, distinta de los conceptos que
+   * `getChampionKnowledge` deriva automáticamente de sus matchups/guías.
+   * Solo debe apuntar a conceptos genuinamente evidenciados por el propio
+   * `profile` del campeón (fortalezas, debilidades, errores comunes), nunca
+   * una lista completa "porque sí".
+   */
+  coreConceptIds?: readonly ConceptId[];
 }
 
 export interface Patch {
@@ -134,19 +147,74 @@ export interface Patch {
   editorialSummary?: string;
 }
 
+/**
+ * "No te digo qué construir. Te explico por qué." Una elección de objeto
+ * nunca es solo un id: siempre lleva el razonamiento que la justifica. Un
+ * objeto sin `reasoning` no pertenece a una build editorial — pertenece a
+ * una tabla de estadísticas, que es exactamente lo que este dominio no
+ * quiere ser.
+ */
+export interface BuildItemAlternative {
+  /**
+   * El nombre es el dato real y obligatorio; `itemId` (para resolver el
+   * icono de Data Dragon) es opcional porque no siempre se conoce sin
+   * consultar una fuente externa — mostrar el nombre nunca debe esperar a
+   * que exista un id.
+   */
+  name: string;
+  itemId?: number;
+  /** Cuándo elegir esta alternativa en vez del objeto principal. */
+  whenToPreferInstead: string;
+}
+
+export interface BuildItemChoice {
+  name: string;
+  itemId?: number;
+  /** Cuándo comprarlo (p. ej. "Primer back", "Antes del segundo objetivo grande"). Ausente si es evidente por su posición (objetos iniciales). */
+  timing?: string;
+  /** Por qué esta elección — el corazón del bloque editorial, nunca vacío. */
+  reasoning: string;
+  pros?: readonly string[];
+  cons?: readonly string[];
+  alternatives?: readonly BuildItemAlternative[];
+}
+
+export type BuildVariant = 'primary' | 'situational';
+
 export interface Build {
   id: BuildId;
   title: string;
   championId: LabChampionId;
   role: Role;
   patchId: PatchId;
-  startingItemIds: readonly number[];
-  coreItemIds: readonly number[];
-  situationalItemIds: readonly number[];
+  /** `primary`: la build por defecto. `situational`: una alternativa condicionada a `situationalContext`. */
+  variant: BuildVariant;
+  /** Obligatorio cuando `variant` es `situational`: qué condición (o preferencia editorial) hace elegir esta ruta en vez de la principal. */
+  situationalContext?: string;
+  startingItems: readonly BuildItemChoice[];
+  /** Independientes del resto de la build: ninguna bota se presenta como universalmente superior a otra. */
+  boots?: readonly BuildItemChoice[];
+  coreItems: readonly BuildItemChoice[];
+  situationalItems: readonly BuildItemChoice[];
   skillOrder?: readonly string[];
+  skillOrderReasoning?: string;
   summonerSpellIds?: readonly number[];
   runePageId?: RunePageId;
   editorialTake: EditorialTake;
+}
+
+/**
+ * Igual que `BuildItemChoice`: una runa sin explicación no aporta más que
+ * el icono que ya muestra Data Dragon. `reasoning` es opcional solo porque
+ * algunas runas (p. ej. un fragmento de estadística menor) pueden ser
+ * evidentes por convención — nunca porque se nos olvidara explicarla.
+ * `name` es el dato real y obligatorio; `runeId` (para el icono) es
+ * opcional por el mismo motivo que en `BuildItemChoice`.
+ */
+export interface RuneChoice {
+  name: string;
+  runeId?: number;
+  reasoning?: string;
 }
 
 export interface RunePage {
@@ -155,11 +223,12 @@ export interface RunePage {
   championId: LabChampionId;
   role: Role;
   patchId: PatchId;
-  primaryTreeId: number;
-  primaryRuneIds: readonly number[];
-  secondaryTreeId: number;
-  secondaryRuneIds: readonly number[];
-  statShardIds: readonly number[];
+  /** Ausente mientras no se confirme qué árbol es — nunca se rellena con una suposición. */
+  primaryTreeId?: number;
+  primaryRunes: readonly RuneChoice[];
+  secondaryTreeId?: number;
+  secondaryRunes: readonly RuneChoice[];
+  statShards: readonly RuneChoice[];
   editorialTake: EditorialTake;
 }
 
@@ -174,6 +243,12 @@ export interface Matchup {
   earlyGameNote?: string;
   midGameNote?: string;
   lateGameNote?: string;
+  /** Consejos rápidos y accionables, distintos de las notas de fase de partida. */
+  tips?: readonly string[];
+  /** Enlace a un vídeo real que documenta este matchup — nunca inventado; ausente mientras no exista uno verificado. */
+  videoUrl?: string;
+  /** Enlace a una partida real que ilustra este matchup — mismo criterio que `videoUrl`. */
+  matchHref?: string;
   editorialTake: EditorialTake;
   relatedConceptIds?: readonly ConceptId[];
 }
@@ -184,8 +259,23 @@ export interface Synergy {
   type: SynergyType;
   roles?: readonly Role[];
   patchId: PatchId;
+  /** Consejos rápidos para ejecutar la sinergia en partida. */
+  tips?: readonly string[];
   editorialTake: EditorialTake;
   relatedConceptIds?: readonly ConceptId[];
+}
+
+/**
+ * Una entrada del historial editorial de un campeón: cuándo y qué cambió en
+ * el propio análisis de Tidusss — no confundir con parches de balance de
+ * Riot (eso sería `ChampionCatalogEntry`/futuros datos factuales de Riot,
+ * todavía sin modelar porque no hay ninguna fuente real de esos datos hoy).
+ */
+export interface EditorialHistoryEntry {
+  /** Fecha ISO (YYYY-MM-DD) del cambio editorial. */
+  date: string;
+  patchId?: PatchId;
+  summary: string;
 }
 
 export interface Concept {

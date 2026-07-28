@@ -1,0 +1,90 @@
+---
+import type {
+  ChampionCatalogEntry,
+  Matchup,
+} from '../../../domain/league-laboratory';
+import { dataDragonUrls } from '../../../lib/riot/datadragon';
+import EditorialTakeBlock from '../EditorialTakeBlock.astro';
+import MatchupDifficultyBadge from '../MatchupDifficultyBadge.astro';
+import TraitList from '../TraitList.astro';
+
+interface Props {
+  matchup: Matchup;
+  opponentCatalogEntry: ChampionCatalogEntry;
+  dataDragonVersion: string;
+}
+const { matchup, opponentCatalogEntry, dataDragonVersion } = Astro.props;
+const iconUrl = dataDragonUrls(dataDragonVersion).champion(
+  opponentCatalogEntry.dataDragonKey,
+);
+---
+
+<article class="matchup-card" data-difficulty={matchup.difficulty}>
+  <header class="matchup-card-header">
+    <img
+      src={iconUrl}
+      width="48"
+      height="48"
+      loading="lazy"
+      decoding="async"
+      alt=""
+    />
+    <div>
+      <strong>vs. {opponentCatalogEntry.name}</strong>
+      <small>{opponentCatalogEntry.title}</small>
+    </div>
+    <MatchupDifficultyBadge difficulty={matchup.difficulty} />
+  </header>
+
+  <div class="matchup-card-notes">
+    {
+      matchup.earlyGameNote && (
+        <p>
+          <span class="lab-badge-label">Fase inicial</span>
+          {matchup.earlyGameNote}
+        </p>
+      )
+    }
+    {
+      matchup.midGameNote && (
+        <p>
+          <span class="lab-badge-label">Fase media</span>
+          {matchup.midGameNote}
+        </p>
+      )
+    }
+    {
+      matchup.lateGameNote && (
+        <p>
+          <span class="lab-badge-label">Fase final</span>
+          {matchup.lateGameNote}
+        </p>
+      )
+    }
+  </div>
+
+  {
+    matchup.tips && matchup.tips.length > 0 && (
+      <TraitList label="Consejos rápidos" items={matchup.tips} />
+    )
+  }
+
+  {
+    (matchup.videoUrl || matchup.matchHref) && (
+      <div class="matchup-card-links">
+        {matchup.videoUrl && (
+          <a href={matchup.videoUrl} target="_blank" rel="noopener noreferrer">
+            Ver vídeo del matchup <span aria-hidden="true">↗</span>
+          </a>
+        )}
+        {matchup.matchHref && (
+          <a href={matchup.matchHref}>
+            Ver la partida <span aria-hidden="true">→</span>
+          </a>
+        )}
+      </div>
+    )
+  }
+
+  <EditorialTakeBlock take={matchup.editorialTake} />
+</article>

@@ -1,5 +1,6 @@
 ---
 import { contentCards } from '../data/content';
+import { integrationEndpoints } from '../config/platforms';
 import SectionHeading from './SectionHeading.astro';
 ---
 
@@ -7,6 +8,8 @@ import SectionHeading from './SectionHeading.astro';
   id="contenido"
   class="section-shell coded-section border-y border-white/6 bg-white/[0.012]"
   data-code="SECCIÓN / CONTENIDO"
+  data-content-section
+  data-youtube={integrationEndpoints.youtube}
   data-reveal
 >
   <div class="mx-auto max-w-7xl px-5 sm:px-8">
@@ -18,7 +21,22 @@ import SectionHeading from './SectionHeading.astro';
     <div class="mt-12 grid gap-4 md:grid-cols-3">
       {
         contentCards.map((card, index) => (
-          <article class="content-card group" style={`--item-index: ${index}`}>
+          <article
+            class="content-card group"
+            style={`--item-index: ${index}`}
+            data-content-card={index}
+          >
+            <img
+              class="content-card-still"
+              data-content-still
+              width="480"
+              height="270"
+              alt=""
+              aria-hidden="true"
+              loading="lazy"
+              decoding="async"
+              hidden
+            />
             <span class="text-xs font-bold tracking-[0.22em] text-[#d6b56b]">
               {card.number}
             </span>
@@ -33,3 +51,33 @@ import SectionHeading from './SectionHeading.astro';
     </div>
   </div>
 </section>
+
+<script>
+  import type { YouTubeFeedResponse } from '../types/content';
+
+  const section = document.querySelector<HTMLElement>('[data-content-section]');
+  if (section) {
+    fetch(section.dataset.youtube!)
+      .then((response) => response.json() as Promise<YouTubeFeedResponse>)
+      .then((payload) => {
+        if (!payload.ok) throw new Error(payload.error.code);
+        const videos = payload.data.videos;
+        section
+          .querySelectorAll<HTMLElement>('[data-content-card]')
+          .forEach((card) => {
+            const index = Number(card.dataset.contentCard ?? '-1');
+            const video = videos[index];
+            const still = card.querySelector<HTMLImageElement>(
+              '[data-content-still]',
+            );
+            if (!video || !still) return;
+            still.src = video.thumbnailUrl;
+            still.hidden = false;
+          });
+      })
+      .catch(() => {
+        /* Sin vídeos reales que mostrar, las tarjetas se quedan como estaban
+           — nunca una miniatura de relleno. */
+      });
+  }
+</script>

@@ -1,0 +1,18 @@
+---
+import type { MatchupDifficulty } from '../../domain/league-laboratory';
+
+interface Props {
+  difficulty: MatchupDifficulty;
+}
+const { difficulty } = Astro.props;
+
+const labels: Record<MatchupDifficulty, string> = {
+  easy: 'Fácil',
+  even: 'Parejo',
+  hard: 'Difícil',
+};
+---
+
+<span class="matchup-difficulty-badge" data-difficulty={difficulty}>
+  {labels[difficulty]}
+</span>

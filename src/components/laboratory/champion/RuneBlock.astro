@@ -1,0 +1,78 @@
+---
+import type { Patch, RunePage } from '../../../domain/league-laboratory';
+import EditorialTakeBlock from '../EditorialTakeBlock.astro';
+import PatchBadge from '../PatchBadge.astro';
+
+interface Props {
+  runePage: RunePage;
+  patch?: Patch;
+}
+const { runePage, patch } = Astro.props;
+
+/**
+ * Deliberadamente sin iconos de runa todavía: Data Dragon no resuelve el
+ * icono de una runa a partir de su id como sí hace con campeones/objetos
+ * (`.../item/{id}.png`) — requiere el mapa completo de `runesReforged.json`.
+ * El nombre real (`RuneChoice.name`) es siempre el dato principal; `runeId`
+ * es opcional y solo sirve para cuando exista esa sincronización.
+ */
+---
+
+<article class="rune-block">
+  <header class="rune-block-header">
+    <h4>{runePage.title}</h4>
+    {patch && <PatchBadge patch={patch} />}
+  </header>
+
+  <div class="rune-block-tree">
+    <span class="lab-badge-label">Rama principal</span>
+    <ul class="rune-choice-list">
+      {
+        runePage.primaryRunes.map((choice) => (
+          <li>
+            <strong>{choice.name}</strong>
+            {choice.reasoning && <p>{choice.reasoning}</p>}
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+
+  <div class="rune-block-tree">
+    <span class="lab-badge-label">Rama secundaria</span>
+    {
+      runePage.secondaryRunes.length > 0 ? (
+        <ul class="rune-choice-list">
+          {runePage.secondaryRunes.map((choice) => (
+            <li>
+              <strong>{choice.name}</strong>
+              {choice.reasoning && <p>{choice.reasoning}</p>}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p class="rune-block-pending">Pendiente de análisis.</p>
+      )
+    }
+  </div>
+
+  <div class="rune-block-tree">
+    <span class="lab-badge-label">Fragmentos de estadística</span>
+    {
+      runePage.statShards.length > 0 ? (
+        <ul class="rune-choice-list rune-choice-list--shards">
+          {runePage.statShards.map((choice) => (
+            <li>
+              <strong>{choice.name}</strong>
+              {choice.reasoning && <p>{choice.reasoning}</p>}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p class="rune-block-pending">Pendiente de análisis.</p>
+      )
+    }
+  </div>
+
+  <EditorialTakeBlock take={runePage.editorialTake} />
+</article>

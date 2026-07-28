@@ -1508,6 +1508,21 @@
   object-fit: cover;
   mask-image: linear-gradient(to right, transparent 5%, #000 100%);
 }
+/* La miniatura real del último vídeo llena el mismo hueco que antes dejaba
+   vacío el panel de YouTube (sin ningún visual de fondo equivalente al de
+   Twitch) — nunca un icono decorativo genérico, siempre el vídeo real. */
+.youtube-video-preview {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.22;
+  object-fit: cover;
+  object-position: center 30%;
+  filter: saturate(0.7) contrast(1.1);
+  mask-image: linear-gradient(to right, transparent 5%, #000 100%);
+}
 .platform-status {
   z-index: 1;
   width: min(76%, 28rem);
@@ -4977,6 +4992,46 @@ p {
   color: #fff;
 }
 
+/* Directo incrustado en el Hero: "nada más entrar en la web" — se muestra
+   solo cuando el Home State Engine confirma que el directo está activo
+   (mismo evento que ya usa el resto de la página), nunca por defecto. */
+.hero-live-embed {
+  max-width: 32rem;
+  margin-top: 1.5rem;
+}
+.hero-live-embed[hidden] {
+  display: none;
+}
+.hero-live-embed-label {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-bottom: 0.65rem;
+  color: #9146ff;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.hero-live-embed-label .platform-live-mark {
+  background: #9146ff;
+  box-shadow: 0 0 0 0 rgb(145 70 255 / 45%);
+  animation: live-pulse 2s ease-out infinite;
+}
+.hero-live-embed-frame {
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border: 1px solid rgb(145 70 255 / 25%);
+  border-radius: 2px;
+  background: #0a0d16;
+  box-shadow: 0 20px 50px rgb(0 0 0 / 35%);
+}
+.hero-live-embed-frame iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
 [data-home-target] {
   transition:
     border-color 360ms ease,
@@ -6313,20 +6368,18 @@ body[data-home-state='near-goal'] .environment-rays {
   color: #9aa5b8;
 }
 
-.champion-knowledge-grid {
+/* Guía editorial de campeón (Fase 5): una sola columna, mucho aire entre
+   secciones — se lee como una guía premium, no como un panel denso de
+   estadísticas. Reutilizable para cualquier campeón, no solo Lucian. */
+.champion-guide-sections {
   display: grid;
-  gap: 1.5rem;
-  margin-top: 3rem;
-  padding-top: 2.5rem;
+  gap: 4rem;
+  margin-top: 4rem;
+  padding-top: 3rem;
   border-top: 1px solid rgb(255 255 255 / 8%);
 }
-@media (min-width: 768px) {
-  .champion-knowledge-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
 .champion-knowledge-section h3 {
-  font-size: 1rem;
+  font-size: 1.3rem;
   font-weight: 700;
   color: white;
 }
@@ -6698,6 +6751,543 @@ body[data-home-state='near-goal'] .environment-rays {
   .laboratory-filter-chips button,
   .champion-editorial-card,
   .champion-catalog-row a {
+    transition: none;
+  }
+}
+
+/* Guía editorial de campeón — Fase 5
+   "No te digo qué construir. Te explico por qué." Bloques con mucho aire,
+   nunca una tabla ni una fila de iconos sueltos. Genérico: nada de esto
+   depende de Lucian, solo el contenido que consume. */
+
+.editorial-take-block {
+  margin-top: 1.5rem;
+  padding: 1.15rem 1.25rem;
+  border-left: 2px solid #d6b56b;
+  background: rgb(255 255 255 / 2%);
+}
+.editorial-take-block-verdict {
+  margin-top: 0.5rem;
+  font-size: 0.98rem;
+  line-height: 1.6;
+  color: white;
+}
+.editorial-take-block-reasoning {
+  margin-top: 0.5rem;
+  font-size: 0.88rem;
+  line-height: 1.7;
+  color: #9aa5b8;
+}
+.editorial-take-block .confidence-indicator {
+  margin-top: 0.85rem;
+}
+
+/* Build */
+.build-block-list {
+  display: grid;
+  gap: 2.5rem;
+}
+.build-block {
+  padding: 1.75rem;
+  border: 1px solid rgb(255 255 255 / 8%);
+  background: rgb(255 255 255 / 1.5%);
+}
+.build-block[data-variant='situational'] {
+  border-style: dashed;
+}
+.build-block-badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
+.build-block-header .lab-badge[data-variant='primary'] strong {
+  color: #d6b56b;
+}
+.build-block-header .lab-badge[data-variant='situational'] strong {
+  color: #4ba3ff;
+}
+.build-block-header h4 {
+  margin-top: 0.6rem;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: white;
+}
+/* Callout, no solo texto en cursiva: la diferencia entre "recomendación
+   general" y "preferencia personal" debe notarse incluso sin distinguir el
+   color del borde. */
+.build-block-context {
+  margin-top: 0.85rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid rgb(75 163 255 / 25%);
+  border-left: 2px solid #4ba3ff;
+  background: rgb(75 163 255 / 5%);
+  color: #b9c2d0;
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+.build-block-section {
+  margin-top: 1.75rem;
+}
+.build-block-section h5 {
+  color: #667388;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.build-block-section > p {
+  margin-top: 0.6rem;
+  color: #9aa5b8;
+  font-size: 0.88rem;
+  line-height: 1.65;
+}
+.build-skill-order {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding: 0;
+  list-style: none;
+  counter-reset: skill-order;
+}
+.build-skill-order li {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.5rem;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: 2px;
+  color: white;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.build-item-grid {
+  display: grid;
+  gap: 1.25rem;
+  margin-top: 1rem;
+  padding: 0;
+  list-style: none;
+}
+@media (min-width: 640px) {
+  .build-item-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+.build-item-card {
+  padding: 1.1rem;
+  border: 1px solid rgb(255 255 255 / 8%);
+  background: rgb(255 255 255 / 1.5%);
+}
+.build-item-card-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+.build-item-card-header img {
+  border-radius: 2px;
+}
+.build-item-card-icon-placeholder {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: 2px;
+  color: #9aa5b8;
+  font-weight: 800;
+  font-size: 1.1rem;
+}
+.build-item-card-icon-placeholder--small {
+  width: 28px;
+  height: 28px;
+  font-size: 0.75rem;
+}
+.build-item-card-name {
+  color: white;
+  font-size: 0.95rem;
+}
+.build-item-card-timing {
+  padding: 0.25rem 0.6rem;
+  border: 1px solid rgb(214 181 107 / 30%);
+  border-radius: 999px;
+  color: #d6b56b;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+.build-item-card-reasoning {
+  margin-top: 0.85rem;
+  font-size: 0.9rem;
+  line-height: 1.65;
+  color: #dce4f0;
+}
+.build-item-card-traits {
+  display: grid;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+@media (min-width: 480px) {
+  .build-item-card-traits {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+.build-item-card-alternatives {
+  margin-top: 1rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid rgb(255 255 255 / 8%);
+}
+.build-item-card-alternatives ul {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding: 0;
+  list-style: none;
+}
+.build-item-card-alternatives li {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.82rem;
+  color: #9aa5b8;
+}
+.build-item-card-alternatives img {
+  flex-shrink: 0;
+  border-radius: 2px;
+}
+
+/* Runas */
+.rune-block-list {
+  display: grid;
+  gap: 2.5rem;
+}
+.rune-block {
+  padding: 1.75rem;
+  border: 1px solid rgb(255 255 255 / 8%);
+  background: rgb(255 255 255 / 1.5%);
+}
+.rune-block-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.rune-block-header h4 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: white;
+}
+.rune-block-tree {
+  margin-top: 1.5rem;
+}
+.rune-block-pending {
+  margin-top: 0.6rem;
+  color: #667388;
+  font-size: 0.85rem;
+  font-style: italic;
+}
+.rune-choice-list {
+  display: grid;
+  gap: 0.85rem;
+  margin-top: 0.6rem;
+  padding: 0;
+  list-style: none;
+}
+.rune-choice-list--shards {
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+}
+.rune-choice-list li {
+  padding: 0.85rem 1rem;
+  border: 1px solid rgb(255 255 255 / 8%);
+  background: rgb(255 255 255 / 1.5%);
+}
+.rune-choice-list strong {
+  display: block;
+  color: white;
+  font-size: 0.9rem;
+}
+.rune-choice-list p {
+  margin-top: 0.4rem;
+  color: #9aa5b8;
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+/* Matchups y sinergias */
+.matchup-groups {
+  display: grid;
+  gap: 2.5rem;
+}
+.matchup-group h4 {
+  color: white;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+.matchup-card-grid {
+  display: grid;
+  gap: 1.25rem;
+  margin-top: 1rem;
+}
+@media (min-width: 640px) {
+  .matchup-card-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+.matchup-card,
+.synergy-card {
+  padding: 1.25rem;
+  border: 1px solid rgb(255 255 255 / 8%);
+  background: rgb(255 255 255 / 1.5%);
+}
+.matchup-card-header {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.85rem;
+}
+.matchup-card-header img {
+  border-radius: 2px;
+}
+.matchup-card-header strong {
+  display: block;
+  color: white;
+  font-size: 0.98rem;
+}
+.matchup-card-header small {
+  display: block;
+  margin-top: 0.15rem;
+  color: #667388;
+  font-size: 0.78rem;
+  font-style: italic;
+}
+.matchup-difficulty-badge {
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.matchup-difficulty-badge[data-difficulty='easy'] {
+  border: 1px solid rgb(114 172 197 / 25%);
+  background: rgb(114 172 197 / 8%);
+  color: #72acc5;
+}
+.matchup-difficulty-badge[data-difficulty='even'] {
+  border: 1px solid rgb(255 255 255 / 14%);
+  color: #9aa5b8;
+}
+.matchup-difficulty-badge[data-difficulty='hard'] {
+  border: 1px solid rgb(196 139 148 / 25%);
+  background: rgb(196 139 148 / 8%);
+  color: #c48b94;
+}
+.matchup-card-notes {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+.matchup-card-notes p {
+  font-size: 0.88rem;
+  line-height: 1.65;
+  color: #b9c2d0;
+}
+.matchup-card-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+.matchup-card-links a {
+  color: #4ba3ff;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.synergy-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+.synergy-card-partners {
+  display: flex;
+}
+.synergy-card-partners img {
+  border-radius: 999px;
+  border: 2px solid #0a0f1d;
+  margin-left: -0.75rem;
+}
+.synergy-card-partners img:first-child {
+  margin-left: 0;
+}
+.synergy-card-header strong {
+  display: block;
+  color: white;
+  font-size: 0.98rem;
+}
+.synergy-card-header small {
+  color: #667388;
+  font-size: 0.78rem;
+}
+
+/* Conceptos */
+.concept-card-grid {
+  display: grid;
+  gap: 1.25rem;
+  margin-top: 1rem;
+  padding: 0;
+  list-style: none;
+}
+@media (min-width: 640px) {
+  .concept-card-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (min-width: 1024px) {
+  .concept-card-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+.concept-card {
+  padding: 1.15rem;
+  border: 1px solid rgb(255 255 255 / 8%);
+  background: rgb(255 255 255 / 1.5%);
+}
+.concept-card strong {
+  display: block;
+  margin-top: 0.35rem;
+  color: white;
+  font-size: 1rem;
+}
+.concept-card p {
+  margin-top: 0.5rem;
+  color: #9aa5b8;
+  font-size: 0.85rem;
+  line-height: 1.65;
+}
+
+/* Historial editorial */
+.editorial-history-timeline {
+  display: grid;
+  gap: 1.25rem;
+  margin-top: 1rem;
+  padding: 0;
+  list-style: none;
+  border-left: 1px solid rgb(255 255 255 / 10%);
+}
+.editorial-history-timeline li {
+  position: relative;
+  padding-left: 1.5rem;
+}
+.editorial-history-timeline li::before {
+  content: '';
+  position: absolute;
+  left: -0.3rem;
+  top: 0.4rem;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: #d6b56b;
+}
+.editorial-history-timeline time {
+  display: block;
+  color: #667388;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.editorial-history-timeline p {
+  margin-top: 0.35rem;
+  color: #b9c2d0;
+  font-size: 0.9rem;
+  line-height: 1.65;
+}
+
+/* Partidas en vivo dentro de la ficha de campeón */
+.champion-match-history header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.champion-match-history-empty {
+  padding: 1.5rem;
+  border: 1px dashed rgb(255 255 255 / 14%);
+  text-align: center;
+  color: #667388;
+  font-size: 0.88rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .matchup-card,
+  .synergy-card,
+  .build-item-card {
+    transition: none;
+  }
+}
+
+/* Redes sociales en el pie de página — presentes en todas las páginas, no
+   solo en la sección de contacto de Home, para que siempre haya una forma
+   de encontrarlas. El icono siempre identifica la red, nunca solo el color. */
+.footer-social a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 3%);
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    transform 0.2s ease;
+}
+.footer-social img {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+@media (hover: hover) {
+  .footer-social a:hover {
+    border-color: rgb(255 255 255 / 24%);
+    background: rgb(255 255 255 / 6%);
+    transform: translateY(-2px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .footer-social a {
+    transition: none;
+  }
+}
+
+/* Fotograma real de un vídeo real como fondo de cada tarjeta de "Contenido"
+   — la misma idea que ya usan los paneles de Twitch/YouTube, aplicada a las
+   3 categorías para que dejen de ser solo texto. Nunca una miniatura de
+   relleno: si no hay vídeo real disponible, la tarjeta se queda como
+   estaba (sin imagen, `hidden` en el propio elemento). */
+.content-card-still {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 30%;
+  opacity: 0.16;
+  filter: saturate(0.6) contrast(1.1);
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 55%);
+  transition: opacity 220ms ease;
+}
+.content-card:hover .content-card-still {
+  opacity: 0.26;
+}
+@media (prefers-reduced-motion: reduce) {
+  .content-card-still {
     transition: none;
   }
 }

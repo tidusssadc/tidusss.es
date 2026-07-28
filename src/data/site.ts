@@ -17,5 +17,5 @@ export const navigation = [
   { label: 'Contenido', href: '#contenido' },
   { label: 'Trayectoria', href: '#trayectoria' },
   { label: 'Contacto', href: '#contacto' },
-  { label: 'Live', href: '/live' },
+  { label: 'Directo', href: '/live' },
 ] as const;

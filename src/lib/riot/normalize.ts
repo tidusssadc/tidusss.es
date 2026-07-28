@@ -20,31 +20,39 @@ const summonerSpells: Record<number, { name: string; asset: string }> = {
   21: { name: 'Barrier', asset: 'SummonerBarrier' },
 };
 
+/**
+ * El icono de cada ÁRBOL de runas (a diferencia del icono de una runa
+ * concreta) no vive en `Styles/{Nombre}/{Nombre}.png` — esa ruta devuelve
+ * 403 en el CDN real de Data Dragon. El nombre de archivo correcto lleva un
+ * prefijo numérico que ni siquiera coincide siempre con el nombre del árbol
+ * (Inspiración es "7203_Whimsy.png"). Verificado contra
+ * `cdn/16.14.1/data/es_ES/runesReforged.json` real — no es una suposición.
+ */
 const runeStyles: Record<number, { name: string; imageUrl: string }> = {
   8000: {
     name: 'Precisión',
     imageUrl:
-      'https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Precision/Precision.png',
+      'https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/7201_Precision.png',
   },
   8100: {
     name: 'Dominación',
     imageUrl:
-      'https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Domination/Domination.png',
+      'https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/7200_Domination.png',
   },
   8200: {
     name: 'Brujería',
     imageUrl:
-      'https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Sorcery/Sorcery.png',
+      'https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/7202_Sorcery.png',
   },
   8300: {
     name: 'Inspiración',
     imageUrl:
-      'https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Inspiration/Inspiration.png',
+      'https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/7203_Whimsy.png',
   },
   8400: {
     name: 'Valor',
     imageUrl:
-      'https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Resolve/Resolve.png',
+      'https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/7204_Resolve.png',
   },
 };
 

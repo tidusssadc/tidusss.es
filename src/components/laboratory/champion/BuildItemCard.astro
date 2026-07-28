@@ -1,0 +1,87 @@
+---
+import type { BuildItemChoice } from '../../../domain/league-laboratory';
+import { dataDragonUrls } from '../../../lib/riot/datadragon';
+import TraitList from '../TraitList.astro';
+
+interface Props {
+  choice: BuildItemChoice;
+  dataDragonVersion: string;
+}
+const { choice, dataDragonVersion } = Astro.props;
+const iconUrl =
+  choice.itemId !== undefined
+    ? dataDragonUrls(dataDragonVersion).item(choice.itemId)
+    : undefined;
+---
+
+<li class="build-item-card">
+  <div class="build-item-card-header">
+    {
+      iconUrl ? (
+        <img
+          src={iconUrl}
+          width="48"
+          height="48"
+          loading="lazy"
+          decoding="async"
+          alt=""
+        />
+      ) : (
+        <span class="build-item-card-icon-placeholder" aria-hidden="true">
+          {choice.name.charAt(0)}
+        </span>
+      )
+    }
+    <strong class="build-item-card-name">{choice.name}</strong>
+    {
+      choice.timing && (
+        <span class="build-item-card-timing">{choice.timing}</span>
+      )
+    }
+  </div>
+  <p class="build-item-card-reasoning">{choice.reasoning}</p>
+  {
+    (choice.pros?.length || choice.cons?.length) && (
+      <div class="build-item-card-traits">
+        <TraitList label="Ventajas" items={choice.pros ?? []} />
+        <TraitList label="Inconvenientes" items={choice.cons ?? []} />
+      </div>
+    )
+  }
+  {
+    choice.alternatives && choice.alternatives.length > 0 && (
+      <div class="build-item-card-alternatives">
+        <span class="lab-badge-label">Alternativas</span>
+        <ul>
+          {choice.alternatives.map((alternative) => (
+            <li>
+              {alternative.itemId !== undefined ? (
+                <img
+                  src={dataDragonUrls(dataDragonVersion).item(
+                    alternative.itemId,
+                  )}
+                  width="28"
+                  height="28"
+                  loading="lazy"
+                  decoding="async"
+                  alt=""
+                />
+              ) : (
+                <span
+                  class="build-item-card-icon-placeholder build-item-card-icon-placeholder--small"
+                  aria-hidden="true"
+                >
+                  {alternative.name.charAt(0)}
+                </span>
+              )}
+              <span>
+                <strong>{alternative.name}:</strong>{' '}
+                {alternative.whenToPreferInstead}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    )
+  }
+</li>

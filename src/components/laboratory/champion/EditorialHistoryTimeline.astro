@@ -1,0 +1,29 @@
+---
+import type { EditorialHistoryEntry } from '../../../domain/league-laboratory';
+
+interface Props {
+  entries: readonly EditorialHistoryEntry[];
+}
+const { entries } = Astro.props;
+
+const formatDate = (value: string) =>
+  new Date(`${value}T00:00:00`).toLocaleDateString('es-ES', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+
+/** Más reciente primero — el historial se lee como una bitácora, no como un registro cronológico ascendente. */
+const sorted = [...entries].sort((a, b) => b.date.localeCompare(a.date));
+---
+
+<ol class="editorial-history-timeline">
+  {
+    sorted.map((entry) => (
+      <li>
+        <time datetime={entry.date}>{formatDate(entry.date)}</time>
+        <p>{entry.summary}</p>
+      </li>
+    ))
+  }
+</ol>

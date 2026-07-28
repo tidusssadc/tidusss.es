@@ -87,16 +87,20 @@ const isGuide = (article: KnowledgeArticle): article is Guide =>
   article.format === 'guide';
 
 /**
- * Un campeón no tiene una lista de conceptos propia: los conceptos se
- * alcanzan a través de lo que sí lo menciona (guías, matchups, sinergias).
- * Esta función resuelve esa cadena una sola vez, para que ningún componente
- * tenga que conocerla.
+ * Un campeón no tiene una lista de conceptos propia calculada desde cero:
+ * se alcanzan por dos vías, ambas fusionadas aquí para que ningún
+ * componente tenga que conocer ninguna de las dos por separado — (1) lo que
+ * sí lo menciona (guías, matchups, sinergias) y (2) `LabChampion.coreConceptIds`,
+ * la curación editorial directa de qué conceptos son fundamentales para
+ * entender a este campeón en concreto.
  */
 const getRelatedConceptsFor = (
   registry: LabRegistry,
   id: LabChampionId,
+  labChampion: LabChampion | undefined,
 ): Concept[] => {
   const conceptIds = new Set<ConceptId>();
+  labChampion?.coreConceptIds?.forEach((c) => conceptIds.add(c));
   registry.articles
     .filter((article) => article.relatedChampionIds?.includes(id))
     .forEach((article) =>
@@ -151,7 +155,7 @@ export const getChampionKnowledge = (
     guides: registry.articles.filter(
       (article) => isGuide(article) && article.scope.championId === id,
     ) as Guide[],
-    concepts: getRelatedConceptsFor(registry, id),
+    concepts: getRelatedConceptsFor(registry, id, labChampion),
     tierListAppearances: registry.tierLists.flatMap((tierList) => {
       const entry = tierList.entries.find(
         (candidate) => candidate.championId === id,

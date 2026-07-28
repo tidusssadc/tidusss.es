@@ -1,0 +1,116 @@
+---
+import type { Build, Patch } from '../../../domain/league-laboratory';
+import EditorialTakeBlock from '../EditorialTakeBlock.astro';
+import PatchBadge from '../PatchBadge.astro';
+import BuildItemCard from './BuildItemCard.astro';
+
+interface Props {
+  build: Build;
+  dataDragonVersion: string;
+  patch?: Patch;
+}
+const { build, dataDragonVersion, patch } = Astro.props;
+---
+
+<article class="build-block" data-variant={build.variant}>
+  <header class="build-block-header">
+    <div class="build-block-badges">
+      <span class="lab-badge" data-variant={build.variant}>
+        <strong>
+          {
+            build.variant === 'primary'
+              ? 'Build principal'
+              : 'Build alternativa'
+          }
+        </strong>
+      </span>
+      {patch && <PatchBadge patch={patch} />}
+    </div>
+    <h4>{build.title}</h4>
+    {
+      build.variant === 'situational' && build.situationalContext && (
+        <p class="build-block-context">{build.situationalContext}</p>
+      )
+    }
+  </header>
+
+  {
+    build.startingItems.length > 0 && (
+      <div class="build-block-section">
+        <h5>Objetos iniciales</h5>
+        <ul class="build-item-grid">
+          {build.startingItems.map((choice) => (
+            <BuildItemCard
+              choice={choice}
+              dataDragonVersion={dataDragonVersion}
+            />
+          ))}
+        </ul>
+      </div>
+    )
+  }
+
+  {
+    build.boots && build.boots.length > 0 && (
+      <div class="build-block-section">
+        <h5>Botas</h5>
+        <ul class="build-item-grid">
+          {build.boots.map((choice) => (
+            <BuildItemCard
+              choice={choice}
+              dataDragonVersion={dataDragonVersion}
+            />
+          ))}
+        </ul>
+      </div>
+    )
+  }
+
+  {
+    build.coreItems.length > 0 && (
+      <div class="build-block-section">
+        <h5>Objetos clave</h5>
+        <ul class="build-item-grid">
+          {build.coreItems.map((choice) => (
+            <BuildItemCard
+              choice={choice}
+              dataDragonVersion={dataDragonVersion}
+            />
+          ))}
+        </ul>
+      </div>
+    )
+  }
+
+  {
+    build.situationalItems.length > 0 && (
+      <div class="build-block-section">
+        <h5>Objetos situacionales — cuándo comprar cada uno</h5>
+        <ul class="build-item-grid">
+          {build.situationalItems.map((choice) => (
+            <BuildItemCard
+              choice={choice}
+              dataDragonVersion={dataDragonVersion}
+            />
+          ))}
+        </ul>
+      </div>
+    )
+  }
+
+  {
+    build.skillOrder && build.skillOrder.length > 0 && (
+      <div class="build-block-section">
+        <h5>Orden de habilidades</h5>
+        <ol class="build-skill-order">
+          {build.skillOrder.map((skill) => (
+            <li>{skill}</li>
+          ))}
+        </ol>
+        {build.skillOrderReasoning && <p>{build.skillOrderReasoning}</p>}
+      </div>
+    )
+  }
+
+  <EditorialTakeBlock take={build.editorialTake} />
+</article>

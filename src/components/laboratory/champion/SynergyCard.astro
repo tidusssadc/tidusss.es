@@ -1,0 +1,60 @@
+---
+import type {
+  ChampionCatalogEntry,
+  Synergy,
+  SynergyType,
+} from '../../../domain/league-laboratory';
+import { dataDragonUrls } from '../../../lib/riot/datadragon';
+import EditorialTakeBlock from '../EditorialTakeBlock.astro';
+import TraitList from '../TraitList.astro';
+
+interface Props {
+  synergy: Synergy;
+  /** Los campeones de la sinergia, sin incluir al de la página actual. */
+  partnerCatalogEntries: readonly ChampionCatalogEntry[];
+  dataDragonVersion: string;
+}
+const { synergy, partnerCatalogEntries, dataDragonVersion } = Astro.props;
+
+const typeLabels: Record<SynergyType, string> = {
+  'lane-duo': 'Dúo de línea',
+  'team-comp': 'Composición de equipo',
+  'engage-combo': 'Combo de enganche',
+  'peel-combo': 'Combo de protección',
+};
+---
+
+<article class="synergy-card">
+  <header class="synergy-card-header">
+    <div class="synergy-card-partners">
+      {
+        partnerCatalogEntries.map((entry) => (
+          <img
+            src={dataDragonUrls(dataDragonVersion).champion(
+              entry.dataDragonKey,
+            )}
+            width="44"
+            height="44"
+            loading="lazy"
+            decoding="async"
+            alt=""
+          />
+        ))
+      }
+    </div>
+    <div>
+      <strong>
+        {partnerCatalogEntries.map((entry) => entry.name).join(' + ')}
+      </strong>
+      <small>{typeLabels[synergy.type]}</small>
+    </div>
+  </header>
+
+  {
+    synergy.tips && synergy.tips.length > 0 && (
+      <TraitList label="Consejos rápidos" items={synergy.tips} />
+    )
+  }
+
+  <EditorialTakeBlock take={synergy.editorialTake} />
+</article>

@@ -23,6 +23,8 @@
 13. [Phase 2 — Explorador de Campeones](#13-phase-2--explorador-de-campeones)
 14. [Phase 3 — El campeón como centro del ecosistema: catálogo a escala](#14-phase-3--el-campeón-como-centro-del-ecosistema-catálogo-a-escala-170-campeones)
 15. [Fase 4 — Blindaje del catálogo y Centro de Campeones](#15-fase-4--blindaje-del-catálogo-y-centro-de-campeones)
+16. [Fase 5 — Guía editorial completa: Lucian](#16-fase-5--guía-editorial-completa-lucian)
+17. [Fase 6 — Contenido real de Tidusss: Lucian, parche 26.14](#17-fase-6--contenido-real-de-tidusss-lucian-parche-2614)
 
 ---
 
@@ -779,3 +781,118 @@ Verificación manual en navegador (servidor de desarrollo real, no solo el build
 1. Decidir explícitamente si `npm run test` debe pasar a ser parte de `npm run build` (o de un paso de CI separado) antes de que el catálogo vuelva a regenerarse con `npm run sync:champions` — hoy es una decisión pendiente, no tomada por esta fase.
 2. Si la curación editorial crece más allá de un puñado de campeones, reconsiderar el filtro de "rol editorial" descartado en §15.6.
 3. Antes de construir Build Explorer o Rune Explorer, decidir si necesitan su propia fila de filtro en `/campeones` (p. ej. "tiene build publicada") — el patrón de `hub.ts` ya soporta añadir un nuevo derivado sin tocar `registry.ts`.
+
+## 16. Fase 5 — Guía editorial completa: Lucian
+
+Con el catálogo a escala (Fase 3) y un punto de entrada público (Fase 4), esta fase resuelve el problema opuesto: `/campeones/lucian` tenía ya identidad editorial (Fase 2) pero **ningún** dato real en Build/RunePage/Matchup/Synergy — esos tipos existían desde el diseño de dominio original (ADR-004) sin que nadie los hubiera poblado nunca. El encargo pedía convertir esa página en "el mejor recurso en español para aprender el campeón", con la filosofía "no te digo qué construir, te explico por qué" y 17 secciones concretas, prohibiendo explícitamente inventar contenido y exigiendo que todo fuera reutilizable para cualquier otro campeón curado.
+
+### 16.1 El modelo de dominio no aguantaba el encargo tal cual estaba
+
+`Build.coreItemIds: number[]` y `RunePage.primaryRuneIds: number[]` (Fase 0) eran listas de ids sueltos — suficientes para un futuro "Build Explorer" que solo necesitara mostrar iconos, pero incompatibles con "cuándo comprarlo, por qué, ventajas, inconvenientes, alternativas" por objeto. Como **cero builds o páginas de runas reales existían en todo el repositorio**, no había ningún dato que migrar: se rediseñaron directamente.
+
+- `BuildItemChoice { itemId, timing?, reasoning, pros?, cons?, alternatives? }` sustituye a los ids sueltos en `startingItems`/`coreItems`/`situationalItems`. `reasoning` no es opcional — un objeto sin razonamiento no es una build editorial.
+- `Build` gana `variant: 'primary' | 'situational'` y `situationalContext?` — una sola estructura resuelve a la vez "build principal", "builds alternativas" y, dentro de `situationalItems`, "objetos situacionales — cuándo comprar cada uno" (el propio `timing` de cada `BuildItemChoice`).
+- `RuneChoice { runeId, reasoning? }` sustituye a `primaryRuneIds`/`secondaryRuneIds`/`statShardIds: number[]`.
+- `Matchup` gana `tips?`, `videoUrl?`, `matchHref?` — los tres opcionales, para no obligar a rellenarlos con "próximamente" literal en el propio dato.
+- `LabChampion` gana `editorialHistory?: EditorialHistoryEntry[]` (fecha ISO + resumen real) y `coreConceptIds?: ConceptId[]`.
+
+### 16.2 Conceptos: dos vías fusionadas en una sola fuente de verdad
+
+El diseño original (`getRelatedConceptsFor`, Fase 0) solo derivaba conceptos de lo que un matchup/guía/sinergia mencionara — correcto, pero inútil mientras esas colecciones estén vacías. Se añadió una segunda vía, `LabChampion.coreConceptIds`: la curación editorial directa de qué conceptos son fundamentales para entender a un campeón, **fusionada** (no sustituida) con la derivación automática dentro de la misma función. Ningún componente conoce las dos vías por separado — `knowledge.concepts` es siempre la unión.
+
+`concepts.ts` (nuevo) contiene las 6 definiciones reales exigidas por el encargo — Spacing, Power Spike, Snowball, Trading, Tempo, Wave Management — escritas como vocabulario objetivo ya establecido en League of Legends, no como opinión editorial de Tidusss (esa vive en el `editorialTake` de cada matchup/sinergia que los use). Lucian se enlaza directamente a 4 de los 6 (`coreConceptIds: [spacing, power-spike, trading, snowball]`) porque su `profile` ya publicado en Fase 2 los evidencia con claridad — sus debilidades y errores comunes hablan literalmente de ventanas de daño y trades, sus power spikes están enumerados explícitamente. Deliberadamente **no** se enlaza a Tempo ni Wave Management: el perfil actual no dice nada específico sobre ellos, y enlazar los 6 "porque sí" habría sido una afirmación editorial no respaldada.
+
+### 16.3 Sin contenido inventado: builds, runas, matchups y sinergias quedan vacíos a propósito
+
+`src/data/league-laboratory/{builds,rune-pages,matchups,synergies}.ts` se crearon como arrays vacíos, cada uno con un comentario que documenta la forma exacta de una entrada real (id, campos, ejemplo) para cuando exista contenido genuino. No existe ninguna build, página de runas, matchup o sinergia real de Lucian escrita por Tidusss todavía — ese es exactamente el conocimiento que este trabajo no podía fabricar sin convertir "no inventes contenido" en papel mojado. La página muestra el estado "Pendiente de análisis" honesto en las cinco secciones correspondientes (Build, Runas, Matchups, Sinergias, Consejos rápidos), con copy que explica _por qué_ está vacío, no solo que lo está.
+
+### 16.4 "Partidas donde aparece": la única sección con datos verdaderamente en vivo
+
+A diferencia de todo lo demás en esta página (contenido editorial estático, conocido en build time), existe una fuente de datos real y ya operativa para partidas: `RecentMatch.championName` (`src/lib/riot/types.ts`) ya viaja dentro de `/api/riot/overview`, la misma Function que usa Live. `ChampionMatchHistory.astro` (nuevo, genérico por `championName`) hace `fetch()` en cliente, deduplica `today.matches`/`recent.matches` por `matchId`, filtra por nombre de campeón (case-insensitive) y renderiza hasta 5 partidas reales — cero cambios de backend, cero invención.
+
+Esto reutiliza tres archivos marcados como código huérfano en ADR-002 (Fase 0): `RiotSkeleton.astro` y `RiotUnavailable.astro` se importan sin modificar; `MatchRow.astro` no se pudo importar literalmente (es un componente Astro — solo se renderiza en build/servidor, y estos datos solo existen en tiempo de petición del navegador), pero su forma visual (clases `.riot-match`, `.riot-match-champion`, `.riot-items`, etc., ya con CSS real y sin usar hasta ahora) se replicó en un `<template>` clonado por script, exactamente el mismo patrón que ya usa Live para `MatchCard.astro`. De los 5 archivos que ADR-002 dejó como "decisión pendiente", 3 tienen ahora un uso real; `RankedSummary.astro` y `CompetitiveStatus.astro` (Home) siguen sin consumidor.
+
+**Vídeos relacionados** no corrió la misma suerte: se auditó a fondo `YouTubeVideo` (sin campo de campeón), `contentCards`/`milestones` (copy editorial estático, no registros por vídeo) y `matchVideoLinks` (`src/config/match-video-links.ts`, un esquema real de enlace manual partida↔vídeo, pero con el array vacío). No existe ningún dato, ni automático ni manual, que asocie un vídeo concreto a Lucian. La sección mantiene el mismo estado honesto que ya tenía desde Fase 2 — "no inventamos una relación que no existe" — con CTA al canal completo.
+
+### 16.5 Diseño: de panel denso a guía de una columna
+
+`champion-knowledge-grid` (rejilla de 2 columnas, pensada para un puñado de bloques cortos) se sustituyó por `champion-guide-sections` — una sola columna con `gap: 4rem`. Con 11 secciones nuevas o reescritas, mantener 2 columnas habría comprimido exactamente el tipo de contenido (bloques de build, tarjetas de matchup) que necesita respirar para sentirse "editorial premium" y no "panel de estadísticas". Se crearon 10 componentes nuevos (`BuildBlock`, `BuildItemCard`, `RuneBlock`, `MatchupCard`, `SynergyCard`, `ConceptCard`, `EditorialHistoryTimeline`, `EditorialTakeBlock`, `MatchupDifficultyBadge`, `ChampionMatchHistory`), ninguno con el nombre de Lucian en su código — todos reciben el campeón como prop. Verificado sirviendo la misma página para Kai'Sa (borrador, sin `profile`) y Aatrox (sin ninguna curación): cada sección degrada a su estado vacío correcto, sin ningún error de consola.
+
+### 16.6 SEO
+
+Título y meta-descripción de campeones con `profile` real se reescribieron para cubrir de forma natural las consultas del encargo ("Lucian ADC", "Guía Lucian", "Build Lucian", "Lucian Master", "Lucian EUW"), usando solo hechos ya reales (Tidusss, Master ADC EUW) — sin ninguna palabra clave forzada. Se añadió `Article` en JSON-LD, condicionado a `hasProfile` (no tiene sentido marcar como artículo una ficha que dice "Pendiente" en casi todo su contenido), con `datePublished`/`dateModified` derivados del propio `editorialHistory` — nunca una fecha inventada.
+
+### 16.7 Verificación realizada
+
+`npx astro check` (149 archivos, 0 errores), `npm run lint` (sin salida), `npm run test` (**60/60**, incluidos 8 tests nuevos: unicidad y completitud de los 6 conceptos, resolución de `coreConceptIds` en `getChampionKnowledge` con y sin conceptos sembrados, validez de fechas ISO del historial editorial de Lucian), `npm run build` (**177 páginas**, sin cambios de recuento — esta fase no añade ni quita rutas).
+
+Verificación manual en navegador: `/campeones/lucian` con las 17 secciones presentes y sin un solo error de consola; los 4 conceptos reales (Spacing, Power Spike, Trading, Snowball) y las 3 entradas reales de historial editorial renderizan correctamente; "Partidas donde aparece" hace el fetch real a `/api/riot/overview`, recibe 404 en `astro dev` (las Functions de Cloudflare Pages no se sirven fuera de Wrangler/producción — mismo comportamiento que ya tiene Live en este mismo entorno, no una regresión) y muestra el estado de error de forma honesta; JSON-LD presente y con fechas correctas en Lucian, ausente en Kai'Sa (sin `profile`); `/campeones/kaisa` y `/campeones/aatrox` muestran las 17 secciones en su estado vacío correcto, confirmando la reutilización; `/campeones`, `/tier-list`, `/` y `/live` verificados sin regresiones. Responsive a 375px sin _overflow_ horizontal.
+
+### 16.8 Deuda técnica y riesgos (acumulado con Fases 1-4)
+
+| Elemento                                                                                                            | Severidad | Estado                                                                                                                                                                                                  |
+| ------------------------------------------------------------------------------------------------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Sin build/runas/matchups/sinergias reales para ningún campeón, incluido Lucian                                      | —         | Deliberado — es el contenido que solo Tidusss puede aportar; la arquitectura ya está lista para recibirlo sin cambios de código                                                                         |
+| Sin resolución de iconos de runa (Data Dragon no expone `id → icono` tan directo como con objetos/campeones)        | Baja      | Nueva — documentado en `RuneBlock.astro`; requeriría un sync de `runesReforged.json` análogo a `sync-champion-catalog.mjs`, no construido porque no hay ninguna `RunePage` real todavía que lo necesite |
+| "Cambios recientes del campeón" (parches de balance de Riot) sin ninguna fuente de datos                            | —         | Sin tipo de dominio nuevo — no se diseñó una estructura para datos que no existen todavía, seguirá "Pendiente" hasta que haya una fuente real que justificar                                            |
+| `ChampionMatchHistory` depende de la ventana de partidas que expone `/api/riot/overview` (no un histórico completo) | Baja      | Limitación de la API de Riot, no de este trabajo — ya documentado en `docs/riot-api.md`                                                                                                                 |
+| `RankedSummary.astro`/`CompetitiveStatus.astro` (Home, ADR-002) siguen sin consumidor                               | Baja      | Sin cambio — 3 de los 5 archivos huérfanos de ADR-002 sí se reutilizaron en esta fase                                                                                                                   |
+
+### 16.9 Recomendaciones para el próximo capítulo
+
+1. Cuando Tidusss aporte contenido real de build/runas/matchups/sinergias para Lucian, escribirlo directamente en `builds.ts`/`rune-pages.ts`/`matchups.ts`/`synergies.ts` siguiendo la forma documentada en cada archivo — no requiere ningún cambio en `[slug].astro` ni en los componentes.
+2. Si se decide dar soporte visual a iconos de runa, construir un `sync-rune-data.mjs` análogo al de campeones, generando un mapa `runeId → iconUrl` desde `runesReforged.json`.
+3. Repetir este mismo patrón (arquitectura + componentes genéricos, contenido real solo donde exista) para el segundo campeón que Tidusss quiera curar en profundidad — la reutilización ya está verificada contra Kai'Sa y Aatrox en su estado vacío; falta verificarla contra un segundo campeón con contenido real.
+
+## 17. Fase 6 — Contenido real de Tidusss: Lucian, parche 26.14
+
+Con la arquitectura de la guía (Fase 5) ya construida y verificada contra datos vacíos, esta fase la completa con el criterio genuino de Tidusss para el parche 26.14 — aportado íntegramente dentro del propio encargo, sin consultar ninguna fuente externa para decidir build, runas, matchups, sinergias o power spikes.
+
+### 17.1 Un cambio de tipos mínimo pero real: nombres en vez de ids
+
+`BuildItemChoice`/`RuneChoice` (Fase 5) exigían `itemId`/`runeId` numérico obligatorio, pensado para resolver iconos de Data Dragon. El contenido real de Tidusss llega como nombres — "Segador de Esencia", "Ataque Intensificado" — nunca como ids, y resolverlos habría exigido consultar Data Dragon, prohibido explícitamente en este encargo. Se añadió `name: string` (obligatorio, el dato real) a ambos tipos, y `itemId`/`runeId` pasaron a opcionales. `RunePage.primaryTreeId`/`secondaryTreeId` también pasaron a opcionales: no se conoce el árbol secundario de Lucian y el tipo no puede exigir un dato que el propio encargo prohíbe adivinar. `BuildItemCard.astro`/`RuneBlock.astro` se actualizaron para mostrar un icono real cuando existe `itemId`/`runeId`, y una inicial en un cuadro simple cuando no — nunca un icono inventado.
+
+Se añadió también `Build.boots?: BuildItemChoice[]`: un slot propio, porque las botas no encajaban ni en "objetos iniciales" ni en "objetos situacionales" (la elección de botas es independiente de qué segundo objeto se compre) y el encargo pedía presentarlas sin declarar ninguna superior a la otra — ambas opciones (Tabis / Botas Jonias de la Lucidez) llevan su propio `reasoning` sobre cuándo elegirlas.
+
+### 17.2 Build: dos rutas completas, no una nota al margen
+
+Se representan "ruta más sólida" y "ruta personal de Tidusss" como dos `Build` completos (`variant: 'primary'` / `'situational'`), reutilizando sin ningún cambio el mecanismo ya diseñado en Fase 5 — la prueba de que ese diseño estaba bien pensado es que no hizo falta tocarlo para esto. Ambas builds comparten el mismo primer objeto (Segador de Esencia, con Brillo como componente inicial priorizado "cuando la economía de la partida lo permite" — nunca presentado como garantizado), las mismas botas y el mismo tercer objeto situacional (Últimas Palabras de Lord Dominik contra tanques/armadura, Recordatorio Letal contra curación). Difieren solo en el segundo objeto: Filo Infinito en la ruta sólida, Navori en la personal.
+
+El riesgo de la ruta personal —retrasar Filo Infinito si el tercer objeto necesario es penetración— se documenta en dos sitios que se refuerzan: como `cons` del objeto Navori (visible directamente en su tarjeta) y como el `editorialTake` completo de esa build (el bloque con borde dorado ya construido en Fase 5, sin ningún componente nuevo). La tensión "recomendación general" vs. "preferencia personal" se hace evidente sin depender solo del color: la etiqueta del badge ("Build principal" en dorado / "Build alternativa" en azul), un _callout_ con borde e icono bajo el título (antes texto en cursiva plano, mejorado en esta fase) y el propio `editorialTake`.
+
+### 17.3 Runas: solo lo confirmado, el resto "Pendiente de análisis" de verdad
+
+La `RunePage` de Lucian tiene únicamente la runa principal (Ataque Intensificado, con su razonamiento). `secondaryRunes`/`statShards` son arrays vacíos — `RuneBlock.astro` los muestra explícitamente como "Pendiente de análisis" en vez de omitir la sección en silencio, para que quede claro que falta información, no que se decidió no mostrarla.
+
+### 17.4 Sinergias: 6 parejas confirmadas, sin inventar profundidad
+
+Milio, Nami, Yuumi, Braum, Nautilus y Pyke se modelan como 6 `Synergy` reales, todas `type: 'lane-duo'`, sin ninguna clasificación numérica ni tier (no había fuente para eso) y con una única `editorialTake` compartida, deliberadamente breve: "recomendada por Tidusss; el análisis detallado todavía está pendiente". Ampliar cada pareja con un análisis propio queda como trabajo futuro explícito, no como algo rellenado ahora con una suposición razonable.
+
+### 17.5 Perfil del campeón: un refinamiento y dos adiciones, sin inventar un concepto nuevo
+
+El power spike de nivel 2 (ya existente desde Fase 2) se **editó**, no se duplicó, para incorporar el matiz de que la agresividad depende de posición, habilidades disponibles, estado de la oleada, apoyo del support y errores del rival — es el mismo hecho, refinado. La curva de escalado general (fuerte en early/mid, más débil en late) se añadió como una fortaleza y una debilidad **nuevas** dentro de `ChampionProfile` — deliberadamente sin crear un tipo de dominio nuevo, porque es la misma clase de afirmación que ya vive en `strengths`/`weaknesses`, no un concepto distinto que justificara un campo propio. Los 4 errores frecuentes nuevos del encargo se fusionaron en 3 entradas de `commonMistakes` (combos lentos y aprovechamiento de la pasiva son la misma idea, tal como pedía explícitamente el encargo para no duplicar contenido). Los 9 consejos rápidos se añadieron tal cual al nuevo campo `ChampionProfile.quickTips` (Fase 5, hasta ahora vacío para Lucian).
+
+### 17.6 SEO: derivado de los datos reales, no escrito a mano
+
+Título, descripción y JSON-LD ahora leen el parche y los nombres de objeto/runa directamente de `orderedBuilds`/`knowledge.runePages` — nunca de una cadena con "Segador de Esencia"/"Ataque Intensificado" escrita a mano en la plantilla. Esto es deliberado: si mañana otro campeón (Kai'Sa, Ashe...) recibe una build principal real, su página generará automáticamente un título/descripción equivalente con sus propios objetos y su propio parche, sin tocar `[slug].astro`. Sin build real (el caso de hoy para todos los campeones salvo Lucian), cae al título genérico ya existente desde Fase 5.
+
+### 17.7 Verificación realizada
+
+`npx astro check` (151 archivos, 0 errores), `npm run lint` (sin salida), `npm run test` (**81/81**, 21 tests nuevos: builds, runas, sinergias, perfil de Lucian, y un test explícito de no-fuga de contenido real entre campeones), `npm run build` (**177 páginas**, sin cambios de recuento).
+
+Verificación manual en navegador: `/campeones/lucian` con ambas builds, botas, runa principal con "Pendiente de análisis" honesto en lo no confirmado, las 6 sinergias, errores frecuentes fusionados, consejos rápidos, y el historial editorial con la nueva entrada de esta fase — sin errores de consola. `/campeones/kaisa` confirma que ninguna de las secciones nuevas de Lucian (build/runas/sinergias) se filtra a otro campeón: sigue mostrando sus estados "Pendiente" originales, sin JSON-LD (no tiene `profile`). `/tier-list`, `/campeones`, `/` y `/live` verificados sin regresiones. Responsive a 375px sin _overflow_ horizontal.
+
+### 17.8 Deuda técnica y riesgos (acumulado con Fases 1-5)
+
+| Elemento                                                                                       | Severidad | Estado                                                                                                                                                                 |
+| ---------------------------------------------------------------------------------------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Sin resolución de iconos de objeto/runa por nombre (solo por `itemId`/`runeId` cuando existen) | Baja      | Deliberado — los nombres reales no vinieron con ids, y no se ha consultado Data Dragon para resolverlos; las tarjetas degradan a una inicial en vez de a un icono roto |
+| Matchups de Lucian siguen sin ningún dato real                                                 | —         | Fuera de alcance de este encargo explícitamente ("no matchups específicos") — sigue "Pendiente de análisis"                                                            |
+| El resto del árbol de runas (secundario, fragmentos) sigue sin confirmar                       | —         | Deliberado — mismo criterio que matchups, documentado como "Pendiente" real, no relleno genérico                                                                       |
+| Las 6 sinergias comparten una única `editorialTake` genérica                                   | Baja      | Deliberado por esta fase — el encargo pedía descripciones prudentes, no un análisis por pareja; candidato a profundizar en un capítulo futuro                          |
+
+### 17.9 Recomendaciones para el próximo capítulo
+
+1. Cuando Tidusss aporte matchups reales (dificultad, notas de fase, consejos) o el resto de la página de runas, añadirlos directamente a `matchups.ts`/`rune-pages.ts` siguiendo la forma ya documentada — no requiere ningún cambio de código.
+2. Si se profundiza en alguna de las 6 sinergias con análisis propio, sustituir su `editorialTake` compartida por una específica — la estructura ya lo permite sin cambios de tipo.
+3. Considerar un `sync-rune-data.mjs`/mapa manual `nombre → itemId` solo si se decide invertir en iconos reales para objetos/runas nombrados sin id — no antes, para no resolver un problema sin contenido real que lo justifique todavía.

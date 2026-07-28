@@ -1,0 +1,17 @@
+---
+import type { EditorialTake } from '../../domain/league-laboratory';
+import ConfidenceIndicator from './ConfidenceIndicator.astro';
+
+interface Props {
+  take: EditorialTake;
+  label?: string;
+}
+const { take, label = 'Lo que piensa Tidusss' } = Astro.props;
+---
+
+<div class="editorial-take-block">
+  <span class="lab-badge-label">{label}</span>
+  <p class="editorial-take-block-verdict">{take.verdict}</p>
+  <p class="editorial-take-block-reasoning">{take.reasoning}</p>
+  <ConfidenceIndicator confidence={take.confidence} />
+</div>

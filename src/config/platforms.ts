@@ -9,6 +9,13 @@ export const platforms = {
   },
   twitch: {
     url: 'https://www.twitch.tv/tidussstwitch',
+    handle: 'tidussstwitch',
+  },
+  x: {
+    url: 'https://x.com/TidusssTwitch',
+  },
+  discord: {
+    url: 'https://discord.com/invite/QwR8AEKY9Q',
   },
 } as const;
 
