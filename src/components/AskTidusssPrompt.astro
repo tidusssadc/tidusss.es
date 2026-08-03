@@ -1,0 +1,47 @@
+---
+/**
+ * Bloque de invitación a "Pregunta a Tidusss" — reutilizado en Home y en la
+ * guía de Lucian con copy distinta pero el mismo componente visual. Enlaces
+ * reales (`<a href>`), sin JavaScript propio: funciona igual con o sin JS,
+ * y las preguntas ya llegan a `/pregunta?q=...`, que sí sabe precargarlas
+ * y enviarlas automáticamente cuando el script de esa página se ejecuta.
+ */
+interface Props {
+  title: string;
+  description: string;
+  questions: readonly string[];
+  ctaLabel?: string;
+  headingLevel?: 'h2' | 'h3';
+}
+const {
+  title,
+  description,
+  questions,
+  ctaLabel = 'Preguntar a Tidusss',
+  headingLevel = 'h2',
+} = Astro.props;
+const Heading = headingLevel;
+---
+
+<div class="ask-tidusss-prompt">
+  <Heading>{title}</Heading>
+  <p>{description}</p>
+  <div class="ask-tidusss-prompt-actions">
+    <a class="button-primary" href="/pregunta">
+      {ctaLabel} <span aria-hidden="true">→</span>
+    </a>
+  </div>
+  <div class="pregunta-chips" role="list">
+    {
+      questions.map((question) => (
+        <a
+          class="pregunta-chip"
+          role="listitem"
+          href={`/pregunta?q=${encodeURIComponent(question)}`}
+        >
+          {question}
+        </a>
+      ))
+    }
+  </div>
+</div>

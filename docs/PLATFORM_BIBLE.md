@@ -400,6 +400,26 @@ Estados **preparados pero inactivos** (esperan un `future-event` real): nuevo pa
 
 **Estado real:** construido y validado (43 pruebas propias, 342 en total en el proyecto). 100% de estados correctos sobre el conjunto de evaluación de respuestas (14 preguntas reales), 0 citas inválidas, 0 mezclas de parche, 0 afirmaciones sin fuente. Sin ningún consumidor público todavía — sin LLM, sin endpoint, sin interfaz. Ver ADR-016.
 
+### 5.17 Capa de Generación — Claude como redactor opcional
+
+**Qué es:** `src/domain/knowledge-generation/` — reformula, opcionalmente con Claude, la redacción de una respuesta ya calculada por el Motor de Respuesta. Claude solo puede cambiar cómo se dice algo — nunca qué se dice: `GenerationResult` no tiene ni un campo de confianza, cobertura, parche o fecha donde escribir un valor nuevo. La fuente de verdad sigue siendo Índice de Conocimiento → Recuperación → Motor de Respuesta, sin excepción.
+
+**Cómo funciona:** `generateAnswer(AnswerResult, AnswerGenerator)` — si el estado no es `sufficient`/`partial`, ni siquiera invoca al generador. Un generador determinista local (oficial, sin red, sin secretos) sirve siempre de red de seguridad: cualquier fallo del adaptador de Claude —excepción, sin configurar, o salida que no pasa la validación de servidor (fuentes inventadas, URLs inventadas, confianza inflada, filtración de instrucciones, texto vacío o excesivo)— cae automáticamente a él. El adaptador de Claude usa salida estructurada obligatoria (tool-use) y lee su configuración únicamente de variables de entorno del servidor (`CLAUDE_API_KEY`, sin valor real en `.env.example`). Un conjunto de 17 casos (incluidos intentos explícitos de inyección de instrucciones) se evalúa con dobles de prueba — nunca contra la API real. Comando reproducible: `npm run eval:generation`.
+
+**Documentación de referencia:** [`docs/knowledge-generation.md`](knowledge-generation.md).
+
+**Estado real:** construido y validado (55 pruebas propias, 397 en total en el proyecto). 100% de casos correctos sobre el conjunto de evaluación del generador, incluidos todos los intentos de inyección. Sin Claude activado en producción — sin credenciales configuradas, todo el sistema funciona hoy con el generador determinista. Ver ADR-017.
+
+### 5.18 Pregunta a Tidusss — V1 pública (`/pregunta`, sin LLM)
+
+**Qué es:** la primera versión visible y funcional de "Pregunta a Tidusss" — una ruta pública (`/pregunta`) y un endpoint (`POST /api/pregunta`) que cualquier visitante puede usar hoy, en producción, sin ningún LLM: el motor oficial de esta V1 es el determinista (Índice de Conocimiento → Recuperación → Motor de Respuesta, `domain/knowledge-answering`). Ya no es arquitectura invisible — es una funcionalidad real, con formulario, sugerencias, estados visuales completos, fuentes citables y contenido relacionado.
+
+**Cómo funciona:** `functions/api/pregunta.ts` (Cloudflare Pages Function) valida método/content-type/longitud, normaliza, ejecuta la recuperación local real y el ensamblaje determinista, y serializa el resultado a través de un DTO público nuevo (`toPublicAnswer`, `domain/knowledge-answering/public.ts`) que nunca expone campos internos (ids de documento, `sourceEntityId`, motivos de rechazo, el `KnowledgeDocumentType`/`ContentEntityKind` crudos, ni la puntuación de recuperación sin traducir — se envía como banda `'high'|'medium'|'low'`). `/pregunta` implementa los 9 estados requeridos (inicial, cargando, suficiente, parcial, información insuficiente, fuera de alcance, pregunta vacía, error temporal, sin JavaScript), con `aria-live`, gestión de foco, contador de caracteres, historial local opcional (últimas 3 preguntas, nunca respuestas) y precarga por query param (`?q=...`, siempre canonicaliza a `/pregunta` sin parámetros). Integrado en Home (bloque tras "Contenido", sin desplazar Twitch/YouTube), en `/campeones/lucian` (bloque contextual al final de la guía) y en la navegación principal (enlace "Pregunta").
+
+**Documentación de referencia:** [`docs/pregunta-a-tidusss.md`](pregunta-a-tidusss.md) §4-§13, [`docs/knowledge-answering.md`](knowledge-answering.md).
+
+**Estado real:** construido, validado y probado manualmente en un entorno equivalente a producción (`wrangler pages dev`, Functions reales). 24 pruebas nuevas del endpoint (421 en total en el proyecto), sin llamadas externas. Sin Claude/embeddings/Vectorize/D1 — el motor determinista es el oficial de esta V1. Ver ADR-018.
+
 ---
 
 ## 6. Roadmap
@@ -740,6 +760,26 @@ Estados **preparados pero inactivos** (esperan un `future-event` real): nuevo pa
 **Consecuencia:** probar el motor de respuesta contra dos proveedores de recuperación distintos (línea base local y espacio vectorial) — no solo contra el que "ya se sabía que funcionaba"— expuso un defecto real: un documento fundido en el texto de la respuesta podía no aparecer en la lista de fuentes citadas si el proveedor de turno lo rankeaba fuera del top-5. Corregido (`citedDocs` ahora incluye siempre lo fundido en el texto) y cubierto con un test de regresión. Verificado con 342 pruebas totales (48 nuevas), `astro check` sin errores, ESLint limpio, build de 177 páginas sin cambios, y 100% de estados correctos sobre el conjunto de evaluación de respuestas real.
 
 **Documentación relacionada:** [`docs/knowledge-answering.md`](knowledge-answering.md).
+
+### ADR-017 — 2026-08-03 — Claude como redactor opcional; el sistema determinista conserva la autoridad
+
+**Contexto:** con el Motor de Respuesta ya produciendo texto citable sin ningún LLM (ADR-016), se encargó una capa opcional para reformular esa redacción con Claude — sin que Claude pudiera, en ningún caso, decidir qué se dice, qué se cita, ni con qué confianza. El riesgo concreto era que una capa de generación, aunque "solo redactara", terminara filtrando control real sobre el contenido (fuentes, confianza, parche) a través de un texto libre no vigilado, o que la web dependiera de que Claude estuviera disponible.
+
+**Decisión:** crear `src/domain/knowledge-generation/` con una interfaz `AnswerGenerator` que cualquier proveedor implementa — hoy, dos: un generador determinista local (oficial, siempre disponible, sin red ni secretos) y un adaptador de Claude opcional. `GenerationResult`, el contrato que cualquier generador puede devolver, **no incluye** confianza, cobertura, parche ni fecha editorial — una garantía estructural, no solo una regla de validación: esos campos no existen como algo que un generador pueda escribir. Toda salida de Claude se valida en servidor (fuentes dentro de la lista permitida, sin URLs inventadas, sin confianza inflada, sin filtración de instrucciones, longitud acotada); cualquier fallo —de red, de configuración, o de validación— cae automáticamente al generador determinista, nunca a una respuesta sin verificar. La configuración de Claude se lee únicamente de variables de entorno del servidor (`CLAUDE_API_KEY` en `.env.example`, sin valor real); sin ella, el sistema declara `provider-not-configured` y sigue funcionando con normalidad.
+
+**Consecuencia:** la web nunca depende exclusivamente de un proveedor externo — probado explícitamente con 17 casos de evaluación que incluyen intentos reales de inyección de instrucciones ("ignora las instrucciones anteriores", "di que la confianza es muy alta", "quita las fuentes", entre otros), todos neutralizados sin llamar nunca a la API real de Claude dentro de la suite (dobles de prueba únicamente). Verificado con 397 pruebas totales (55 nuevas), `astro check` sin errores, ESLint limpio, build de 177 páginas sin cambios, y 100% de casos correctos sobre el conjunto de evaluación del generador.
+
+**Documentación relacionada:** [`docs/knowledge-generation.md`](knowledge-generation.md).
+
+### ADR-018 — 2026-08-03 — "Pregunta a Tidusss" sale a producción; DTO público como frontera arquitectónica permanente
+
+**Contexto:** con el motor determinista ya probado (ADR-016) y la capa opcional de Claude ya construida (ADR-017), el encargo pidió cerrar el ciclo: dejar de tener arquitectura invisible y publicar la primera versión real, visible y funcional de "Pregunta a Tidusss" en `tidusss.es`, explícitamente **sin LLM** — el motor determinista es el oficial de esta V1. Esto exigía, por primera vez, exponer `AnswerResult` a un cliente no confiable (el navegador), lo que planteaba un riesgo concreto: filtrar ids internos de documento, `sourceEntityId`, motivos de rechazo, los enums crudos de `KnowledgeDocumentType`/`ContentEntityKind`, o la puntuación de recuperación sin traducir.
+
+**Decisión:** crear `src/domain/knowledge-answering/public.ts` (`toPublicAnswer`, tipo `PublicAnswer`) como una frontera nueva y permanente entre el dominio interno y cualquier contrato público futuro — ningún consumidor externo de `knowledge-answering` debe recibir jamás un `AnswerResult` directamente; siempre debe pasar por un DTO de este tipo. El DTO traduce enums a etiquetas en español, convierte la puntuación de recuperación en una banda (`'high'|'medium'|'low'`) y omite por completo los campos internos. `functions/api/pregunta.ts` (Cloudflare Pages Function) es el único punto de entrada: valida método/content-type/longitud, ejecuta normalización → recuperación local → ensamblaje determinista → `toPublicAnswer`, y nunca ejecuta conocimiento en el navegador ni envía el Índice de Conocimiento completo al cliente. Se decidió además incluir "Pregunta" en la navegación principal (a diferencia del precedente histórico que excluyó `/campeones` y `/tier-list` del nav) porque el encargo lo invitaba explícitamente y se verificó, sin overflow, que cabe en una sola fila a 1024px.
+
+**Consecuencia:** la web tiene ahora una funcionalidad pública real y probada de extremo a extremo (`/pregunta`, integrada en Home y en la guía de Lucian), verificada manualmente contra un entorno equivalente a producción (`wrangler pages dev`). 421 pruebas totales en el proyecto (24 nuevas del endpoint), sin llamadas externas, build de 178 páginas. Cualquier futura capa pública (incluida una eventual reactivación de la generación con Claude, ADR-017) debe seguir sirviéndose a través de este mismo DTO, nunca directamente del dominio.
+
+**Documentación relacionada:** [`docs/pregunta-a-tidusss.md`](pregunta-a-tidusss.md), [`docs/knowledge-answering.md`](knowledge-answering.md).
 
 ---
 

@@ -182,3 +182,7 @@ Explícitamente fuera de alcance, por instrucción directa del encargo:
 - Ningún embedding real, Vectorize, D1.
 - Ningún endpoint público, ninguna ruta `/pregunta`, ninguna interfaz.
 - Ninguna conversación, streaming, historial de usuario, autenticación ni analítica.
+
+> **Actualización (2026-08-03):** existe ya una capa OPCIONAL de reformulación con Claude — `src/domain/knowledge-generation/` y [`docs/knowledge-generation.md`](knowledge-generation.md). Consume `AnswerResult` sin modificarlo: Claude solo puede cambiar la redacción de `answer`, nunca el estado, la cobertura, la confianza, el parche ni las fuentes — esos campos ni siquiera existen en lo que Claude puede devolver. Sin configuración (o si algo falla), se usa automáticamente el generador determinista que ya describe este documento.
+>
+> **Actualización (2026-08-03):** `AnswerResult` tiene ahora un consumidor público real: `POST /api/pregunta` (`functions/api/pregunta.ts`), detrás de la ruta pública `/pregunta`. El endpoint nunca envía `AnswerResult` directamente al cliente — lo traduce mediante un DTO nuevo, `domain/knowledge-answering/public.ts` (`toPublicAnswer` → `PublicAnswer`), que omite los campos internos (ids de documento, `sourceEntityId`, motivos de rechazo) y banda la confianza de recuperación (`'high'|'medium'|'low'`) en vez de exponer la puntuación cruda. Ver ADR-018 en [`PLATFORM_BIBLE.md`](PLATFORM_BIBLE.md) y [`docs/pregunta-a-tidusss.md`](pregunta-a-tidusss.md).

@@ -1,0 +1,507 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Navbar from '../components/Navbar.astro';
+import Footer from '../components/Footer.astro';
+import LaboratoryHero from '../components/laboratory/LaboratoryHero.astro';
+import {
+  PREGUNTA_GENERAL_SUGGESTIONS,
+  PREGUNTA_MAX_QUESTION_LENGTH,
+} from '../data/pregunta';
+
+const pageTitle = 'Pregunta a Tidusss — Dudas sobre Lucian y ADC';
+const pageDescription =
+  'Resuelve dudas sobre Lucian, builds, runas y ADC con el criterio editorial que Tidusss ya ha publicado en tidusss.es — sin inventar respuestas, siempre con fuentes reales.';
+---
+
+<BaseLayout title={pageTitle} description={pageDescription}>
+  <Navbar />
+  <main>
+    <LaboratoryHero
+      eyebrow="El Laboratorio"
+      title="Pregunta a Tidusss"
+      description="Resuelve tus dudas sobre Lucian, ADC y el contenido publicado en tidusss.es."
+    />
+
+    <section class="pregunta-page section-shell" aria-labelledby="pregunta-heading">
+      <div class="mx-auto max-w-3xl px-5 sm:px-8">
+        <h2 id="pregunta-heading" class="sr-only">Haz tu pregunta</h2>
+
+        <p class="pregunta-scope-note">
+          Responde únicamente con el criterio editorial que Tidusss ya ha
+          publicado — nunca con conocimiento genérico de League of Legends.
+        </p>
+
+        <noscript>
+          <div class="empty-laboratory-state">
+            <strong>Activa JavaScript para realizar preguntas.</strong>
+            <p>
+              Mientras tanto, puedes consultar la guía completa de Lucian.
+            </p>
+            <a href="/campeones/lucian"
+              >Ver la guía de Lucian <span aria-hidden="true">→</span></a
+            >
+          </div>
+        </noscript>
+
+        <form
+          class="pregunta-form"
+          data-pregunta-form
+          novalidate
+          hidden
+        >
+          <label for="pregunta-input">¿Qué quieres saber?</label>
+          <div class="pregunta-field-wrap">
+            <textarea
+              id="pregunta-input"
+              name="question"
+              rows="2"
+              maxlength={PREGUNTA_MAX_QUESTION_LENGTH}
+              placeholder="¿Cuándo debería comprar Navori con Lucian?"
+              aria-describedby="pregunta-counter"
+              data-pregunta-input></textarea>
+          </div>
+          <div class="pregunta-form-footer">
+            <span
+              id="pregunta-counter"
+              class="pregunta-counter"
+              data-pregunta-counter>{`0 / ${PREGUNTA_MAX_QUESTION_LENGTH}`}</span
+            >
+            <button
+              type="submit"
+              class="button-primary"
+              data-pregunta-submit
+              disabled
+            >
+              Preguntar a Tidusss
+            </button>
+          </div>
+        </form>
+
+        <div class="pregunta-suggestions">
+          <p class="eyebrow">Preguntas frecuentes</p>
+          <div class="pregunta-chips" role="list">
+            {
+              PREGUNTA_GENERAL_SUGGESTIONS.map((question) => (
+                <a
+                  class="pregunta-chip"
+                  role="listitem"
+                  href={`/pregunta?q=${encodeURIComponent(question)}`}
+                  data-pregunta-chip
+                  data-question={question}
+                >
+                  {question}
+                </a>
+              ))
+            }
+          </div>
+        </div>
+
+        <div class="pregunta-history" data-pregunta-history hidden>
+          <p class="eyebrow">Preguntas recientes</p>
+          <div
+            class="pregunta-chips"
+            data-pregunta-history-list
+            role="list"
+          />
+          <button
+            type="button"
+            class="pregunta-history-clear"
+            data-pregunta-history-clear
+          >
+            Borrar historial
+          </button>
+        </div>
+
+        <div
+          class="pregunta-result"
+          data-pregunta-result
+          aria-live="polite"
+          aria-atomic="true"
+          tabindex="-1"
+          hidden
+        />
+
+        <div class="pregunta-limits">
+          <h2>Límites de este conocimiento</h2>
+          <p>
+            Pregunta a Tidusss responde únicamente con el criterio editorial
+            que Tidusss ya ha publicado sobre ADC, Lucian y el Laboratorio —
+            hoy, sobre todo Lucian. No es un chatbot genérico ni usa
+            inteligencia artificial para generar contenido nuevo: cada
+            respuesta se construye combinando fragmentos reales ya
+            publicados en la web, siempre con su fuente exacta.
+          </p>
+          <div class="pregunta-limits-links">
+            <a class="button-secondary" href="/campeones/lucian">
+              Ver la guía completa de Lucian <span aria-hidden="true">→</span>
+            </a>
+            <a class="button-secondary" href="/campeones">
+              Explorar el Laboratorio <span aria-hidden="true">→</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <Footer />
+</BaseLayout>
+
+<script>
+  import type { PreguntaApiResponse } from '../types/pregunta';
+  import type { PublicAnswer, PublicSource, PublicRelatedLink } from '../domain/knowledge-answering';
+
+  const MAX_LENGTH = 250;
+  const HISTORY_KEY = 'tidusss:pregunta:historial';
+  const HISTORY_LIMIT = 3;
+
+  const form = document.querySelector<HTMLFormElement>('[data-pregunta-form]');
+  const input = document.querySelector<HTMLTextAreaElement>('[data-pregunta-input]');
+  const counter = document.querySelector<HTMLElement>('[data-pregunta-counter]');
+  const submitButton = document.querySelector<HTMLButtonElement>('[data-pregunta-submit]');
+  const resultEl = document.querySelector<HTMLElement>('[data-pregunta-result]');
+  const historyBlock = document.querySelector<HTMLElement>('[data-pregunta-history]');
+  const historyList = document.querySelector<HTMLElement>('[data-pregunta-history-list]');
+  const historyClearButton = document.querySelector<HTMLButtonElement>('[data-pregunta-history-clear]');
+
+  if (form && input && counter && submitButton && resultEl) {
+    // Solo se revela el formulario cuando JavaScript funciona de verdad —
+    // sin JS, la página se queda con propósito, sugerencias y límites (`<noscript>`).
+    form.hidden = false;
+
+    const el = <K extends keyof HTMLElementTagNameMap>(
+      tag: K,
+      className?: string,
+      text?: string,
+    ): HTMLElementTagNameMap[K] => {
+      const node = document.createElement(tag);
+      if (className) node.className = className;
+      if (text !== undefined) node.textContent = text;
+      return node;
+    };
+
+    const updateCounter = () => {
+      const length = input.value.length;
+      counter.textContent = `${length} / ${MAX_LENGTH}`;
+      counter.classList.toggle('is-near-limit', length > MAX_LENGTH - 20);
+    };
+
+    const updateSubmitState = () => {
+      submitButton.disabled = input.value.trim().length === 0;
+    };
+
+    input.addEventListener('input', () => {
+      updateCounter();
+      updateSubmitState();
+    });
+
+    input.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        if (!submitButton.disabled) form.requestSubmit();
+      }
+    });
+
+    updateCounter();
+    updateSubmitState();
+
+    // --- Historial local (últimas 3 preguntas, nunca respuestas) ---
+    const readHistory = (): string[] => {
+      try {
+        const raw = localStorage.getItem(HISTORY_KEY);
+        const parsed: unknown = raw ? JSON.parse(raw) : [];
+        return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === 'string') : [];
+      } catch {
+        return [];
+      }
+    };
+
+    const renderHistory = () => {
+      const history = readHistory();
+      if (!historyBlock || !historyList) return;
+      historyList.replaceChildren();
+      if (history.length === 0) {
+        historyBlock.hidden = true;
+        return;
+      }
+      historyBlock.hidden = false;
+      for (const question of history) {
+        const chip = el('button', 'pregunta-chip', question);
+        chip.type = 'button';
+        chip.setAttribute('role', 'listitem');
+        chip.addEventListener('click', () => askQuestion(question));
+        historyList.append(chip);
+      }
+    };
+
+    const saveToHistory = (question: string) => {
+      try {
+        const history = readHistory().filter((existing) => existing !== question);
+        history.unshift(question);
+        localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(0, HISTORY_LIMIT)));
+        renderHistory();
+      } catch {
+        // Almacenamiento no disponible (privado/bloqueado) — el historial simplemente no se guarda.
+      }
+    };
+
+    historyClearButton?.addEventListener('click', () => {
+      try {
+        localStorage.removeItem(HISTORY_KEY);
+      } catch {
+        /* nada que limpiar si no había almacenamiento disponible */
+      }
+      renderHistory();
+    });
+
+    renderHistory();
+
+    // --- Render de estados ---
+    const CONFIDENCE_LABELS = { low: 'Confianza editorial baja', medium: 'Confianza editorial media', high: 'Confianza editorial alta' } as const;
+    const CONFIDENCE_FILLED = { low: 1, medium: 2, high: 3 } as const;
+
+    const renderConfidence = (level: keyof typeof CONFIDENCE_LABELS): HTMLElement => {
+      const wrap = el('span', 'confidence-indicator');
+      wrap.dataset.confidence = level;
+      const dots = el('span', 'confidence-dots');
+      dots.setAttribute('aria-hidden', 'true');
+      for (let index = 0; index < 3; index += 1) {
+        const dot = el('i');
+        if (index < CONFIDENCE_FILLED[level]) dot.classList.add('is-filled');
+        dots.append(dot);
+      }
+      const label = el('span', 'confidence-label', CONFIDENCE_LABELS[level]);
+      wrap.append(dots, label);
+      return wrap;
+    };
+
+    const COVERAGE_LABELS = { full: 'Cobertura completa', partial: 'Cobertura parcial', none: 'Sin cobertura' } as const;
+
+    const renderCoverageBadge = (coverage: PublicAnswer['coverage']): HTMLElement => {
+      const badge = el('span', 'pregunta-coverage-badge');
+      badge.dataset.coverage = coverage;
+      const icon = el('i');
+      icon.setAttribute('aria-hidden', 'true');
+      const label = el('span', undefined, COVERAGE_LABELS[coverage]);
+      badge.append(icon, label);
+      return badge;
+    };
+
+    const renderSource = (source: PublicSource): HTMLElement => {
+      const card = el('article', 'pregunta-source-card');
+      const header = el('div', 'pregunta-source-header');
+      const badge = el('span', 'lab-badge');
+      badge.append(el('span', 'lab-badge-label', 'Fuente'), el('strong', undefined, source.type));
+      header.append(badge);
+      if (source.patchId) {
+        const patchBadge = el('span', 'lab-badge lab-badge--patch');
+        patchBadge.append(el('span', 'lab-badge-label', 'Parche'), el('strong', undefined, source.patchId));
+        header.append(patchBadge);
+      }
+      if (source.editorialDate) {
+        header.append(el('time', 'pregunta-source-date', new Date(source.editorialDate).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })));
+      }
+      card.append(header);
+      card.append(el('h3', 'pregunta-source-title', source.title));
+      if (source.excerpt) card.append(el('p', 'pregunta-source-excerpt', `“${source.excerpt}”`));
+      const link = el('a', 'pregunta-source-cta', 'Consultar fuente');
+      link.href = source.url;
+      link.append(document.createTextNode(' '));
+      const arrow = el('span', undefined, '→');
+      arrow.setAttribute('aria-hidden', 'true');
+      link.append(arrow);
+      card.append(link);
+      return card;
+    };
+
+    const renderRelated = (link: PublicRelatedLink): HTMLElement => {
+      const anchor = el('a', 'pregunta-related-card');
+      anchor.href = link.href;
+      anchor.append(el('span', 'pregunta-related-kind', link.kind));
+      anchor.append(el('strong', undefined, link.title));
+      return anchor;
+    };
+
+    const focusResult = () => {
+      resultEl.hidden = false;
+      requestAnimationFrame(() => resultEl.focus({ preventScroll: false }));
+    };
+
+    const renderLoading = () => {
+      resultEl.replaceChildren();
+      const banner = el('div', 'pregunta-state pregunta-state--loading');
+      banner.setAttribute('aria-busy', 'true');
+      banner.append(el('strong', undefined, 'Buscando en el contenido publicado…'));
+      resultEl.append(banner);
+      focusResult();
+    };
+
+    const renderFixedState = (variant: string, title: string, body: string): void => {
+      resultEl.replaceChildren();
+      const banner = el('div', `pregunta-state pregunta-state--${variant}`);
+      banner.append(el('strong', undefined, title));
+      banner.append(el('p', undefined, body));
+      resultEl.append(banner);
+      focusResult();
+    };
+
+    const renderAnswer = (data: PublicAnswer): void => {
+      resultEl.replaceChildren();
+      const card = el('div', 'pregunta-answer-card');
+
+      const heading = el('h2', 'pregunta-answer-heading', 'Respuesta de Tidusss');
+      card.append(heading);
+
+      if (data.status === 'partial') {
+        card.append(
+          el(
+            'p',
+            'pregunta-partial-note',
+            'Tengo información relacionada, pero todavía no existe un análisis completo sobre esta pregunta.',
+          ),
+        );
+      }
+
+      const badgeRow = el('div', 'pregunta-badge-row');
+      if (data.editorialConfidence) badgeRow.append(renderConfidence(data.editorialConfidence));
+      badgeRow.append(renderCoverageBadge(data.coverage));
+      if (data.patchId) {
+        const patchBadge = el('span', 'lab-badge lab-badge--patch');
+        patchBadge.append(el('span', 'lab-badge-label', 'Parche'), el('strong', undefined, data.patchId));
+        badgeRow.append(patchBadge);
+      }
+      card.append(badgeRow);
+
+      const body = el('div', 'pregunta-answer-body');
+      const sentences = (data.answer ?? '').split(/(?<=[.!?])\s+/).filter((sentence) => sentence.trim().length > 0);
+      sentences.forEach((sentence, index) => {
+        const paragraph = el('p', index === 0 ? 'pregunta-answer-lead' : undefined, sentence);
+        body.append(paragraph);
+      });
+      card.append(body);
+
+      card.append(
+        el(
+          'p',
+          'pregunta-answer-disclaimer',
+          'Respuesta construida a partir del contenido editorial publicado en tidusss.es.',
+        ),
+      );
+
+      if (data.sources.length > 0) {
+        const sourcesSection = el('div', 'pregunta-sources');
+        sourcesSection.append(el('h3', undefined, 'Fuentes'));
+        const grid = el('div', 'pregunta-sources-grid');
+        data.sources.forEach((source) => grid.append(renderSource(source)));
+        sourcesSection.append(grid);
+        card.append(sourcesSection);
+      }
+
+      if (data.related.length > 0) {
+        const relatedSection = el('div', 'pregunta-related');
+        relatedSection.append(el('h3', undefined, 'Contenido relacionado'));
+        const grid = el('div', 'pregunta-related-grid');
+        data.related.forEach((link) => grid.append(renderRelated(link)));
+        relatedSection.append(grid);
+        card.append(relatedSection);
+      }
+
+      resultEl.append(card);
+      focusResult();
+    };
+
+    const STATE_COPY: Record<string, { variant: string; title: string; body: string }> = {
+      'insufficient-information': {
+        variant: 'insufficient',
+        title: 'Información insuficiente',
+        body: 'Todavía no he publicado suficiente contenido para responderte con precisión. Prefiero no inventarme una respuesta.',
+      },
+      'out-of-scope': {
+        variant: 'out-of-scope',
+        title: 'Fuera de alcance',
+        body: 'Pregunta a Tidusss responde únicamente con el contenido publicado sobre ADC, Lucian y el Laboratorio.',
+      },
+      'empty-question': {
+        variant: 'empty',
+        title: 'Pregunta vacía',
+        body: 'Escribe una pregunta para poder buscar en el contenido publicado.',
+      },
+    };
+
+    const askQuestion = async (question: string): Promise<void> => {
+      const trimmed = question.trim();
+      if (trimmed.length === 0) {
+        renderFixedState('empty', STATE_COPY['empty-question'].title, STATE_COPY['empty-question'].body);
+        return;
+      }
+
+      input.value = trimmed;
+      updateCounter();
+      updateSubmitState();
+      renderLoading();
+      saveToHistory(trimmed);
+
+      try {
+        const response = await fetch('/api/pregunta', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ question: trimmed }),
+        });
+        const payload = (await response.json()) as PreguntaApiResponse;
+
+        if (!payload.ok) {
+          if (payload.error.code === 'EMPTY_QUESTION') {
+            renderFixedState('empty', STATE_COPY['empty-question'].title, STATE_COPY['empty-question'].body);
+            return;
+          }
+          renderFixedState(
+            'error',
+            'No he podido consultar el conocimiento publicado',
+            'No he podido consultar el conocimiento publicado en este momento. Inténtalo de nuevo en unos segundos.',
+          );
+          return;
+        }
+
+        const { data } = payload;
+        if (data.status === 'sufficient' || data.status === 'partial') {
+          renderAnswer(data);
+        } else if (data.status in STATE_COPY) {
+          const copy = STATE_COPY[data.status];
+          renderFixedState(copy.variant, copy.title, copy.body);
+        } else {
+          renderFixedState(
+            'error',
+            'No he podido consultar el conocimiento publicado',
+            'No he podido consultar el conocimiento publicado en este momento. Inténtalo de nuevo en unos segundos.',
+          );
+        }
+      } catch {
+        renderFixedState(
+          'error',
+          'No he podido consultar el conocimiento publicado',
+          'No he podido consultar el conocimiento publicado en este momento. Inténtalo de nuevo en unos segundos.',
+        );
+      }
+    };
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      void askQuestion(input.value);
+    });
+
+    document.querySelectorAll<HTMLAnchorElement>('[data-pregunta-chip]').forEach((chip) => {
+      chip.addEventListener('click', (event) => {
+        event.preventDefault();
+        const question = chip.dataset.question ?? chip.textContent ?? '';
+        void askQuestion(question);
+      });
+    });
+
+    // --- Query param `?q=` — precargado desde Home/Lucian, siempre canonicaliza a /pregunta ---
+    const params = new URLSearchParams(window.location.search);
+    const prefilled = params.get('q');
+    if (prefilled && prefilled.trim().length > 0) {
+      window.history.replaceState(null, '', '/pregunta');
+      void askQuestion(prefilled.slice(0, MAX_LENGTH));
+    }
+  }
+</script>

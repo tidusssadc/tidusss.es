@@ -16,6 +16,8 @@ import SynergyCard from '../../components/laboratory/champion/SynergyCard.astro'
 import ConceptCard from '../../components/laboratory/champion/ConceptCard.astro';
 import EditorialHistoryTimeline from '../../components/laboratory/champion/EditorialHistoryTimeline.astro';
 import ChampionMatchHistory from '../../components/laboratory/champion/ChampionMatchHistory.astro';
+import AskTidusssPrompt from '../../components/AskTidusssPrompt.astro';
+import { PREGUNTA_LUCIAN_SUGGESTIONS } from '../../data/pregunta';
 import {
   buildLabRegistry,
   getChampionKnowledge,
@@ -449,6 +451,19 @@ const structuredData = hasProfile
             <span aria-hidden="true">→</span>
           </a>
         </div>
+
+        {
+          catalogEntry.slug === 'lucian' && (
+            <div class="mt-12">
+              <AskTidusssPrompt
+                title="¿Te queda alguna duda?"
+                description="Pregunta a Tidusss sobre esta guía."
+                questions={PREGUNTA_LUCIAN_SUGGESTIONS}
+                headingLevel="h3"
+              />
+            </div>
+          )
+        }
       </div>
     </section>
     <ExploreNext

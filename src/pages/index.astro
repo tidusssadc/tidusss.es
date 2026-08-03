@@ -1,5 +1,6 @@
 ---
 import About from '../components/About.astro';
+import AskTidusssPrompt from '../components/AskTidusssPrompt.astro';
 import BrandClosing from '../components/BrandClosing.astro';
 import BrandManifesto from '../components/BrandManifesto.astro';
 import CompetitiveCredential from '../components/CompetitiveCredential.astro';
@@ -13,6 +14,7 @@ import Navbar from '../components/Navbar.astro';
 import Recognition from '../components/Recognition.astro';
 import Timeline from '../components/Timeline.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { PREGUNTA_HOME_SUGGESTIONS } from '../data/pregunta';
 ---
 
 <BaseLayout
@@ -23,7 +25,22 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   <HomeStateEngine />
   <main>
     <Hero /><HomePlatformShowcase /><CompetitiveCredential /><BrandManifesto
-    /><ContentSection /><Recognition /><About /><Timeline /><Contact
+    /><ContentSection />
+    <section
+      id="pregunta-tidusss"
+      class="section-shell"
+      aria-label="¿Tienes una duda sobre Lucian?"
+      data-reveal
+    >
+      <div class="mx-auto max-w-4xl px-5 sm:px-8">
+        <AskTidusssPrompt
+          title="¿Tienes una duda sobre Lucian?"
+          description="Pregunta sobre builds, runas, combos, power spikes o la forma de jugar el campeón."
+          questions={PREGUNTA_HOME_SUGGESTIONS}
+        />
+      </div>
+    </section>
+    <Recognition /><About /><Timeline /><Contact
     /><BrandClosing />
   </main>
   <Footer />
