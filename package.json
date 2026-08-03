@@ -12,6 +12,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "sync:champions": "node scripts/sync-champion-catalog.mjs",
+    "eval:retrieval": "node --import ./scripts/testing/register-ts-loader.mjs scripts/knowledge-retrieval/evaluate.ts",
+    "eval:answering": "node --import ./scripts/testing/register-ts-loader.mjs scripts/knowledge-answering/evaluate.ts",
     "test": "node --import ./scripts/testing/register-ts-loader.mjs --test \"test/**/*.test.ts\""
   },
   "engines": {

@@ -378,6 +378,28 @@ Estados **preparados pero inactivos** (esperan un `future-event` real): nuevo pa
 
 **Estado real:** construido y validado (45 pruebas propias, 258 en total en el proyecto). Sin ningún consumidor todavía — ni ruta, ni endpoint, ni UI. Ver ADR-014.
 
+### 5.15 Recuperación de Conocimiento — experimento técnico (sin IA generativa todavía)
+
+**Qué es:** `src/domain/knowledge-retrieval/` — un experimento aislado que comprueba si los `KnowledgeDocument` del Índice de Conocimiento se recuperan correctamente dada una pregunta real, ANTES de construir ningún motor de respuesta. No genera texto, no expone ningún endpoint ni ruta pública: cada proveedor de recuperación (`RetrievalProvider`) recibe texto y devuelve documentos reales, nunca respuestas escritas.
+
+**Cómo funciona:** dos proveedores intercambiables sobre la misma interfaz — una línea base local determinista por términos (normalización, título, tipo/etiqueta, campeón, parche, entidades relacionadas) y un experimento local de espacio vectorial TF-IDF + coseno (la técnica más cercana a un embedding real que puede ejecutarse hoy sin credenciales ni red). Un conjunto tipado de 15 preguntas reales (`evaluation/cases.ts`) y un runner de métricas (`evaluation/run.ts`) miden a ambos por igual — precisión@1/@3, recall, rechazos correctos. Comando reproducible: `npm run eval:retrieval`.
+
+**Resultado real, con números:** la línea base local (90% precisión@1, 90% recall tras la mejora léxica de §5.16) supera al experimento TF-IDF (80%/57%) sobre el corpus actual — un hallazgo genuino, no el resultado "esperado" de un experimento de embeddings, y la razón exacta de por qué medir importa más que asumir. Ningún proveedor real de embeddings (Workers AI, Vectorize, API externa) se ha activado — todos requieren cuenta, clave o coste, y quedan documentados pero no conectados.
+
+**Documentación de referencia:** [`docs/knowledge-retrieval.md`](knowledge-retrieval.md).
+
+**Estado real:** construido y validado (41 pruebas propias, 342 en total en el proyecto). Consumido por el motor de respuesta (§5.16). Ver ADR-015.
+
+### 5.16 Motor de Respuesta — ensamblaje determinista, sin IA generativa
+
+**Qué es:** `src/domain/knowledge-answering/` — demuestra que, usando solo el Índice de Conocimiento y el recuperador local, se puede producir una respuesta estructurada, honesta y citable sin ningún LLM. Cada palabra de la respuesta es el `content` verbatim de uno o más `KnowledgeDocument` reales, unido por reglas explícitas (compañero de razonamiento build/runa, nunca mezclar parches, nunca rellenar con documentos de menor relevancia) — nunca una paráfrasis.
+
+**Cómo funciona:** `assembleAnswer(RetrievalResult): AnswerResult` — seis estados obligatorios (`sufficient`/`partial`/`insufficient-information`/`out-of-scope`/`empty-question`/`internal-error`), separando siempre confianza editorial (heredada), confianza de recuperación y cobertura. Los enlaces relacionados se resuelven exclusivamente contra el Content Graph real (`getContentEntity`/`getContentConnections`) — es el primer dominio que consume los otros tres domains a la vez. Antes de construirlo, se aplicó una mejora léxica (sinónimos editoriales justificados por el corpus real, `domain/knowledge-retrieval/synonyms.ts`) que subió el recall del recuperador local de 70% a 90%. Comando reproducible: `npm run eval:answering`.
+
+**Documentación de referencia:** [`docs/knowledge-answering.md`](knowledge-answering.md).
+
+**Estado real:** construido y validado (43 pruebas propias, 342 en total en el proyecto). 100% de estados correctos sobre el conjunto de evaluación de respuestas (14 preguntas reales), 0 citas inválidas, 0 mezclas de parche, 0 afirmaciones sin fuente. Sin ningún consumidor público todavía — sin LLM, sin endpoint, sin interfaz. Ver ADR-016.
+
 ---
 
 ## 6. Roadmap
@@ -698,6 +720,26 @@ Estados **preparados pero inactivos** (esperan un `future-event` real): nuevo pa
 **Consecuencia:** dos dominios editoriales conviven sobre la misma fuente de datos sin acoplarse entre sí, lo que permite evolucionar el Índice de Conocimiento (embeddings, recuperación, RAG) sin tocar el Content Graph y viceversa. Verificado con 258 pruebas totales (45 nuevas), `astro check` sin errores, ESLint limpio y build de 177 páginas sin cambios. Toda ancla usada por el índice se verifica automáticamente contra el archivo real `[slug].astro` en tiempo de test, no contra una lista asumida.
 
 **Documentación relacionada:** [`docs/knowledge-index.md`](knowledge-index.md).
+
+### ADR-015 — 2026-08-03 — Interfaz de proveedor de recuperación desacoplada; línea base local antes que embeddings
+
+**Contexto:** antes de diseñar "Pregunta a Tidusss", se encargó un experimento técnico aislado para comprobar si los `KnowledgeDocument` del Índice de Conocimiento se recuperan correctamente dada una pregunta real — sin implementar todavía respuesta generada, endpoint ni UI. El riesgo concreto era mezclar "encontrar el documento correcto" (un problema medible con una línea base simple) con "generar una respuesta" (un problema de IA, fuera de alcance), o saltar directamente a conectar embeddings sin verificar primero si una recuperación mucho más barata ya funciona razonablemente bien.
+
+**Decisión:** crear `src/domain/knowledge-retrieval/` con una interfaz `RetrievalProvider` única que cualquier motor de recuperación implementa — hoy, dos: una línea base local determinista por términos (Fase 2) y un experimento local de espacio vectorial TF-IDF + coseno (Fase 5, explícitamente no llamado "embeddings": no captura sinónimos ni parafraseo). Un conjunto tipado de 15 preguntas reales y un runner de métricas puro evalúan a cualquier proveedor por igual. Medido contra el corpus real: la línea base (90% precisión@1, 70% recall) supera al experimento TF-IDF (70%/47%) — se documenta como hallazgo real, no se oculta ni se fuerza a que el experimento "gane". Ningún proveedor real de embeddings (Cloudflare Workers AI, Vectorize, API externa) se activa: todos requieren cuenta, clave o coste no autorizados en este encargo; quedan documentados en `docs/knowledge-retrieval.md` §8, con el adaptador ya preparado para conectarlos sin tocar el conjunto de evaluación.
+
+**Consecuencia:** "Pregunta a Tidusss" puede evolucionar su motor de recuperación (línea base → TF-IDF → embeddings reales) sustituyendo únicamente la implementación de `RetrievalProvider`, sin rediseñar el conjunto de evaluación ni el contrato de resultado. Se encontraron y corrigieron dos defectos reales de la línea base durante la propia evaluación (contar el nombre del campeón dos veces inflaba documentos sin relación real con la pregunta; "Tidusss", la firma editorial omnipresente, generaba empates artificiales) — documentados en detalle en `docs/knowledge-retrieval.md` §11 junto con los límites que persisten (sin lematización, sin jerga bilingüe). Verificado con 294 pruebas totales (36 nuevas), `astro check` sin errores, ESLint limpio y build de 177 páginas sin cambios.
+
+**Documentación relacionada:** [`docs/knowledge-retrieval.md`](knowledge-retrieval.md).
+
+### ADR-016 — 2026-08-03 — Motor de respuesta separado del recuperador; ensamblaje determinista antes que un LLM
+
+**Contexto:** con el recuperador local ya midiendo bien (ADR-015), se encargó demostrar que se puede construir un motor de respuesta estructurado y citable sin ningún LLM — un paso intermedio deliberado antes de decidir si (y cómo) conectar generación real. El riesgo era mezclar la responsabilidad de "decidir qué documentos son relevantes" (ya resuelta por `knowledge-retrieval`) con "decidir qué decir y cómo citarlo" (una responsabilidad nueva, de ensamblaje, no de recuperación).
+
+**Decisión:** crear `src/domain/knowledge-answering/` como una capa nueva y separada que consume `RetrievalResult` (nunca lo recalcula) y produce `AnswerResult` mediante reglas de ensamblaje explícitas — nunca redacción libre: cada frase de `answer` es el `content` verbatim de un `KnowledgeDocument` real. Seis estados obligatorios, con `insufficient-information` y `out-of-scope` como estados distintos y no intercambiables (reconocer una entidad real sin contenido no es lo mismo que no reconocer nada del corpus). Los enlaces relacionados se resuelven contra el Content Graph real — es el primer dominio que consume los otros tres (Content Graph, Índice de Conocimiento, Recuperación) a la vez, una capa de consumo, no una cuarta responsabilidad paralela. Como preparación, se aplicó una mejora léxica al recuperador (`synonyms.ts`, 10 grupos de sinónimos, cada uno justificado con una cita textual del corpus real) que subió el recall de 70% a 90%.
+
+**Consecuencia:** probar el motor de respuesta contra dos proveedores de recuperación distintos (línea base local y espacio vectorial) — no solo contra el que "ya se sabía que funcionaba"— expuso un defecto real: un documento fundido en el texto de la respuesta podía no aparecer en la lista de fuentes citadas si el proveedor de turno lo rankeaba fuera del top-5. Corregido (`citedDocs` ahora incluye siempre lo fundido en el texto) y cubierto con un test de regresión. Verificado con 342 pruebas totales (48 nuevas), `astro check` sin errores, ESLint limpio, build de 177 páginas sin cambios, y 100% de estados correctos sobre el conjunto de evaluación de respuestas real.
+
+**Documentación relacionada:** [`docs/knowledge-answering.md`](knowledge-answering.md).
 
 ---
 

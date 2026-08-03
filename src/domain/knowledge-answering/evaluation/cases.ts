@@ -1,0 +1,158 @@
+import type { AnswerEvaluationCase } from './types';
+
+/**
+ * Conjunto de evaluación de RESPUESTAS (Fase 6 del encargo) — verifica el
+ * `AnswerResult` completo, no solo qué documentos se recuperan (eso ya lo
+ * cubre `domain/knowledge-retrieval/evaluation/cases.ts`). Cada expectativa
+ * se registró leyendo el resultado REAL del motor contra el índice de
+ * conocimiento real, no adivinada — exactamente como exige el encargo
+ * ("valida... ausencia de afirmaciones no respaldadas").
+ */
+export const answerEvaluationCases: AnswerEvaluationCase[] = [
+  {
+    id: 'navori-cuando',
+    question: '¿Cuándo me hago Navori?',
+    expectedStatus: 'sufficient',
+    minimumSourceIds: ['knowledge:build:lucian-26-14-personal:item:core:1'],
+    forbiddenSourceIds: [],
+    expectedCoverage: 'full',
+    expectedEditorialConfidence: 'medium',
+    note: 'La build personal de Navori tiene confianza editorial media (no alta) — el motor debe heredarla, nunca inflarla.',
+  },
+  {
+    id: 'filo-infinito-vs-navori',
+    question: '¿Es mejor Filo Infinito o Navori?',
+    expectedStatus: 'partial',
+    minimumSourceIds: [
+      'knowledge:build:lucian-26-14-solid:item:core:1',
+      'knowledge:build:lucian-26-14-personal:item:core:1',
+    ],
+    forbiddenSourceIds: [],
+    expectedCoverage: 'partial',
+    note: 'Ambos objetos deben citarse — ninguno debe excluirse por tener menor confianza editorial.',
+  },
+  {
+    id: 'combos-rapidos',
+    question: '¿Por qué Lucian necesita hacer combos rápidos?',
+    expectedStatus: 'partial',
+    minimumSourceIds: [
+      'knowledge:champion:lucian:common-mistake:2',
+      'knowledge:champion:lucian:quick-tip:4',
+    ],
+    forbiddenSourceIds: [],
+    expectedCoverage: 'partial',
+    expectedEditorialConfidence: 'high',
+    note: 'El error frecuente y el consejo rápido sobre combos deben citarse juntos.',
+  },
+  {
+    id: 'cuando-fuerte',
+    question: '¿Cuándo empieza a ser fuerte Lucian?',
+    expectedStatus: 'sufficient',
+    minimumSourceIds: ['knowledge:champion:lucian:power-spike:0', 'knowledge:champion:lucian:power-spike:1'],
+    forbiddenSourceIds: [],
+    expectedCoverage: 'full',
+    expectedEditorialConfidence: 'high',
+    note: 'Tras la mejora léxica de Fase 1, ambos power spikes reales se citan con cobertura completa.',
+  },
+  {
+    id: 'runa-tidusss',
+    question: '¿Qué runa usa Tidusss?',
+    expectedStatus: 'partial',
+    minimumSourceIds: ['knowledge:rune-page:lucian-26-14:choice:primary:0'],
+    forbiddenSourceIds: [],
+    expectedCoverage: 'partial',
+    expectedEditorialConfidence: 'high',
+    note: 'Sin nombrar a Lucian explícitamente, la runa real (Ataque Intensificado) sigue citándose.',
+  },
+  {
+    id: 'supports-recomienda',
+    question: '¿Qué supports recomienda?',
+    expectedStatus: 'partial',
+    minimumSourceIds: [
+      'knowledge:synergy:lucian-milio:editorial-take',
+      'knowledge:synergy:lucian-braum:editorial-take',
+    ],
+    forbiddenSourceIds: [],
+    expectedCoverage: 'partial',
+    expectedEditorialConfidence: 'medium',
+    note: 'Pregunta genérica: las sinergias reales se citan, ninguna con confianza inflada por encima de "medium" (la real de todas las sinergias del corpus).',
+  },
+  {
+    id: 'sufre-en-late',
+    question: '¿Por qué Lucian sufre en late?',
+    expectedStatus: 'partial',
+    minimumSourceIds: ['knowledge:champion:lucian:weakness:2'],
+    forbiddenSourceIds: [],
+    expectedCoverage: 'partial',
+    expectedEditorialConfidence: 'high',
+    note: 'La debilidad real sobre el late se cita.',
+  },
+  {
+    id: 'intercambios',
+    question: '¿Cómo debo jugar los intercambios?',
+    expectedStatus: 'partial',
+    minimumSourceIds: ['knowledge:concept:trading:summary'],
+    forbiddenSourceIds: [],
+    expectedCoverage: 'partial',
+    note: 'Corregido en Fase 1: el concepto real de "intercambio"/trading ahora se cita para la variante en plural. Sin `expectedEditorialConfidence`: el concepto no lleva confianza propia (no es un veredicto editorial).',
+  },
+  {
+    id: 'errores-jugadores',
+    question: '¿Qué errores cometen los jugadores de Lucian?',
+    expectedStatus: 'partial',
+    minimumSourceIds: [
+      'knowledge:champion:lucian:common-mistake:0',
+      'knowledge:champion:lucian:common-mistake:1',
+      'knowledge:champion:lucian:common-mistake:2',
+    ],
+    forbiddenSourceIds: [],
+    expectedCoverage: 'partial',
+    expectedEditorialConfidence: 'high',
+    note: 'Los errores reales de Lucian se citan (hasta el límite de fuentes).',
+  },
+  {
+    id: 'matchup-draven',
+    question: '¿Cómo juego Lucian contra Draven?',
+    expectedStatus: 'insufficient-information',
+    minimumSourceIds: [],
+    forbiddenSourceIds: [],
+    expectedCoverage: 'none',
+    note: 'Draven es un campeón real reconocido, pero sin matchup analizado — nunca se inventa uno.',
+  },
+  {
+    id: 'build-jinx',
+    question: '¿Cuál es la build de Jinx?',
+    expectedStatus: 'insufficient-information',
+    minimumSourceIds: [],
+    forbiddenSourceIds: [],
+    expectedCoverage: 'none',
+    note: 'Jinx es un campeón real (draft, sin perfil) — nunca se mezcla con contenido de Lucian.',
+  },
+  {
+    id: 'quien-gano-el-mundial',
+    question: '¿Quién ganó el Mundial?',
+    expectedStatus: 'out-of-scope',
+    minimumSourceIds: [],
+    forbiddenSourceIds: [],
+    expectedCoverage: 'none',
+    note: 'Fuera del vocabulario del corpus por completo.',
+  },
+  {
+    id: 'pregunta-vacia',
+    question: '',
+    expectedStatus: 'empty-question',
+    minimumSourceIds: [],
+    forbiddenSourceIds: [],
+    expectedCoverage: 'none',
+    note: 'Se rechaza antes de intentar nada.',
+  },
+  {
+    id: 'pregunta-ambigua',
+    question: 'ayuda',
+    expectedStatus: 'out-of-scope',
+    minimumSourceIds: [],
+    forbiddenSourceIds: [],
+    expectedCoverage: 'none',
+    note: 'Sin ningún término reconocible del corpus ni del catálogo.',
+  },
+];

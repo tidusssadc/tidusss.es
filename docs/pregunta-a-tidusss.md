@@ -207,6 +207,8 @@ El conocimiento editorial de Tidusss cambia **cuando él publica**, no continuam
 
 Cada `KnowledgeChunk.url` no es una URL inventada — se calcula con las **mismas funciones de resolución de rutas** que ya usa el resto del sitio (`campeon-${slug}`, `#build-heading`, `#runas-heading`, etc., los mismos anclajes por los que ya navega `/campeones/[slug].astro`). Esto garantiza que "ver la fuente completa" lleve siempre a una sección real, existente y ya probada de la web — nunca a un enlace roto o a una página que el sistema de indexado "cree" que existe.
 
+> **Nota de estado (2026-08-03):** antes de construir el motor de respuesta, se auditó experimentalmente si los documentos del índice se recuperan bien dada una pregunta real — `src/domain/knowledge-retrieval/` y [`docs/knowledge-retrieval.md`](knowledge-retrieval.md). Conclusión real, con números: una recuperación local determinista por términos (sin IA) alcanza 90% de precisión@1 y 70% de recall sobre un conjunto de 15 preguntas reales; un experimento local de TF-IDF (la técnica de espacio vectorial más cercana a un embedding que se puede ejecutar hoy sin credenciales) obtiene 70%/47% — peor, en este corpus todavía pequeño. Ningún proveedor real de embeddings (Workers AI, Vectorize, una API externa) se ha activado: todos requieren cuenta, clave o coste, y quedan documentados pero no conectados. Se encontraron límites reales que §4.2/§4.3 de este documento deberán tener en cuenta cuando se diseñe la generación de respuestas: sin lematización ("intercambios" no encuentra el concepto "Trading", en singular), y ausencia de jerga bilingüe en el corpus real (Tidusss nunca escribe "burst" en inglés, aunque el concepto exista en español).
+
 ---
 
 ## 5. El contrato de respuesta
@@ -229,6 +231,8 @@ AskResponse {
 ```
 
 Los cuatro elementos que el encargo pide explícitamente que **toda** respuesta muestre —confianza, fuentes, fecha editorial, enlaces relacionados— no son un adorno de la interfaz: son **campos obligatorios de este contrato**. Si el motor de respuesta no puede rellenar `sources` con al menos un elemento real, el `status` no puede ser `'answered'` — se convierte automáticamente en `'no-coverage'`. Esto hace estructuralmente imposible una respuesta "flotante" sin evidencia detrás, de la misma forma que `EditorialTake` obligatorio en el dominio hace estructuralmente imposible una build sin razonamiento.
+
+> **Nota de estado (2026-08-03):** una primera versión real y determinista de este contrato (sin ningún LLM todavía) ya existe — `AnswerResult` en `src/domain/knowledge-answering/` y [`docs/knowledge-answering.md`](knowledge-answering.md). Cubre, con nombres adaptados a las convenciones ya establecidas del proyecto, exactamente lo que `AskResponse` describe aquí: `sources`→`sources` (con `excerpt` verbatim), `confidence`→separado en `editorialConfidence` (heredada) y `retrievalConfidence` (nunca mezcladas, ver §10), `editorialDate`→`editorialDate`, y `relatedConcepts`/`relatedChampions`/`relatedVideos`/`relatedMatches` unificados en `relatedLinks`, resueltos contra el Content Graph real. El estado `'answered'` se divide en dos más precisos, `'sufficient'`/`'partial'`, y `'no-coverage'` en `'insufficient-information'`/`'out-of-scope'` (ver `knowledge-answering.md` §5 para el criterio exacto). Lo que sigue sin implementar es la generación con Claude (§3.2), la puerta de alcance por embeddings (§2.1, hoy resuelta léxicamente por el recuperador), Vectorize/D1 y toda la superficie de UI (§6-§9).
 
 ---
 
