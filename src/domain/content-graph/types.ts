@@ -3,7 +3,9 @@ export type ContentEntityKind =
   | 'build'
   | 'champion'
   | 'channel'
+  | 'concept'
   | 'creator-project'
+  | 'editorial-log'
   | 'game'
   | 'goal'
   | 'guide'
@@ -13,6 +15,8 @@ export type ContentEntityKind =
   | 'moment'
   | 'patch'
   | 'reference'
+  | 'rune-page'
+  | 'synergy'
   | 'tier-list'
   | 'tool'
   | 'video';
@@ -20,13 +24,16 @@ export type ContentEntityKind =
 export type ContentEntityId = `${ContentEntityKind}:${string}`;
 
 export type ContentRelationKind =
+  | 'changed-in'
   | 'continues-with'
   | 'documents'
+  | 'explains'
   | 'features'
   | 'played-with'
   | 'published-on'
   | 'related-to'
   | 'specializes-in'
+  | 'synergizes-with'
   | 'tracks'
   | 'uses';
 

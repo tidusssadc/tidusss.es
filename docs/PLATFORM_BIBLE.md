@@ -366,6 +366,18 @@ Estados **preparados pero inactivos** (esperan un `future-event` real): nuevo pa
 
 **Estado real:** dos aplicaciones públicas reales. **`/tier-list` — The Official Tidusss ADC Tier List** (ADR-005) y **`/campeones/[slug]` — Explorador de Campeones**, que ya no genera 4 páginas de muestra (ADR-007) sino **una por cada uno de los ~170 campeones del juego** (ADR-008), a partir de un catálogo generado desde Data Dragon (`scripts/sync-champion-catalog.mjs`) completamente separado de la curación editorial de Tidusss (`LabChampion`, hoy 4 campeones). El registro del dominio se refactorizó de un singleton mutable (`labRegistry`/`hydrateLabRegistry`) a una fábrica pura sin estado compartido (`buildLabRegistry`, ADR-006). El Content Graph solo registra los campeones curados, nunca el catálogo completo (ADR-009). Verificado con datos reales: el build genera **176 páginas**, incluidos campeones publicados por Riot después del corte de conocimiento de quien hizo este cambio — la prueba de que añadir 30 campeones mañana no requiere tocar ni una línea de esta arquitectura. Sigue sin endpoints, sin Build/RunePage/Matchup/Synergy/MetaState con datos reales, y sin las demás herramientas del capítulo. Detalle completo en [`docs/league-laboratory.md`](league-laboratory.md) §12-§14.
 
+> **Nota de actualización (no verificada en la fecha de la auditoría original, 24 de julio):** `Build`, `RunePage`, `Synergy`, `Concept` y las entradas de Tier List de Lucian ya tienen contenido real del parche 26.14, y el Content Graph ya activó `build`, `matchup` (vacío), `rune-page`, `synergy`, `concept` (parcial) y `editorial-log` como tipos de entidad — ver [`docs/content-graph.md`](content-graph.md) §14 para el detalle exacto de qué se activó y qué sigue diferido.
+
+### 5.14 Índice de Conocimiento (dominio nuevo, sin consumidor todavía)
+
+**Qué es:** `src/domain/knowledge-index/` — la capa que transforma el contenido editorial real de `league-laboratory` en `KnowledgeDocument[]`, unidades citables con título, contenido, URL+ancla real, fuente, idioma, parche/fecha y confianza heredada. Es la base sobre la que se construirá el motor de respuesta de "Pregunta a Tidusss" (`docs/pregunta-a-tidusss.md` §4), pero no incluye embeddings, recuperación ni generación — solo la transformación pura y determinista de contenido editorial en documentos.
+
+**Cómo funciona:** mismo patrón que `content-graph`/`league-laboratory` (cero dependencias de Astro/DOM/fetch/red, barrel `index.ts`, tipos separados, productores puros en `builders.ts`, invariantes en `invariants.ts`). Deliberadamente **no importa nada de `content-graph`** ni al revés — son responsabilidades distintas (relaciones vs. documentos recuperables) que comparten solo el dominio de origen.
+
+**Documentación de referencia:** [`docs/knowledge-index.md`](knowledge-index.md).
+
+**Estado real:** construido y validado (45 pruebas propias, 258 en total en el proyecto). Sin ningún consumidor todavía — ni ruta, ni endpoint, ni UI. Ver ADR-014.
+
 ---
 
 ## 6. Roadmap
@@ -676,6 +688,16 @@ Estados **preparados pero inactivos** (esperan un `future-event` real): nuevo pa
 **Decisión — perfil del campeón:** el nivel 2 como power spike (ya existente desde ADR-007) se amplió en el sitio para incorporar el matiz de que la agresividad depende de posición/habilidades/oleada/apoyo/errores rivales — es un refinamiento del mismo hecho, no contenido nuevo, así que se edita en vez de duplicar. La curva de escalado general (fuerte en early/mid, más débil en late) se añadió como una fortaleza y una debilidad nuevas dentro de `ChampionProfile`, sin crear un tipo de dominio nuevo — es la misma clase de afirmación que ya vive en `strengths`/`weaknesses`, no un concepto distinto. Los 4 errores frecuentes nuevos del encargo se fusionaron en 3 entradas de `commonMistakes` para no duplicar contenido (combos lentos y aprovechamiento de la pasiva son la misma idea, tal como pedía el encargo).
 **Consecuencia:** el registro (`getChampionKnowledge`) sigue filtrando por `championId` sin ningún cambio — verificado explícitamente con un test que siembra el registro completo con el contenido real de Lucian y comprueba que Kai'Sa (otro campeón curado) no recibe ni sus builds, ni sus runas, ni sus sinergias. El SEO (título/descripción/JSON-LD) ahora deriva el parche y los nombres de objeto/runa de los datos reales de la build principal, no de una cadena escrita a mano — sigue siendo genérico y correcto para cualquier futuro campeón con contenido real, no solo para Lucian.
 **Documentación relacionada:** [`docs/league-laboratory.md`](league-laboratory.md) §17.
+
+### ADR-014 — 2026-08-03 — Índice de Conocimiento como dominio nuevo, separado del Content Graph
+
+**Contexto:** tras cerrar el diseño y la implementación del Content Graph (Fases A-C), se encargó construir la primera versión del "Índice de Conocimiento": una capa que transforma el contenido editorial real de `league-laboratory` en documentos recuperables y citables (`KnowledgeDocument`), pensada como base futura del motor de respuesta de "Pregunta a Tidusss" (`docs/pregunta-a-tidusss.md` §4), pero sin implementar todavía embeddings, recuperación, endpoints ni UI. Existía el riesgo de mezclar esta responsabilidad con el Content Graph, que ya modela relaciones entre entidades editoriales sobre la misma fuente de datos.
+
+**Decisión:** crear `src/domain/knowledge-index/` como dominio nuevo e independiente, que no importa nada de `domain/content-graph` ni al revés — ambos importan por separado de `domain/league-laboratory`. El Content Graph describe relaciones; el Índice de Conocimiento describe unidades editoriales recuperables (título, contenido, URL+ancla real, fuente, idioma, parche/fecha, confianza heredada, entidades relacionadas). Solo se indexa contenido real, publicado y no-borrador: identidad y comprensión de Lucian, sus rasgos de perfil, historial editorial, builds y runas del parche 26.14, sinergias reales, los 4 conceptos con relación real (no los 6 existentes) y la única entrada revisada de la Tier List. Como corrección menor asociada, se corrigió `buildDocumentsChampionRelation` (Content Graph) para que use el nombre editorial real del campeón (`championName`) en vez de derivar una capitalización artificial del slug.
+
+**Consecuencia:** dos dominios editoriales conviven sobre la misma fuente de datos sin acoplarse entre sí, lo que permite evolucionar el Índice de Conocimiento (embeddings, recuperación, RAG) sin tocar el Content Graph y viceversa. Verificado con 258 pruebas totales (45 nuevas), `astro check` sin errores, ESLint limpio y build de 177 páginas sin cambios. Toda ancla usada por el índice se verifica automáticamente contra el archivo real `[slug].astro` en tiempo de test, no contra una lista asumida.
+
+**Documentación relacionada:** [`docs/knowledge-index.md`](knowledge-index.md).
 
 ---
 

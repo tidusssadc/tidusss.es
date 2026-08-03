@@ -1,16 +1,43 @@
 import {
   adcLabChampions,
   championCatalog,
+  leagueLaboratoryBuilds,
+  leagueLaboratoryConcepts,
+  leagueLaboratoryMatchups,
+  leagueLaboratoryRunePages,
+  leagueLaboratorySynergies,
+  lucian,
   officialAdcTierList,
   patch1514,
+  patch2614,
 } from '../../data/league-laboratory';
 import {
+  buildDocumentsChampionRelation,
+  buildToContentEntity,
   championAppearsInTierListRelation,
+  championSynergizesWithRelation,
   championToContentEntity,
+  conceptExplainsRelation,
+  conceptToContentEntity,
+  editorialLogChangedInRelations,
+  editorialLogDocumentsChampionRelation,
+  editorialLogToContentEntity,
+  matchupRelatedToChampionRelation,
+  matchupToContentEntity,
   patchToContentEntity,
+  runePageDocumentsChampionRelation,
+  runePageToContentEntity,
+  synergyDocumentsChampionRelation,
+  synergyToContentEntity,
   tierListFeaturesChampionRelation,
   tierListToContentEntity,
   tierListTracksPatchRelation,
+} from '../league-laboratory';
+import type {
+  ChampionCatalogEntry,
+  Concept,
+  ConceptId,
+  LabChampionId,
 } from '../league-laboratory';
 import type { ContentEntity, ContentRelation } from './types';
 
@@ -44,24 +71,152 @@ const championHubEntity: ContentEntity = {
   status: 'available',
 };
 
+/**
+ * Único punto de resolución de un `LabChampionId` contra el catálogo
+ * generado — usado tanto por campeones curados como por el contenido que
+ * los referencia (builds, matchups). Lanza en vez de devolver `undefined`
+ * porque un `championId` que no resuelve es un error de datos real, nunca
+ * un estado esperado (mismo criterio que ya usaba este archivo).
+ */
+const getCatalogEntryOrThrow = (
+  championId: LabChampionId,
+): ChampionCatalogEntry => {
+  const catalogEntry = championCatalog.find(
+    (entry) => entry.id === championId,
+  );
+  if (!catalogEntry) {
+    throw new Error(
+      `${championId} no existe en el catálogo generado — ejecuta npm run sync:champions o revisa src/data/league-laboratory/champions.ts.`,
+    );
+  }
+  return catalogEntry;
+};
+
+/** Mismo criterio que `getCatalogEntryOrThrow`, para conceptos referenciados por id. */
+const getConceptOrThrow = (conceptId: ConceptId): Concept => {
+  const concept = leagueLaboratoryConcepts.find(
+    (candidate) => candidate.id === conceptId,
+  );
+  if (!concept) {
+    throw new Error(
+      `${conceptId} no existe en leagueLaboratoryConcepts — revisa src/data/league-laboratory/concepts.ts.`,
+    );
+  }
+  return concept;
+};
+
+/**
+ * Sinergias: el primer id de `championIds` es siempre el campeón curado
+ * que "posee" el análisis (hoy, Lucian en las 6 sinergias reales) — el
+ * resto son socios referenciados, siguiendo el mismo criterio
+ * propietario/referenciado ya usado para matchups (§6.3). Los socios no
+ * curados (Milio, Nami...) se registran como campeones "planos" (sin
+ * `LabChampion`, igual que `championToContentEntity` ya soporta) porque,
+ * a partir de esta fase, tienen una relación real que ofrecer: la propia
+ * sinergia. Sin esa relación no se registrarían (§1.3/§12).
+ */
+const synergyPartnerIds = [
+  ...new Set(
+    leagueLaboratorySynergies.flatMap((synergy) => synergy.championIds.slice(1)),
+  ),
+].filter(
+  (partnerId) => !adcLabChampions.some((champion) => champion.id === partnerId),
+);
+
 export const leagueLaboratoryEntities: ContentEntity[] = [
   ...adcLabChampions.map((labChampion) => {
-    const catalogEntry = championCatalog.find(
-      (entry) => entry.id === labChampion.id,
-    );
-    if (!catalogEntry) {
-      throw new Error(
-        `${labChampion.id} no existe en el catálogo generado — ejecuta npm run sync:champions o revisa src/data/league-laboratory/champions.ts.`,
-      );
-    }
+    const catalogEntry = getCatalogEntryOrThrow(labChampion.id);
     return {
       ...championToContentEntity(catalogEntry, labChampion),
       href: `/campeones/${catalogEntry.slug}`,
     };
   }),
   patchToContentEntity(patch1514),
+  // Fase C: registrado porque el historial editorial de Lucian genera
+  // relaciones `changed-in` reales hacia este parche (ver más abajo) — sin
+  // este nodo, esas relaciones serían aristas colgantes.
+  patchToContentEntity(patch2614),
   { ...tierListToContentEntity(officialAdcTierList), href: '/tier-list' },
   championHubEntity,
+  // Fase B: contenido editorial real de builds — hoy, las dos rutas
+  // publicadas de Lucian. `Build` no tiene concepto de borrador/placeholder
+  // en el dominio de origen: todo lo que existe en `leagueLaboratoryBuilds`
+  // es, por construcción, contenido real y publicado.
+  ...leagueLaboratoryBuilds.map((build) => ({
+    ...buildToContentEntity(build),
+    href: `/campeones/${getCatalogEntryOrThrow(build.championId).slug}#build-heading`,
+  })),
+  // Fase B: contenido editorial real de matchups. `leagueLaboratoryMatchups`
+  // está vacío hoy (todavía no existe ningún matchup real analizado por
+  // Tidusss) — este `map` no registra ninguna entidad hasta que exista una,
+  // exactamente igual que el resto del grafo no registra nodos sin
+  // contenido real que ofrecer (§1.3 de `docs/content-graph.md`).
+  ...leagueLaboratoryMatchups.map((matchup) => ({
+    ...matchupToContentEntity(
+      matchup,
+      getCatalogEntryOrThrow(matchup.championId).name,
+      getCatalogEntryOrThrow(matchup.opponentChampionId).name,
+    ),
+    href: `/campeones/${getCatalogEntryOrThrow(matchup.championId).slug}#matchups-heading`,
+  })),
+  // Fase C: rune-page real de Lucian (parche 26.14).
+  ...leagueLaboratoryRunePages.map((runePage) => ({
+    ...runePageToContentEntity(runePage),
+    href: `/campeones/${getCatalogEntryOrThrow(runePage.championId).slug}#runas-heading`,
+  })),
+  // Fase C: las 6 sinergias reales recomendadas por Tidusss para Lucian.
+  ...leagueLaboratorySynergies.map((synergy) => {
+    const ownerId = synergy.championIds[0];
+    if (!ownerId) {
+      throw new Error(`${synergy.id} no tiene ningún championId — dato de dominio inválido.`);
+    }
+    const championNames = synergy.championIds.map(
+      (championId) => getCatalogEntryOrThrow(championId).name,
+    );
+    return {
+      ...synergyToContentEntity(synergy, championNames),
+      href: `/campeones/${getCatalogEntryOrThrow(ownerId).slug}#sinergias-heading`,
+    };
+  }),
+  // Fase C: socios de sinergia sin curación editorial propia (Milio, Nami,
+  // Yuumi, Braum, Nautilus, Pyke) — se registran como campeones "planos"
+  // (sin `LabChampion`) porque, a partir de esta fase, tienen una relación
+  // real que ofrecer (`synergizes-with` desde Lucian). Su página en
+  // `/campeones/<slug>` ya existe para los ~173 campeones del catálogo.
+  ...synergyPartnerIds.map((partnerId) => {
+    const catalogEntry = getCatalogEntryOrThrow(partnerId);
+    return {
+      ...championToContentEntity(catalogEntry),
+      href: `/campeones/${catalogEntry.slug}`,
+    };
+  }),
+  // Fase C: solo los conceptos que Lucian enlaza directamente
+  // (`coreConceptIds`, curación editorial explícita) tienen hoy una
+  // relación real que ofrecer. El resto de `leagueLaboratoryConcepts`
+  // (Tempo, Wave Management) no está referenciado por ningún matchup,
+  // sinergia o campeón curado todavía — no se registra (§1.3/§12).
+  ...(lucian.coreConceptIds ?? []).map((conceptId) => {
+    const concept = getConceptOrThrow(conceptId);
+    return {
+      ...conceptToContentEntity(concept),
+      href: `/campeones/${getCatalogEntryOrThrow(lucian.id).slug}#concepts-heading`,
+    };
+  }),
+  // Fase C: editorial-log de Lucian — único nodo 1:1 que agrega todo su
+  // historial real (`LabChampion.editorialHistory`), tal como aprueba el
+  // diseño (`docs/content-graph.md` §3.2): nunca un nodo por entrada.
+  ...(lucian.editorialHistory && lucian.editorialHistory.length > 0
+    ? [
+        {
+          ...editorialLogToContentEntity(
+            lucian.id,
+            getCatalogEntryOrThrow(lucian.id).name,
+            lucian.editorialHistory,
+          ),
+          href: `/campeones/${getCatalogEntryOrThrow(lucian.id).slug}#historial-editorial-heading`,
+        },
+      ]
+    : []),
 ];
 
 export const leagueLaboratoryRelations: ContentRelation[] = [
@@ -70,6 +225,57 @@ export const leagueLaboratoryRelations: ContentRelation[] = [
     championAppearsInTierListRelation(officialAdcTierList, entry.championId),
   ]),
   tierListTracksPatchRelation(officialAdcTierList),
+  ...leagueLaboratoryBuilds.map((build) =>
+    buildDocumentsChampionRelation(
+      build,
+      getCatalogEntryOrThrow(build.championId).name,
+    ),
+  ),
+  ...leagueLaboratoryMatchups.map((matchup) =>
+    matchupRelatedToChampionRelation(
+      matchup,
+      getCatalogEntryOrThrow(matchup.championId).name,
+      getCatalogEntryOrThrow(matchup.opponentChampionId).name,
+    ),
+  ),
+  ...leagueLaboratoryRunePages.map((runePage) =>
+    runePageDocumentsChampionRelation(
+      runePage,
+      getCatalogEntryOrThrow(runePage.championId).name,
+    ),
+  ),
+  ...leagueLaboratorySynergies.flatMap((synergy) => {
+    const [ownerId, ...partnerIds] = synergy.championIds;
+    if (!ownerId) {
+      throw new Error(`${synergy.id} no tiene ningún championId — dato de dominio inválido.`);
+    }
+    return [
+      synergyDocumentsChampionRelation(synergy, ownerId),
+      ...partnerIds.map((partnerId) =>
+        championSynergizesWithRelation(
+          ownerId,
+          partnerId,
+          getCatalogEntryOrThrow(partnerId).name,
+        ),
+      ),
+    ];
+  }),
+  ...(lucian.coreConceptIds ?? []).map((conceptId) =>
+    conceptExplainsRelation(
+      getConceptOrThrow(conceptId),
+      lucian.id,
+      getCatalogEntryOrThrow(lucian.id).name,
+    ),
+  ),
+  ...(lucian.editorialHistory && lucian.editorialHistory.length > 0
+    ? [
+        editorialLogDocumentsChampionRelation(
+          lucian.id,
+          getCatalogEntryOrThrow(lucian.id).name,
+        ),
+        ...editorialLogChangedInRelations(lucian.id, lucian.editorialHistory),
+      ]
+    : []),
   ...adcLabChampions.flatMap((labChampion) => {
     const catalogEntry = championCatalog.find(
       (entry) => entry.id === labChampion.id,

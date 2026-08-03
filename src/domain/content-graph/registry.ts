@@ -8,6 +8,7 @@ import type {
   ContentConnection,
   ContentEntity,
   ContentEntityId,
+  ContentEntityKind,
   ContentGraph,
   ContentRelation,
 } from './types';
@@ -69,15 +70,21 @@ const coreEntities: ContentEntity[] = [
     source: 'riot',
     status: 'available',
   },
-  ...goals.map<ContentEntity>((goal) => ({
-    id: `goal:${goal.id}`,
-    kind: 'goal',
-    title: goal.label,
-    description: goal.description,
-    href: '/live/#objetivos',
-    source: goal.source === 'riot' ? 'riot' : 'editorial',
-    status: goal.status === 'active' ? 'available' : 'planned',
-  })),
+  ...goals.map<ContentEntity>((goal) => {
+    const status = goal.status === 'active' ? 'available' : 'planned';
+    return {
+      id: `goal:${goal.id}`,
+      kind: 'goal',
+      title: goal.label,
+      description: goal.description,
+      // Una entidad `planned` no es navegable: `href` solo se rellena
+      // cuando el objetivo está realmente activo (invariante de grafo,
+      // `docs/content-graph.md` §10.2).
+      ...(status === 'available' ? { href: '/live/#objetivos' } : {}),
+      source: goal.source === 'riot' ? 'riot' : 'editorial',
+      status,
+    };
+  }),
   ...leagueLaboratoryEntities,
 ];
 
@@ -165,17 +172,34 @@ const entityIndex = new Map(
 
 export const getContentEntity = (id: ContentEntityId) => entityIndex.get(id);
 
-export const getContentConnections = (
+export const getContentEntitiesByKind = (
+  kind: ContentEntityKind,
+): readonly ContentEntity[] =>
+  contentGraph.entities.filter((entity) => entity.kind === kind);
+
+/**
+ * Núcleo puro de la resolución de conexiones: recibe entidades y
+ * relaciones como datos, nunca lee `contentGraph` directamente. Esto
+ * permite probar la propiedad de estabilidad ("el resultado no depende
+ * del orden de registro de las relaciones", `docs/content-graph.md` §10.2)
+ * con grafos sintéticos, además de con el registro real.
+ * `getContentConnections` es una fina capa que aplica esta función sobre
+ * el grafo real — su comportamiento público no cambia.
+ */
+export const resolveConnections = (
+  entities: readonly ContentEntity[],
+  relations: readonly ContentRelation[],
   from: ContentEntityId,
   options: { limit?: number; navigableOnly?: boolean } = {},
 ): ContentConnection[] => {
   const { limit, navigableOnly = true } = options;
+  const index = new Map(entities.map((entity) => [entity.id, entity]));
   const seenTargets = new Set<ContentEntityId>();
-  const connections = contentGraph.relations
+  const connections = relations
     .filter((relation) => relation.from === from)
     .sort((a, b) => b.priority - a.priority)
     .flatMap((relation) => {
-      const target = entityIndex.get(relation.to);
+      const target = index.get(relation.to);
       if (
         !target ||
         target.status !== 'available' ||
@@ -188,6 +212,17 @@ export const getContentConnections = (
     });
   return limit === undefined ? connections : connections.slice(0, limit);
 };
+
+export const getContentConnections = (
+  from: ContentEntityId,
+  options: { limit?: number; navigableOnly?: boolean } = {},
+): ContentConnection[] =>
+  resolveConnections(
+    contentGraph.entities,
+    contentGraph.relations,
+    from,
+    options,
+  );
 
 export const getPrimaryConnection = (from: ContentEntityId) =>
   getContentConnections(from, { limit: 1 })[0];

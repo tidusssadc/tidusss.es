@@ -36,7 +36,7 @@ const socialLinks = [
         socialLinks.map(({ name, href, icon }, index) => (
           <a
             class={
-              index === 0
+              index <= 1
                 ? 'button-primary justify-center px-6 py-3.5'
                 : 'button-secondary justify-center px-6 py-3.5'
             }

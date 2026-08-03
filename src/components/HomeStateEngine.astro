@@ -38,7 +38,10 @@
           action.removeAttribute('rel');
         }
       } else action.hidden = true;
-      context.hidden = false;
+      // El estado "live" ya se anuncia con el reproductor incrustado del
+      // Hero (más prominente) — este banner de contexto se reserva para el
+      // resto de estados para no anunciar el directo dos veces a la vez.
+      context.hidden = state.id === 'live';
       requestAnimationFrame(() => context.toggleAttribute('data-ready', true));
     });
     window.addEventListener('pagehide', stop, { once: true });

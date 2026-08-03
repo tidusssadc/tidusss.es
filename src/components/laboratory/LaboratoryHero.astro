@@ -3,14 +3,21 @@ interface Props {
   eyebrow?: string;
   title: string;
   description: string;
+  headingLevel?: 'h1' | 'h2';
 }
-const { eyebrow = 'El Laboratorio', title, description } = Astro.props;
+const {
+  eyebrow = 'El Laboratorio',
+  title,
+  description,
+  headingLevel = 'h1',
+} = Astro.props;
+const Heading = headingLevel;
 ---
 
 <section class="laboratory-hero" aria-labelledby="laboratory-hero-title">
   <div class="mx-auto max-w-7xl px-5 sm:px-8">
     <p class="eyebrow">{eyebrow}</p>
-    <h1 id="laboratory-hero-title">{title}</h1>
+    <Heading id="laboratory-hero-title">{title}</Heading>
     <p class="laboratory-hero-lead">{description}</p>
   </div>
 </section>

@@ -81,12 +81,9 @@ import PlayerProfile from './PlayerProfile.astro';
         <p><span>Racha actual</span><strong data-today-streak></strong></p>
         <p>
           <span>Variación de LP</span><strong data-lp-delta
-            >Sin snapshot previo</strong
+            >Pendiente</strong
           >
-          <small
-            >La variación aparecerá cuando exista una medición anterior
-            comparable.</small
-          >
+          <small>Se mostrará en cuanto haya una medición previa con la que compararla.</small>
         </p>
       </div>
       <div class="today-empty" data-today-empty hidden>
@@ -121,7 +118,7 @@ import PlayerProfile from './PlayerProfile.astro';
         <div><span>02 / Twitch</span><h2 id="twitch-title">Directo</h2></div>
         <i class="live-dot" aria-hidden="true"></i>
       </header>
-      <div class="stream-status">
+      <div class="stream-status" aria-live="polite">
         <strong
           data-stream-state
           class="data-skeleton"
