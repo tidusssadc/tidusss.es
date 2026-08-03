@@ -13,10 +13,10 @@ export const brandPrinciple = {
 
 export const navigation = [
   { label: 'Inicio', href: '#inicio' },
-  { label: 'Sobre mí', href: '#sobre-mi' },
-  { label: 'Contenido', href: '#contenido' },
-  { label: 'Trayectoria', href: '#trayectoria' },
-  { label: 'Contacto', href: '#contacto' },
+  { label: 'Explorar', href: '/explorar' },
+  { label: 'Campeones', href: '/campeones' },
+  { label: 'Tier List', href: '/tier-list' },
   { label: 'Directo', href: '/live' },
   { label: 'Pregunta', href: '/pregunta' },
+  { label: 'Comunidad', href: '/comunidad' },
 ] as const;

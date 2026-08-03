@@ -103,6 +103,15 @@ const difficultyOptions = [
       <input type="checkbox" data-hub-tierlist-checkbox />
       Solo en la Tier List oficial
     </label>
+
+    <label class="laboratory-search-select">
+      <span class="sr-only">Ordenar catálogo</span>
+      <select data-hub-sort>
+        <option value="name-asc">Nombre (A-Z)</option>
+        <option value="name-desc">Nombre (Z-A)</option>
+        <option value="status">Revisados primero</option>
+      </select>
+    </label>
   </div>
 
   <p
@@ -145,6 +154,10 @@ const difficultyOptions = [
   const rows = [
     ...document.querySelectorAll<HTMLElement>('[data-champion-catalog-row]'),
   ];
+  const catalogGrid = document.querySelector<HTMLElement>(
+    '[data-champion-catalog-grid]',
+  );
+  const sortSelect = root?.querySelector<HTMLSelectElement>('[data-hub-sort]');
   const emptyState = document.querySelector<HTMLElement>(
     '[data-champion-catalog-empty]',
   );
@@ -156,6 +169,30 @@ const difficultyOptions = [
     initial: 'all',
     tierlist: false,
     query: '',
+    sort: 'name-asc',
+  };
+
+  const statusWeight: Record<string, number> = {
+    reviewed: 0,
+    draft: 1,
+    pending: 2,
+  };
+
+  const applySort = () => {
+    if (!catalogGrid) return;
+    const sorted = [...rows].sort((a, b) => {
+      if (state.sort === 'status') {
+        const weightDiff =
+          (statusWeight[a.dataset.status ?? 'pending'] ?? 3) -
+          (statusWeight[b.dataset.status ?? 'pending'] ?? 3);
+        if (weightDiff !== 0) return weightDiff;
+      }
+      const nameA = a.dataset.name ?? '';
+      const nameB = b.dataset.name ?? '';
+      const compared = nameA.localeCompare(nameB, 'es');
+      return state.sort === 'name-desc' ? -compared : compared;
+    });
+    catalogGrid.append(...sorted);
   };
 
   const applyFilters = () => {
@@ -214,6 +251,11 @@ const difficultyOptions = [
     applyFilters();
     syncUrl();
   };
+
+  sortSelect?.addEventListener('change', () => {
+    state.sort = sortSelect.value;
+    applySort();
+  });
 
   const selectChip = (chips: HTMLButtonElement[], chip: HTMLButtonElement) => {
     chips.forEach((candidate) =>
@@ -306,4 +348,5 @@ const difficultyOptions = [
   }
 
   applyFilters();
+  applySort();
 </script>

@@ -1,17 +1,58 @@
 ---
 import { platforms } from '../config/platforms';
 
-const socialLinks = [
-  { name: 'YouTube', href: platforms.youtube.url, icon: '/icons/youtube.svg' },
-  { name: 'Twitch', href: platforms.twitch.url, icon: '/icons/twitch.svg' },
+const socialCards = [
   {
-    name: 'Instagram',
-    href: platforms.instagram.url,
-    icon: '/icons/instagram.svg',
+    key: 'youtube',
+    name: 'YouTube',
+    icon: '/icons/youtube.svg',
+    href: platforms.youtube.url,
+    tagline: 'Gameplays con contexto.',
+    description:
+      'Partidas comentadas de principio a fin: mecánicas, errores y decisiones explicadas para que la partida siga aportando después.',
+    cta: 'Suscribirse',
   },
-  { name: 'X', href: platforms.x.url, icon: '/icons/x.svg' },
-  { name: 'Discord', href: platforms.discord.url, icon: '/icons/discord.svg' },
-];
+  {
+    key: 'twitch',
+    name: 'Twitch',
+    icon: '/icons/twitch.svg',
+    href: platforms.twitch.url,
+    tagline: 'Directo sin cortes.',
+    description:
+      'SoloQ en tiempo real: reacción, tensión y decisiones compartidas con la comunidad mientras ocurren.',
+    cta: 'Seguir el canal',
+  },
+  {
+    key: 'discord',
+    name: 'Discord',
+    icon: '/icons/discord.svg',
+    href: platforms.discord.url,
+    tagline: 'Donde se habla de ADC.',
+    description:
+      'La comunidad más cercana: dudas de builds y runas, avisos de directo y conversación entre partidas.',
+    cta: 'Unirse al servidor',
+  },
+  {
+    key: 'instagram',
+    name: 'Instagram',
+    icon: '/icons/instagram.svg',
+    href: platforms.instagram.url,
+    tagline: 'Momentos y clips.',
+    description:
+      'Highlights, anuncios y el lado más rápido de visitar entre un vídeo y el siguiente.',
+    cta: 'Seguir',
+  },
+  {
+    key: 'x',
+    name: 'X',
+    icon: '/icons/x.svg',
+    href: platforms.x.url,
+    tagline: 'Lo que pienso, al momento.',
+    description:
+      'Opiniones sobre el meta, avisos de directo y la conversación en tiempo real con la comunidad.',
+    cta: 'Seguir',
+  },
+] as const;
 ---
 
 <section
@@ -20,32 +61,34 @@ const socialLinks = [
   data-code="CANAL / COMUNIDAD"
   data-reveal
 >
-  <div
-    class="cta-panel mx-auto max-w-7xl px-6 py-14 text-center sm:px-12 sm:py-20"
-  >
-    <p class="eyebrow">Comunidad</p><h2
-      class="mt-5 text-3xl font-bold tracking-[-0.04em] text-white sm:text-5xl"
-    >
-      Nos vemos en la siguiente partida.
-    </h2><p class="mx-auto mt-5 max-w-xl leading-7 text-slate-400">
-      Elige dónde quieres vivirla: en directo, después de editarla o entre una
-      publicación y la siguiente.
-    </p>
-    <div class="mt-9 flex flex-wrap justify-center gap-3">
+  <div class="mx-auto max-w-7xl px-1">
+    <header class="social-showcase-heading">
+      <p class="eyebrow">Comunidad</p>
+      <h2>Nos vemos en la siguiente partida.</h2>
+      <p>
+        Elige dónde quieres vivirla: en directo, después de editarla o entre
+        una publicación y la siguiente.
+      </p>
+    </header>
+    <div class="social-card-grid">
       {
-        socialLinks.map(({ name, href, icon }, index) => (
+        socialCards.map((card) => (
           <a
-            class={
-              index <= 1
-                ? 'button-primary justify-center px-6 py-3.5'
-                : 'button-secondary justify-center px-6 py-3.5'
-            }
-            href={href}
+            class="social-card"
+            data-social={card.key}
+            href={card.href}
             target="_blank"
             rel="noreferrer"
           >
-            <img src={icon} width="18" height="18" alt="" aria-hidden="true" />
-            {name} <span aria-hidden="true">↗</span>
+            <div class="social-card-head">
+              <img src={card.icon} width="28" height="28" alt="" aria-hidden="true" />
+              <span>{card.name}</span>
+            </div>
+            <strong>{card.tagline}</strong>
+            <p>{card.description}</p>
+            <span class="social-card-cta">
+              {card.cta} <b aria-hidden="true">↗</b>
+            </span>
           </a>
         ))
       }

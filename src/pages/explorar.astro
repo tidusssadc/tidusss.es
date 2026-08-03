@@ -1,0 +1,182 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Navbar from '../components/Navbar.astro';
+import Footer from '../components/Footer.astro';
+import LaboratoryHero from '../components/laboratory/LaboratoryHero.astro';
+import { platforms } from '../config/platforms';
+import { PREGUNTA_GENERAL_SUGGESTIONS } from '../data/pregunta';
+import {
+  buildLabRegistry,
+  getCatalogCoverage,
+} from '../domain/league-laboratory';
+import {
+  adcLabChampions,
+  championCatalog,
+  leagueLaboratoryBuilds,
+  leagueLaboratoryConcepts,
+  leagueLaboratoryPatches,
+  leagueLaboratorySynergies,
+  officialAdcTierList,
+} from '../data/league-laboratory';
+
+const registry = buildLabRegistry({
+  catalog: championCatalog,
+  champions: adcLabChampions,
+  patches: leagueLaboratoryPatches,
+  tierLists: [officialAdcTierList],
+});
+const coverage = getCatalogCoverage(registry);
+
+const stats = [
+  { value: coverage.total, label: 'Campeones en el catálogo' },
+  { value: coverage.reviewed, label: 'Analizados por Tidusss' },
+  { value: leagueLaboratoryBuilds.length, label: 'Builds documentadas' },
+  { value: leagueLaboratorySynergies.length, label: 'Sinergias confirmadas' },
+  { value: leagueLaboratoryConcepts.length, label: 'Conceptos explicados' },
+  { value: leagueLaboratoryPatches.length, label: 'Parches cubiertos' },
+] as const;
+
+const groups = [
+  {
+    title: 'El Laboratorio',
+    description:
+      'El criterio de Tidusss sobre League of Legends, documentado campeón a campeón.',
+    links: [
+      {
+        href: '/campeones/lucian',
+        title: 'Guía completa de Lucian',
+        description:
+          'Build, runas, sinergias, matchups, power spikes y errores frecuentes.',
+      },
+      {
+        href: '/campeones',
+        title: 'Centro de Campeones',
+        description: `Los ${coverage.total} campeones del catálogo, busca y filtra por estado.`,
+      },
+      {
+        href: '/tier-list',
+        title: 'Tier List oficial ADC',
+        description: 'Clasificación editorial del meta actual, no un promedio de win rate.',
+      },
+    ],
+  },
+  {
+    title: 'Contenido',
+    description: 'Partidas, directos y el análisis detrás de cada decisión.',
+    links: [
+      {
+        href: '/#contenido',
+        title: 'Últimos vídeos',
+        description: 'Gameplays y análisis recientes, directamente desde YouTube.',
+      },
+      {
+        href: '/live',
+        title: 'Directo y actividad competitiva',
+        description: 'Rango, partidas recientes y el directo de Twitch cuando está activo.',
+      },
+      {
+        href: '/actividad',
+        title: 'Actividad reciente',
+        description: 'Todo lo publicado y actualizado, en orden cronológico.',
+      },
+    ],
+  },
+  {
+    title: 'Pregunta a Tidusss',
+    description:
+      'Resuelve dudas concretas sobre Lucian, ADC y el contenido publicado, al momento.',
+    links: PREGUNTA_GENERAL_SUGGESTIONS.slice(0, 3).map((question) => ({
+      href: `/pregunta?q=${encodeURIComponent(question)}`,
+      title: question,
+      description: 'Responde con el contenido editorial ya publicado.',
+    })),
+  },
+  {
+    title: 'Comunidad',
+    description: 'Objetivos, roadmap y dónde seguir el proceso en directo.',
+    links: [
+      {
+        href: '/comunidad',
+        title: 'Estado del proyecto y roadmap',
+        description: 'Objetivos actuales, qué se está preparando y qué ha cambiado.',
+      },
+      {
+        href: platforms.discord.url,
+        title: 'Servidor de Discord',
+        description: 'La comunidad más cercana para hablar de ADC.',
+        external: true,
+      },
+      {
+        href: platforms.twitch.url,
+        title: 'Twitch',
+        description: 'Sigue el canal para no perderte el próximo directo.',
+        external: true,
+      },
+    ],
+  },
+] as const;
+
+const pageTitle = 'Explorar · tidusss.es';
+const pageDescription =
+  'El índice completo de tidusss.es: guías, tier list, vídeos, directos, Pregunta a Tidusss y comunidad, todo en un solo sitio.';
+---
+
+<BaseLayout title={pageTitle} description={pageDescription}>
+  <Navbar />
+  <main>
+    <LaboratoryHero
+      eyebrow="Índice"
+      title="Explorar"
+      description="Todo lo que hay en tidusss.es, en un solo sitio: guías, herramientas, vídeos, directos y la comunidad."
+    />
+    <section class="explore-page section-shell" aria-labelledby="explore-title">
+      <div class="mx-auto max-w-7xl px-5 sm:px-8">
+        <h2 id="explore-title" class="sr-only">Explorar tidusss.es</h2>
+
+        <dl class="explore-stats" aria-label="El Laboratorio en cifras">
+          {
+            stats.map((stat) => (
+              <div>
+                <dt>{stat.label}</dt>
+                <dd>{stat.value}</dd>
+              </div>
+            ))
+          }
+        </dl>
+
+        <div class="explore-groups">
+          {
+            groups.map((group) => (
+              <div class="explore-group">
+                <header>
+                  <h3>{group.title}</h3>
+                  <p>{group.description}</p>
+                </header>
+                <ul>
+                  {group.links.map((link) => (
+                    <li>
+                      <a
+                        href={link.href}
+                        target={'external' in link && link.external ? '_blank' : undefined}
+                        rel={'external' in link && link.external ? 'noopener noreferrer' : undefined}
+                      >
+                        <div>
+                          <strong>{link.title}</strong>
+                          <p>{link.description}</p>
+                        </div>
+                        <b aria-hidden="true">
+                          {'external' in link && link.external ? '↗' : '→'}
+                        </b>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))
+          }
+        </div>
+      </div>
+    </section>
+  </main>
+  <Footer />
+</BaseLayout>

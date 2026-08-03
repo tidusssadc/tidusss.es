@@ -79,6 +79,20 @@ import { integrationEndpoints, platforms } from '../config/platforms';
             <div><dt>Duración</dt><dd data-twitch-duration></dd></div>
           </dl>
         </div>
+        <a
+          class="twitch-last-stream"
+          data-twitch-last-stream
+          href={platforms.twitch.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          hidden
+        >
+          <img data-twitch-last-stream-thumb alt="" loading="lazy" decoding="async" />
+          <div>
+            <span>Último directo <b data-twitch-last-stream-ago></b></span>
+            <strong data-twitch-last-stream-title></strong>
+          </div>
+        </a>
         <small data-twitch-updated class="showcase-skeleton">&nbsp;</small>
         <a
           class="platform-cta"
@@ -203,6 +217,10 @@ import { integrationEndpoints, platforms } from '../config/platforms';
   };
   const number = (value: number) =>
     new Intl.NumberFormat('es-ES').format(value);
+  const setText = (root: ParentNode, selector: string, value: string) => {
+    const node = root.querySelector<HTMLElement>(selector);
+    if (node) node.textContent = value;
+  };
 
   const renderVideo = (video: YouTubeVideo, index: number) => {
     const link = document.createElement('a');
@@ -312,13 +330,40 @@ import { integrationEndpoints, platforms } from '../config/platforms';
               elapsedDuration(data.startedAt) ?? 'Recién iniciado',
             );
             setShowcase('[data-twitch-cta]', 'Ver en Twitch ↗');
-          } else
+          } else {
             setShowcase(
               '[data-twitch-cta]',
               data.state === 'not-configured'
                 ? 'Visitar Twitch ↗'
                 : 'Seguir en Twitch ↗',
             );
+            if (data.lastStream) {
+              const lastStream = showcase.querySelector<HTMLAnchorElement>(
+                '[data-twitch-last-stream]',
+              );
+              if (lastStream) {
+                lastStream.href = data.lastStream.url;
+                lastStream.hidden = false;
+                const thumb = lastStream.querySelector<HTMLImageElement>(
+                  '[data-twitch-last-stream-thumb]',
+                );
+                if (thumb && data.lastStream.thumbnailUrl) {
+                  thumb.src = data.lastStream.thumbnailUrl;
+                  thumb.alt = '';
+                }
+                setText(
+                  lastStream,
+                  '[data-twitch-last-stream-ago]',
+                  relativeTime(data.lastStream.publishedAt) ?? '',
+                );
+                setText(
+                  lastStream,
+                  '[data-twitch-last-stream-title]',
+                  data.lastStream.title,
+                );
+              }
+            }
+          }
           setShowcase('[data-twitch-updated]', updatedAgo(data.updatedAt));
         })
         .catch(() => {

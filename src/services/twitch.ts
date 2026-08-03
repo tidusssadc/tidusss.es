@@ -25,6 +25,62 @@ const reportTwitchFailure = (phase: 'oauth' | 'helix', status: number) => {
   });
 };
 
+const parseTwitchDuration = (value: string): string | undefined => {
+  const match = /^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?$/.exec(value);
+  if (!match) return undefined;
+  const hours = Number(match[1] ?? 0);
+  const minutes = Number(match[2] ?? 0);
+  if (!hours && !minutes) return undefined;
+  return hours ? `${hours}h ${minutes}min` : `${minutes}min`;
+};
+
+const getLastStream = async (
+  env: Required<TwitchEnvironment>,
+  accessToken: string,
+): Promise<TwitchStatus['lastStream']> => {
+  const headers = {
+    'Client-Id': env.TWITCH_CLIENT_ID,
+    Authorization: `Bearer ${accessToken}`,
+  };
+  const usersResponse = await fetch(
+    `https://api.twitch.tv/helix/users?login=${encodeURIComponent(env.TWITCH_USER_LOGIN)}`,
+    { headers },
+  );
+  if (!usersResponse.ok) return undefined;
+  const usersPayload = (await usersResponse.json()) as {
+    data?: Array<{ id?: string }>;
+  };
+  const userId = usersPayload.data?.[0]?.id;
+  if (!userId) return undefined;
+  const videosResponse = await fetch(
+    `https://api.twitch.tv/helix/videos?user_id=${userId}&type=archive&first=1`,
+    { headers },
+  );
+  if (!videosResponse.ok) return undefined;
+  const videosPayload = (await videosResponse.json()) as {
+    data?: Array<{
+      title?: string;
+      url?: string;
+      thumbnail_url?: string;
+      created_at?: string;
+      duration?: string;
+    }>;
+  };
+  const video = videosPayload.data?.[0];
+  if (!video?.title || !video.url || !video.created_at) return undefined;
+  return {
+    title: video.title,
+    url: video.url,
+    thumbnailUrl: video.thumbnail_url
+      ?.replace('%{width}', '640')
+      .replace('%{height}', '360'),
+    publishedAt: video.created_at,
+    durationLabel: video.duration
+      ? parseTwitchDuration(video.duration)
+      : undefined,
+  };
+};
+
 const token = async (env: Required<TwitchEnvironment>) => {
   if (
     tokenCache &&
@@ -97,7 +153,12 @@ export const getTwitchStatus = async (
   };
   const stream = payload.data?.[0];
   const updatedAt = new Date().toISOString();
-  if (!stream) return { isLive: false, state: 'offline', updatedAt };
+  if (!stream) {
+    const lastStream = await getLastStream(env, accessToken).catch(
+      () => undefined,
+    );
+    return { isLive: false, state: 'offline', updatedAt, lastStream };
+  }
   return {
     isLive: true,
     state: 'online',

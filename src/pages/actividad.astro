@@ -1,0 +1,242 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Navbar from '../components/Navbar.astro';
+import Footer from '../components/Footer.astro';
+import LaboratoryHero from '../components/laboratory/LaboratoryHero.astro';
+import { integrationEndpoints } from '../config/platforms';
+import {
+  lucian,
+  leagueLaboratoryPatches,
+  officialAdcTierList,
+} from '../data/league-laboratory';
+
+interface ActivityEntry {
+  date: string;
+  kind: 'guía' | 'tier list' | 'pregunta' | 'centro de campeones';
+  title: string;
+  description: string;
+  href: string;
+}
+
+const patch = leagueLaboratoryPatches.find(
+  (candidate) => candidate.id === officialAdcTierList.patchId,
+);
+
+const staticEntries: ActivityEntry[] = [
+  {
+    date: '2026-08-03',
+    kind: 'pregunta' as const,
+    title: 'Se publica Pregunta a Tidusss',
+    description:
+      'Nueva forma de resolver dudas sobre Lucian y ADC con el contenido editorial ya publicado, sin esperar a un vídeo.',
+    href: '/pregunta',
+  },
+  ...(lucian.editorialHistory ?? []).map((entry) => ({
+    date: entry.date,
+    kind: 'guía' as const,
+    title: 'Guía de Lucian actualizada',
+    description: entry.summary,
+    href: '/campeones/lucian',
+  })),
+  {
+    date: officialAdcTierList.publishedAt ?? '2026-07-24',
+    kind: 'tier list' as const,
+    title: `Tier List ADC publicada${patch ? ` · ${patch.label}` : ''}`,
+    description: officialAdcTierList.title,
+    href: '/tier-list',
+  },
+  {
+    date: '2026-07-24',
+    kind: 'centro de campeones' as const,
+    title: 'Se abre el Centro de Campeones',
+    description:
+      'Catálogo completo explorable, con búsqueda y filtros por estado editorial.',
+    href: '/campeones',
+  },
+].sort((a, b) => Date.parse(b.date) - Date.parse(a.date));
+
+const kindLabel: Record<ActivityEntry['kind'], string> = {
+  guía: 'Guía',
+  'tier list': 'Tier List',
+  pregunta: 'Pregunta a Tidusss',
+  'centro de campeones': 'Centro de Campeones',
+};
+
+const pageTitle = 'Actividad · tidusss.es';
+const pageDescription =
+  'Todo lo publicado y actualizado en tidusss.es, en orden cronológico: vídeos, directos, guías y cambios editoriales.';
+---
+
+<BaseLayout title={pageTitle} description={pageDescription}>
+  <Navbar />
+  <main>
+    <LaboratoryHero
+      eyebrow="Actividad"
+      title="Todo lo que pasa, en orden"
+      description="Vídeos, directos, guías y cambios editoriales, ordenados cronológicamente en un solo lugar."
+    />
+    <section
+      class="activity-page section-shell"
+      aria-labelledby="activity-feed-title"
+      data-activity-feed
+      data-youtube={integrationEndpoints.youtube}
+      data-twitch={integrationEndpoints.twitch}
+    >
+      <div class="mx-auto max-w-4xl px-5 sm:px-8">
+        <h2 id="activity-feed-title" class="sr-only">Feed de actividad</h2>
+        <ol class="activity-feed" data-activity-list>
+          {
+            staticEntries.map((entry) => (
+              <li data-activity-date={entry.date}>
+                <a href={entry.href} class="activity-entry">
+                  <time datetime={entry.date}>
+                    {new Date(entry.date).toLocaleDateString('es-ES', {
+                      day: 'numeric',
+                      month: 'short',
+                      year: 'numeric',
+                    })}
+                  </time>
+                  <div>
+                    <b class="activity-kind" data-kind={entry.kind}>
+                      {kindLabel[entry.kind]}
+                    </b>
+                    <strong>{entry.title}</strong>
+                    <p>{entry.description}</p>
+                  </div>
+                </a>
+              </li>
+            ))
+          }
+        </ol>
+        <p class="activity-feed-loading" data-activity-loading>
+          Cargando vídeos y directos recientes…
+        </p>
+      </div>
+    </section>
+  </main>
+  <Footer />
+</BaseLayout>
+
+<script>
+  import type { YouTubeFeedResponse, YouTubeVideo } from '../types/content';
+  import type { TwitchStatusResponse } from '../types/platforms';
+
+  const section = document.querySelector<HTMLElement>('[data-activity-feed]');
+  const list = section?.querySelector<HTMLOListElement>('[data-activity-list]');
+  const loading = section?.querySelector<HTMLElement>('[data-activity-loading]');
+
+  const dayLabel = (iso: string) =>
+    new Date(iso).toLocaleDateString('es-ES', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    });
+
+  const buildItem = (opts: {
+    date: string;
+    kind: string;
+    kindClass: string;
+    title: string;
+    description: string;
+    href: string;
+    external?: boolean;
+  }) => {
+    const li = document.createElement('li');
+    li.dataset.activityDate = opts.date;
+    const link = document.createElement('a');
+    link.className = 'activity-entry';
+    link.href = opts.href;
+    if (opts.external) {
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+    }
+    const time = document.createElement('time');
+    time.dateTime = opts.date;
+    time.textContent = dayLabel(opts.date);
+    const body = document.createElement('div');
+    const kind = document.createElement('b');
+    kind.className = 'activity-kind';
+    kind.dataset.kind = opts.kindClass;
+    kind.textContent = opts.kind;
+    const title = document.createElement('strong');
+    title.textContent = opts.title;
+    const description = document.createElement('p');
+    description.textContent = opts.description;
+    body.append(kind, title, description);
+    link.append(time, body);
+    li.append(link);
+    return li;
+  };
+
+  const insertSorted = (items: HTMLLIElement[]) => {
+    if (!list) return;
+    const existing = [...list.children] as HTMLLIElement[];
+    const all = [...existing, ...items];
+    all.sort(
+      (a, b) =>
+        Date.parse(b.dataset.activityDate ?? '') -
+        Date.parse(a.dataset.activityDate ?? ''),
+    );
+    list.replaceChildren(...all);
+  };
+
+  if (section && list) {
+    Promise.allSettled([
+      fetch(section.dataset.youtube!)
+        .then((response) => response.json() as Promise<YouTubeFeedResponse>)
+        .then((payload) => {
+          if (!payload.ok) throw new Error(payload.error.code);
+          return payload.data.videos.slice(0, 6).map((video: YouTubeVideo) =>
+            buildItem({
+              date: video.publishedAt,
+              kind: 'Vídeo',
+              kindClass: 'video',
+              title: video.title,
+              description: `Nuevo vídeo en el canal${video.durationLabel ? ` · ${video.durationLabel}` : ''}.`,
+              href: video.url,
+              external: true,
+            }),
+          );
+        })
+        .catch(() => []),
+      fetch(section.dataset.twitch!)
+        .then((response) => response.json() as Promise<TwitchStatusResponse>)
+        .then((payload) => {
+          if (!payload.ok) throw new Error(payload.error.code);
+          const { data } = payload;
+          if (data.isLive)
+            return [
+              buildItem({
+                date: data.startedAt ?? data.updatedAt,
+                kind: 'Directo',
+                kindClass: 'live',
+                title: 'En directo ahora en Twitch',
+                description: data.title ?? 'Tidusss está jugando en directo.',
+                href: 'https://www.twitch.tv/tidussstwitch',
+                external: true,
+              }),
+            ];
+          if (data.lastStream)
+            return [
+              buildItem({
+                date: data.lastStream.publishedAt,
+                kind: 'Directo',
+                kindClass: 'live',
+                title: 'Último directo en Twitch',
+                description: data.lastStream.title,
+                href: data.lastStream.url,
+                external: true,
+              }),
+            ];
+          return [];
+        })
+        .catch(() => []),
+    ]).then((results) => {
+      const items = results.flatMap((result) =>
+        result.status === 'fulfilled' ? result.value : [],
+      );
+      if (items.length) insertSorted(items);
+      if (loading) loading.hidden = true;
+    });
+  } else if (loading) loading.hidden = true;
+</script>

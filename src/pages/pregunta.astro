@@ -286,35 +286,60 @@ const pageDescription =
       return badge;
     };
 
-    const renderSource = (source: PublicSource): HTMLElement => {
-      const card = el('article', 'pregunta-source-card');
-      const header = el('div', 'pregunta-source-header');
-      const badge = el('span', 'lab-badge');
-      badge.append(el('span', 'lab-badge-label', 'Fuente'), el('strong', undefined, source.type));
-      header.append(badge);
-      if (source.patchId) {
-        const patchBadge = el('span', 'lab-badge lab-badge--patch');
-        patchBadge.append(el('span', 'lab-badge-label', 'Parche'), el('strong', undefined, source.patchId));
-        header.append(patchBadge);
-      }
-      if (source.editorialDate) {
-        header.append(el('time', 'pregunta-source-date', new Date(source.editorialDate).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })));
-      }
-      card.append(header);
-      card.append(el('h3', 'pregunta-source-title', source.title));
-      if (source.excerpt) card.append(el('p', 'pregunta-source-excerpt', `“${source.excerpt}”`));
-      const link = el('a', 'pregunta-source-cta', 'Consultar fuente');
+    const renderSourceRow = (source: PublicSource): HTMLElement => {
+      const row = el('li');
+      const link = el('a', 'pregunta-source-row');
       link.href = source.url;
-      link.append(document.createTextNode(' '));
-      const arrow = el('span', undefined, '→');
+      link.title = 'Consultar fuente: ' + source.title;
+      link.append(el('span', 'pregunta-source-row-title', source.title));
+      if (source.patchId)
+        link.append(el('span', 'pregunta-source-row-meta', source.patchId));
+      const arrow = el('b', undefined, '→');
       arrow.setAttribute('aria-hidden', 'true');
       link.append(arrow);
-      card.append(link);
-      return card;
+      row.append(link);
+      return row;
+    };
+
+    /**
+     * Las fuentes son secundarias frente a la respuesta: se agrupan por tipo
+     * (evita repetir la misma etiqueta en cada fila) y se deduplican por
+     * título, aunque el motor ya no debería repetir documentos.
+     */
+    const renderSourcesSection = (sources: readonly PublicSource[]): HTMLElement => {
+      const seen = new Set<string>();
+      const unique = sources.filter((source) => {
+        const key = source.title.trim().toLocaleLowerCase('es-ES');
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+      const groups = new Map<string, PublicSource[]>();
+      unique.forEach((source) => {
+        const bucket = groups.get(source.type) ?? [];
+        bucket.push(source);
+        groups.set(source.type, bucket);
+      });
+
+      const details = el('details', 'pregunta-sources');
+      details.open = unique.length <= 2;
+      const summary = el('summary', undefined, `Fuentes (${unique.length})`);
+      details.append(summary);
+      const body = el('div', 'pregunta-sources-body');
+      for (const [type, groupSources] of groups) {
+        const group = el('div', 'pregunta-source-group');
+        group.append(el('span', 'pregunta-source-group-label', type));
+        const list = el('ul', 'pregunta-source-group-list');
+        groupSources.forEach((source) => list.append(renderSourceRow(source)));
+        group.append(list);
+        body.append(group);
+      }
+      details.append(body);
+      return details;
     };
 
     const renderRelated = (link: PublicRelatedLink): HTMLElement => {
-      const anchor = el('a', 'pregunta-related-card');
+      const anchor = el('a', 'pregunta-related-chip');
       anchor.href = link.href;
       anchor.append(el('span', 'pregunta-related-kind', link.kind));
       anchor.append(el('strong', undefined, link.title));
@@ -361,16 +386,8 @@ const pageDescription =
         );
       }
 
-      const badgeRow = el('div', 'pregunta-badge-row');
-      if (data.editorialConfidence) badgeRow.append(renderConfidence(data.editorialConfidence));
-      badgeRow.append(renderCoverageBadge(data.coverage));
-      if (data.patchId) {
-        const patchBadge = el('span', 'lab-badge lab-badge--patch');
-        patchBadge.append(el('span', 'lab-badge-label', 'Parche'), el('strong', undefined, data.patchId));
-        badgeRow.append(patchBadge);
-      }
-      card.append(badgeRow);
-
+      // La respuesta es la protagonista visual: va primero y con más peso
+      // tipográfico. Confianza/cobertura/fuentes son secundarias y van después.
       const body = el('div', 'pregunta-answer-body');
       const sentences = (data.answer ?? '').split(/(?<=[.!?])\s+/).filter((sentence) => sentence.trim().length > 0);
       sentences.forEach((sentence, index) => {
@@ -387,21 +404,24 @@ const pageDescription =
         ),
       );
 
-      if (data.sources.length > 0) {
-        const sourcesSection = el('div', 'pregunta-sources');
-        sourcesSection.append(el('h3', undefined, 'Fuentes'));
-        const grid = el('div', 'pregunta-sources-grid');
-        data.sources.forEach((source) => grid.append(renderSource(source)));
-        sourcesSection.append(grid);
-        card.append(sourcesSection);
+      const badgeRow = el('div', 'pregunta-badge-row');
+      if (data.editorialConfidence) badgeRow.append(renderConfidence(data.editorialConfidence));
+      badgeRow.append(renderCoverageBadge(data.coverage));
+      if (data.patchId) {
+        const patchBadge = el('span', 'lab-badge lab-badge--patch');
+        patchBadge.append(el('span', 'lab-badge-label', 'Parche'), el('strong', undefined, data.patchId));
+        badgeRow.append(patchBadge);
       }
+      card.append(badgeRow);
+
+      if (data.sources.length > 0) card.append(renderSourcesSection(data.sources));
 
       if (data.related.length > 0) {
         const relatedSection = el('div', 'pregunta-related');
         relatedSection.append(el('h3', undefined, 'Contenido relacionado'));
-        const grid = el('div', 'pregunta-related-grid');
-        data.related.forEach((link) => grid.append(renderRelated(link)));
-        relatedSection.append(grid);
+        const chips = el('div', 'pregunta-related-chips');
+        data.related.forEach((link) => chips.append(renderRelated(link)));
+        relatedSection.append(chips);
         card.append(relatedSection);
       }
 

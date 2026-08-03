@@ -1,0 +1,225 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Navbar from '../components/Navbar.astro';
+import Footer from '../components/Footer.astro';
+import LaboratoryHero from '../components/laboratory/LaboratoryHero.astro';
+import { integrationEndpoints, platforms } from '../config/platforms';
+import { goals } from '../config/goals';
+
+const activeGoals = goals.filter((goal) => goal.status === 'active');
+const futureGoals = goals.filter((goal) => goal.status === 'future');
+
+const inProgress = [
+  {
+    title: 'Documentar los primeros matchups de Lucian',
+    description:
+      'El apartado de matchups del Laboratorio todavía está vacío — es el siguiente contenido editorial en cola.',
+  },
+  {
+    title: 'Ampliar el catálogo de campeones analizados',
+    description:
+      'Solo un puñado de campeones tiene ya el criterio completo de Tidusss; el resto del catálogo sigue disponible mientras se revisa.',
+  },
+  {
+    title: 'Seguir creciendo Pregunta a Tidusss',
+    description:
+      'Más contenido editorial publicado significa respuestas más completas — cada guía nueva alimenta directamente el motor de respuestas.',
+  },
+] as const;
+
+const changelog = [
+  {
+    date: '2026-08-03',
+    summary:
+      'Se publica Pregunta a Tidusss: resuelve dudas sobre Lucian y ADC con el contenido editorial ya publicado.',
+  },
+  {
+    date: '2026-07-26',
+    summary:
+      'Se amplía la guía de Lucian con build personal, sinergias, quick tips e historial editorial.',
+  },
+  {
+    date: '2026-07-24',
+    summary:
+      'Se publican la Tier List oficial ADC y el Centro de Campeones, con el catálogo completo explorable.',
+  },
+] as const;
+
+const pageTitle = 'Comunidad · tidusss.es';
+const pageDescription =
+  'Objetivos, roadmap y estado real del proyecto de Tidusss: qué se está preparando y qué ha cambiado recientemente.';
+---
+
+<BaseLayout title={pageTitle} description={pageDescription}>
+  <Navbar />
+  <main>
+    <LaboratoryHero
+      eyebrow="Comunidad"
+      title="Estado del proyecto"
+      description="Objetivos actuales, qué se está preparando y qué ha cambiado recientemente. Sin promesas de fechas: solo lo que es real hoy."
+    />
+    <section class="community-page section-shell" aria-labelledby="community-goals-title">
+      <div class="mx-auto max-w-7xl px-5 sm:px-8">
+        <header class="community-section-heading">
+          <p class="eyebrow">Objetivos</p>
+          <h2 id="community-goals-title">Hacia dónde va el canal ahora mismo</h2>
+        </header>
+        <div
+          class="community-goals"
+          data-community-goals
+          data-youtube-stats={integrationEndpoints.youtubeStats}
+          data-riot={integrationEndpoints.riot}
+        >
+          {
+            activeGoals.map((goal) => (
+              <div class="community-goal" data-goal={goal.id}>
+                <strong>{goal.label}</strong>
+                {goal.description && <p>{goal.description}</p>}
+                <div class="community-goal-bar">
+                  <i style="width: 0%" data-goal-bar />
+                </div>
+                <span data-goal-progress class="showcase-skeleton">&nbsp;</span>
+              </div>
+            ))
+          }
+          {
+            futureGoals.map((goal) => (
+              <div class="community-goal community-goal-future" data-goal={goal.id}>
+                <strong>{goal.label}</strong>
+                {goal.description && <p>{goal.description}</p>}
+                <span class="community-goal-tag">Objetivo a largo plazo</span>
+              </div>
+            ))
+          }
+        </div>
+      </div>
+    </section>
+
+    <section class="community-page section-shell" aria-labelledby="community-progress-title">
+      <div class="mx-auto max-w-7xl px-5 sm:px-8">
+        <header class="community-section-heading">
+          <p class="eyebrow">Roadmap</p>
+          <h2 id="community-progress-title">Qué se está preparando ahora</h2>
+        </header>
+        <ul class="community-progress-list">
+          {
+            inProgress.map((item) => (
+              <li>
+                <strong>{item.title}</strong>
+                <p>{item.description}</p>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </section>
+
+    <section class="community-page section-shell" aria-labelledby="community-changelog-title">
+      <div class="mx-auto max-w-7xl px-5 sm:px-8">
+        <header class="community-section-heading">
+          <p class="eyebrow">Últimos cambios</p>
+          <h2 id="community-changelog-title">Lo que ha cambiado recientemente</h2>
+        </header>
+        <ol class="community-changelog">
+          {
+            changelog.map((entry) => (
+              <li>
+                <time datetime={entry.date}>
+                  {new Date(entry.date).toLocaleDateString('es-ES', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric',
+                  })}
+                </time>
+                <p>{entry.summary}</p>
+              </li>
+            ))
+          }
+        </ol>
+        <a class="button-secondary mt-8 inline-flex" href="/actividad">
+          Ver toda la actividad <span aria-hidden="true">→</span>
+        </a>
+      </div>
+    </section>
+
+    <section class="community-page section-shell" aria-labelledby="community-join-title">
+      <div class="mx-auto max-w-7xl px-5 sm:px-8">
+        <header class="community-section-heading">
+          <p class="eyebrow">Únete</p>
+          <h2 id="community-join-title">Sigue el proceso de cerca</h2>
+        </header>
+        <div class="community-join-actions">
+          <a class="button-primary" href={platforms.discord.url} target="_blank" rel="noreferrer">
+            Unirse a Discord <span aria-hidden="true">↗</span>
+          </a>
+          <a class="button-secondary" href={platforms.twitch.url} target="_blank" rel="noreferrer">
+            Seguir en Twitch <span aria-hidden="true">↗</span>
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+  <Footer />
+</BaseLayout>
+
+<script>
+  import type { YouTubeStatsResponse } from '../types/platforms';
+  import type { RiotPublicResponse } from '../lib/riot';
+  import { goalProgress } from '../config/goals';
+
+  const container = document.querySelector<HTMLElement>('[data-community-goals]');
+  const setGoal = (id: string, current: string, progress?: number) => {
+    const node = container?.querySelector<HTMLElement>(`[data-goal="${id}"]`);
+    if (!node) return;
+    const progressLabel = node.querySelector<HTMLElement>('[data-goal-progress]');
+    const bar = node.querySelector<HTMLElement>('[data-goal-bar]');
+    if (progressLabel) {
+      progressLabel.textContent = current;
+      progressLabel.classList.remove('showcase-skeleton');
+    }
+    if (bar && progress !== undefined)
+      bar.style.width = `${Math.min(100, Math.max(0, progress))}%`;
+  };
+
+  if (container) {
+    fetch(container.dataset.youtubeStats!)
+      .then((response) => response.json() as Promise<YouTubeStatsResponse>)
+      .then((payload) => {
+        if (!payload.ok) throw new Error(payload.error.code);
+        const { data } = payload;
+        if (data.subscriberCount !== undefined && data.nextGoal !== undefined)
+          setGoal(
+            'youtube-next',
+            `${new Intl.NumberFormat('es-ES').format(data.subscriberCount)} / ${new Intl.NumberFormat('es-ES').format(data.nextGoal)} suscriptores`,
+            data.progress,
+          );
+        if (data.videoCount !== undefined)
+          setGoal(
+            'videos-500',
+            `${new Intl.NumberFormat('es-ES').format(data.videoCount)} / 500 vídeos`,
+            Math.min(100, (data.videoCount / 500) * 100),
+          );
+      })
+      .catch(() => {
+        setGoal('youtube-next', 'Sin datos por ahora');
+        setGoal('videos-500', 'Sin datos por ahora');
+      });
+
+    fetch(container.dataset.riot!)
+      .then((response) => response.json() as Promise<RiotPublicResponse>)
+      .then((payload) => {
+        if (!payload.ok) throw new Error(payload.error.code);
+        const { ranked } = payload.data;
+        if (ranked.leaguePoints !== undefined)
+          setGoal(
+            'soloqueue-700',
+            `${ranked.leaguePoints} / 700 LP`,
+            goalProgress(ranked.leaguePoints, 700),
+          );
+        else setGoal('soloqueue-700', 'Sin clasificación por ahora');
+      })
+      .catch(() => {
+        setGoal('soloqueue-700', 'Sin datos por ahora');
+      });
+  }
+</script>

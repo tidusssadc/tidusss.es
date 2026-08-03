@@ -26,6 +26,13 @@ export interface TwitchStatus {
   thumbnailUrl?: string;
   updatedAt: string;
   state: 'online' | 'offline' | 'not-configured';
+  lastStream?: {
+    title: string;
+    url: string;
+    thumbnailUrl?: string;
+    publishedAt: string;
+    durationLabel?: string;
+  };
 }
 
 export type TwitchStatusResponse =

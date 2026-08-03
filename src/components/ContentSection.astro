@@ -18,66 +18,229 @@ import SectionHeading from './SectionHeading.astro';
       title="Partidas reales. Decisiones explicadas."
       description="Contenido directo sobre mecánicas, botlane y todo lo que ocurre antes de apretar el botón."
     />
-    <div class="mt-12 grid gap-4 md:grid-cols-3">
+
+    <ul class="content-pillars" aria-label="Qué encontrarás en el canal">
       {
-        contentCards.map((card, index) => (
-          <article
-            class="content-card group"
-            style={`--item-index: ${index}`}
-            data-content-card={index}
-          >
-            <img
-              class="content-card-still"
-              data-content-still
-              width="480"
-              height="270"
-              alt=""
-              aria-hidden="true"
-              loading="lazy"
-              decoding="async"
-              hidden
-            />
-            <span class="text-xs font-bold tracking-[0.22em] text-[#d6b56b]">
-              {card.number}
-            </span>
-            <h3 class="mt-8 text-xl font-semibold text-white">{card.title}</h3>
-            <p class="mt-4 text-sm leading-7 text-slate-400">
-              {card.description}
-            </p>
-            <span class="mt-8 block h-px w-10 bg-[#278cff] transition-all duration-300 group-hover:w-20" />
-          </article>
+        contentCards.map((card) => (
+          <li class="content-pillar">
+            <span aria-hidden="true">{card.number}</span>
+            <div>
+              <strong>{card.title}</strong>
+              <p>{card.description}</p>
+            </div>
+          </li>
         ))
       }
+    </ul>
+
+    <div class="content-showcase" data-content-showcase>
+      <a class="content-featured is-loading" data-content-featured href="#">
+        <span class="content-featured-media">
+          <img data-content-featured-thumb alt="" loading="lazy" decoding="async" />
+          <span class="content-play-glyph" aria-hidden="true">▶</span>
+          <span class="content-duration" data-content-featured-duration hidden
+          ></span>
+        </span>
+        <span class="content-featured-body">
+          <span class="content-featured-badges">
+            <b class="content-badge content-badge-featured">Último vídeo</b>
+            <b
+              class="content-badge content-badge-tag"
+              data-content-featured-tag
+              hidden></b>
+          </span>
+          <strong data-content-featured-title>Cargando el último vídeo…</strong>
+          <span class="content-featured-meta">
+            <span data-content-featured-date></span>
+            <span data-content-featured-views hidden></span>
+          </span>
+        </span>
+      </a>
+
+      <div class="content-grid" data-content-grid aria-busy="true">
+        {
+          Array.from({ length: 6 }, () => (
+            <div class="content-grid-skeleton" aria-hidden="true">
+              <span />
+              <b />
+              <i />
+            </div>
+          ))
+        }
+      </div>
+    </div>
+
+    <p class="content-showcase-empty" data-content-empty hidden>
+      Los vídeos no se han podido cargar ahora mismo. Puedes verlos
+      directamente en el canal.
+    </p>
+
+    <div class="content-showcase-cta">
+      <a
+        class="button-secondary"
+        href={`https://www.youtube.com/@tidussstwitch`}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Ver todos los vídeos en YouTube <span aria-hidden="true">↗</span>
+      </a>
     </div>
   </div>
 </section>
 
 <script>
-  import type { YouTubeFeedResponse } from '../types/content';
+  import { relativeTime } from '../lib/time';
+  import type { YouTubeFeedResponse, YouTubeVideo } from '../types/content';
 
-  const section = document.querySelector<HTMLElement>('[data-content-section]');
+  const section = document.querySelector<HTMLElement>(
+    '[data-content-section]',
+  );
+
+  const guessTag = (video: YouTubeVideo): string => {
+    const title = video.title.toLocaleLowerCase('es-ES');
+    if (video.isShort) return 'Short';
+    if (/\bvs\b|matchup|contra /.test(title)) return 'Matchup';
+    if (/build|runa|ítem|item/.test(title)) return 'Build & Runas';
+    if (/directo|stream|en vivo/.test(title)) return 'Directo';
+    if (/combo|mecánica|mecanica/.test(title)) return 'Mecánicas';
+    if (/análisis|analisis|review|por qué|por que/.test(title))
+      return 'Análisis';
+    return 'Gameplay';
+  };
+
+  const setText = (root: ParentNode, selector: string, value: string) => {
+    const node = root.querySelector<HTMLElement>(selector);
+    if (node) node.textContent = value;
+  };
+
+  const renderFeatured = (video: YouTubeVideo) => {
+    const featured = section?.querySelector<HTMLAnchorElement>(
+      '[data-content-featured]',
+    );
+    if (!featured) return;
+    featured.href = video.url;
+    featured.target = '_blank';
+    featured.rel = 'noopener noreferrer';
+    featured.setAttribute('aria-label', `Ver en YouTube: ${video.title}`);
+    featured.classList.remove('is-loading');
+    const thumb = featured.querySelector<HTMLImageElement>(
+      '[data-content-featured-thumb]',
+    );
+    if (thumb) {
+      thumb.src = video.thumbnailUrl;
+      thumb.alt = '';
+    }
+    if (video.durationLabel) {
+      const duration = featured.querySelector<HTMLElement>(
+        '[data-content-featured-duration]',
+      );
+      if (duration) {
+        duration.textContent = video.durationLabel;
+        duration.hidden = false;
+      }
+    }
+    const tag = featured.querySelector<HTMLElement>(
+      '[data-content-featured-tag]',
+    );
+    if (tag) {
+      tag.textContent = guessTag(video);
+      tag.hidden = false;
+    }
+    setText(featured, '[data-content-featured-title]', video.title);
+    setText(
+      featured,
+      '[data-content-featured-date]',
+      relativeTime(video.publishedAt) ?? '',
+    );
+    if (video.viewCount !== undefined) {
+      const views = featured.querySelector<HTMLElement>(
+        '[data-content-featured-views]',
+      );
+      if (views) {
+        views.textContent = `${new Intl.NumberFormat('es-ES').format(video.viewCount)} vistas`;
+        views.hidden = false;
+      }
+    }
+  };
+
+  const renderGrid = (videos: YouTubeVideo[]) => {
+    const grid = section?.querySelector<HTMLElement>('[data-content-grid]');
+    if (!grid) return;
+    const mostViewed = videos.reduce<YouTubeVideo | undefined>(
+      (best, video) =>
+        video.viewCount !== undefined &&
+        (best?.viewCount === undefined || video.viewCount > best.viewCount)
+          ? video
+          : best,
+      undefined,
+    );
+    grid.replaceChildren(
+      ...videos.map((video) => {
+        const card = document.createElement('a');
+        card.className = 'content-grid-card';
+        card.href = video.url;
+        card.target = '_blank';
+        card.rel = 'noopener noreferrer';
+        card.setAttribute('aria-label', `Ver en YouTube: ${video.title}`);
+
+        const media = document.createElement('span');
+        media.className = 'content-grid-media';
+        const image = document.createElement('img');
+        image.src = video.thumbnailUrl;
+        image.alt = '';
+        image.loading = 'lazy';
+        image.decoding = 'async';
+        media.append(image);
+        if (video.durationLabel) {
+          const duration = document.createElement('span');
+          duration.className = 'content-grid-duration';
+          duration.textContent = video.durationLabel;
+          media.append(duration);
+        }
+        if (mostViewed && video.id === mostViewed.id && videos.length > 1) {
+          const popular = document.createElement('b');
+          popular.className = 'content-badge content-badge-popular';
+          popular.textContent = 'Popular';
+          media.append(popular);
+        }
+
+        const tag = document.createElement('span');
+        tag.className = 'content-grid-tag';
+        tag.textContent = guessTag(video);
+
+        const title = document.createElement('strong');
+        title.textContent = video.title;
+
+        const date = document.createElement('time');
+        date.dateTime = video.publishedAt;
+        date.textContent = relativeTime(video.publishedAt) ?? '';
+
+        card.append(media, tag, title, date);
+        return card;
+      }),
+    );
+    grid.setAttribute('aria-busy', 'false');
+  };
+
   if (section) {
     fetch(section.dataset.youtube!)
       .then((response) => response.json() as Promise<YouTubeFeedResponse>)
       .then((payload) => {
         if (!payload.ok) throw new Error(payload.error.code);
         const videos = payload.data.videos;
-        section
-          .querySelectorAll<HTMLElement>('[data-content-card]')
-          .forEach((card) => {
-            const index = Number(card.dataset.contentCard ?? '-1');
-            const video = videos[index];
-            const still = card.querySelector<HTMLImageElement>(
-              '[data-content-still]',
-            );
-            if (!video || !still) return;
-            still.src = video.thumbnailUrl;
-            still.hidden = false;
-          });
+        if (!videos.length) throw new Error('YOUTUBE_EMPTY');
+        renderFeatured(videos[0]);
+        renderGrid(videos.slice(1, 7));
       })
       .catch(() => {
-        /* Sin vídeos reales que mostrar, las tarjetas se quedan como estaban
-           — nunca una miniatura de relleno. */
+        const showcase = section.querySelector<HTMLElement>(
+          '[data-content-showcase]',
+        );
+        const empty = section.querySelector<HTMLElement>(
+          '[data-content-empty]',
+        );
+        if (showcase) showcase.hidden = true;
+        if (empty) empty.hidden = false;
       });
   }
 </script>

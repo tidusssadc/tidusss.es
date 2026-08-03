@@ -15,6 +15,7 @@ import MatchupCard from '../../components/laboratory/champion/MatchupCard.astro'
 import SynergyCard from '../../components/laboratory/champion/SynergyCard.astro';
 import ConceptCard from '../../components/laboratory/champion/ConceptCard.astro';
 import EditorialHistoryTimeline from '../../components/laboratory/champion/EditorialHistoryTimeline.astro';
+import ChampionGuideToc from '../../components/laboratory/champion/ChampionGuideToc.astro';
 import ChampionMatchHistory from '../../components/laboratory/champion/ChampionMatchHistory.astro';
 import AskTidusssPrompt from '../../components/AskTidusssPrompt.astro';
 import { PREGUNTA_LUCIAN_SUGGESTIONS } from '../../data/pregunta';
@@ -122,6 +123,34 @@ const partnersFor = (championIds: readonly string[]) =>
 const quickTips = labChampion?.profile?.quickTips ?? [];
 const editorialHistory = labChampion?.editorialHistory ?? [];
 
+// Índice lateral: solo enlaza a secciones que de verdad tienen contenido —
+// un índice que apunta a estados vacíos resta profundidad en vez de sumarla.
+const tocEntries = hasProfile
+  ? [
+      { id: 'resumen', label: 'Resumen', show: true },
+      { id: 'build', label: 'Build', show: orderedBuilds.length > 0 },
+      { id: 'runas', label: 'Runas', show: (knowledge?.runePages.length ?? 0) > 0 },
+      { id: 'matchups', label: 'Matchups', show: matchups.length > 0 },
+      { id: 'sinergias', label: 'Sinergias', show: synergies.length > 0 },
+      {
+        id: 'consejos-rapidos',
+        label: 'Consejos rápidos',
+        show: quickTips.length > 0,
+      },
+      {
+        id: 'concepts',
+        label: 'Conceptos',
+        show: (knowledge?.concepts.length ?? 0) > 0,
+      },
+      { id: 'partidas', label: 'Partidas', show: true },
+      {
+        id: 'historial-editorial',
+        label: 'Historial editorial',
+        show: editorialHistory.length > 0,
+      },
+    ].filter((entry) => entry.show)
+  : [];
+
 // El título/descripción mencionan el parche y los objetos reales solo
 // cuando existe build publicada — leídos siempre de los datos reales, nunca
 // escritos a mano para un campeón concreto, para que esto siga siendo
@@ -216,6 +245,9 @@ const structuredData = hasProfile
           tierListAppearances={knowledge?.tierListAppearances ?? []}
         />
 
+        <div class="champion-guide-layout">
+          {tocEntries.length > 0 && <ChampionGuideToc entries={tocEntries} />}
+          <div class="champion-guide-main">
         <ChampionProfileSection
           profile={labChampion?.profile}
           championName={catalogEntry.name}
@@ -401,6 +433,7 @@ const structuredData = hasProfile
           />
 
           <div
+            id="partidas"
             class="champion-knowledge-section"
             aria-labelledby="partidas-heading"
           >
@@ -437,6 +470,8 @@ const structuredData = hasProfile
           >
             <EditorialHistoryTimeline entries={editorialHistory} />
           </ChampionKnowledgeSection>
+        </div>
+          </div>
         </div>
 
         <div class="tier-list-cta">

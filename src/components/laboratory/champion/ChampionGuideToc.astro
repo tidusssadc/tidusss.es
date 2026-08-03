@@ -1,0 +1,60 @@
+---
+interface TocEntry {
+  id: string;
+  label: string;
+}
+interface Props {
+  entries: readonly TocEntry[];
+}
+const { entries } = Astro.props;
+---
+
+{
+  entries.length > 0 && (
+    <nav
+      class="champion-guide-toc"
+      aria-label="Índice de esta guía"
+      data-champion-guide-toc
+    >
+      <p class="eyebrow">En esta guía</p>
+      <ul>
+        {entries.map((entry) => (
+          <li>
+            <a href={`#${entry.id}`} data-toc-link data-toc-target={entry.id}>
+              {entry.label}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  )
+}
+
+<script>
+  const nav = document.querySelector<HTMLElement>('[data-champion-guide-toc]');
+  if (nav) {
+    const links = [
+      ...nav.querySelectorAll<HTMLAnchorElement>('[data-toc-link]'),
+    ];
+    const targets = links
+      .map((link) => document.getElementById(link.dataset.tocTarget ?? ''))
+      .filter((target): target is HTMLElement => Boolean(target));
+
+    const setActive = (id: string) => {
+      links.forEach((link) =>
+        link.toggleAttribute('data-active', link.dataset.tocTarget === id),
+      );
+    };
+
+    const observer = new IntersectionObserver(
+      (observedEntries) => {
+        const visible = observedEntries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        if (visible?.target.id) setActive(visible.target.id);
+      },
+      { rootMargin: '-15% 0px -70% 0px', threshold: [0, 0.2, 0.6] },
+    );
+    targets.forEach((target) => observer.observe(target));
+  }
+</script>
