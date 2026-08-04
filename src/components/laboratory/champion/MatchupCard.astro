@@ -21,18 +21,20 @@ const iconUrl = dataDragonUrls(dataDragonVersion).champion(
 
 <article class="matchup-card" data-difficulty={matchup.difficulty}>
   <header class="matchup-card-header">
-    <img
-      src={iconUrl}
-      width="48"
-      height="48"
-      loading="lazy"
-      decoding="async"
-      alt=""
-    />
-    <div>
-      <strong>vs. {opponentCatalogEntry.name}</strong>
-      <small>{opponentCatalogEntry.title}</small>
-    </div>
+    <a href={`/campeones/${opponentCatalogEntry.slug}`} class="matchup-card-opponent">
+      <img
+        src={iconUrl}
+        width="48"
+        height="48"
+        loading="lazy"
+        decoding="async"
+        alt=""
+      />
+      <div>
+        <strong>vs. {opponentCatalogEntry.name}</strong>
+        <small>{opponentCatalogEntry.title}</small>
+      </div>
+    </a>
     <MatchupDifficultyBadge difficulty={matchup.difficulty} />
   </header>
 
@@ -86,5 +88,5 @@ const iconUrl = dataDragonUrls(dataDragonVersion).champion(
     )
   }
 
-  <EditorialTakeBlock take={matchup.editorialTake} />
+  <EditorialTakeBlock take={matchup.editorialTake} label="👀 Cómo jugaría este matchup" />
 </article>

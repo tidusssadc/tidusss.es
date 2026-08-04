@@ -1,8 +1,10 @@
 ---
 import type { ChampionDifficulty, ChampionProfile } from '../../../domain/league-laboratory';
 import ConfidenceIndicator from '../ConfidenceIndicator.astro';
+import EditorialCallout from '../EditorialCallout.astro';
 import EmptyLaboratoryState from '../EmptyLaboratoryState.astro';
 import TraitList from '../TraitList.astro';
+import PowerSpikeStory from './PowerSpikeStory.astro';
 
 interface Props {
   profile?: ChampionProfile;
@@ -35,7 +37,16 @@ const difficultyLabel: Record<ChampionDifficulty, string> = {
       <div class="champion-profile-traits">
         <TraitList label="Fortalezas" items={profile.strengths} />
         <TraitList label="Debilidades" items={profile.weaknesses} />
-        <TraitList label="Power spikes" items={profile.powerSpikes} />
+      </div>
+      <PowerSpikeStory championName={championName} powerSpikes={profile.powerSpikes} />
+      {
+        profile.commonMistakes.length > 0 && (
+          <EditorialCallout icon="⚠️" label="Error muy habitual" variant="warning">
+            {profile.commonMistakes[0]}
+          </EditorialCallout>
+        )
+      }
+      <div class="champion-profile-traits">
         <TraitList label="Errores frecuentes" items={profile.commonMistakes} />
       </div>
       <p class="champion-profile-difficulty">

@@ -29,16 +29,18 @@ const typeLabels: Record<SynergyType, string> = {
     <div class="synergy-card-partners">
       {
         partnerCatalogEntries.map((entry) => (
-          <img
-            src={dataDragonUrls(dataDragonVersion).champion(
-              entry.dataDragonKey,
-            )}
-            width="44"
-            height="44"
-            loading="lazy"
-            decoding="async"
-            alt=""
-          />
+          <a href={`/campeones/${entry.slug}`} aria-label={`Ver a ${entry.name}`}>
+            <img
+              src={dataDragonUrls(dataDragonVersion).champion(
+                entry.dataDragonKey,
+              )}
+              width="44"
+              height="44"
+              loading="lazy"
+              decoding="async"
+              alt=""
+            />
+          </a>
         ))
       }
     </div>
@@ -56,5 +58,5 @@ const typeLabels: Record<SynergyType, string> = {
     )
   }
 
-  <EditorialTakeBlock take={synergy.editorialTake} />
+  <EditorialTakeBlock take={synergy.editorialTake} label="🔥 Por qué funciona esta dupla" />
 </article>

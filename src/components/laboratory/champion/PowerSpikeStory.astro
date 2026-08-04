@@ -1,0 +1,51 @@
+---
+interface Props {
+  championName: string;
+  powerSpikes: readonly string[];
+}
+const { championName, powerSpikes } = Astro.props;
+
+/**
+ * `powerSpikes` ya son frases reales escritas por Tidusss, casi siempre con
+ * forma "Momento: explicación" — se separan solo para dar más peso visual
+ * al momento concreto, nunca se reescribe ni se inventa el contenido.
+ */
+const splitAt = (entry: string, needle: string) => {
+  const index = entry.indexOf(needle);
+  return index === -1
+    ? undefined
+    : {
+        moment: entry.slice(0, index),
+        detail: entry.slice(index + needle.length),
+      };
+};
+
+const moments = powerSpikes.map((entry, index) => {
+  const split = splitAt(entry, ': ') ?? splitAt(entry, ', ');
+  if (!split || split.moment.length > 60)
+    return { moment: `Momento ${index + 1}`, detail: entry };
+  return split;
+});
+---
+
+{
+  moments.length > 0 && (
+    <div class="power-spike-story">
+      <p class="eyebrow">Power spikes</p>
+      <h3>Cuándo {championName} manda en la partida</h3>
+      <ol>
+        {moments.map((item, index) => (
+          <li>
+            <span class="power-spike-story-index" aria-hidden="true">
+              {String(index + 1).padStart(2, '0')}
+            </span>
+            <div>
+              <strong>{item.moment}</strong>
+              <p>{item.detail}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </div>
+  )
+}

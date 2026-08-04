@@ -5,10 +5,14 @@ interface Props {
   concept: Concept;
 }
 const { concept } = Astro.props;
+const slug = concept.id.replace('concept:', '');
 ---
 
 <li class="concept-card">
-  <span class="lab-badge-label">{concept.category}</span>
-  <strong>{concept.title}</strong>
-  <p>{concept.summary}</p>
+  <a href={`/academia#${slug}`}>
+    <span class="lab-badge-label">{concept.category}</span>
+    <strong>{concept.title}</strong>
+    <p>{concept.summary}</p>
+    <span class="concept-card-cta">Ver en la Academia ADC <b aria-hidden="true">→</b></span>
+  </a>
 </li>

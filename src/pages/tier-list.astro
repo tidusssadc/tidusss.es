@@ -5,6 +5,7 @@ import Footer from '../components/Footer.astro';
 import ExploreNext from '../components/ExploreNext.astro';
 import LaboratoryHero from '../components/laboratory/LaboratoryHero.astro';
 import LaboratoryMetadata from '../components/laboratory/LaboratoryMetadata.astro';
+import EditorialCallout from '../components/laboratory/EditorialCallout.astro';
 import EmptyLaboratoryState from '../components/laboratory/EmptyLaboratoryState.astro';
 import TierListLegend from '../components/laboratory/tier-list/TierListLegend.astro';
 import TierListFilters from '../components/laboratory/tier-list/TierListFilters.astro';
@@ -93,9 +94,9 @@ const pageDescription = patch
           }
           {
             officialAdcTierList.methodologyNote && (
-              <p class="tier-list-methodology">
+              <EditorialCallout icon="💬" label="Cómo hago esta Tier List" variant="take">
                 {officialAdcTierList.methodologyNote}
-              </p>
+              </EditorialCallout>
             )
           }
         </header>

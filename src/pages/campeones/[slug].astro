@@ -18,6 +18,7 @@ import EditorialHistoryTimeline from '../../components/laboratory/champion/Edito
 import ChampionGuideToc from '../../components/laboratory/champion/ChampionGuideToc.astro';
 import ChampionQuickFacts from '../../components/laboratory/champion/ChampionQuickFacts.astro';
 import ChampionMatchHistory from '../../components/laboratory/champion/ChampionMatchHistory.astro';
+import EditorialCallout from '../../components/laboratory/EditorialCallout.astro';
 import AskTidusssPrompt from '../../components/AskTidusssPrompt.astro';
 import { PREGUNTA_LUCIAN_SUGGESTIONS } from '../../data/pregunta';
 import {
@@ -430,6 +431,13 @@ const structuredData = hasProfile
             <ul class="champion-build-list">
               {quickTips.map((tip) => <li>{tip}</li>)}
             </ul>
+            {
+              quickTips.length > 0 && (
+                <EditorialCallout icon="🎯" label="Si tuviera que quedarme con uno" variant="focus">
+                  {quickTips[quickTips.length - 1]}
+                </EditorialCallout>
+              )
+            }
           </ChampionKnowledgeSection>
 
           <ChampionKnowledgeSection

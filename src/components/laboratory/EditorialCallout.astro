@@ -1,0 +1,16 @@
+---
+interface Props {
+  icon: string;
+  label: string;
+  variant?: 'tip' | 'warning' | 'take' | 'focus' | 'insight' | 'summary';
+}
+const { icon, label, variant = 'tip' } = Astro.props;
+---
+
+<aside class="editorial-callout" data-variant={variant}>
+  <span class="editorial-callout-icon" aria-hidden="true">{icon}</span>
+  <div class="editorial-callout-body">
+    <span class="editorial-callout-label">{label}</span>
+    <p><slot /></p>
+  </div>
+</aside>

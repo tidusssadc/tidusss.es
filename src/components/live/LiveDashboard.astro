@@ -214,7 +214,7 @@ import PlayerProfile from './PlayerProfile.astro';
               <strong data-goal-value>
                 {goal.description ??
                   (goal.mode === 'automatic'
-                    ? 'Esperando datos'
+                    ? 'Calculando el progreso real…'
                     : 'Objetivo manual')}
               </strong>
               {goal.mode === 'long-term' && <small>Largo plazo</small>}
@@ -953,8 +953,8 @@ import PlayerProfile from './PlayerProfile.astro';
         if (current === undefined || dynamicTarget === undefined) {
           if (value)
             value.textContent = source?.startsWith('youtube')
-              ? 'Esperando datos de YouTube'
-              : 'Esperando datos de Riot';
+              ? 'YouTube no responde ahora mismo — vuelve en un momento'
+              : 'Riot no responde ahora mismo — vuelve en un momento';
           if (track) track.hidden = true;
           return;
         }
@@ -1037,13 +1037,13 @@ import PlayerProfile from './PlayerProfile.astro';
       root
         ?.querySelector('[data-activity]')
         ?.classList.remove('data-skeleton', 'data-skeleton--copy');
-      text('[data-rank]', 'No disponible');
+      text('[data-rank]', 'Riot no contesta ahora mismo');
       text('[data-lp]', 'Intentaremos actualizar pronto');
-      text('[data-activity]', 'Sin actividad reciente');
+      text('[data-activity]', 'No he podido consultar la SoloQ ahora mismo');
       root
         ?.querySelector('[data-riot-updated]')
         ?.classList.remove('data-skeleton', 'data-skeleton--meta');
-      text('[data-riot-updated]', 'Clasificación no disponible');
+      text('[data-riot-updated]', 'Reintentando la conexión con Riot');
     }
     if (results[1].status === 'rejected') {
       const code =
@@ -1051,12 +1051,12 @@ import PlayerProfile from './PlayerProfile.astro';
       root
         ?.querySelector('[data-subscribers]')
         ?.classList.remove('data-skeleton');
-      text('[data-subscribers]', 'Sin datos');
+      text('[data-subscribers]', 'YouTube no responde ahora mismo');
       text(
         '[data-youtube-state]',
         code === 'YOUTUBE_NOT_CONFIGURED'
           ? 'Canal pendiente de conexión.'
-          : 'Datos del canal no disponibles temporalmente.',
+          : 'YouTube no me deja consultar el canal ahora mismo.',
       );
       visible('[data-youtube-state]', true);
       root

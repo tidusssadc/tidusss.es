@@ -183,8 +183,8 @@ const pageDescription =
           );
       })
       .catch(() => {
-        setGoal('youtube-next', 'Sin datos por ahora');
-        setGoal('videos-500', 'Sin datos por ahora');
+        setGoal('youtube-next', 'YouTube no responde ahora mismo — reintenta en un rato');
+        setGoal('videos-500', 'YouTube no responde ahora mismo — reintenta en un rato');
       });
 
     fetch(container.dataset.riot!)
@@ -201,7 +201,7 @@ const pageDescription =
         else setGoal('soloqueue-700', 'Sin clasificación por ahora');
       })
       .catch(() => {
-        setGoal('soloqueue-700', 'Sin datos por ahora');
+        setGoal('soloqueue-700', 'Riot no responde ahora mismo — reintenta en un rato');
       });
   }
 </script>
