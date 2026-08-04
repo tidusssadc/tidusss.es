@@ -281,7 +281,13 @@ import { integrationEndpoints, platforms } from '../config/platforms';
           if (!payload.ok) throw new Error(payload.error.code);
           const { data } = payload;
           const online = data.state === 'online';
-          publishHomeSignal({ type: 'twitch', state: data.state });
+          publishHomeSignal({
+            type: 'twitch',
+            state: data.state,
+            title: data.title,
+            category: data.category,
+            viewerCount: data.viewerCount,
+          });
           showcase
             .querySelector('[data-twitch-panel]')
             ?.toggleAttribute('data-online', online);

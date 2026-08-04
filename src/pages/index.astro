@@ -11,6 +11,7 @@ import Footer from '../components/Footer.astro';
 import Hero from '../components/Hero.astro';
 import HomePlatformShowcase from '../components/HomePlatformShowcase.astro';
 import HomeStateEngine from '../components/HomeStateEngine.astro';
+import HomeTodayModule from '../components/HomeTodayModule.astro';
 import LiveTeaser from '../components/LiveTeaser.astro';
 import Navbar from '../components/Navbar.astro';
 import Recognition from '../components/Recognition.astro';
@@ -26,42 +27,10 @@ import { PREGUNTA_HOME_SUGGESTIONS } from '../data/pregunta';
   <Navbar />
   <HomeStateEngine />
   <main>
-    <Hero /><LiveTeaser /><HomePlatformShowcase /><CompetitiveCredential /><BrandManifesto
+    <Hero /><LiveTeaser />
+    <HomeTodayModule />
+    <HomePlatformShowcase /><CompetitiveCredential /><BrandManifesto
     /><ContentSection />
-    <section
-      class="section-shell"
-      aria-labelledby="home-lab-title"
-      data-reveal
-    >
-      <div class="mx-auto max-w-7xl px-5 sm:px-8">
-        <p class="eyebrow">El Laboratorio</p>
-        <h2 id="home-lab-title" class="home-lab-title">
-          El criterio de Tidusss, documentado.
-        </h2>
-        <div class="tools-grid mt-10">
-          <a class="tool-card" href="/campeones/lucian">
-            <strong>Guía de Lucian</strong>
-            <p>Build, runas, sinergias y el criterio real detrás de cada decisión.</p>
-            <span class="tool-card-cta">Ver guía <b aria-hidden="true">→</b></span>
-          </a>
-          <a class="tool-card" href="/tier-list">
-            <strong>Tier List oficial ADC</strong>
-            <p>Clasificación editorial del meta actual, explicada partida a partida.</p>
-            <span class="tool-card-cta">Ver Tier List <b aria-hidden="true">→</b></span>
-          </a>
-          <a class="tool-card" href="/academia">
-            <strong>Academia ADC</strong>
-            <p>El vocabulario y los fundamentos de ADC, en fichas navegables.</p>
-            <span class="tool-card-cta">Explorar <b aria-hidden="true">→</b></span>
-          </a>
-          <a class="tool-card" href="/herramientas">
-            <strong>Herramientas</strong>
-            <p>Pregunta a Tidusss, Tier List, Centro de Campeones y más, en un solo sitio.</p>
-            <span class="tool-card-cta">Ver todas <b aria-hidden="true">→</b></span>
-          </a>
-        </div>
-      </div>
-    </section>
     <ActivityCenterCta />
     <section
       id="pregunta-tidusss"
@@ -77,7 +46,43 @@ import { PREGUNTA_HOME_SUGGESTIONS } from '../data/pregunta';
         />
       </div>
     </section>
-    <Recognition /><About /><Timeline /><Contact
+    <Recognition /><About /><Timeline />
+    <section class="section-shell" aria-labelledby="home-keep-exploring-title" data-reveal>
+      <div class="mx-auto max-w-7xl px-5 sm:px-8">
+        <p class="eyebrow">Sigue explorando</p>
+        <h2 id="home-keep-exploring-title" class="home-lab-title">
+          Esto no termina aquí.
+        </h2>
+        <div class="today-widgets mt-8">
+          <a class="tool-card" href="/explorar">
+            <strong>Explorar</strong>
+            <p>El índice completo del sitio, con cifras reales del catálogo.</p>
+            <span class="tool-card-cta">Explorar todo <b aria-hidden="true">→</b></span>
+          </a>
+          <a class="tool-card" href="/actividad">
+            <strong>Actividad</strong>
+            <p>Vídeos, directos, partidas y cambios editoriales, en orden.</p>
+            <span class="tool-card-cta">Ver actividad <b aria-hidden="true">→</b></span>
+          </a>
+          <a class="tool-card" href="/academia">
+            <strong>Academia ADC</strong>
+            <p>El vocabulario y los fundamentos, en fichas navegables.</p>
+            <span class="tool-card-cta">Ir a la Academia <b aria-hidden="true">→</b></span>
+          </a>
+          <a class="tool-card" href="/pregunta">
+            <strong>Pregunta a Tidusss</strong>
+            <p>Resuelve una duda concreta con el contenido ya publicado.</p>
+            <span class="tool-card-cta">Preguntar <b aria-hidden="true">→</b></span>
+          </a>
+          <a class="tool-card" href="/comunidad">
+            <strong>Comunidad</strong>
+            <p>Objetivos, roadmap y qué acaba de cambiar en el proyecto.</p>
+            <span class="tool-card-cta">Ver estado <b aria-hidden="true">→</b></span>
+          </a>
+        </div>
+      </div>
+    </section>
+    <Contact
     /><BrandClosing />
   </main>
   <Footer />

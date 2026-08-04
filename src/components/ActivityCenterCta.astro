@@ -1,24 +1,167 @@
+---
+import { integrationEndpoints } from '../config/platforms';
+import { siteUpdates } from '../data/updates';
+
+// SSR-safe por defecto: los 4 cambios editoriales reales más recientes —
+// funciona sin JavaScript. El script cliente los mezcla con vídeos,
+// directos y partidas reales cuando esas APIs responden.
+const staticEntries = siteUpdates.slice(0, 4).map((entry) => ({
+  date: entry.date,
+  kind: 'guía' as const,
+  title: entry.title,
+  detail: entry.description,
+  href: entry.href,
+}));
+
+const kindLabel: Record<string, string> = {
+  guía: 'Guía',
+  video: 'Vídeo',
+  live: 'Directo',
+  match: 'Partida',
+};
+---
+
 <section
   id="actividad"
   class="activity-center section-shell"
   aria-labelledby="activity-center-title"
   data-reveal
+  data-activity-preview
+  data-youtube={integrationEndpoints.youtube}
+  data-twitch={integrationEndpoints.twitch}
+  data-riot={integrationEndpoints.riot}
 >
   <div class="mx-auto max-w-7xl px-5 sm:px-8">
-    <a class="activity-center-link" href="/actividad">
-      <div>
-        <p class="eyebrow">Actividad</p>
-        <h2 id="activity-center-title">
-          Todo lo que pasa, en un solo feed.
-        </h2>
-        <p>
-          Vídeos, directos, guías y cambios editoriales, ordenados
-          cronológicamente.
-        </p>
-      </div>
-      <span>
-        Ver toda la actividad <b aria-hidden="true">→</b>
-      </span>
+    <p class="eyebrow">Actividad</p>
+    <h2 id="activity-center-title">Todo lo que pasa, en un solo feed.</h2>
+    <p class="activity-preview-lead">
+      Vídeos, directos, guías y cambios editoriales, ordenados cronológicamente.
+    </p>
+    <ol class="activity-feed activity-preview-feed" data-activity-preview-list>
+      {
+        staticEntries.map((entry) => (
+          <li>
+            <a href={entry.href} class="activity-entry">
+              <time datetime={entry.date}>
+                {new Date(entry.date).toLocaleDateString('es-ES', {
+                  day: 'numeric',
+                  month: 'short',
+                })}
+              </time>
+              <div>
+                <b class="activity-kind" data-kind={entry.kind}>
+                  {kindLabel[entry.kind]}
+                </b>
+                <strong>{entry.title}</strong>
+              </div>
+            </a>
+          </li>
+        ))
+      }
+    </ol>
+    <a class="button-secondary mt-8 inline-flex" href="/actividad">
+      Ver toda la actividad <span aria-hidden="true">→</span>
     </a>
   </div>
 </section>
+
+<script>
+  import { buildActivity } from '../lib/activity';
+  import type { YouTubeFeedResponse } from '../types/content';
+  import type { RiotPublicResponse } from '../lib/riot';
+  import type { TwitchStatusResponse } from '../types/platforms';
+
+  const root = document.querySelector<HTMLElement>('[data-activity-preview]');
+  const list = root?.querySelector<HTMLOListElement>('[data-activity-preview-list]');
+  if (!root || !list) throw new Error('unreachable');
+
+  const dayLabel = (iso: string) =>
+    new Date(iso).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+
+  const kindLabel: Record<string, string> = {
+    video: 'Vídeo',
+    match: 'Partida',
+    live: 'Directo',
+  };
+
+  const buildItem = (opts: {
+    date: string;
+    kind: 'video' | 'match' | 'live';
+    title: string;
+    href: string;
+    external?: boolean;
+  }) => {
+    const li = document.createElement('li');
+    const link = document.createElement('a');
+    link.className = 'activity-entry';
+    link.href = opts.href;
+    if (opts.external) {
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+    }
+    const time = document.createElement('time');
+    time.dateTime = opts.date;
+    time.textContent = dayLabel(opts.date);
+    const body = document.createElement('div');
+    const kind = document.createElement('b');
+    kind.className = 'activity-kind';
+    kind.dataset.kind = opts.kind;
+    kind.textContent = kindLabel[opts.kind];
+    const title = document.createElement('strong');
+    title.textContent = opts.title;
+    body.append(kind, title);
+    link.append(time, body);
+    li.append(link);
+    return li;
+  };
+
+  Promise.allSettled([
+    fetch(root.dataset.youtube!)
+      .then((response) => response.json() as Promise<YouTubeFeedResponse>)
+      .then((payload) => (payload.ok ? payload.data.videos.slice(0, 3) : [])),
+    fetch(root.dataset.riot!)
+      .then((response) => response.json() as Promise<RiotPublicResponse>)
+      .then((payload) => (payload.ok ? payload.data.recent.matches.slice(0, 2) : [])),
+    fetch(root.dataset.twitch!)
+      .then((response) => response.json() as Promise<TwitchStatusResponse>)
+      .then((payload) => (payload.ok ? payload.data : undefined)),
+  ]).then(([videosResult, matchesResult, twitchResult]) => {
+    const videos = videosResult.status === 'fulfilled' ? videosResult.value : [];
+    const matches = matchesResult.status === 'fulfilled' ? matchesResult.value : [];
+    const twitch = twitchResult.status === 'fulfilled' ? twitchResult.value : undefined;
+
+    const dynamicItems = buildActivity(matches, videos).map((event) =>
+      buildItem({
+        date: event.timestamp,
+        kind: event.type,
+        title: event.detail,
+        href: event.href ?? '/competitivo',
+        external: event.type === 'video',
+      }),
+    );
+
+    if (twitch?.isLive) {
+      dynamicItems.unshift(
+        buildItem({
+          date: twitch.updatedAt,
+          kind: 'live',
+          title: twitch.title ?? 'En directo ahora en Twitch',
+          href: 'https://www.twitch.tv/tidussstwitch',
+          external: true,
+        }),
+      );
+    }
+
+    if (dynamicItems.length === 0) return;
+
+    const staticItems = [...list.children] as HTMLLIElement[];
+    const merged = [...dynamicItems, ...staticItems]
+      .sort((a, b) => {
+        const timeA = a.querySelector('time')?.dateTime ?? '';
+        const timeB = b.querySelector('time')?.dateTime ?? '';
+        return Date.parse(timeB) - Date.parse(timeA);
+      })
+      .slice(0, 5);
+    list.replaceChildren(...merged);
+  });
+</script>

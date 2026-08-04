@@ -1,0 +1,229 @@
+---
+import { integrationEndpoints } from '../config/platforms';
+import { goals } from '../config/goals';
+import { siteUpdates } from '../data/updates';
+import { PREGUNTA_GENERAL_SUGGESTIONS } from '../data/pregunta';
+import { knowledgeDocuments } from '../domain/knowledge-index';
+import { assembleAnswer } from '../domain/knowledge-answering';
+import { toPublicAnswer } from '../domain/knowledge-answering/public';
+import { createLocalProvider } from '../domain/knowledge-retrieval';
+
+/**
+ * Rotación determinista por semana real (no aleatoria, no diaria-falsa):
+ * cambia solo cuando el sitio se reconstruye en una semana distinta. Nunca
+ * finge que el contenido se genera en el momento en que alguien lo lee.
+ */
+const weekIndex = Math.floor(Date.now() / (7 * 24 * 60 * 60 * 1000));
+
+// --- Pregunta destacada: respuesta real generada en build time con el motor oficial ---
+const featuredQuestion =
+  PREGUNTA_GENERAL_SUGGESTIONS[weekIndex % PREGUNTA_GENERAL_SUGGESTIONS.length];
+const localProvider = createLocalProvider(knowledgeDocuments);
+const featuredRetrieval = localProvider.retrieve({ text: featuredQuestion, limit: 10 });
+const featuredAnswerResult = assembleAnswer(featuredRetrieval);
+const featuredAnswer = toPublicAnswer(featuredAnswerResult);
+const featuredTeaser =
+  featuredAnswer.status === 'sufficient' || featuredAnswer.status === 'partial'
+    ? featuredAnswer.answer?.split(/(?<=[.!?])\s+/)[0]
+    : undefined;
+
+// --- Recomendación personal: recursos evergreen reales, rotados con criterio, nunca al azar puro ---
+const recommendations = [
+  {
+    href: '/campeones/lucian',
+    kind: 'Guía',
+    title: 'La guía completa de Lucian',
+    reason: 'Build, runas, sinergias y el criterio real detrás de cada decisión.',
+  },
+  {
+    href: '/tier-list',
+    kind: 'Tier List',
+    title: 'La Tier List oficial ADC',
+    reason: 'Cómo veo el meta ahora mismo — no un promedio de win rate.',
+  },
+  {
+    href: '/academia',
+    kind: 'Academia ADC',
+    title: 'Los fundamentos de ADC',
+    reason: 'El vocabulario que uso en cada guía, explicado una vez y bien.',
+  },
+  {
+    href: '/competitivo',
+    kind: 'Competitivo',
+    title: 'Mi actividad competitiva',
+    reason: 'Rango, partidas recientes y objetivos, actualizados en vivo.',
+  },
+] as const;
+const recommendation = recommendations[(weekIndex + 1) % recommendations.length];
+
+// --- Objetivo actual: uno solo, rotado entre los objetivos activos reales ---
+const activeGoals = goals.filter((goal) => goal.status === 'active');
+const featuredGoal = activeGoals[(weekIndex + 2) % activeGoals.length];
+
+// --- Qué ha cambiado: los 3 más recientes del historial editorial real ---
+const recentUpdates = siteUpdates.slice(0, 3);
+
+// --- Hoy en Tidusss: el cambio editorial más reciente, salvo que algo más urgente lo desplace en vivo ---
+const latestUpdate = siteUpdates[0];
+---
+
+<section
+  class="today-module section-shell"
+  aria-labelledby="today-module-title"
+  data-today-module
+  data-youtube-stats={integrationEndpoints.youtubeStats}
+  data-riot={integrationEndpoints.riot}
+  data-goal-id={featuredGoal?.id}
+  data-goal-source={featuredGoal?.source}
+  data-goal-target={featuredGoal?.target}
+  data-update-title={latestUpdate.title}
+  data-update-text={latestUpdate.description}
+  data-update-href={latestUpdate.href}
+  data-reveal
+>
+  <div class="mx-auto max-w-7xl px-5 sm:px-8">
+    <p class="eyebrow">Hoy en Tidusss</p>
+    <h2 id="today-module-title" class="sr-only">Qué está pasando ahora mismo</h2>
+
+    <aside
+      class="today-primary"
+      data-home-context
+      aria-live="polite"
+      data-state="default"
+    >
+      <span class="today-primary-badge" data-home-context-badge aria-hidden="true"
+      ></span>
+      <strong data-home-context-label>{latestUpdate.title}</strong>
+      <p data-home-context-text>{latestUpdate.description}</p>
+      <a
+        class="today-primary-cta"
+        data-home-context-action
+        href={latestUpdate.href}
+      >
+        Ver la actualización <b aria-hidden="true">→</b>
+      </a>
+    </aside>
+
+    <div class="today-widgets">
+      <div class="today-widget" data-today-widget="goal">
+        <span class="today-widget-label">Mi objetivo ahora mismo</span>
+        {
+          featuredGoal && (
+            <>
+              <strong>{featuredGoal.label}</strong>
+              <div class="today-widget-bar">
+                <i data-today-goal-bar style="width: 0%" />
+              </div>
+              <span data-today-goal-progress class="showcase-skeleton">
+                &nbsp;
+              </span>
+            </>
+          )
+        }
+        <a href="/comunidad">Ver todos los objetivos <b aria-hidden="true">→</b></a>
+      </div>
+
+      <div class="today-widget" data-today-widget="changes">
+        <span class="today-widget-label">Qué ha cambiado</span>
+        <ul>
+          {
+            recentUpdates.map((entry) => (
+              <li>
+                <a href={entry.href}>{entry.title}</a>
+              </li>
+            ))
+          }
+        </ul>
+        <a href="/actualizaciones">Ver todo el historial <b aria-hidden="true">→</b></a>
+      </div>
+
+      <div class="today-widget" data-today-widget="question">
+        <span class="today-widget-label">La pregunta que más sentido tiene hoy</span>
+        <strong>{featuredQuestion}</strong>
+        {featuredTeaser && <p>{featuredTeaser}</p>}
+        <a href={`/pregunta?q=${encodeURIComponent(featuredQuestion)}`}>
+          Ver la respuesta completa <b aria-hidden="true">→</b>
+        </a>
+      </div>
+
+      <div class="today-widget" data-today-widget="recommendation">
+        <span class="today-widget-label">Esto es lo que vería hoy</span>
+        <strong>{recommendation.title}</strong>
+        <p>{recommendation.reason}</p>
+        <a href={recommendation.href}>
+          {recommendation.kind} <b aria-hidden="true">→</b>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  import { publishHomeSignal } from '../domain/home-state';
+  import { goalProgress } from '../config/goals';
+  import type { YouTubeStatsResponse } from '../types/platforms';
+  import type { RiotPublicResponse } from '../lib/riot';
+
+  const root = document.querySelector<HTMLElement>('[data-today-module]');
+  if (root) {
+    // El motor de estado ya decide qué es más urgente (directo > vídeo nuevo
+    // > objetivo cerca...) — este módulo solo aporta el suelo real por
+    // defecto: el último cambio editorial, cuando nada más urgente lo gana.
+    publishHomeSignal({
+      type: 'editorial-update',
+      title: root.dataset.updateTitle ?? '',
+      text: root.dataset.updateText ?? '',
+      href: root.dataset.updateHref ?? '/actualizaciones',
+    });
+
+    // --- Objetivo actual ---
+    const goalSource = root.dataset.goalSource;
+    const goalTarget = Number(root.dataset.goalTarget) || undefined;
+    const setGoalProgress = (current: number, target: number) => {
+      const bar = root.querySelector<HTMLElement>('[data-today-goal-bar]');
+      const label = root.querySelector<HTMLElement>('[data-today-goal-progress]');
+      const progress = goalProgress(current, target) ?? 0;
+      if (bar) bar.style.width = `${Math.min(100, progress)}%`;
+      if (label) {
+        label.textContent = `${new Intl.NumberFormat('es-ES').format(current)} / ${new Intl.NumberFormat('es-ES').format(target)}`;
+        label.classList.remove('showcase-skeleton');
+      }
+    };
+    const setGoalFailed = () => {
+      const label = root.querySelector<HTMLElement>('[data-today-goal-progress]');
+      if (label) {
+        label.textContent = 'No he podido consultar el progreso ahora mismo';
+        label.classList.remove('showcase-skeleton');
+      }
+    };
+    if (goalSource === 'riot') {
+      fetch(root.dataset.riot!)
+        .then((response) => response.json() as Promise<RiotPublicResponse>)
+        .then((payload) => {
+          if (!payload.ok || payload.data.ranked.leaguePoints === undefined || !goalTarget)
+            throw new Error('unavailable');
+          setGoalProgress(payload.data.ranked.leaguePoints, goalTarget);
+        })
+        .catch(setGoalFailed);
+    } else if (goalSource === 'youtube' || goalSource === 'youtube-videos') {
+      fetch(root.dataset.youtubeStats!)
+        .then((response) => response.json() as Promise<YouTubeStatsResponse>)
+        .then((payload) => {
+          if (!payload.ok) throw new Error('unavailable');
+          if (goalSource === 'youtube') {
+            if (
+              payload.data.subscriberCount === undefined ||
+              payload.data.nextGoal === undefined
+            )
+              throw new Error('unavailable');
+            setGoalProgress(payload.data.subscriberCount, payload.data.nextGoal);
+          } else {
+            if (payload.data.videoCount === undefined || !goalTarget)
+              throw new Error('unavailable');
+            setGoalProgress(payload.data.videoCount, goalTarget);
+          }
+        })
+        .catch(setGoalFailed);
+    }
+  }
+</script>

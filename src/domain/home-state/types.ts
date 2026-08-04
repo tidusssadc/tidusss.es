@@ -4,13 +4,19 @@ export type HomeStateId =
   | 'live'
   | 'new-video'
   | 'near-goal'
+  | 'latest-update'
   | 'default'
   | 'new-patch'
   | 'new-record'
   | 'goal-achieved'
   | 'milestone';
 
-export type HomePriorityTarget = 'twitch' | 'youtube' | 'competitive' | 'patch';
+export type HomePriorityTarget =
+  | 'twitch'
+  | 'youtube'
+  | 'competitive'
+  | 'patch'
+  | 'editorial';
 
 export interface HomeGoalSignal {
   id: ContentEntityId;
@@ -24,6 +30,9 @@ export type HomeSignal =
   | {
       type: 'twitch';
       state: 'online' | 'offline' | 'not-configured';
+      title?: string;
+      category?: string;
+      viewerCount?: number;
     }
   | {
       type: 'latest-video';
@@ -46,6 +55,15 @@ export type HomeSignal =
       label: string;
       text: string;
       entity?: ContentEntity;
+    }
+  | {
+      /** El cambio editorial real más reciente (guía, build, Tier List...) —
+       * el suelo por defecto de "Hoy en Tidusss" cuando no hay nada más
+       * urgente (directo, vídeo nuevo, objetivo cerca) que mostrar. */
+      type: 'editorial-update';
+      title: string;
+      text: string;
+      href: string;
     };
 
 export interface HomeStateAction {

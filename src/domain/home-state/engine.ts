@@ -67,12 +67,20 @@ export const homeStateDefinitions: readonly HomeStateDefinition[] = [
     evaluate(signals) {
       const twitch = signal(signals, 'twitch');
       if (twitch?.type !== 'twitch' || twitch.state !== 'online') return null;
+      const details = [
+        twitch.category,
+        twitch.viewerCount !== undefined
+          ? `${new Intl.NumberFormat('es-ES').format(twitch.viewerCount)} espectadores`
+          : undefined,
+      ]
+        .filter(Boolean)
+        .join(' · ');
       return {
         id: 'live',
         priority: 100,
         target: 'twitch',
-        label: 'Ahora en directo',
-        text: 'La partida está ocurriendo en Twitch.',
+        label: twitch.title ?? 'Ahora en directo',
+        text: details || 'La partida está ocurriendo en Twitch, ahora mismo.',
         action: {
           label: 'Entrar al directo',
           entityId: 'channel:twitch',
@@ -127,6 +135,23 @@ export const homeStateDefinitions: readonly HomeStateDefinition[] = [
   futureState('goal-achieved', 90),
   futureState('new-patch', 70),
   futureState('milestone', 65),
+  {
+    id: 'latest-update',
+    priority: 30,
+    status: 'active',
+    evaluate(signals) {
+      const update = signal(signals, 'editorial-update');
+      if (update?.type !== 'editorial-update') return null;
+      return {
+        id: 'latest-update',
+        priority: 30,
+        target: 'editorial',
+        label: update.title,
+        text: update.text,
+        action: { label: 'Ver la actualización', href: update.href },
+      };
+    },
+  },
   {
     id: 'default',
     priority: 20,
