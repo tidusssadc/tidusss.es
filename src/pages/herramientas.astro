@@ -1,0 +1,132 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Navbar from '../components/Navbar.astro';
+import Footer from '../components/Footer.astro';
+import ExploreNext from '../components/ExploreNext.astro';
+import LaboratoryHero from '../components/laboratory/LaboratoryHero.astro';
+import {
+  buildLabRegistry,
+  getCatalogCoverage,
+} from '../domain/league-laboratory';
+import {
+  adcLabChampions,
+  championCatalog,
+  leagueLaboratoryPatches,
+  officialAdcTierList,
+} from '../data/league-laboratory';
+
+const registry = buildLabRegistry({
+  catalog: championCatalog,
+  champions: adcLabChampions,
+  patches: leagueLaboratoryPatches,
+  tierLists: [officialAdcTierList],
+});
+const coverage = getCatalogCoverage(registry);
+
+const availableTools = [
+  {
+    href: '/pregunta',
+    title: 'Pregunta a Tidusss',
+    description:
+      'Resuelve dudas concretas sobre Lucian y ADC con el contenido editorial ya publicado.',
+  },
+  {
+    href: '/tier-list',
+    title: 'Tier List oficial ADC',
+    description:
+      'Clasificación editorial del meta actual, con filtros por tier y buscador de campeón.',
+  },
+  {
+    href: '/campeones',
+    title: 'Centro de Campeones',
+    description: `Los ${coverage.total} campeones del catálogo: busca, filtra y ordena por estado editorial.`,
+  },
+  {
+    href: '/academia',
+    title: 'Academia ADC',
+    description:
+      'El vocabulario y los fundamentos de ADC, organizados en fichas navegables.',
+  },
+  {
+    href: '/competitivo',
+    title: 'Centro competitivo',
+    description: 'Rango, LP, últimas partidas y objetivos, actualizados en vivo.',
+  },
+] as const;
+
+const upcomingTools = [
+  {
+    title: 'Calculadora de daño',
+    description:
+      'Simula combos e intercambios reales de Lucian objeto a objeto y nivel a nivel.',
+  },
+  {
+    title: 'Build Planner',
+    description:
+      'Arma tu propia ruta de objetos y compárala con las builds ya publicadas.',
+  },
+  {
+    title: 'Comparador de campeones',
+    description:
+      'Enfrenta a dos campeones del catálogo lado a lado: fortalezas, debilidades y sinergias.',
+  },
+] as const;
+
+const pageTitle = 'Herramientas · El Laboratorio · tidusss.es';
+const pageDescription =
+  'Todas las herramientas del Laboratorio en un solo sitio: Pregunta a Tidusss, Tier List, Centro de Campeones, Academia ADC y lo que está en camino.';
+---
+
+<BaseLayout title={pageTitle} description={pageDescription}>
+  <Navbar />
+  <main>
+    <LaboratoryHero
+      eyebrow="El Laboratorio"
+      title="Herramientas"
+      description="Todo lo que puedes usar para resolver una duda concreta, en un solo sitio — hoy y lo que está por llegar."
+    />
+    <section class="tools-page section-shell" aria-labelledby="tools-title">
+      <div class="mx-auto max-w-6xl px-5 sm:px-8">
+        <h2 id="tools-title" class="sr-only">Herramientas disponibles</h2>
+
+        <div class="tools-grid">
+          {
+            availableTools.map((tool) => (
+              <a class="tool-card" href={tool.href}>
+                <span class="tool-card-status tool-card-status--available">
+                  Disponible
+                </span>
+                <strong>{tool.title}</strong>
+                <p>{tool.description}</p>
+                <span class="tool-card-cta">
+                  Abrir <b aria-hidden="true">→</b>
+                </span>
+              </a>
+            ))
+          }
+        </div>
+
+        <div class="tools-upcoming">
+          <p class="eyebrow">Próximamente</p>
+          <div class="tools-grid">
+            {
+              upcomingTools.map((tool) => (
+                <div class="tool-card tool-card--upcoming">
+                  <span class="tool-card-status">Próximamente</span>
+                  <strong>{tool.title}</strong>
+                  <p>{tool.description}</p>
+                </div>
+              ))
+            }
+          </div>
+        </div>
+      </div>
+    </section>
+    <ExploreNext
+      source="tool:tools-hub"
+      eyebrow="Sigue explorando"
+      title="Relacionado con las herramientas"
+    />
+  </main>
+  <Footer />
+</BaseLayout>

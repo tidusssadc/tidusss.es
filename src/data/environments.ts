@@ -71,7 +71,8 @@ export const environments: Record<EnvironmentId, EnvironmentDefinition> = {
 };
 
 export function resolveEnvironment(pathname: string): EnvironmentId {
-  if (pathname.startsWith('/live')) return 'live';
+  if (pathname.startsWith('/competitivo') || pathname.startsWith('/live'))
+    return 'live';
   if (pathname.startsWith('/match')) return 'match';
   if (pathname.startsWith('/tier-list')) return 'tier-list';
   if (pathname.startsWith('/campeones')) return 'champion';

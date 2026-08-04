@@ -1,0 +1,3 @@
+# /live pasó a llamarse /competitivo — redirección permanente para enlaces existentes.
+/live    /competitivo          301
+/live/*  /competitivo/:splat  301

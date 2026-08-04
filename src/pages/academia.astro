@@ -1,0 +1,135 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Navbar from '../components/Navbar.astro';
+import Footer from '../components/Footer.astro';
+import ExploreNext from '../components/ExploreNext.astro';
+import LaboratoryHero from '../components/laboratory/LaboratoryHero.astro';
+import {
+  adcLabChampions,
+  championCatalog,
+  leagueLaboratoryConcepts,
+} from '../data/league-laboratory';
+
+const conceptSlug = (id: string) => id.replace('concept:', '');
+
+// Dónde se aplica cada concepto: derivado directamente de qué campeón lo
+// referencia en su perfil curado — nunca una relación inventada.
+const appliesTo = (conceptId: string) =>
+  adcLabChampions
+    .filter((champion) => champion.coreConceptIds?.includes(conceptId as never))
+    .flatMap((champion) => {
+      const catalogEntry = championCatalog.find(
+        (entry) => entry.id === champion.id,
+      );
+      return catalogEntry ? [catalogEntry] : [];
+    });
+
+const categories = [...new Set(leagueLaboratoryConcepts.map((c) => c.category))];
+const conceptsByCategory = categories.map((category) => ({
+  category,
+  concepts: leagueLaboratoryConcepts.filter((c) => c.category === category),
+}));
+
+// Fichas explícitamente pendientes — nunca se inventa contenido para ellas,
+// solo se declara que existen y que todavía no tienen ficha propia.
+const upcomingConcepts = [
+  'Burst',
+  'Recall',
+  'Posicionamiento en teamfight',
+  'Objetivos (torres, dragones, heraldo)',
+  'Macro',
+  'Micro',
+] as const;
+
+const pageTitle = 'Academia ADC · El Laboratorio · tidusss.es';
+const pageDescription =
+  'El vocabulario y los fundamentos de ADC explicados con precisión: spacing, power spike, trading, tempo y wave management — la base sobre la que se construye cada guía.';
+---
+
+<BaseLayout title={pageTitle} description={pageDescription}>
+  <Navbar />
+  <main>
+    <LaboratoryHero
+      eyebrow="El Laboratorio"
+      title="Academia ADC"
+      description="El vocabulario y los fundamentos que sostienen cada guía y cada decisión en partida, explicados una sola vez y enlazados desde todas partes."
+    />
+    <section class="academy-page section-shell" aria-labelledby="academy-title">
+      <div class="mx-auto max-w-6xl px-5 sm:px-8">
+        <h2 id="academy-title" class="sr-only">Conceptos de la Academia ADC</h2>
+
+        {
+          conceptsByCategory.map(({ category, concepts }) => (
+            <div class="academy-category">
+              <p class="eyebrow">{category}</p>
+              <div class="academy-concept-grid">
+                {concepts.map((concept) => {
+                  const relatedChampions = appliesTo(concept.id);
+                  return (
+                    <article
+                      id={conceptSlug(concept.id)}
+                      class="academy-concept-card"
+                    >
+                      <h3>{concept.title}</h3>
+                      <p>{concept.summary}</p>
+                      {relatedChampions.length > 0 && (
+                        <div class="academy-concept-applies">
+                          <span>Se aplica en</span>
+                          <ul>
+                            {relatedChampions.map((catalogEntry) => (
+                              <li>
+                                <a href={`/campeones/${catalogEntry.slug}#concepts`}>
+                                  {catalogEntry.name}
+                                </a>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </article>
+                  );
+                })}
+              </div>
+            </div>
+          ))
+        }
+
+        <div class="academy-category">
+          <p class="eyebrow">En preparación</p>
+          <p class="academy-upcoming-note">
+            Estos conceptos son igual de fundamentales, pero todavía no tienen
+            una ficha propia con el mismo nivel de detalle. Se añadirán aquí
+            en cuanto existan — nunca se inventa contenido mientras tanto.
+          </p>
+          <div class="academy-concept-grid">
+            {
+              upcomingConcepts.map((title) => (
+                <article class="academy-concept-card academy-concept-card--upcoming">
+                  <span class="academy-upcoming-badge">En preparación</span>
+                  <h3>{title}</h3>
+                  <p>Todavía no existe una ficha para este concepto.</p>
+                </article>
+              ))
+            }
+          </div>
+        </div>
+
+        <div class="tier-list-cta">
+          <a class="button-secondary" href="/campeones/lucian">
+            Ver estos conceptos aplicados en la guía de Lucian
+            <span aria-hidden="true">→</span>
+          </a>
+          <a class="button-secondary" href="/herramientas">
+            Explorar todas las herramientas <span aria-hidden="true">→</span>
+          </a>
+        </div>
+      </div>
+    </section>
+    <ExploreNext
+      source="tool:academia"
+      eyebrow="Sigue explorando"
+      title="Relacionado con la Academia ADC"
+    />
+  </main>
+  <Footer />
+</BaseLayout>

@@ -16,6 +16,7 @@ import SynergyCard from '../../components/laboratory/champion/SynergyCard.astro'
 import ConceptCard from '../../components/laboratory/champion/ConceptCard.astro';
 import EditorialHistoryTimeline from '../../components/laboratory/champion/EditorialHistoryTimeline.astro';
 import ChampionGuideToc from '../../components/laboratory/champion/ChampionGuideToc.astro';
+import ChampionQuickFacts from '../../components/laboratory/champion/ChampionQuickFacts.astro';
 import ChampionMatchHistory from '../../components/laboratory/champion/ChampionMatchHistory.astro';
 import AskTidusssPrompt from '../../components/AskTidusssPrompt.astro';
 import { PREGUNTA_LUCIAN_SUGGESTIONS } from '../../data/pregunta';
@@ -122,6 +123,14 @@ const partnersFor = (championIds: readonly string[]) =>
 
 const quickTips = labChampion?.profile?.quickTips ?? [];
 const editorialHistory = labChampion?.editorialHistory ?? [];
+
+// Panel contextual: solo aporta valor cuando ya hay una build real que
+// resumir — no se muestra para campeones sin perfil ni build.
+const lastEditorialDate = [...editorialHistory]
+  .map((entry) => entry.date)
+  .sort()
+  .at(-1);
+const primaryQuestion = PREGUNTA_LUCIAN_SUGGESTIONS[0];
 
 // Índice lateral: solo enlaza a secciones que de verdad tienen contenido —
 // un índice que apunta a estados vacíos resta profundidad en vez de sumarla.
@@ -246,7 +255,25 @@ const structuredData = hasProfile
         />
 
         <div class="champion-guide-layout">
-          {tocEntries.length > 0 && <ChampionGuideToc entries={tocEntries} />}
+          {
+            (tocEntries.length > 0 || primaryBuild) && (
+              <div class="champion-guide-sidebar">
+                {tocEntries.length > 0 && <ChampionGuideToc entries={tocEntries} />}
+                {primaryBuild && (
+                  <ChampionQuickFacts
+                    championName={catalogEntry.name}
+                    patch={primaryBuildPatch}
+                    buildItemNames={coreItemNames}
+                    lastUpdated={lastEditorialDate}
+                    powerSpike={labChampion?.profile?.powerSpikes[0]}
+                    relatedQuestion={
+                      catalogEntry.slug === 'lucian' ? primaryQuestion : undefined
+                    }
+                  />
+                )}
+              </div>
+            )
+          }
           <div class="champion-guide-main">
         <ChampionProfileSection
           profile={labChampion?.profile}
@@ -481,7 +508,7 @@ const structuredData = hasProfile
           <a class="button-secondary" href="/tier-list">
             Volver a la Tier List <span aria-hidden="true">→</span>
           </a>
-          <a class="button-secondary" href="/live">
+          <a class="button-secondary" href="/competitivo">
             Ver la actividad competitiva en directo
             <span aria-hidden="true">→</span>
           </a>

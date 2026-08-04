@@ -11,6 +11,7 @@ import Footer from '../components/Footer.astro';
 import Hero from '../components/Hero.astro';
 import HomePlatformShowcase from '../components/HomePlatformShowcase.astro';
 import HomeStateEngine from '../components/HomeStateEngine.astro';
+import LiveTeaser from '../components/LiveTeaser.astro';
 import Navbar from '../components/Navbar.astro';
 import Recognition from '../components/Recognition.astro';
 import Timeline from '../components/Timeline.astro';
@@ -25,8 +26,42 @@ import { PREGUNTA_HOME_SUGGESTIONS } from '../data/pregunta';
   <Navbar />
   <HomeStateEngine />
   <main>
-    <Hero /><HomePlatformShowcase /><CompetitiveCredential /><BrandManifesto
+    <Hero /><LiveTeaser /><HomePlatformShowcase /><CompetitiveCredential /><BrandManifesto
     /><ContentSection />
+    <section
+      class="section-shell"
+      aria-labelledby="home-lab-title"
+      data-reveal
+    >
+      <div class="mx-auto max-w-7xl px-5 sm:px-8">
+        <p class="eyebrow">El Laboratorio</p>
+        <h2 id="home-lab-title" class="home-lab-title">
+          El criterio de Tidusss, documentado.
+        </h2>
+        <div class="tools-grid mt-10">
+          <a class="tool-card" href="/campeones/lucian">
+            <strong>Guía de Lucian</strong>
+            <p>Build, runas, sinergias y el criterio real detrás de cada decisión.</p>
+            <span class="tool-card-cta">Ver guía <b aria-hidden="true">→</b></span>
+          </a>
+          <a class="tool-card" href="/tier-list">
+            <strong>Tier List oficial ADC</strong>
+            <p>Clasificación editorial del meta actual, explicada partida a partida.</p>
+            <span class="tool-card-cta">Ver Tier List <b aria-hidden="true">→</b></span>
+          </a>
+          <a class="tool-card" href="/academia">
+            <strong>Academia ADC</strong>
+            <p>El vocabulario y los fundamentos de ADC, en fichas navegables.</p>
+            <span class="tool-card-cta">Explorar <b aria-hidden="true">→</b></span>
+          </a>
+          <a class="tool-card" href="/herramientas">
+            <strong>Herramientas</strong>
+            <p>Pregunta a Tidusss, Tier List, Centro de Campeones y más, en un solo sitio.</p>
+            <span class="tool-card-cta">Ver todas <b aria-hidden="true">→</b></span>
+          </a>
+        </div>
+      </div>
+    </section>
     <ActivityCenterCta />
     <section
       id="pregunta-tidusss"

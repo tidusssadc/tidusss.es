@@ -71,6 +71,39 @@ const championHubEntity: ContentEntity = {
   status: 'available',
 };
 
+const preguntaToolEntity: ContentEntity = {
+  id: 'tool:pregunta',
+  kind: 'tool',
+  title: 'Pregunta a Tidusss',
+  description:
+    'Resuelve dudas sobre Lucian y ADC con el contenido editorial ya publicado.',
+  href: '/pregunta',
+  source: 'editorial',
+  status: 'available',
+};
+
+const academiaToolEntity: ContentEntity = {
+  id: 'tool:academia',
+  kind: 'tool',
+  title: 'Academia ADC',
+  description:
+    'El vocabulario y los fundamentos de ADC, organizados en fichas navegables.',
+  href: '/academia',
+  source: 'editorial',
+  status: 'available',
+};
+
+const toolsHubEntity: ContentEntity = {
+  id: 'tool:tools-hub',
+  kind: 'tool',
+  title: 'Herramientas',
+  description:
+    'Todas las utilidades del Laboratorio en un solo sitio, disponibles y en camino.',
+  href: '/herramientas',
+  source: 'editorial',
+  status: 'available',
+};
+
 /**
  * Único punto de resolución de un `LabChampionId` contra el catálogo
  * generado — usado tanto por campeones curados como por el contenido que
@@ -138,6 +171,9 @@ export const leagueLaboratoryEntities: ContentEntity[] = [
   patchToContentEntity(patch2614),
   { ...tierListToContentEntity(officialAdcTierList), href: '/tier-list' },
   championHubEntity,
+  preguntaToolEntity,
+  academiaToolEntity,
+  toolsHubEntity,
   // Fase B: contenido editorial real de builds — hoy, las dos rutas
   // publicadas de Lucian. `Build` no tiene concepto de borrador/placeholder
   // en el dominio de origen: todo lo que existe en `leagueLaboratoryBuilds`
@@ -316,4 +352,66 @@ export const leagueLaboratoryRelations: ContentRelation[] = [
     priority: 55,
     source: 'editorial',
   },
+  // Herramientas: el hub de utilidades enlaza a cada herramienta real y
+  // cada herramienta enlaza de vuelta — igual criterio que championHubEntity.
+  ...[preguntaToolEntity, academiaToolEntity, championHubEntity, {
+    ...tierListToContentEntity(officialAdcTierList),
+  }].flatMap((tool) => [
+    {
+      from: toolsHubEntity.id,
+      to: tool.id,
+      kind: 'features' as const,
+      label: `Abrir ${tool.title}`,
+      priority: 50,
+      source: 'editorial' as const,
+    },
+    {
+      from: tool.id,
+      to: toolsHubEntity.id,
+      kind: 'related-to' as const,
+      label: 'Ver todas las herramientas',
+      priority: 40,
+      source: 'editorial' as const,
+    },
+  ]),
+  {
+    from: preguntaToolEntity.id,
+    to: lucian.id,
+    kind: 'related-to',
+    label: 'Preguntar sobre Lucian',
+    priority: 55,
+    source: 'editorial',
+  },
+  {
+    from: lucian.id,
+    to: preguntaToolEntity.id,
+    kind: 'related-to',
+    label: 'Resolver una duda sobre esta guía',
+    priority: 35,
+    source: 'editorial',
+  },
+  // Academia ADC enlaza a los conceptos ya registrados (los que Lucian
+  // referencia directamente) y viceversa — nunca a los que todavía no
+  // tienen ninguna relación real que ofrecer.
+  ...(lucian.coreConceptIds ?? []).flatMap((conceptId) => {
+    const concept = getConceptOrThrow(conceptId);
+    return [
+      {
+        from: academiaToolEntity.id,
+        to: concept.id,
+        kind: 'features' as const,
+        label: `Ver la ficha de ${concept.title}`,
+        priority: 50,
+        source: 'editorial' as const,
+      },
+      {
+        from: concept.id,
+        to: academiaToolEntity.id,
+        kind: 'related-to' as const,
+        label: 'Ver todos los conceptos de la Academia ADC',
+        priority: 40,
+        source: 'editorial' as const,
+      },
+    ];
+  }),
 ];

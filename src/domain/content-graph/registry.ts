@@ -26,9 +26,9 @@ const coreEntities: ContentEntity[] = [
   {
     id: 'creator-project:live',
     kind: 'creator-project',
-    title: 'Centro de actividad',
+    title: 'Competitivo',
     description: 'Partidas, rango, objetivos y actividad reciente.',
-    href: '/live/',
+    href: '/competitivo/',
     source: 'editorial',
     status: 'available',
   },
@@ -66,7 +66,7 @@ const coreEntities: ContentEntity[] = [
     kind: 'achievement',
     title: 'Master EUW',
     description: 'Credencial competitiva verificada mediante Riot.',
-    href: '/live/#competitivo',
+    href: '/competitivo/#competitivo',
     source: 'riot',
     status: 'available',
   },
@@ -80,7 +80,7 @@ const coreEntities: ContentEntity[] = [
       // Una entidad `planned` no es navegable: `href` solo se rellena
       // cuando el objetivo está realmente activo (invariante de grafo,
       // `docs/content-graph.md` §10.2).
-      ...(status === 'available' ? { href: '/live/#objetivos' } : {}),
+      ...(status === 'available' ? { href: '/competitivo/#objetivos' } : {}),
       source: goal.source === 'riot' ? 'riot' : 'editorial',
       status,
     };
@@ -93,7 +93,7 @@ const relations: ContentRelation[] = [
     from: 'creator-project:tidusss',
     to: 'creator-project:live',
     kind: 'continues-with',
-    label: 'Explorar el centro de actividad',
+    label: 'Explorar el centro competitivo',
     context: 'La evolución competitiva continúa después de la portada.',
     priority: 100,
     source: 'editorial',

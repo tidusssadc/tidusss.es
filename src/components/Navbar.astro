@@ -21,15 +21,28 @@ const navHref = (href: string) =>
     >
     <div class="hidden items-center gap-7 lg:flex">
       {
-        navigation.map((item) => (
-          <a
-            class="nav-link text-sm text-slate-300"
-            href={navHref(item.href)}
-            data-nav-link
-          >
-            {item.label}
-          </a>
-        ))
+        navigation.map((item) =>
+          'items' in item ? (
+            <details class="nav-dropdown">
+              <summary class="nav-link text-sm text-slate-300" data-nav-link>
+                {item.label} <span aria-hidden="true">▾</span>
+              </summary>
+              <div class="nav-dropdown-panel">
+                {item.items.map((sub) => (
+                  <a href={navHref(sub.href)}>{sub.label}</a>
+                ))}
+              </div>
+            </details>
+          ) : (
+            <a
+              class="nav-link text-sm text-slate-300"
+              href={navHref(item.href)}
+              data-nav-link
+            >
+              {item.label}
+            </a>
+          ),
+        )
       }
     </div>
     <a
@@ -48,14 +61,28 @@ const navHref = (href: string) =>
         class="absolute top-14 right-0 w-64 border border-white/10 bg-[#0a0f1d] p-3 shadow-2xl"
       >
         {
-          navigation.map((item) => (
-            <a
-              class="block rounded-sm px-4 py-3 text-sm text-slate-200 hover:bg-white/5"
-              href={navHref(item.href)}
-            >
-              {item.label}
-            </a>
-          ))
+          navigation.map((item) =>
+            'items' in item ? (
+              <div class="mobile-nav-group">
+                <span class="mobile-nav-group-label">{item.label}</span>
+                {item.items.map((sub) => (
+                  <a
+                    class="block rounded-sm px-4 py-3 text-sm text-slate-200 hover:bg-white/5"
+                    href={navHref(sub.href)}
+                  >
+                    {sub.label}
+                  </a>
+                ))}
+              </div>
+            ) : (
+              <a
+                class="block rounded-sm px-4 py-3 text-sm text-slate-200 hover:bg-white/5"
+                href={navHref(item.href)}
+              >
+                {item.label}
+              </a>
+            ),
+          )
         }
         <a
           class="button-primary mt-3 flex justify-center px-5 py-3 text-sm"
@@ -80,12 +107,13 @@ const navHref = (href: string) =>
     ...document.querySelectorAll<HTMLAnchorElement>('[data-nav-link]'),
   ];
   const sections = links
-    .filter((link) => link.hash)
+    .filter((link): link is HTMLAnchorElement => link instanceof HTMLAnchorElement && Boolean(link.hash))
     .map((link) => document.querySelector<HTMLElement>(link.hash))
     .filter((section): section is HTMLElement => Boolean(section));
   const setActiveLink = (id: string) => {
     links.forEach((link) => {
-      const active = link.hash === `#${id}`;
+      const active =
+        link instanceof HTMLAnchorElement && link.hash === `#${id}`;
       link.toggleAttribute('data-active', active);
       if (active) link.setAttribute('aria-current', 'location');
       else link.removeAttribute('aria-current');
@@ -101,4 +129,30 @@ const navHref = (href: string) =>
     { rootMargin: '-25% 0px -60% 0px', threshold: [0, 0.2, 0.6] },
   );
   sections.forEach((section) => sectionObserver.observe(section));
+
+  // Dropdowns del menú principal: un <details> abierto a la vez, y se
+  // cierra al hacer clic fuera o al elegir un enlace — comportamiento
+  // esperado de un menú, no el de un <details> aislado.
+  const dropdowns = [
+    ...document.querySelectorAll<HTMLDetailsElement>('.nav-dropdown'),
+  ];
+  dropdowns.forEach((dropdown) => {
+    dropdown.addEventListener('toggle', () => {
+      if (dropdown.open)
+        dropdowns.forEach((other) => {
+          if (other !== dropdown) other.open = false;
+        });
+    });
+    dropdown
+      .querySelectorAll('a')
+      .forEach((link) => link.addEventListener('click', () => {
+        dropdown.open = false;
+      }));
+  });
+  document.addEventListener('click', (event) => {
+    dropdowns.forEach((dropdown) => {
+      if (dropdown.open && !dropdown.contains(event.target as Node))
+        dropdown.open = false;
+    });
+  });
 </script>

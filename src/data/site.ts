@@ -14,9 +14,23 @@ export const brandPrinciple = {
 export const navigation = [
   { label: 'Inicio', href: '#inicio' },
   { label: 'Explorar', href: '/explorar' },
-  { label: 'Campeones', href: '/campeones' },
-  { label: 'Tier List', href: '/tier-list' },
-  { label: 'Directo', href: '/live' },
+  {
+    label: 'El Laboratorio',
+    items: [
+      { label: 'Centro de Campeones', href: '/campeones' },
+      { label: 'Tier List', href: '/tier-list' },
+      { label: 'Academia ADC', href: '/academia' },
+      { label: 'Herramientas', href: '/herramientas' },
+    ],
+  },
+  { label: 'Competitivo', href: '/competitivo' },
   { label: 'Pregunta', href: '/pregunta' },
-  { label: 'Comunidad', href: '/comunidad' },
+  {
+    label: 'Comunidad',
+    items: [
+      { label: 'Estado del proyecto', href: '/comunidad' },
+      { label: 'Roadmap', href: '/roadmap' },
+      { label: 'Actualizaciones', href: '/actualizaciones' },
+    ],
+  },
 ] as const;

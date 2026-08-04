@@ -6517,20 +6517,22 @@ body[data-home-state='near-goal'] .environment-rays {
 .champion-guide-layout {
   display: block;
 }
-.champion-guide-toc {
+.champion-guide-sidebar {
   display: none;
 }
 @media (min-width: 1100px) {
   .champion-guide-layout {
     display: grid;
-    grid-template-columns: 13rem 1fr;
+    grid-template-columns: 15rem 1fr;
     align-items: start;
     gap: 3rem;
   }
-  .champion-guide-toc {
+  .champion-guide-sidebar {
     position: sticky;
     top: 6rem;
-    display: block;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
     padding-right: 1rem;
   }
   .champion-guide-toc ul {
@@ -6561,6 +6563,68 @@ body[data-home-state='near-goal'] .environment-rays {
   }
   .champion-guide-toc a[data-active] {
     border-left-color: #d6b56b;
+    color: #edcf8d;
+  }
+}
+
+/* Panel contextual (Implementación 5): solo aparece junto a una build real,
+   nunca como relleno fijo en toda página de campeón. */
+.champion-quick-facts {
+  display: none;
+}
+@media (min-width: 1100px) {
+  .champion-quick-facts {
+    display: block;
+    padding: 1.2rem 1.2rem 1.4rem;
+    border: 1px solid rgb(255 255 255 / 8%);
+    border-radius: 0.75rem;
+    background: rgb(255 255 255 / 2%);
+  }
+  .champion-quick-facts dl {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    margin-top: 0.9rem;
+  }
+  .champion-quick-facts dt {
+    font-size: 0.62rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #7583a0;
+  }
+  .champion-quick-facts dd {
+    margin-top: 0.25rem;
+    font-size: 0.82rem;
+    line-height: 1.5;
+    color: #e2e8f0;
+  }
+  .champion-quick-facts dd a {
+    color: #7fbcff;
+    text-decoration: none;
+  }
+  .champion-quick-facts dd a:hover {
+    text-decoration: underline;
+  }
+  .champion-quick-facts-question {
+    display: block;
+    margin-top: 1.2rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgb(255 255 255 / 8%);
+    text-decoration: none;
+  }
+  .champion-quick-facts-question span {
+    font-size: 0.62rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #d6b56b;
+  }
+  .champion-quick-facts-question strong {
+    display: block;
+    margin-top: 0.35rem;
+    font-size: 0.82rem;
+    font-weight: 650;
     color: #edcf8d;
   }
 }
@@ -8710,11 +8774,23 @@ body[data-home-state='near-goal'] .environment-rays {
   color: #7fbcff;
 }
 .activity-kind[data-kind='tier list'],
+.activity-kind[data-kind='tier-list'],
 .activity-kind[data-kind='pregunta'],
 .activity-kind[data-kind='centro de campeones'] {
   border-color: rgb(214 181 107 / 35%);
   background: rgb(214 181 107 / 7%);
   color: #edcf8d;
+}
+.activity-kind[data-kind='build'],
+.activity-kind[data-kind='concepto'] {
+  border-color: rgb(52 211 153 / 35%);
+  background: rgb(52 211 153 / 8%);
+  color: #6ee7b7;
+}
+.activity-kind[data-kind='mejora-web'] {
+  border-color: rgb(255 255 255 / 18%);
+  background: rgb(255 255 255 / 5%);
+  color: #cbd5e1;
 }
 .activity-entry strong {
   display: block;
@@ -8738,4 +8814,329 @@ body[data-home-state='near-goal'] .environment-rays {
     grid-template-columns: 1fr;
     gap: 0.4rem;
   }
+}
+
+/* Academia ADC — fichas de conceptos fundamentales */
+.academy-category {
+  margin-top: 3rem;
+}
+.academy-category:first-child {
+  margin-top: 0;
+}
+.academy-upcoming-note {
+  max-width: 42rem;
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: #7583a0;
+}
+.academy-concept-grid {
+  display: grid;
+  gap: 1.1rem;
+  margin-top: 1.25rem;
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+}
+.academy-concept-card {
+  scroll-margin-top: 4.5rem;
+  padding: 1.5rem 1.4rem;
+  border: 1px solid rgb(255 255 255 / 8%);
+  border-radius: 0.85rem;
+  background: rgb(255 255 255 / 2%);
+  transition:
+    border-color 200ms ease,
+    transform 200ms ease;
+}
+.academy-concept-card:hover {
+  border-color: rgb(75 163 255 / 35%);
+  transform: translateY(-2px);
+}
+.academy-concept-card h3 {
+  font-size: 1.05rem;
+  font-weight: 750;
+  color: #fff;
+}
+.academy-concept-card > p {
+  margin-top: 0.65rem;
+  font-size: 0.85rem;
+  line-height: 1.65;
+  color: #9aa5b8;
+}
+.academy-concept-applies {
+  margin-top: 1rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid rgb(255 255 255 / 6%);
+}
+.academy-concept-applies span {
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #7583a0;
+}
+.academy-concept-applies ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+  padding: 0;
+  list-style: none;
+}
+.academy-concept-applies a {
+  display: inline-flex;
+  padding: 0.25rem 0.6rem;
+  border: 1px solid rgb(214 181 107 / 25%);
+  border-radius: 999px;
+  color: #edcf8d;
+  font-size: 0.72rem;
+  font-weight: 650;
+  text-decoration: none;
+}
+.academy-concept-applies a:hover {
+  border-color: rgb(214 181 107 / 55%);
+}
+.academy-concept-card--upcoming {
+  border-style: dashed;
+  opacity: 0.75;
+}
+.academy-upcoming-badge {
+  display: inline-block;
+  margin-bottom: 0.6rem;
+  padding: 0.18rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid rgb(255 255 255 / 14%);
+  color: #9aa5b8;
+  font-size: 0.62rem;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* Herramientas — centro de utilidades */
+.tools-grid {
+  display: grid;
+  gap: 1.1rem;
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+}
+.tool-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1.6rem 1.5rem;
+  border: 1px solid rgb(255 255 255 / 8%);
+  border-radius: 0.9rem;
+  background: rgb(255 255 255 / 2%);
+  text-decoration: none;
+  transition:
+    border-color 200ms ease,
+    transform 200ms ease;
+}
+a.tool-card:hover,
+a.tool-card:focus-visible {
+  border-color: rgb(214 181 107 / 40%);
+  transform: translateY(-3px);
+}
+.tool-card-status {
+  align-self: flex-start;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid rgb(255 255 255 / 14%);
+  color: #7583a0;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.tool-card-status--available {
+  border-color: rgb(75 163 255 / 35%);
+  color: #7fbcff;
+}
+.tool-card strong {
+  font-size: 1.05rem;
+  font-weight: 750;
+  color: #fff;
+}
+.tool-card p {
+  flex: 1;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: #9aa5b8;
+}
+.tool-card-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.4rem;
+  color: #edcf8d;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+.tools-upcoming {
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 1px solid rgb(255 255 255 / 8%);
+}
+.tool-card--upcoming {
+  border-style: dashed;
+  opacity: 0.75;
+}
+
+/* Roadmap — cuatro columnas de estado, sin fechas inventadas */
+.roadmap-columns {
+  display: grid;
+  gap: 1.25rem;
+}
+@media (min-width: 900px) {
+  .roadmap-columns {
+    grid-template-columns: repeat(4, 1fr);
+    align-items: start;
+  }
+}
+.roadmap-column {
+  padding: 1.4rem 1.3rem 1.6rem;
+  border: 1px solid rgb(255 255 255 / 8%);
+  border-radius: 0.9rem;
+  background: rgb(255 255 255 / 1.5%);
+  border-top: 2px solid #7583a0;
+}
+.roadmap-column[data-roadmap-status='shipped'] {
+  border-top-color: #4ba3ff;
+}
+.roadmap-column[data-roadmap-status='in-development'] {
+  border-top-color: #d6b56b;
+}
+.roadmap-column[data-roadmap-status='planned'] {
+  border-top-color: #9aa5b8;
+}
+.roadmap-column[data-roadmap-status='idea'] {
+  border-top-color: #7583a0;
+  border-top-style: dashed;
+}
+.roadmap-column-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #fff;
+}
+.roadmap-column header p {
+  margin-top: 0.4rem;
+  font-size: 0.76rem;
+  line-height: 1.5;
+  color: #7583a0;
+}
+.roadmap-column ul {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1.1rem;
+  padding: 0;
+  list-style: none;
+}
+.roadmap-column li a,
+.roadmap-item-static {
+  display: block;
+  padding: 0.85rem 0.9rem;
+  border: 1px solid rgb(255 255 255 / 7%);
+  border-radius: 0.55rem;
+  text-decoration: none;
+  transition:
+    border-color 180ms ease,
+    transform 180ms ease;
+}
+.roadmap-column li a:hover,
+.roadmap-column li a:focus-visible {
+  border-color: rgb(75 163 255 / 40%);
+  transform: translateX(3px);
+}
+.roadmap-column strong {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #e2e8f0;
+}
+.roadmap-column p {
+  margin-top: 0.3rem;
+  font-size: 0.76rem;
+  line-height: 1.5;
+  color: #7583a0;
+}
+
+.home-lab-title {
+  margin-top: 0.6rem;
+  font-size: clamp(1.5rem, 2.8vw, 2.1rem);
+  font-weight: 750;
+  letter-spacing: -0.02em;
+  color: #fff;
+}
+
+/* Navegación: mega-menú ligero con dos agrupaciones (El Laboratorio,
+   Comunidad) — el mismo <details> nativo que ya usaba el menú móvil. */
+.nav-dropdown {
+  position: relative;
+}
+.nav-dropdown > summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  list-style: none;
+  cursor: pointer;
+}
+.nav-dropdown > summary::-webkit-details-marker {
+  display: none;
+}
+.nav-dropdown > summary span {
+  font-size: 0.6rem;
+  transition: transform 180ms ease;
+}
+.nav-dropdown[open] > summary span {
+  transform: rotate(180deg);
+}
+.nav-dropdown-panel {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  min-width: 13rem;
+  padding: 0.5rem;
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 0.6rem;
+  background: #0a0f1d;
+  box-shadow: 0 20px 45px rgb(0 0 0 / 45%);
+}
+.nav-dropdown-panel a {
+  padding: 0.6rem 0.75rem;
+  border-radius: 0.4rem;
+  color: #cbd5e1;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color 150ms ease;
+}
+.nav-dropdown-panel a:hover,
+.nav-dropdown-panel a:focus-visible {
+  background: rgb(255 255 255 / 6%);
+  color: #fff;
+}
+.mobile-nav-group {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgb(255 255 255 / 8%);
+}
+.mobile-nav-group:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+.mobile-nav-group-label {
+  display: block;
+  padding: 0.4rem 0.75rem 0.2rem;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #7583a0;
 }

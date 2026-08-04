@@ -1,0 +1,138 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Navbar from '../components/Navbar.astro';
+import Footer from '../components/Footer.astro';
+import LaboratoryHero from '../components/laboratory/LaboratoryHero.astro';
+
+type UpdateKind = 'guía' | 'build' | 'tier-list' | 'concepto' | 'mejora-web';
+
+interface UpdateEntry {
+  date: string;
+  kind: UpdateKind;
+  title: string;
+  description: string;
+  href: string;
+}
+
+const entries: UpdateEntry[] = [
+  {
+    date: '2026-08-03',
+    kind: 'mejora-web',
+    title: 'Segunda fase de producto: un ecosistema conectado',
+    description:
+      'Academia ADC, Herramientas, Roadmap y Actualizaciones, además de un centro competitivo propio y navegación contextual en las páginas principales.',
+    href: '/explorar',
+  },
+  {
+    date: '2026-08-03',
+    kind: 'mejora-web',
+    title: 'Primera fase de producto: Home, Explorar, Comunidad y Actividad',
+    description:
+      'Rediseño del Home, nuevo showcase de vídeos, tarjetas de redes sociales y tres páginas nuevas para descubrir todo el contenido del sitio.',
+    href: '/',
+  },
+  {
+    date: '2026-08-03',
+    kind: 'guía',
+    title: 'Se publica Pregunta a Tidusss',
+    description:
+      'Resuelve dudas sobre Lucian y ADC con el contenido editorial ya publicado, sin esperar a un vídeo.',
+    href: '/pregunta',
+  },
+  {
+    date: '2026-07-26',
+    kind: 'build',
+    title: 'Guía de Lucian ampliada: build personal, sinergias y biblioteca de conceptos',
+    description:
+      'Ruta de objetos personal, 6 sinergias confirmadas, consejos rápidos, historial editorial y los primeros 6 conceptos fundamentales de ADC (spacing, power spike, snowball, trading, tempo y wave management).',
+    href: '/campeones/lucian',
+  },
+  {
+    date: '2026-07-24',
+    kind: 'tier-list',
+    title: 'Se publican la Tier List oficial ADC y el Centro de Campeones',
+    description:
+      'Clasificación editorial del meta actual y catálogo completo explorable, con búsqueda y filtros por estado.',
+    href: '/tier-list',
+  },
+  {
+    date: '2026-07-24',
+    kind: 'guía',
+    title: 'Lucian entra en la Tier List como S',
+    description: 'La única entrada revisada de la primera edición de la Tier List.',
+    href: '/tier-list',
+  },
+  {
+    date: '2026-07-24',
+    kind: 'guía',
+    title: 'Se publica el perfil editorial completo de Lucian',
+    description:
+      'Resumen, fortalezas, debilidades, errores comunes y power spikes en el Explorador de Campeones.',
+    href: '/campeones/lucian',
+  },
+];
+
+const kindLabel: Record<UpdateKind, string> = {
+  guía: 'Guía',
+  build: 'Build',
+  'tier-list': 'Tier List',
+  concepto: 'Concepto',
+  'mejora-web': 'Mejora de la web',
+};
+
+const pageTitle = 'Actualizaciones · tidusss.es';
+const pageDescription =
+  'El historial editorial de tidusss.es: nuevas guías, cambios de builds, cambios de Tier List, nuevos conceptos y mejoras de la web, en orden cronológico.';
+---
+
+<BaseLayout title={pageTitle} description={pageDescription}>
+  <Navbar />
+  <main>
+    <LaboratoryHero
+      eyebrow="Actualizaciones"
+      title="El historial de lo que ha cambiado"
+      description="Nuevas guías, cambios de builds, cambios de Tier List, nuevos conceptos y mejoras de la web — en orden, sin mezclarlo con vídeos ni directos."
+    />
+    <section
+      class="updates-page section-shell"
+      aria-labelledby="updates-title"
+    >
+      <div class="mx-auto max-w-4xl px-5 sm:px-8">
+        <h2 id="updates-title" class="sr-only">Historial de actualizaciones</h2>
+        <ol class="activity-feed">
+          {
+            entries.map((entry) => (
+              <li>
+                <a href={entry.href} class="activity-entry">
+                  <time datetime={entry.date}>
+                    {new Date(entry.date).toLocaleDateString('es-ES', {
+                      day: 'numeric',
+                      month: 'short',
+                      year: 'numeric',
+                    })}
+                  </time>
+                  <div>
+                    <b class="activity-kind" data-kind={entry.kind}>
+                      {kindLabel[entry.kind]}
+                    </b>
+                    <strong>{entry.title}</strong>
+                    <p>{entry.description}</p>
+                  </div>
+                </a>
+              </li>
+            ))
+          }
+        </ol>
+        <div class="tier-list-cta">
+          <a class="button-secondary" href="/actividad">
+            Ver también vídeos y directos <span aria-hidden="true">→</span>
+          </a>
+          <a class="button-secondary" href="/roadmap">
+            Ver qué viene después <span aria-hidden="true">→</span>
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+  <Footer />
+</BaseLayout>

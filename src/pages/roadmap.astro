@@ -1,0 +1,172 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Navbar from '../components/Navbar.astro';
+import Footer from '../components/Footer.astro';
+import LaboratoryHero from '../components/laboratory/LaboratoryHero.astro';
+
+type RoadmapStatus = 'shipped' | 'in-development' | 'planned' | 'idea';
+
+interface RoadmapItem {
+  title: string;
+  description: string;
+  href?: string;
+}
+
+const columns: Array<{
+  status: RoadmapStatus;
+  label: string;
+  description: string;
+  items: RoadmapItem[];
+}> = [
+  {
+    status: 'shipped',
+    label: 'Recién salido',
+    description: 'Ya está en tidusss.es, disponible ahora mismo.',
+    items: [
+      {
+        title: 'Pregunta a Tidusss',
+        description:
+          'Resuelve dudas sobre Lucian y ADC con el contenido editorial ya publicado.',
+        href: '/pregunta',
+      },
+      {
+        title: 'Explorar, Comunidad y Actividad',
+        description:
+          'Tres páginas nuevas para descubrir todo el contenido del sitio desde un mismo sitio.',
+        href: '/explorar',
+      },
+      {
+        title: 'Academia ADC y Herramientas',
+        description:
+          'El vocabulario de ADC organizado en fichas, y un centro único para todas las utilidades.',
+        href: '/academia',
+      },
+    ],
+  },
+  {
+    status: 'in-development',
+    label: 'En desarrollo',
+    description: 'Ya está empezado, todavía no está terminado.',
+    items: [
+      {
+        title: 'Matchups de Lucian',
+        description:
+          'El apartado de matchups del Laboratorio todavía está vacío — es el siguiente contenido editorial en cola.',
+        href: '/campeones/lucian#matchups',
+      },
+      {
+        title: 'Ampliar el catálogo con perfil completo',
+        description:
+          'Solo un puñado de campeones tiene ya el criterio completo de Tidusss; el resto sigue disponible mientras se revisa.',
+        href: '/campeones',
+      },
+    ],
+  },
+  {
+    status: 'planned',
+    label: 'Próximamente',
+    description: 'Decidido, todavía sin fecha concreta.',
+    items: [
+      {
+        title: 'Calculadora de daño',
+        description:
+          'Simular combos e intercambios reales de Lucian objeto a objeto y nivel a nivel.',
+      },
+      {
+        title: 'Build Planner',
+        description:
+          'Armar una ruta de objetos propia y compararla con las builds ya publicadas.',
+      },
+      {
+        title: 'Comparador de campeones',
+        description:
+          'Enfrentar a dos campeones del catálogo lado a lado: fortalezas, debilidades y sinergias.',
+      },
+    ],
+  },
+  {
+    status: 'idea',
+    label: 'Ideas',
+    description: 'En el radar, sin compromiso todavía.',
+    items: [
+      {
+        title: 'Ampliar la Academia ADC',
+        description:
+          'Fichas propias para burst, recall, macro y micro, con el mismo nivel de detalle que el resto.',
+      },
+      {
+        title: 'Más campeones con guía completa',
+        description:
+          'Llevar el mismo tratamiento editorial de Lucian a otros ADC del catálogo.',
+      },
+      {
+        title: 'Momentos destacados del directo',
+        description:
+          'Traer los mejores clips de Twitch al feed de Actividad, no solo el enlace al canal.',
+      },
+    ],
+  },
+];
+
+const pageTitle = 'Roadmap · tidusss.es';
+const pageDescription =
+  'Qué acaba de salir, qué está en desarrollo, qué llegará próximamente y qué ideas hay sobre la mesa para tidusss.es — sin promesas de fecha.';
+---
+
+<BaseLayout title={pageTitle} description={pageDescription}>
+  <Navbar />
+  <main>
+    <LaboratoryHero
+      eyebrow="Roadmap"
+      title="Qué viene después"
+      description="Sin fechas inventadas: lo que acaba de salir, lo que está en marcha, lo que está decidido y lo que todavía es solo una idea."
+    />
+    <section class="roadmap-page section-shell" aria-labelledby="roadmap-title">
+      <div class="mx-auto max-w-7xl px-5 sm:px-8">
+        <h2 id="roadmap-title" class="sr-only">Roadmap público</h2>
+        <div class="roadmap-columns">
+          {
+            columns.map((column) => (
+              <div class="roadmap-column" data-roadmap-status={column.status}>
+                <header>
+                  <span class="roadmap-column-label">{column.label}</span>
+                  <p>{column.description}</p>
+                </header>
+                <ul>
+                  {column.items.map((item) =>
+                    item.href ? (
+                      <li>
+                        <a href={item.href}>
+                          <strong>{item.title}</strong>
+                          <p>{item.description}</p>
+                        </a>
+                      </li>
+                    ) : (
+                      <li>
+                        <div class="roadmap-item-static">
+                          <strong>{item.title}</strong>
+                          <p>{item.description}</p>
+                        </div>
+                      </li>
+                    ),
+                  )}
+                </ul>
+              </div>
+            ))
+          }
+        </div>
+
+        <div class="tier-list-cta">
+          <a class="button-secondary" href="/actualizaciones">
+            Ver el historial de cambios ya publicados
+            <span aria-hidden="true">→</span>
+          </a>
+          <a class="button-secondary" href="/comunidad">
+            Ver objetivos y estado del canal <span aria-hidden="true">→</span>
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+  <Footer />
+</BaseLayout>

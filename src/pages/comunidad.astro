@@ -9,39 +9,22 @@ import { goals } from '../config/goals';
 const activeGoals = goals.filter((goal) => goal.status === 'active');
 const futureGoals = goals.filter((goal) => goal.status === 'future');
 
-const inProgress = [
-  {
-    title: 'Documentar los primeros matchups de Lucian',
-    description:
-      'El apartado de matchups del Laboratorio todavía está vacío — es el siguiente contenido editorial en cola.',
-  },
-  {
-    title: 'Ampliar el catálogo de campeones analizados',
-    description:
-      'Solo un puñado de campeones tiene ya el criterio completo de Tidusss; el resto del catálogo sigue disponible mientras se revisa.',
-  },
-  {
-    title: 'Seguir creciendo Pregunta a Tidusss',
-    description:
-      'Más contenido editorial publicado significa respuestas más completas — cada guía nueva alimenta directamente el motor de respuestas.',
-  },
-] as const;
+const inProgressTeaser = {
+  title: 'Documentar los primeros matchups de Lucian',
+  description:
+    'El apartado de matchups del Laboratorio todavía está vacío — es el siguiente contenido editorial en cola.',
+} as const;
 
 const changelog = [
   {
     date: '2026-08-03',
     summary:
+      'Segunda fase de producto: Academia ADC, Herramientas, Roadmap y Actualizaciones.',
+  },
+  {
+    date: '2026-08-03',
+    summary:
       'Se publica Pregunta a Tidusss: resuelve dudas sobre Lucian y ADC con el contenido editorial ya publicado.',
-  },
-  {
-    date: '2026-07-26',
-    summary:
-      'Se amplía la guía de Lucian con build personal, sinergias, quick tips e historial editorial.',
-  },
-  {
-    date: '2026-07-24',
-    summary:
-      'Se publican la Tier List oficial ADC y el Centro de Campeones, con el catálogo completo explorable.',
   },
 ] as const;
 
@@ -102,15 +85,14 @@ const pageDescription =
           <h2 id="community-progress-title">Qué se está preparando ahora</h2>
         </header>
         <ul class="community-progress-list">
-          {
-            inProgress.map((item) => (
-              <li>
-                <strong>{item.title}</strong>
-                <p>{item.description}</p>
-              </li>
-            ))
-          }
+          <li>
+            <strong>{inProgressTeaser.title}</strong>
+            <p>{inProgressTeaser.description}</p>
+          </li>
         </ul>
+        <a class="button-secondary mt-8 inline-flex" href="/roadmap">
+          Ver el roadmap completo <span aria-hidden="true">→</span>
+        </a>
       </div>
     </section>
 
@@ -136,8 +118,8 @@ const pageDescription =
             ))
           }
         </ol>
-        <a class="button-secondary mt-8 inline-flex" href="/actividad">
-          Ver toda la actividad <span aria-hidden="true">→</span>
+        <a class="button-secondary mt-8 inline-flex" href="/actualizaciones">
+          Ver todas las actualizaciones <span aria-hidden="true">→</span>
         </a>
       </div>
     </section>

@@ -1,0 +1,76 @@
+---
+import type { Patch } from '../../../domain/league-laboratory';
+
+interface Props {
+  championName: string;
+  patch?: Patch;
+  buildItemNames?: readonly string[];
+  lastUpdated?: string;
+  powerSpike?: string;
+  relatedQuestion?: string;
+}
+const {
+  championName,
+  patch,
+  buildItemNames,
+  lastUpdated,
+  powerSpike,
+  relatedQuestion,
+} = Astro.props;
+
+const lastUpdatedLabel = lastUpdated
+  ? new Intl.DateTimeFormat('es-ES', {
+      dateStyle: 'long',
+      timeZone: 'Europe/Madrid',
+    }).format(new Date(lastUpdated))
+  : undefined;
+---
+
+<aside class="champion-quick-facts" aria-label={`Datos rápidos de ${championName}`}>
+  <p class="eyebrow">Datos rápidos</p>
+  <dl>
+    {
+      buildItemNames && buildItemNames.length > 0 && (
+        <div>
+          <dt>Build actual</dt>
+          <dd><a href="#build">{buildItemNames.join(' · ')}</a></dd>
+        </div>
+      )
+    }
+    {
+      patch && (
+        <div>
+          <dt>Parche</dt>
+          <dd>{patch.label}</dd>
+        </div>
+      )
+    }
+    {
+      powerSpike && (
+        <div>
+          <dt>Power spike principal</dt>
+          <dd>{powerSpike}</dd>
+        </div>
+      )
+    }
+    {
+      lastUpdatedLabel && (
+        <div>
+          <dt>Última actualización</dt>
+          <dd><a href="#historial-editorial">{lastUpdatedLabel}</a></dd>
+        </div>
+      )
+    }
+  </dl>
+  {
+    relatedQuestion && (
+      <a
+        class="champion-quick-facts-question"
+        href={`/pregunta?q=${encodeURIComponent(relatedQuestion)}`}
+      >
+        <span>Pregunta relacionada</span>
+        <strong>{relatedQuestion}</strong>
+      </a>
+    )
+  }
+</aside>
