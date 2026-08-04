@@ -275,6 +275,8 @@ export interface EditorialHistoryEntry {
   /** Fecha ISO (YYYY-MM-DD) del cambio editorial. */
   date: string;
   patchId?: PatchId;
+  /** Etiqueta breve y real del cambio — nunca genérica ("Guía actualizada") ni idéntica entre entradas: es lo que distingue una entrada de otra en un listado cronológico (p. ej. `/actividad`). */
+  title: string;
   summary: string;
 }
 

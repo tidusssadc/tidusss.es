@@ -6,6 +6,7 @@ import ExploreNext from '../../components/ExploreNext.astro';
 import LaboratoryHero from '../../components/laboratory/LaboratoryHero.astro';
 import LaboratoryMetadata from '../../components/laboratory/LaboratoryMetadata.astro';
 import ChampionKnowledgeSection from '../../components/laboratory/ChampionKnowledgeSection.astro';
+import EmptyLaboratoryState from '../../components/laboratory/EmptyLaboratoryState.astro';
 import ChampionHeader from '../../components/laboratory/champion/ChampionHeader.astro';
 import ChampionProfileSection from '../../components/laboratory/champion/ChampionProfileSection.astro';
 import ChampionTierStatus from '../../components/laboratory/champion/ChampionTierStatus.astro';
@@ -282,10 +283,24 @@ const structuredData = hasProfile
         />
 
         <div class="champion-guide-sections">
+          {!hasProfile && (
+            <div class="champion-knowledge-section champion-knowledge-empty-combined">
+              <h3>Todavía sin análisis editorial</h3>
+              <EmptyLaboratoryState
+                title="Tidusss no ha curado este campeón todavía"
+                description={`Build, runas, matchups, sinergias, conceptos y guía llegarán aquí en cuanto ${catalogEntry.name} entre en la rotación de análisis del Laboratorio — nunca se inventa contenido mientras tanto.`}
+                ctaHref="/campeones"
+                ctaLabel="Ver todo el catálogo de campeones"
+              />
+            </div>
+          )}
+          {hasProfile && (
+          <>
           <ChampionKnowledgeSection
             id="build"
             title="Build"
             hasContent={orderedBuilds.length > 0}
+            showShareLink
             emptyTitle="Todavía no hay una build publicada"
             emptyDescription={`Tidusss no ha publicado todavía una build recomendada para ${catalogEntry.name}. No es una tabla de objetos genérica lo que falta — es el razonamiento detrás de cada elección, y eso se escribe con calma.`}
           >
@@ -466,6 +481,8 @@ const structuredData = hasProfile
             emptyCtaLabel="Ver el canal de YouTube"
             emptyCtaExternal
           />
+          </>
+          )}
 
           <div
             id="partidas"
@@ -476,6 +493,8 @@ const structuredData = hasProfile
             <ChampionMatchHistory championName={catalogEntry.name} />
           </div>
 
+          {hasProfile && (
+          <>
           <ChampionKnowledgeSection
             id="cambios-recientes"
             title="Cambios recientes del campeón"
@@ -505,6 +524,8 @@ const structuredData = hasProfile
           >
             <EditorialHistoryTimeline entries={editorialHistory} />
           </ChampionKnowledgeSection>
+          </>
+          )}
         </div>
           </div>
         </div>

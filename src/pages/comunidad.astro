@@ -55,7 +55,7 @@ const pageDescription =
         >
           {
             activeGoals.map((goal) => (
-              <div class="community-goal" data-goal={goal.id}>
+              <div class="community-goal" data-goal={goal.id} data-goal-target={goal.target}>
                 <strong>{goal.label}</strong>
                 {goal.description && <p>{goal.description}</p>}
                 <div class="community-goal-bar">
@@ -150,6 +150,15 @@ const pageDescription =
   import { goalProgress } from '../config/goals';
 
   const container = document.querySelector<HTMLElement>('[data-community-goals]');
+  // Los targets numéricos (700/800, 500...) nunca se repiten a mano en este
+  // script: se leen del `data-goal-target` que ya renderiza el frontmatter
+  // desde `config/goals.ts` — así un cambio de hito ahí no puede dejar el
+  // texto del cliente desincronizado (regresión real corregida en Fase V:
+  // el LP real ya superaba el "700" fijo aquí escrito).
+  const targetFor = (id: string): number | undefined => {
+    const raw = container?.querySelector<HTMLElement>(`[data-goal="${id}"]`)?.dataset.goalTarget;
+    return raw ? Number(raw) : undefined;
+  };
   const setGoal = (id: string, current: string, progress?: number) => {
     const node = container?.querySelector<HTMLElement>(`[data-goal="${id}"]`);
     if (!node) return;
@@ -164,6 +173,9 @@ const pageDescription =
   };
 
   if (container) {
+    const videosTarget = targetFor('videos-500');
+    const lpTarget = targetFor('soloqueue-700');
+
     fetch(container.dataset.youtubeStats!)
       .then((response) => response.json() as Promise<YouTubeStatsResponse>)
       .then((payload) => {
@@ -175,11 +187,11 @@ const pageDescription =
             `${new Intl.NumberFormat('es-ES').format(data.subscriberCount)} / ${new Intl.NumberFormat('es-ES').format(data.nextGoal)} suscriptores`,
             data.progress,
           );
-        if (data.videoCount !== undefined)
+        if (data.videoCount !== undefined && videosTarget !== undefined)
           setGoal(
             'videos-500',
-            `${new Intl.NumberFormat('es-ES').format(data.videoCount)} / 500 vídeos`,
-            Math.min(100, (data.videoCount / 500) * 100),
+            `${new Intl.NumberFormat('es-ES').format(data.videoCount)} / ${new Intl.NumberFormat('es-ES').format(videosTarget)} vídeos`,
+            goalProgress(data.videoCount, videosTarget),
           );
       })
       .catch(() => {
@@ -192,11 +204,11 @@ const pageDescription =
       .then((payload) => {
         if (!payload.ok) throw new Error(payload.error.code);
         const { ranked } = payload.data;
-        if (ranked.leaguePoints !== undefined)
+        if (ranked.leaguePoints !== undefined && lpTarget !== undefined)
           setGoal(
             'soloqueue-700',
-            `${ranked.leaguePoints} / 700 LP`,
-            goalProgress(ranked.leaguePoints, 700),
+            `${ranked.leaguePoints} / ${lpTarget} LP`,
+            goalProgress(ranked.leaguePoints, lpTarget),
           );
         else setGoal('soloqueue-700', 'Sin clasificación por ahora');
       })

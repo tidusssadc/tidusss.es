@@ -68,6 +68,12 @@ const socialImageURL = new URL('/og-image.png', Astro.site);
     <link rel="manifest" href="/site.webmanifest" />
     <link rel="canonical" href={canonicalURL} />
     <title>{title}</title>
+    <!--
+      Punto de integración futuro para Cloudflare Web Analytics (el script
+      "beacon" oficial, sin cookies) — deliberadamente sin activar todavía:
+      no hay ninguna plataforma de analítica en producción hoy, y activarla
+      exige autorización explícita antes de añadir el primer tracker real.
+    -->
   </head>
   <body class="antialiased" data-environment={environment}>
     <Environment environment={environment} />

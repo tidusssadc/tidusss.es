@@ -371,7 +371,38 @@ const pageDescription =
       focusResult();
     };
 
-    const renderAnswer = (data: PublicAnswer): void => {
+    const renderShareAnswerButton = (question: string): HTMLButtonElement => {
+      const button = el('button', 'share-link-button share-link-button-inline');
+      button.type = 'button';
+      const labelEl = el('span', undefined, 'Copiar enlace a esta respuesta');
+      button.append(labelEl);
+      button.addEventListener('click', () => {
+        // Revisitar esta URL vuelve a ejecutar el mismo motor determinista con
+        // la misma pregunta real — nunca una URL falseada ni un dato privado:
+        // es exactamente lo que ya hace un enlace desde "Preguntas frecuentes".
+        const url = new URL('/pregunta', location.origin);
+        url.searchParams.set('q', question);
+        const finish = (text: string) => {
+          labelEl.textContent = text;
+          button.classList.toggle('is-copied', text !== 'No se pudo copiar');
+          setTimeout(() => {
+            labelEl.textContent = 'Copiar enlace a esta respuesta';
+            button.classList.remove('is-copied');
+          }, 2000);
+        };
+        if (navigator.clipboard?.writeText) {
+          navigator.clipboard
+            .writeText(url.toString())
+            .then(() => finish('Enlace copiado'))
+            .catch(() => finish('No se pudo copiar'));
+        } else {
+          finish('No se pudo copiar');
+        }
+      });
+      return button;
+    };
+
+    const renderAnswer = (data: PublicAnswer, question: string): void => {
       resultEl.replaceChildren();
       const card = el('div', 'pregunta-answer-card');
 
@@ -414,6 +445,7 @@ const pageDescription =
         patchBadge.append(el('span', 'lab-badge-label', 'Parche'), el('strong', undefined, data.patchId));
         badgeRow.append(patchBadge);
       }
+      badgeRow.append(renderShareAnswerButton(question));
       card.append(badgeRow);
 
       if (data.sources.length > 0) card.append(renderSourcesSection(data.sources));
@@ -485,7 +517,7 @@ const pageDescription =
 
         const { data } = payload;
         if (data.status === 'sufficient' || data.status === 'partial') {
-          renderAnswer(data);
+          renderAnswer(data, trimmed);
         } else if (data.status in STATE_COPY) {
           const copy = STATE_COPY[data.status];
           renderFixedState(copy.variant, copy.title, copy.body);

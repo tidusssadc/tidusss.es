@@ -4,6 +4,7 @@ import Navbar from '../components/Navbar.astro';
 import Footer from '../components/Footer.astro';
 import ExploreNext from '../components/ExploreNext.astro';
 import LaboratoryHero from '../components/laboratory/LaboratoryHero.astro';
+import ShareLinkButton from '../components/ShareLinkButton.astro';
 import {
   adcLabChampions,
   championCatalog,
@@ -70,7 +71,14 @@ const pageDescription =
                       id={conceptSlug(concept.id)}
                       class="academy-concept-card"
                     >
-                      <h3>{concept.title}</h3>
+                      <div class="academy-concept-card-heading">
+                        <h3>{concept.title}</h3>
+                        <ShareLinkButton
+                          class="share-link-button-icon"
+                          href={`/academia#${conceptSlug(concept.id)}`}
+                          label={`Copiar enlace a ${concept.title}`}
+                        />
+                      </div>
                       <p>{concept.summary}</p>
                       {relatedChampions.length > 0 && (
                         <div class="academy-concept-applies">

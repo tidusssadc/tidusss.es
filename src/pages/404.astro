@@ -1,0 +1,77 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Navbar from '../components/Navbar.astro';
+import Footer from '../components/Footer.astro';
+
+const pageTitle = 'Página no encontrada · tidusss.es';
+const pageDescription = 'Esta ruta no existe en tidusss.es. Busca lo que necesitas o vuelve al índice.';
+---
+
+<BaseLayout title={pageTitle} description={pageDescription} noindex>
+  <Navbar />
+  <main>
+    <section class="not-found section-shell">
+      <div class="mx-auto max-w-2xl px-5 text-center sm:px-8">
+        <p class="eyebrow">Error 404</p>
+        <h1>Esta página no existe.</h1>
+        <p class="not-found-lead">
+          El enlace puede estar desactualizado, o la dirección tiene un error.
+          Prueba a buscar lo que necesitas, o vuelve a un punto conocido.
+        </p>
+
+        <div class="search-page-field not-found-search">
+          <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+            <circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="1.6" />
+            <path
+              d="M17 17L13.4 13.4"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+            />
+          </svg>
+          <input
+            type="search"
+            data-not-found-search
+            placeholder="Busca Navori, Lucian, spacing, Tier List…"
+            autocomplete="off"
+            spellcheck="false"
+            aria-label="Buscar en tidusss.es"
+          />
+        </div>
+
+        <div class="today-widgets not-found-links">
+          <a class="tool-card" href="/">
+            <strong>Inicio</strong>
+            <p>Vuelve a la portada y a lo que está pasando ahora mismo.</p>
+            <span class="tool-card-cta">Ir a Inicio <b aria-hidden="true">→</b></span>
+          </a>
+          <a class="tool-card" href="/explorar">
+            <strong>Explorar</strong>
+            <p>El índice completo del sitio, con cifras reales del catálogo.</p>
+            <span class="tool-card-cta">Explorar todo <b aria-hidden="true">→</b></span>
+          </a>
+          <a class="tool-card" href="/campeones/lucian">
+            <strong>Guía de Lucian</strong>
+            <p>Build, runas, sinergias y el criterio real detrás de cada decisión.</p>
+            <span class="tool-card-cta">Ver la guía <b aria-hidden="true">→</b></span>
+          </a>
+          <a class="tool-card" href="/pregunta">
+            <strong>Pregunta a Tidusss</strong>
+            <p>Resuelve una duda concreta con el contenido ya publicado.</p>
+            <span class="tool-card-cta">Preguntar <b aria-hidden="true">→</b></span>
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+  <Footer />
+</BaseLayout>
+
+<script>
+  const input = document.querySelector<HTMLInputElement>('[data-not-found-search]');
+  input?.addEventListener('keydown', (event) => {
+    if (event.key !== 'Enter') return;
+    const query = input.value.trim();
+    if (query) location.href = `/buscar?q=${encodeURIComponent(query)}`;
+  });
+</script>

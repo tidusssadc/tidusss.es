@@ -336,6 +336,12 @@ import PlayerProfile from './PlayerProfile.astro';
       if (progress < 1) requestAnimationFrame(frame);
     };
     requestAnimationFrame(frame);
+    // Red de seguridad: en una pestaña en segundo plano `requestAnimationFrame`
+    // puede no llegar a ejecutarse nunca — sin esto, el valor real quedaría
+    // bloqueado en el esqueleto de carga aunque la API ya hubiera respondido.
+    setTimeout(() => {
+      node.textContent = render(values);
+    }, duration + 100);
   };
 
   const animateValues = (

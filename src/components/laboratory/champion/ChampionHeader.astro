@@ -7,6 +7,7 @@ import type {
 import { dataDragonUrls } from '../../../lib/riot/datadragon';
 import ConfidenceIndicator from '../ConfidenceIndicator.astro';
 import RoleBadge from '../RoleBadge.astro';
+import ShareLinkButton from '../../ShareLinkButton.astro';
 
 interface Props {
   catalogEntry: ChampionCatalogEntry;
@@ -67,6 +68,13 @@ const hasProfile = Boolean(labChampion?.profile);
         <ConfidenceIndicator
           confidence={labChampion.profile.editorialTake.confidence}
         />
+      )
+    }
+    {
+      hasProfile && (
+        <div class="champion-header-actions">
+          <ShareLinkButton label="Compartir esta guía" />
+        </div>
       )
     }
   </div>

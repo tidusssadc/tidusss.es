@@ -235,7 +235,10 @@ export const leagueLaboratoryEntities: ContentEntity[] = [
     const concept = getConceptOrThrow(conceptId);
     return {
       ...conceptToContentEntity(concept),
-      href: `/campeones/${getCatalogEntryOrThrow(lucian.id).slug}#concepts-heading`,
+      // Ancla propia y real de la ficha del concepto en /academia (la misma
+      // que ya usa `ConceptCard.astro`) — nunca la sección genérica de
+      // conceptos de la guía de Lucian, que sería idéntica para los tres.
+      href: `/academia#${concept.id.replace('concept:', '')}`,
     };
   }),
   // Fase C: editorial-log de Lucian — único nodo 1:1 que agrega todo su
@@ -257,7 +260,11 @@ export const leagueLaboratoryEntities: ContentEntity[] = [
 
 export const leagueLaboratoryRelations: ContentRelation[] = [
   ...officialAdcTierList.entries.flatMap((entry) => [
-    tierListFeaturesChampionRelation(officialAdcTierList, entry.championId),
+    tierListFeaturesChampionRelation(
+      officialAdcTierList,
+      entry.championId,
+      `Ver el perfil de ${getCatalogEntryOrThrow(entry.championId).name}`,
+    ),
     championAppearsInTierListRelation(officialAdcTierList, entry.championId),
   ]),
   tierListTracksPatchRelation(officialAdcTierList),

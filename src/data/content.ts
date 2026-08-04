@@ -14,7 +14,6 @@ export const recognition = {
   disclaimer:
     'Los puestos en rankings externos pueden variar con el tiempo y dependen de los criterios de cada plataforma.',
   entries: [
-    { value: 'Master', subject: 'Solo Queue', source: 'Región: EUW' },
     { value: '#2', subject: 'DPM.LOL', source: 'Rendimiento por campeón' },
     {
       value: 'Top 10',

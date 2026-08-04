@@ -78,23 +78,58 @@ interface SelectedDocuments {
 }
 
 /**
+ * "Fortaleza 0", "Fortaleza 1"... de un mismo campeón son entradas
+ * hermanas de la misma lista real (`ChampionProfile.strengths` y
+ * equivalentes) partida en un documento por elemento — no documentos
+ * independientes que compitan entre sí. Si el motor de recuperación ya
+ * juzgó relevante más de una (misma pregunta, mismo `type`, mismo
+ * `sourceEntityId`: literalmente la misma lista de origen), fundirlas
+ * todas es completar la respuesta con lo que ya está publicado, nunca
+ * inventar nada — regresión real corregida en Fase V ("¿Cuándo empieza a
+ * ser fuerte Lucian?" solo fundía un power spike de los dos reales).
+ */
+/** Solo los ids que terminan en el índice numérico de una lista real (`...:power-spike:0`, `...:weakness:2`) — nunca un documento 1:1 como `champion-identity` o `synergy`, que nunca tiene hermanos reales aunque comparta `sourceEntityId` con otro documento por casualidad. */
+const isListItemId = (id: string): boolean => /:\d+$/.test(id);
+
+const findSiblings = (
+  primary: KnowledgeDocument,
+  candidates: readonly RetrievedDocument[],
+): KnowledgeDocument[] => {
+  if (!isListItemId(primary.id)) return [];
+  return candidates
+    .map((retrieved) => retrieved.document)
+    .filter(
+      (document) =>
+        document.id !== primary.id &&
+        document.type === primary.type &&
+        document.sourceEntityId === primary.sourceEntityId &&
+        isListItemId(document.id),
+    )
+    .sort((a, b) => a.id.localeCompare(b.id));
+};
+
+/**
  * Decide qué documentos se funden en el texto de la respuesta y cuáles se
  * citan como fuente adicional. Nunca "rellena" el texto con documentos de
- * menor relevancia solo para alcanzar un número — o hay un compañero real
- * de razonamiento, o se incluye todo lo que empata exactamente con la
- * puntuación del documento principal (hasta `TEXT_MERGE_LIMIT`), nunca más.
+ * menor relevancia solo para alcanzar un número: o hay un compañero real
+ * de razonamiento, o hay hermanos reales de la misma lista de origen, o se
+ * incluye todo lo que empata exactamente con la puntuación del documento
+ * principal — en los tres casos, hasta `TEXT_MERGE_LIMIT`, nunca más.
  */
 const selectAnswerDocuments = (documents: readonly RetrievedDocument[]): SelectedDocuments => {
   const primary = documents[0]!.document;
   const eligible = documents.filter((retrieved) => sharesPatch(primary, retrieved.document));
 
   const companion = findCompanion(primary, eligible);
+  const siblings = findSiblings(primary, eligible);
   const textMergeDocs = companion
     ? [primary, companion]
-    : eligible
-        .filter((retrieved) => retrieved.score === eligible[0]!.score)
-        .slice(0, TEXT_MERGE_LIMIT)
-        .map((retrieved) => retrieved.document);
+    : siblings.length > 0
+      ? [primary, ...siblings].sort((a, b) => a.id.localeCompare(b.id)).slice(0, TEXT_MERGE_LIMIT)
+      : eligible
+          .filter((retrieved) => retrieved.score === eligible[0]!.score)
+          .slice(0, TEXT_MERGE_LIMIT)
+          .map((retrieved) => retrieved.document);
 
   // Toda fuente fundida en el texto SIEMPRE se cita — nunca puede quedar
   // fuera de `citedDocs` por no estar entre las primeras `SOURCES_LIMIT`
@@ -234,7 +269,16 @@ export const assembleAnswer = (result: RetrievalResult): AnswerResult => {
 
     const { textMergeDocs, citedDocs } = selectAnswerDocuments(result.documents);
 
-    const answer = textMergeDocs.map((document) => document.content).join(' ');
+    // Fusionar varios fragmentos exige que cada uno termine en puntuación
+    // real antes de concatenarlos — algunos elementos de listas editoriales
+    // (fortalezas, debilidades) no llevan punto final propio porque nunca
+    // antes se habían mostrado seguidos de otro fragmento. Nunca se toca la
+    // redacción, solo se asegura el punto final que ya falta.
+    const withTerminalPunctuation = (text: string): string =>
+      /[.!?]$/.test(text.trim()) ? text : `${text.trim()}.`;
+    const answer = textMergeDocs
+      .map((document) => withTerminalPunctuation(document.content))
+      .join(' ');
     const editorialConfidence = minConfidence(textMergeDocs.map((document) => document.confidence));
     const editorialDate = mostRecentDate(citedDocs.map((document) => document.date));
     const primary = textMergeDocs[0]!;

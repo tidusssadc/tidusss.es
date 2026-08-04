@@ -1,5 +1,6 @@
 ---
 import EmptyLaboratoryState from './EmptyLaboratoryState.astro';
+import ShareLinkButton from '../ShareLinkButton.astro';
 
 interface Props {
   id: string;
@@ -10,6 +11,8 @@ interface Props {
   emptyCtaHref?: string;
   emptyCtaLabel?: string;
   emptyCtaExternal?: boolean;
+  /** Solo el bloque de Build lo activa hoy — el encargo prioriza guía, build, conceptos y Tier List, nunca todas las secciones a la vez. */
+  showShareLink?: boolean;
 }
 const {
   id,
@@ -20,6 +23,7 @@ const {
   emptyCtaHref,
   emptyCtaLabel,
   emptyCtaExternal,
+  showShareLink,
 } = Astro.props;
 ---
 
@@ -28,7 +32,18 @@ const {
   class="champion-knowledge-section"
   aria-labelledby={`${id}-heading`}
 >
-  <h3 id={`${id}-heading`}>{title}</h3>
+  <div class="champion-knowledge-heading">
+    <h3 id={`${id}-heading`}>{title}</h3>
+    {
+      showShareLink && hasContent && (
+        <ShareLinkButton
+          class="share-link-button-icon"
+          href={`${Astro.url.pathname}#${id}`}
+          label={`Copiar enlace a ${title}`}
+        />
+      )
+    }
+  </div>
   {
     hasContent ? (
       <slot />

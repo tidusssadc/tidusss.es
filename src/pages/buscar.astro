@@ -1,0 +1,370 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Navbar from '../components/Navbar.astro';
+import Footer from '../components/Footer.astro';
+import LaboratoryHero from '../components/laboratory/LaboratoryHero.astro';
+
+/**
+ * Página completamente estática (prerenderizada, sin `q` en build time —
+ * Astro no ve query params al generar el HTML). Toda la búsqueda real
+ * ocurre en el cliente contra `/buscar-index.json`, igual que el panel
+ * rápido de `GlobalSearch`. El `canonical` de `BaseLayout` siempre apunta a
+ * `/buscar` sin query string (usa solo `Astro.url.pathname`), así que
+ * `/buscar?q=navori` nunca genera una URL indexable propia — se consolida
+ * en `/buscar` por `rel=canonical`, el mecanismo estándar para vistas de
+ * búsqueda parametrizadas. Por el mismo motivo, la consulta del usuario
+ * nunca llega a los metadatos Open Graph (`title`/`description` son fijos).
+ */
+
+const pageTitle = 'Buscar · tidusss.es';
+const pageDescription =
+  'Encuentra campeones, guías, builds, runas, conceptos de Academia, Tier List, herramientas, vídeos y actualizaciones desde un único sitio.';
+---
+
+<BaseLayout title={pageTitle} description={pageDescription}>
+  <Navbar />
+  <main>
+    <LaboratoryHero
+      eyebrow="Buscar"
+      title="Encuentra lo que necesitas."
+      description="Campeones, guías, builds, runas, conceptos, Tier List, herramientas, vídeos y actualizaciones — todo desde un único sitio."
+    />
+    <section class="search-page section-shell" aria-labelledby="search-page-title" data-reveal>
+      <div class="mx-auto max-w-4xl px-5 sm:px-8">
+        <h2 id="search-page-title" class="sr-only">Buscar en tidusss.es</h2>
+
+        <div class="search-page-field" role="search">
+          <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+            <circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="1.6" />
+            <path
+              d="M17 17L13.4 13.4"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+            />
+          </svg>
+          <input
+            type="search"
+            data-search-page-input
+            placeholder="Busca Navori, Lucian, spacing, Tier List…"
+            autocomplete="off"
+            spellcheck="false"
+            aria-label="Buscar en tidusss.es"
+          />
+        </div>
+
+        <div class="search-page-filters" data-search-page-filters hidden>
+          <div
+            class="laboratory-filter-chips"
+            role="group"
+            aria-label="Filtrar por tipo de contenido"
+            data-search-page-category-chips
+          >
+            <button type="button" data-value="all" aria-pressed="true">Todo</button>
+          </div>
+          <div
+            class="laboratory-filter-chips"
+            role="group"
+            aria-label="Filtrar por estado editorial"
+            data-search-page-status-chips
+            hidden
+          >
+            <button type="button" data-value="all" aria-pressed="true">Cualquier estado</button>
+            <button type="button" data-value="reviewed">Guía completa</button>
+            <button type="button" data-value="draft">En curación</button>
+            <button type="button" data-value="pending">Ficha factual</button>
+          </div>
+        </div>
+
+        <p
+          class="search-page-count"
+          role="status"
+          aria-live="polite"
+          data-search-page-count
+        ></p>
+
+        <div
+          class="global-search-body search-page-results"
+          id="search-page-results"
+          role="listbox"
+          aria-label="Resultados de búsqueda"
+          data-search-page-results
+        >
+        </div>
+      </div>
+    </section>
+  </main>
+  <Footer />
+</BaseLayout>
+
+<script>
+  import { searchEntries } from '../domain/search-index';
+  import type { SearchEntry, SearchEntryCategory } from '../domain/search-index';
+  import { SEARCH_CATEGORY_LABEL } from '../domain/search-index';
+  import type { YouTubeFeedResponse } from '../types/content';
+
+  const input = document.querySelector<HTMLInputElement>('[data-search-page-input]');
+  const filtersRoot = document.querySelector<HTMLElement>('[data-search-page-filters]');
+  const categoryChipsRoot = document.querySelector<HTMLElement>(
+    '[data-search-page-category-chips]',
+  );
+  const statusChipsRoot = document.querySelector<HTMLElement>('[data-search-page-status-chips]');
+  const countEl = document.querySelector<HTMLElement>('[data-search-page-count]');
+  const resultsRoot = document.querySelector<HTMLElement>('[data-search-page-results]');
+  if (!input || !filtersRoot || !categoryChipsRoot || !statusChipsRoot || !countEl || !resultsRoot)
+    throw new Error('unreachable');
+
+  const ICONS: Record<SearchEntryCategory, string> = {
+    pagina:
+      '<path d="M4 4h12v12H4z" stroke="currentColor" stroke-width="1.4"/><path d="M4 8h12" stroke="currentColor" stroke-width="1.4"/>',
+    campeon:
+      '<path d="M10 3l6 2.4v4.2c0 4-2.6 6.7-6 7.4-3.4-.7-6-3.4-6-7.4V5.4L10 3z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>',
+    guia:
+      '<path d="M4 4.5C5 3.7 6.6 3.4 8 3.6c1.1.15 2 .6 2 .6s.9-.45 2-.6c1.4-.2 3-.1 4 .7v10.4c-1-.6-2.6-.7-4-.5-1.1.15-2 .6-2 .6s-.9-.45-2-.6c-1.4-.2-3-.1-4 .5V4.5z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>',
+    build:
+      '<path d="M6 6l8 8M6 14L14 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="6" cy="6" r="1.6" stroke="currentColor" stroke-width="1.2"/><circle cx="14" cy="14" r="1.6" stroke="currentColor" stroke-width="1.2"/>',
+    academia:
+      '<path d="M3 7.5L10 4l7 3.5-7 3.5-7-3.5z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M6 9.2v3.3c0 1 1.8 2 4 2s4-1 4-2V9.2" stroke="currentColor" stroke-width="1.2"/>',
+    herramienta:
+      '<path d="M12.8 3.7a3 3 0 00-4 4L4 12.5 6 15l4.8-4.8a3 3 0 004-4l-2 2-1.5-1.5 2-2z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>',
+    'tier-list':
+      '<path d="M5 15V9M10 15V5M15 15v-3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>',
+    actualizacion:
+      '<path d="M10 5.5V10l3 2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><circle cx="10" cy="10" r="6.3" stroke="currentColor" stroke-width="1.3"/>',
+    pregunta:
+      '<path d="M7.3 7.6a2.7 2.7 0 115 1.5c0 1.6-2.3 1.7-2.3 3.4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><circle cx="10" cy="14.3" r=".9" fill="currentColor"/>',
+    video:
+      '<rect x="3.5" y="5" width="13" height="10" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M8.5 7.8l4 2.2-4 2.2V7.8z" fill="currentColor"/>',
+  };
+
+  const escapeHtml = (value: string): string =>
+    value
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+
+  const highlight = (text: string, rawQuery: string): string => {
+    const escaped = escapeHtml(text);
+    const query = rawQuery.trim();
+    if (!query) return escaped;
+    const index = text.toLowerCase().indexOf(query.toLowerCase());
+    if (index === -1) return escaped;
+    const before = escapeHtml(text.slice(0, index));
+    const match = escapeHtml(text.slice(index, index + query.length));
+    const after = escapeHtml(text.slice(index + query.length));
+    return `${before}<mark>${match}</mark>${after}`;
+  };
+
+  let staticEntries: SearchEntry[] = [];
+  let videoEntries: SearchEntry[] = [];
+
+  const loadEntries = async (): Promise<void> => {
+    const [indexResponse] = await Promise.all([
+      fetch('/buscar-index.json').then((response) => response.json() as Promise<SearchEntry[]>),
+      fetch('/api/youtube')
+        .then((response) => response.json() as Promise<YouTubeFeedResponse>)
+        .then((payload) => {
+          if (!payload.ok) return;
+          videoEntries = payload.data.videos.slice(0, 30).map((video) => ({
+            id: `video:${video.id}`,
+            category: 'video' as const,
+            title: video.title,
+            description: video.durationLabel
+              ? `${video.isShort ? 'Short' : 'Vídeo'} · ${video.durationLabel}`
+              : video.isShort
+                ? 'Short'
+                : 'Vídeo',
+            href: video.url,
+            keywords: [],
+          }));
+        })
+        .catch(() => undefined),
+    ]);
+    staticEntries = indexResponse;
+  };
+
+  // --- Filtros: solo los que cambian resultados de verdad. "Campeón" y
+  // "parche" quedan fuera a propósito: con un único campeón curado y un
+  // único parche real hoy, esos controles no cambiarían nada — el propio
+  // encargo pide no añadir filtros que apenas alteran los resultados.
+  const state = { query: '', category: 'all' as 'all' | SearchEntryCategory, status: 'all' };
+
+  const CATEGORY_ORDER: SearchEntryCategory[] = [
+    'guia',
+    'campeon',
+    'tier-list',
+    'build',
+    'academia',
+    'video',
+    'pregunta',
+    'actualizacion',
+    'herramienta',
+    'pagina',
+  ];
+
+  const selectChip = (root: HTMLElement, value: string) => {
+    root.querySelectorAll<HTMLButtonElement>('button').forEach((chip) => {
+      chip.setAttribute('aria-pressed', String(chip.dataset.value === value));
+    });
+  };
+
+  const buildCategoryChips = (available: Set<SearchEntryCategory>) => {
+    const existing = [...categoryChipsRoot.querySelectorAll('[data-value]')].map(
+      (chip) => (chip as HTMLElement).dataset.value,
+    );
+    const needed = ['all', ...CATEGORY_ORDER.filter((category) => available.has(category))];
+    if (existing.length === needed.length && existing.every((value, index) => value === needed[index]))
+      return;
+    categoryChipsRoot.innerHTML = needed
+      .map(
+        (value) =>
+          `<button type="button" data-value="${value}" aria-pressed="${value === state.category}">${
+            value === 'all' ? 'Todo' : SEARCH_CATEGORY_LABEL[value as SearchEntryCategory]
+          }</button>`,
+      )
+      .join('');
+    categoryChipsRoot.querySelectorAll<HTMLButtonElement>('button').forEach((chip) =>
+      chip.addEventListener('click', () => {
+        state.category = (chip.dataset.value ?? 'all') as typeof state.category;
+        selectChip(categoryChipsRoot, chip.dataset.value ?? 'all');
+        syncUrl();
+        render();
+      }),
+    );
+  };
+
+  statusChipsRoot.querySelectorAll<HTMLButtonElement>('button').forEach((chip) =>
+    chip.addEventListener('click', () => {
+      state.status = chip.dataset.value ?? 'all';
+      selectChip(statusChipsRoot, state.status);
+      render();
+    }),
+  );
+
+  const syncUrl = () => {
+    const params = new URLSearchParams();
+    if (state.query) params.set('q', state.query);
+    const query = params.toString();
+    history.replaceState(null, '', query ? `${location.pathname}?${query}` : location.pathname);
+  };
+
+  const renderEmptyIndexState = () => {
+    resultsRoot.innerHTML = `<p class="search-page-hint">Escribe algo para empezar — por ejemplo «Navori», «Lucian», «spacing» o «Tier List».</p>`;
+    countEl.textContent = '';
+    filtersRoot.hidden = true;
+  };
+
+  const renderNoResults = (query: string) => {
+    resultsRoot.innerHTML = `
+      <div class="global-search-empty">
+        <p class="global-search-empty-title">No he encontrado contenido para «${escapeHtml(query)}».</p>
+        <p class="global-search-empty-hint">Puede que todavía no lo haya publicado, o que uses otras palabras.</p>
+        <div class="global-search-empty-actions">
+          <a href="/pregunta?q=${encodeURIComponent(query)}">Preguntar a Tidusss</a>
+          <a href="/campeones/lucian">Ver la guía de Lucian</a>
+          <a href="/academia">Explorar Academia</a>
+          <a href="/campeones">Abrir el Centro de Campeones</a>
+        </div>
+      </div>
+    `;
+    countEl.textContent = '';
+  };
+
+  const render = () => {
+    const query = state.query.trim();
+    if (!query) {
+      renderEmptyIndexState();
+      return;
+    }
+    const allEntries = [...staticEntries, ...videoEntries];
+    const matches = searchEntries(allEntries, query, { limit: 200 });
+
+    const byCategory = new Map<SearchEntryCategory, SearchEntry[]>();
+    for (const { entry } of matches) {
+      const list = byCategory.get(entry.category) ?? [];
+      list.push(entry);
+      byCategory.set(entry.category, list);
+    }
+    buildCategoryChips(new Set(byCategory.keys()));
+    filtersRoot.hidden = matches.length === 0;
+    // El filtro de estado editorial solo aporta algo cuando hay campeones
+    // entre los resultados — mostrarlo siempre sería un control que casi
+    // nunca cambia nada, justo lo que pide evitar el encargo.
+    const hasChampionResults = (byCategory.get('campeon') ?? []).length > 0;
+    statusChipsRoot.hidden =
+      !hasChampionResults || (state.category !== 'all' && state.category !== 'campeon');
+
+    const filtered = matches.filter(({ entry }) => {
+      if (state.category !== 'all' && entry.category !== state.category) return false;
+      if (state.status !== 'all' && entry.editorialStatus !== state.status) return false;
+      return true;
+    });
+
+    if (filtered.length === 0) {
+      renderNoResults(query);
+      return;
+    }
+
+    countEl.textContent =
+      filtered.length === 1 ? '1 resultado.' : `${filtered.length} resultados.`;
+
+    const grouped = new Map<SearchEntryCategory, SearchEntry[]>();
+    for (const { entry } of filtered) {
+      const list = grouped.get(entry.category) ?? [];
+      list.push(entry);
+      grouped.set(entry.category, list);
+    }
+    const orderedCategories = CATEGORY_ORDER.filter((category) => grouped.has(category));
+
+    resultsRoot.innerHTML = orderedCategories
+      .map((category) => {
+        const entries = grouped.get(category) ?? [];
+        const items = entries
+          .map((entry) => {
+            const meta = [entry.patchLabel ? `Parche ${entry.patchLabel}` : undefined]
+              .filter(Boolean)
+              .join(' · ');
+            return `
+              <a class="global-search-result" href="${escapeHtml(entry.href)}">
+                <span class="global-search-result-icon" aria-hidden="true"><svg viewBox="0 0 20 20" fill="none">${ICONS[entry.category]}</svg></span>
+                <span class="global-search-result-body">
+                  <span class="global-search-result-title">${highlight(entry.title, query)}</span>
+                  <span class="global-search-result-description">${highlight(entry.description, query)}</span>
+                  ${meta ? `<span class="global-search-result-meta">${escapeHtml(meta)}</span>` : ''}
+                </span>
+              </a>
+            `;
+          })
+          .join('');
+        return `
+          <div class="global-search-section" role="group" aria-label="${SEARCH_CATEGORY_LABEL[category]}">
+            <p class="global-search-section-title">${SEARCH_CATEGORY_LABEL[category]} <span class="search-page-section-count">(${entries.length})</span></p>
+            <div class="global-search-results-list search-page-results-list">${items}</div>
+          </div>
+        `;
+      })
+      .join('');
+  };
+
+  const init = async () => {
+    renderEmptyIndexState();
+    const params = new URLSearchParams(location.search);
+    const initialQuery = params.get('q');
+    if (initialQuery) {
+      input.value = initialQuery;
+      state.query = initialQuery;
+    }
+    await loadEntries();
+    render();
+    if (initialQuery) input.focus();
+  };
+
+  input.addEventListener('input', () => {
+    state.query = input.value;
+    syncUrl();
+    render();
+  });
+
+  void init();
+</script>

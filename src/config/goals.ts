@@ -30,10 +30,13 @@ const goalDefinitions: GoalDefinition[] = [
     order: 1,
   },
   {
+    // El id se mantiene estable aunque el hito numérico avance — engine.ts,
+    // comunidad.astro y CompetitiveCredential.astro lo referencian
+    // literalmente como identificador del objetivo de LP, no como el valor.
     id: 'soloqueue-700',
-    label: '700 LP',
+    label: '800 LP',
     source: 'riot',
-    target: 700,
+    target: 800,
     unit: 'LP',
     mode: 'automatic',
     status: 'active',

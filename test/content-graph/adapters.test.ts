@@ -406,13 +406,13 @@ test('championSynergizesWithRelation acepta ContentEntityId genérico en ambos e
 
 test('editorialLogToContentEntity es el mismo nodo (mismo id) sin importar cuántas entradas tenga el historial', () => {
   const oneEntry: EditorialHistoryEntry[] = [
-    { date: '2026-01-01', summary: 'Una entrada.' },
+    { date: '2026-01-01', title: 'Una', summary: 'Una entrada.' },
   ];
   const fourEntries: EditorialHistoryEntry[] = [
     ...oneEntry,
-    { date: '2026-02-01', summary: 'Otra entrada.' },
-    { date: '2026-03-01', summary: 'Otra más.' },
-    { date: '2026-04-01', summary: 'Y otra.' },
+    { date: '2026-02-01', title: 'Otra', summary: 'Otra entrada.' },
+    { date: '2026-03-01', title: 'Otra más', summary: 'Otra más.' },
+    { date: '2026-04-01', title: 'Y otra', summary: 'Y otra.' },
   ];
   const entityWithOne = editorialLogToContentEntity(lucian.id, 'Lucian', oneEntry);
   const entityWithFour = editorialLogToContentEntity(lucian.id, 'Lucian', fourEntries);
@@ -422,8 +422,8 @@ test('editorialLogToContentEntity es el mismo nodo (mismo id) sin importar cuán
 
 test('editorialLogChangedInRelations solo genera una relación por entrada con patchId explícito, nunca por fecha o texto libre', () => {
   const history: EditorialHistoryEntry[] = [
-    { date: '2026-01-01', summary: 'Sin parche asociado.' },
-    { date: '2026-02-01', patchId: 'patch:15-14', summary: 'Con parche.' },
+    { date: '2026-01-01', title: 'Sin parche', summary: 'Sin parche asociado.' },
+    { date: '2026-02-01', patchId: 'patch:15-14', title: 'Con parche', summary: 'Con parche.' },
   ];
   const relations = editorialLogChangedInRelations(lucian.id, history);
   assert.equal(relations.length, 1);
@@ -433,8 +433,18 @@ test('editorialLogChangedInRelations solo genera una relación por entrada con p
 
 test('editorialLogChangedInRelations deduplica: dos entradas con el mismo patchId producen una única relación', () => {
   const history: EditorialHistoryEntry[] = [
-    { date: '2026-01-01', patchId: 'patch:15-14', summary: 'Primera entrada de ese parche.' },
-    { date: '2026-02-01', patchId: 'patch:15-14', summary: 'Segunda entrada del mismo parche.' },
+    {
+      date: '2026-01-01',
+      patchId: 'patch:15-14',
+      title: 'Primera',
+      summary: 'Primera entrada de ese parche.',
+    },
+    {
+      date: '2026-02-01',
+      patchId: 'patch:15-14',
+      title: 'Segunda',
+      summary: 'Segunda entrada del mismo parche.',
+    },
   ];
   const relations = editorialLogChangedInRelations(lucian.id, history);
   assert.equal(relations.length, 1);

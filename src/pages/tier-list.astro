@@ -11,6 +11,7 @@ import TierListLegend from '../components/laboratory/tier-list/TierListLegend.as
 import TierListFilters from '../components/laboratory/tier-list/TierListFilters.astro';
 import TierListSection from '../components/laboratory/tier-list/TierListSection.astro';
 import TierListPendingSection from '../components/laboratory/tier-list/TierListPendingSection.astro';
+import ShareLinkButton from '../components/ShareLinkButton.astro';
 import {
   buildLabRegistry,
   getTierList,
@@ -99,6 +100,9 @@ const pageDescription = patch
               </EditorialCallout>
             )
           }
+          <div class="tier-list-header-actions">
+            <ShareLinkButton label="Compartir Tier List" />
+          </div>
         </header>
 
         {

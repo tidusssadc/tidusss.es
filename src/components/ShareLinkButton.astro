@@ -1,0 +1,91 @@
+---
+/**
+ * Botón de "copiar enlace" reutilizable — priorizado solo donde tiene
+ * sentido real (guía, build, conceptos, Tier List), nunca repetido por
+ * toda la web. `href` acepta una ruta con ancla estable (p. ej.
+ * `/campeones/lucian#build-heading`); si se omite, copia la URL actual.
+ * Astro solo inserta el `<script>` una vez por página aunque el
+ * componente se use varias veces, así que un único listener delegado
+ * basta para todas las instancias.
+ */
+interface Props {
+  href?: string;
+  label?: string;
+  class?: string;
+}
+const { href, label = 'Copiar enlace', class: className } = Astro.props;
+---
+
+<button
+  type="button"
+  class:list={['share-link-button', className]}
+  data-copy-link
+  data-copy-href={href ?? ''}
+  aria-label={label}
+>
+  <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+    <path
+      d="M8 12a3 3 0 004.24 0l2.5-2.5a3 3 0 00-4.24-4.24l-.7.7"
+      stroke="currentColor"
+      stroke-width="1.4"
+      stroke-linecap="round"
+    />
+    <path
+      d="M12 8a3 3 0 00-4.24 0l-2.5 2.5a3 3 0 004.24 4.24l.7-.7"
+      stroke="currentColor"
+      stroke-width="1.4"
+      stroke-linecap="round"
+    />
+  </svg>
+  <span data-copy-link-label>{label}</span>
+</button>
+
+<script>
+  const FEEDBACK_LABEL = 'Enlace copiado';
+  const RESET_DELAY = 2000;
+
+  document.querySelectorAll<HTMLButtonElement>('[data-copy-link]').forEach((button) => {
+    const labelEl = button.querySelector<HTMLElement>('[data-copy-link-label]');
+    const originalLabel = labelEl?.textContent ?? 'Copiar enlace';
+    let resetTimer: ReturnType<typeof setTimeout> | undefined;
+
+    button.addEventListener('click', () => {
+      const path = button.dataset.copyHref || `${location.pathname}${location.hash}`;
+      const url = new URL(path, location.origin).toString();
+
+      const showFeedback = () => {
+        if (labelEl) labelEl.textContent = FEEDBACK_LABEL;
+        button.classList.add('is-copied');
+        button.setAttribute('aria-live', 'polite');
+        clearTimeout(resetTimer);
+        resetTimer = setTimeout(() => {
+          if (labelEl) labelEl.textContent = originalLabel;
+          button.classList.remove('is-copied');
+        }, RESET_DELAY);
+      };
+
+      if (navigator.clipboard?.writeText) {
+        navigator.clipboard.writeText(url).then(showFeedback).catch(() => {
+          if (labelEl) labelEl.textContent = 'No se pudo copiar';
+        });
+      } else {
+        // Sin API de portapapeles (contexto no seguro/navegador antiguo):
+        // un textarea temporal es el único mecanismo de copia universal.
+        const textarea = document.createElement('textarea');
+        textarea.value = url;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.append(textarea);
+        textarea.select();
+        try {
+          document.execCommand('copy');
+          showFeedback();
+        } catch {
+          if (labelEl) labelEl.textContent = 'No se pudo copiar';
+        } finally {
+          textarea.remove();
+        }
+      }
+    });
+  });
+</script>

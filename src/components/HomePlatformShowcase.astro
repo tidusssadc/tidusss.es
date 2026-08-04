@@ -163,36 +163,6 @@ import { integrationEndpoints, platforms } from '../config/platforms';
         >
       </article>
     </div>
-
-    <div class="latest-video-strip" data-home-videos>
-      <header>
-        <div>
-          <span>Selección reciente</span>
-          <h3>Últimos vídeos</h3>
-        </div>
-        <a
-          href={platforms.youtube.url}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Ver todos <span aria-hidden="true">→</span>
-        </a>
-      </header>
-      <div data-home-video-list aria-busy="true">
-        {
-          Array.from({ length: 4 }, (_, index) => (
-            <div class="showcase-video-skeleton" aria-hidden="true">
-              <>
-                <span />
-                <i />
-                <small />
-              </>
-              <b class="sr-only">Cargando vídeo {index + 1}</b>
-            </div>
-          ))
-        }
-      </div>
-    </div>
   </div>
 </section>
 
@@ -220,37 +190,6 @@ import { integrationEndpoints, platforms } from '../config/platforms';
   const setText = (root: ParentNode, selector: string, value: string) => {
     const node = root.querySelector<HTMLElement>(selector);
     if (node) node.textContent = value;
-  };
-
-  const renderVideo = (video: YouTubeVideo, index: number) => {
-    const link = document.createElement('a');
-    if (index === 0) link.className = 'is-featured';
-    link.href = video.url;
-    link.target = '_blank';
-    link.rel = 'noopener noreferrer';
-    link.setAttribute('aria-label', `Ver en YouTube: ${video.title}`);
-    const media = document.createElement('div');
-    const image = document.createElement('img');
-    image.src = video.thumbnailUrl;
-    image.alt = '';
-    image.width = 480;
-    image.height = 270;
-    image.loading = 'lazy';
-    image.decoding = 'async';
-    media.append(image);
-    if (video.durationLabel) {
-      const duration = document.createElement('span');
-      duration.textContent = video.durationLabel;
-      duration.setAttribute('aria-label', `Duración ${video.durationLabel}`);
-      media.append(duration);
-    }
-    const title = document.createElement('strong');
-    title.textContent = video.title;
-    const date = document.createElement('time');
-    date.dateTime = video.publishedAt;
-    date.textContent = relativeTime(video.publishedAt) ?? '';
-    link.append(media, title, date);
-    return link;
   };
 
   const renderHeroFragments = (videos: YouTubeVideo[]) => {
@@ -466,15 +405,11 @@ import { integrationEndpoints, platforms } from '../config/platforms';
         .then((response) => response.json() as Promise<YouTubeFeedResponse>)
         .then((payload) => {
           if (!payload.ok) throw new Error(payload.error.code);
-          const strip =
-            showcase.querySelector<HTMLElement>('[data-home-videos]');
-          const list = showcase.querySelector('[data-home-video-list]');
           const videos = payload.data.videos.slice(0, 4);
-          if (!strip || !list || !videos.length) return;
-          list.replaceChildren(
-            ...videos.map((video, index) => renderVideo(video, index)),
-          );
-          list.setAttribute('aria-busy', 'false');
+          if (!videos.length) return;
+          // El listado propio de vídeos vive únicamente en `ContentSection`
+          // (pocas líneas más abajo en la misma Home) — este componente solo
+          // usa el feed para las miniaturas del Hero y la señal de estado.
           renderHeroFragments(videos);
           const youtubeThumbnail = showcase.querySelector<HTMLImageElement>(
             '[data-youtube-thumbnail]',
@@ -491,9 +426,7 @@ import { integrationEndpoints, platforms } from '../config/platforms';
           });
         })
         .catch(() => {
-          const strip =
-            showcase.querySelector<HTMLElement>('[data-home-videos]');
-          if (strip) strip.hidden = true;
+          // Sin vídeos aquí: ContentSection tiene su propio estado de error.
         }),
     ]);
   }

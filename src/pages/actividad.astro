@@ -34,7 +34,7 @@ const staticEntries: ActivityEntry[] = [
   ...(lucian.editorialHistory ?? []).map((entry) => ({
     date: entry.date,
     kind: 'guía' as const,
-    title: 'Guía de Lucian actualizada',
+    title: entry.title,
     description: entry.summary,
     href: '/campeones/lucian',
   })),

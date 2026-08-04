@@ -28,15 +28,15 @@ export const lucian: LabChampion = {
       confidence: 'high',
     },
     strengths: [
-      'Ventana de daño explosiva con el combo pasivo',
-      'Movilidad para reposicionarse dentro de la pelea',
-      'Presión de línea alta cuando el trade se ejecuta bien',
-      'Genera presión y ventaja en las fases temprana y media, antes de que otros tiradores completen su escalado',
+      'Ventana de daño explosiva con el combo pasivo.',
+      'Movilidad para reposicionarse dentro de la pelea.',
+      'Presión de línea alta cuando el trade se ejecuta bien.',
+      'Genera presión y ventaja en las fases temprana y media, antes de que otros tiradores completen su escalado.',
     ],
     weaknesses: [
-      'Los objetos y las runas exigen precisión de ejecución',
-      'Vulnerable si pierde la ventana de daño inicial',
-      'Pierde parte de su impacto relativo en el late si la partida se alarga demasiado y otros tiradores llegan a completar su escalado',
+      'Los objetos y las runas exigen precisión de ejecución.',
+      'Vulnerable si pierde la ventana de daño inicial.',
+      'Pierde parte de su impacto relativo en el late si la partida se alarga demasiado y otros tiradores llegan a completar su escalado.',
     ],
     commonMistakes: [
       'Buscar el combo pasivo fuera de rango en vez de esperar la ventana correcta.',
@@ -81,23 +81,27 @@ export const lucian: LabChampion = {
     {
       date: '2026-07-24',
       patchId: 'patch:15-14',
+      title: 'Lucian entra en la Tier List como S',
       summary:
         'Lucian entra en The Official Tidusss ADC Tier List como S, la única entrada revisada de su primera edición.',
     },
     {
       date: '2026-07-24',
       patchId: 'patch:15-14',
+      title: 'Se publica el perfil editorial completo de Lucian',
       summary:
         'Se publica el perfil editorial completo (resumen, fortalezas, debilidades, errores comunes, power spikes) en el Explorador de Campeones.',
     },
     {
       date: '2026-07-26',
+      title: 'La ficha de Lucian se rediseña como guía completa',
       summary:
         'Se rediseña la ficha de Lucian como guía editorial completa: arquitectura preparada para build, runas, matchups, sinergias y conceptos. El contenido de esas secciones todavía está pendiente de redacción.',
     },
     {
       date: '2026-07-26',
       patchId: 'patch:26-14',
+      title: 'Guía de Lucian ampliada: build personal, sinergias y biblioteca de conceptos',
       summary:
         'Se publica el criterio real de Tidusss para el parche 26.14: build principal y ruta personal, runa principal, orden de habilidades, power spikes, sinergias, errores frecuentes y consejos rápidos. Matchups y el resto del árbol de runas siguen pendientes de análisis.',
     },

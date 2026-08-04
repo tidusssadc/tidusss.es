@@ -1,9 +1,21 @@
 ---
 import { navigation, site } from '../data/site';
 import { platforms } from '../config/platforms';
+import GlobalSearch from './search/GlobalSearch.astro';
 const onHome = Astro.url.pathname === '/';
 const navHref = (href: string) =>
   href.startsWith('#') && !onHome ? `/${href}` : href;
+
+/**
+ * Señal visual de "estás aquí" para navegación entre páginas reales —
+ * distinta del resaltado por scroll dentro de Home que ya gestiona el
+ * script (`IntersectionObserver` sobre anclas). Compara rutas ignorando
+ * la barra final, la única diferencia real entre `/tier-list` y
+ * `/tier-list/` que Astro genera con `trailingSlash` por defecto.
+ */
+const normalizePath = (path: string) => (path.endsWith('/') ? path : `${path}/`);
+const isCurrentPath = (href: string) =>
+  !href.startsWith('#') && normalizePath(Astro.url.pathname) === normalizePath(href);
 ---
 
 <header
@@ -23,13 +35,21 @@ const navHref = (href: string) =>
       {
         navigation.map((item) =>
           'items' in item ? (
-            <details class="nav-dropdown">
+            <details
+              class="nav-dropdown"
+              data-current={item.items.some((sub) => isCurrentPath(sub.href)) || undefined}
+            >
               <summary class="nav-link text-sm text-slate-300" data-nav-link>
                 {item.label} <span aria-hidden="true">▾</span>
               </summary>
               <div class="nav-dropdown-panel">
                 {item.items.map((sub) => (
-                  <a href={navHref(sub.href)}>{sub.label}</a>
+                  <a
+                    href={navHref(sub.href)}
+                    aria-current={isCurrentPath(sub.href) ? 'page' : undefined}
+                  >
+                    {sub.label}
+                  </a>
                 ))}
               </div>
             </details>
@@ -38,6 +58,7 @@ const navHref = (href: string) =>
               class="nav-link text-sm text-slate-300"
               href={navHref(item.href)}
               data-nav-link
+              aria-current={isCurrentPath(item.href) ? 'page' : undefined}
             >
               {item.label}
             </a>
@@ -45,18 +66,45 @@ const navHref = (href: string) =>
         )
       }
     </div>
-    <a
-      class="button-primary hidden px-5 py-2.5 text-sm lg:inline-flex"
-      href={platforms.youtube.url}
-      target="_blank"
-      rel="noreferrer">YouTube <span aria-hidden="true">↗</span></a
-    >
-    <details class="mobile-menu relative lg:hidden">
-      <summary
-        class="grid size-11 cursor-pointer list-none place-items-center rounded-sm border border-white/12 text-white"
-        aria-label="Abrir menú"
-        ><span class="menu-icon" aria-hidden="true"></span></summary
+    <div class="hidden items-center gap-3 lg:flex">
+      <button
+        type="button"
+        class="search-trigger-desktop"
+        data-search-open
+        aria-haspopup="dialog"
       >
+        <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+          <circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="1.6" />
+          <path d="M17 17L13.4 13.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+        </svg>
+        Buscar
+        <kbd class="search-trigger-kbd"><span data-search-kbd-mod>Ctrl</span> K</kbd>
+      </button>
+      <a
+        class="button-primary px-5 py-2.5 text-sm"
+        href={platforms.youtube.url}
+        target="_blank"
+        rel="noreferrer">YouTube <span aria-hidden="true">↗</span></a
+      >
+    </div>
+    <div class="flex items-center gap-2 lg:hidden">
+      <button
+        type="button"
+        class="search-trigger-mobile"
+        data-search-open
+        aria-label="Buscar en tidusss.es"
+      >
+        <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+          <circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="1.6" />
+          <path d="M17 17L13.4 13.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+        </svg>
+      </button>
+      <details class="mobile-menu relative">
+        <summary
+          class="grid size-11 cursor-pointer list-none place-items-center rounded-sm border border-white/12 text-white"
+          aria-label="Abrir menú"
+          ><span class="menu-icon" aria-hidden="true"></span></summary
+        >
       <div
         class="absolute top-14 right-0 w-64 border border-white/10 bg-[#0a0f1d] p-3 shadow-2xl"
       >
@@ -69,6 +117,7 @@ const navHref = (href: string) =>
                   <a
                     class="block rounded-sm px-4 py-3 text-sm text-slate-200 hover:bg-white/5"
                     href={navHref(sub.href)}
+                    aria-current={isCurrentPath(sub.href) ? 'page' : undefined}
                   >
                     {sub.label}
                   </a>
@@ -78,6 +127,7 @@ const navHref = (href: string) =>
               <a
                 class="block rounded-sm px-4 py-3 text-sm text-slate-200 hover:bg-white/5"
                 href={navHref(item.href)}
+                aria-current={isCurrentPath(item.href) ? 'page' : undefined}
               >
                 {item.label}
               </a>
@@ -91,9 +141,12 @@ const navHref = (href: string) =>
           rel="noreferrer">YouTube</a
         >
       </div>
-    </details>
+      </details>
+    </div>
   </nav>
 </header>
+
+<GlobalSearch />
 
 <script>
   const header = document.querySelector<HTMLElement>('[data-site-header]');

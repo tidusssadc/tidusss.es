@@ -83,6 +83,15 @@ import { integrationEndpoints } from '../config/platforms';
       if (progress < 1) requestAnimationFrame(frame);
     };
     requestAnimationFrame(frame);
+    // Red de seguridad: `requestAnimationFrame` puede no llegar a
+    // ejecutarse nunca si la pestaña está en segundo plano (algunos
+    // navegadores congelan pestañas ocultas) — sin esto, el dato se
+    // quedaría bloqueado en el esqueleto de carga aunque la API ya
+    // hubiera respondido. Fijar el valor real un poco después de que la
+    // animación debería haber terminado es un no-op cuando sí se ejecutó.
+    setTimeout(() => {
+      node.textContent = render(value);
+    }, 900);
   };
   if (teaser)
     Promise.allSettled([
