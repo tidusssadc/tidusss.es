@@ -1179,22 +1179,6 @@
     font-size: 0.62rem;
   }
 }
-.hero-identity {
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
-  margin-top: 1.35rem;
-  color: #f8fafc;
-  font-size: 0.72rem;
-  font-weight: 750;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-}
-.hero-identity span {
-  padding-left: 0.55rem;
-  border-left: 1px solid rgb(255 255 255 / 14%);
-  color: #9ca3af;
-}
 .hero-live-link {
   display: inline-flex;
   align-items: center;
@@ -2077,14 +2061,6 @@
   }
 }
 @media (max-width: 380px) {
-  .hero-identity {
-    gap: 0.35rem;
-    font-size: 0.64rem;
-    letter-spacing: 0.1em;
-  }
-  .hero-identity span {
-    padding-left: 0.35rem;
-  }
   .platform-panel {
     min-height: 29rem;
     padding: 1.15rem;
@@ -8682,6 +8658,88 @@ body[data-home-state='near-goal'] .environment-rays {
   color: #fff;
 }
 
+/* Objetivo actual — bloque protagonista único, no una card más entre otras */
+.community-primary-goal {
+  position: relative;
+  padding: 1.8rem 2rem;
+  border: 1px solid rgb(214 181 107 / 20%);
+  border-radius: 0.9rem;
+  background: linear-gradient(
+    135deg,
+    rgb(214 181 107 / 7%),
+    rgb(255 255 255 / 1.5%) 60%
+  );
+}
+.community-primary-goal strong {
+  display: block;
+  font-size: clamp(1.15rem, 2.2vw, 1.5rem);
+  font-weight: 750;
+  color: #fff;
+}
+.community-primary-goal p {
+  margin-top: 0.5rem;
+  max-width: 38rem;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: #9aa5b8;
+}
+.community-primary-goal-progress {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  margin-top: 1.1rem;
+}
+.community-primary-goal-track {
+  flex: 1 1 auto;
+  height: 0.35rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 6%);
+}
+.community-primary-goal-track i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #278cff, #4ba3ff);
+  transition: width 500ms ease;
+}
+.community-primary-goal-progress span {
+  flex: 0 0 auto;
+  font-size: 0.82rem;
+  font-weight: 650;
+  color: #9aa5b8;
+}
+.community-primary-goal > a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 44px;
+  margin-top: 1rem;
+  padding-block: 0.4rem;
+  color: #edcf8d;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+.community-primary-goal > a:hover,
+.community-primary-goal > a:focus-visible {
+  color: #fff;
+}
+.community-primary-goal-empty {
+  padding: 1.1rem 1.3rem;
+  border: 1px dashed rgb(255 255 255 / 12%);
+  border-radius: 0.7rem;
+  font-size: 0.85rem;
+  line-height: 1.55;
+  color: #7583a0;
+}
+.community-goal-context span {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #e2e8f0;
+}
+
 .community-goals {
   display: grid;
   gap: 1rem;
@@ -8804,6 +8862,84 @@ body[data-home-state='near-goal'] .environment-rays {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
+}
+
+/* MilestoneHistory — trayectoria de hitos reales, reutilizable */
+.milestone-history {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+}
+.milestone-track-label {
+  display: block;
+  margin-bottom: 0.9rem;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: #9aa5b8;
+}
+.milestone-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+.milestone-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.7rem;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid rgb(255 255 255 / 8%);
+  border-left: 2px solid rgb(75 163 255 / 45%);
+  border-radius: 0.5rem;
+  background: rgb(255 255 255 / 1.5%);
+}
+.milestone-item--done {
+  border-left-color: rgb(214 181 107 / 55%);
+  background: rgb(214 181 107 / 4%);
+}
+.milestone-item-source {
+  flex: 0 0 auto;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #7583a0;
+}
+.milestone-item a {
+  flex: 1 1 auto;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #e2e8f0;
+  text-decoration: none;
+}
+.milestone-item a:hover,
+.milestone-item a:focus-visible {
+  color: #7fbcff;
+}
+.milestone-item-tag {
+  flex: 0 0 auto;
+  padding: 0.18rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid rgb(214 181 107 / 30%);
+  background: rgb(214 181 107 / 8%);
+  color: #edcf8d;
+  font-size: 0.62rem;
+  font-weight: 750;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.milestone-empty {
+  padding: 0.9rem 1rem;
+  border: 1px dashed rgb(255 255 255 / 12%);
+  border-radius: 0.5rem;
+  font-size: 0.82rem;
+  line-height: 1.55;
+  color: #7583a0;
 }
 
 /* Actividad — feed cronológico */
@@ -9394,7 +9530,10 @@ a.tool-card:focus-visible {
 }
 .today-primary {
   position: relative;
-  display: block;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.4rem;
   margin-top: 1.3rem;
   padding: 2rem 2.1rem;
   overflow: hidden;
@@ -9406,6 +9545,18 @@ a.tool-card:focus-visible {
     rgb(255 255 255 / 1.5%) 60%
   );
   transition: border-color 220ms ease;
+}
+.today-primary-image {
+  flex: 0 0 auto;
+  width: 9.5rem;
+  height: 5.34375rem;
+  object-fit: cover;
+  border-radius: 0.6rem;
+  border: 1px solid rgb(255 255 255 / 12%);
+}
+.today-primary-body {
+  flex: 1 1 18rem;
+  min-width: 0;
 }
 .today-primary[data-state='live'] {
   border-color: rgb(255 59 59 / 30%);
@@ -9519,6 +9670,79 @@ a.tool-card:focus-visible {
   transform: translateX(3px);
 }
 
+/* Tira compacta de objetivo — un único elemento horizontal, no una card
+   más entre las demás: el objetivo real es protagonista narrativo, nunca
+   compite en peso visual con "Qué ha cambiado" o la pregunta destacada. */
+.today-goal-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.9rem 1.4rem;
+  margin-top: 1rem;
+  padding: 1rem 1.3rem;
+  border: 1px solid rgb(214 181 107 / 16%);
+  border-radius: 0.7rem;
+  background: rgb(214 181 107 / 4%);
+}
+.today-goal-strip-label {
+  flex: 0 0 auto;
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: #edcf8d;
+}
+.today-goal-strip-body {
+  display: flex;
+  flex: 1 1 16rem;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.9rem;
+  min-width: 0;
+}
+.today-goal-strip-body strong {
+  flex: 0 0 auto;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #f1f5f9;
+}
+.today-goal-strip-track {
+  flex: 1 1 8rem;
+  height: 0.3rem;
+  min-width: 5rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 6%);
+}
+.today-goal-strip-track i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #278cff, #4ba3ff);
+  transition: width 500ms ease;
+}
+.today-goal-strip-value {
+  flex: 0 0 auto;
+  font-size: 0.78rem;
+  font-weight: 650;
+  color: #9aa5b8;
+}
+.today-goal-strip-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex: 0 0 auto;
+  min-height: 44px;
+  padding-block: 0.4rem;
+  color: #edcf8d;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+.today-goal-strip-cta:hover,
+.today-goal-strip-cta:focus-visible {
+  color: #fff;
+}
+
 .today-widgets {
   display: grid;
   gap: 1rem;
@@ -9532,9 +9756,6 @@ a.tool-card:focus-visible {
   border-top: 2px solid var(--widget-accent);
   border-radius: 0.7rem;
   background: rgb(255 255 255 / 1.5%);
-}
-.today-widget[data-today-widget='goal'] {
-  --widget-accent: #4ba3ff;
 }
 .today-widget[data-today-widget='changes'] {
   --widget-accent: #9aa5b8;
@@ -9582,26 +9803,6 @@ a.tool-card:focus-visible {
 .today-widget > a:hover,
 .today-widget > a:focus-visible {
   color: var(--widget-accent);
-}
-.today-widget-bar {
-  height: 0.3rem;
-  margin-top: 0.75rem;
-  overflow: hidden;
-  border-radius: 999px;
-  background: rgb(255 255 255 / 6%);
-}
-.today-widget-bar i {
-  display: block;
-  height: 100%;
-  background: linear-gradient(90deg, #278cff, #4ba3ff);
-  transition: width 500ms ease;
-}
-.today-widget[data-today-widget='goal'] [data-today-goal-progress] {
-  display: block;
-  margin-top: 0.5rem;
-  font-size: 0.78rem;
-  font-weight: 650;
-  color: #9aa5b8;
 }
 .today-widget ul {
   margin-top: 0.6rem;

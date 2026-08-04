@@ -1,4 +1,4 @@
-import { nextSubscriberGoal } from '../config/goals';
+import { YOUTUBE_SUBSCRIBER_CHAIN, primaryFromChain, resolveChain } from '../domain/goals';
 import { platforms } from '../config/platforms';
 import type { YouTubeChannelStats } from '../types/platforms';
 import { getYouTubeChannel } from './youtube';
@@ -9,19 +9,18 @@ export const getYouTubeChannelStats = async (
 ): Promise<YouTubeChannelStats> => {
   const channel = await getYouTubeChannel(apiKey, channelId);
   const subscriberCount = channel.subscriberCount;
-  const nextGoal =
-    subscriberCount === undefined
-      ? undefined
-      : nextSubscriberGoal(subscriberCount);
+  // El "próximo hito" ya no es un cálculo propio de este servicio: viene de
+  // la misma cadena dinámica que usa el resto del sitio (Home, Comunidad),
+  // así que nunca puede desincronizarse de lo que se muestra ahí.
+  const primary = subscriberCount === undefined
+    ? undefined
+    : primaryFromChain(resolveChain(YOUTUBE_SUBSCRIBER_CHAIN, subscriberCount));
   return {
     subscriberCount,
     viewCount: channel.viewCount,
     videoCount: channel.videoCount,
-    nextGoal,
-    progress:
-      subscriberCount !== undefined && nextGoal
-        ? Number(((subscriberCount / nextGoal) * 100).toFixed(1))
-        : undefined,
+    nextGoal: primary?.target,
+    progress: primary?.progress,
     updatedAt: new Date().toISOString(),
     isSubscriberCountRounded: true,
     state: subscriberCount === undefined ? 'partial' : 'available',

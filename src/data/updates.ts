@@ -17,15 +17,15 @@ export const siteUpdates: UpdateEntry[] = [
   {
     date: '2026-08-03',
     kind: 'mejora-web',
-    title: 'Segunda fase de producto: un ecosistema conectado',
+    title: 'Nuevas secciones: Academia ADC, Herramientas y Roadmap',
     description:
-      'Academia ADC, Herramientas, Roadmap y Actualizaciones, además de un centro competitivo propio y navegación contextual en las páginas principales.',
+      'Academia ADC, Herramientas, Roadmap y Actualizaciones, además de un centro competitivo propio y navegación contextual en las páginas principales — todo enlazado para que siempre tengas algo más que explorar.',
     href: '/explorar',
   },
   {
     date: '2026-08-03',
     kind: 'mejora-web',
-    title: 'Primera fase de producto: Home, Explorar, Comunidad y Actividad',
+    title: 'Home renovada, con Explorar, Comunidad y Actividad',
     description:
       'Rediseño del Home, nuevo showcase de vídeos, tarjetas de redes sociales y tres páginas nuevas para descubrir todo el contenido del sitio.',
     href: '/',

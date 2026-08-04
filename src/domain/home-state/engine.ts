@@ -1,4 +1,6 @@
 import { getContentEntity } from '../content-graph';
+import { selectPrimaryGoal } from '../goals';
+import type { ResolvedGoal } from '../goals/types';
 import { subscribeHomeSignals } from './signals';
 import type {
   HomeGoalSignal,
@@ -19,13 +21,37 @@ const recentVideo = (publishedAt: string) => {
   );
 };
 
-const closestGoal = (signals: readonly HomeSignal[]) => {
-  const goals = signals.flatMap((candidate) =>
-    'goals' in candidate ? candidate.goals : [],
-  );
-  return goals
-    .filter(({ progress }) => progress >= 80 && progress < 100)
-    .sort((a, b) => b.progress - a.progress)[0];
+/**
+ * Mismo algoritmo determinista que decide el objetivo principal en
+ * Comunidad (`domain/goals/resolve.ts`) — nunca un segundo criterio ad
+ * hoc solo para Home. Cada `HomeGoalSignal` publicado ya es un objetivo
+ * `active` real (los publicadores nunca emiten uno ya completado aquí:
+ * eso es un hito, no "sigue el progreso"), así que basta con adaptarlo a
+ * la forma `ResolvedGoal` que espera `selectPrimaryGoal`.
+ */
+const closestGoal = (signals: readonly HomeSignal[]): HomeGoalSignal | undefined => {
+  // Este estado narrativo concreto ("casi lo consigues") solo tiene sentido
+  // cuando el objetivo elegido está realmente cerca — el umbral no decide
+  // CUÁL mostrar (eso lo hace `selectPrimaryGoal`), solo SI hay alguno lo
+  // bastante próximo como para merecer protagonismo en Home.
+  const NEAR_COMPLETION_THRESHOLD = 80;
+  const goals = signals
+    .flatMap((candidate) => ('goals' in candidate ? candidate.goals : []))
+    .filter((goal) => goal.progress >= NEAR_COMPLETION_THRESHOLD);
+  const resolved: ResolvedGoal[] = goals.map((goal) => ({
+    id: goal.id,
+    category: goal.category,
+    title: goal.label,
+    current: goal.current,
+    target: goal.target,
+    unit: '',
+    progress: goal.progress,
+    status: 'active',
+    source: goal.category === 'competitive-lp' ? 'riot' : goal.category.startsWith('editorial') ? 'editorial' : 'youtube',
+    href: goal.href,
+  }));
+  const primary = selectPrimaryGoal(resolved);
+  return primary ? goals.find((goal) => goal.id === primary.id) : undefined;
 };
 
 const goalCopy = ({ current, target, label }: HomeGoalSignal) =>
@@ -102,6 +128,7 @@ export const homeStateDefinitions: readonly HomeStateDefinition[] = [
         target: 'youtube',
         label: 'Nuevo vídeo',
         text: video.entity.title,
+        image: video.thumbnailUrl,
         action: {
           label: 'Ver el último análisis',
           entityId: video.entity.id,
@@ -121,12 +148,17 @@ export const homeStateDefinitions: readonly HomeStateDefinition[] = [
       return {
         id: 'near-goal',
         priority: 60,
-        target: goal.id === 'goal:soloqueue-700' ? 'competitive' : 'youtube',
+        target:
+          goal.category === 'competitive-lp'
+            ? 'competitive'
+            : goal.category.startsWith('editorial')
+              ? 'editorial'
+              : 'youtube',
         label: 'Siguiente objetivo',
         text: goalCopy(goal),
         action: {
           label: 'Seguir el progreso',
-          entityId: goal.id,
+          href: goal.href,
         },
       };
     },

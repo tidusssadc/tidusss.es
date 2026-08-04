@@ -1,5 +1,4 @@
 ---
-import { goals } from '../../config/goals';
 import { integrationEndpoints, platforms } from '../../config/platforms';
 import MatchCard from './matches/MatchCard.astro';
 import MatchEmpty from './matches/MatchEmpty.astro';
@@ -203,29 +202,21 @@ import PlayerProfile from './PlayerProfile.astro';
         <div><span>05 / Progreso</span><h2 id="goals-title">Objetivos</h2></div>
       </header>
       <div class="goals-list">
-        {
-          goals.map((goal) => (
-            <article
-              data-goal-source={goal.source}
-              data-goal-target={goal.target}
-              data-goal-id={goal.id}
-            >
-              <span>{goal.label}</span>
-              <strong data-goal-value>
-                {goal.description ??
-                  (goal.mode === 'automatic'
-                    ? 'Calculando el progreso real…'
-                    : 'Objetivo manual')}
-              </strong>
-              {goal.mode === 'long-term' && <small>Largo plazo</small>}
-              {goal.target && (
-                <div data-goal-track hidden>
-                  <i />
-                </div>
-              )}
-            </article>
-          ))
-        }
+        <article data-goal-chain="competitive-lp">
+          <span>Objetivo competitivo</span>
+          <strong data-goal-value class="data-skeleton">&nbsp;</strong>
+          <div data-goal-track hidden><i></i></div>
+        </article>
+        <article data-goal-chain="youtube-subscribers">
+          <span>Suscriptores</span>
+          <strong data-goal-value class="data-skeleton">&nbsp;</strong>
+          <div data-goal-track hidden><i></i></div>
+        </article>
+        <article data-goal-chain="youtube-videos">
+          <span>Vídeos publicados</span>
+          <strong data-goal-value class="data-skeleton">&nbsp;</strong>
+          <div data-goal-track hidden><i></i></div>
+        </article>
       </div>
     </section>
 
@@ -281,7 +272,13 @@ import PlayerProfile from './PlayerProfile.astro';
     relativeTime,
     updatedAgo,
   } from '../../lib/time';
-  import { goalProgress } from '../../config/goals';
+  import {
+    COMPETITIVE_LP_CHAIN,
+    YOUTUBE_SUBSCRIBER_CHAIN,
+    YOUTUBE_VIDEO_CHAIN,
+    primaryFromChain,
+    resolveChain,
+  } from '../../domain/goals';
   import { rankAssetFor } from '../../config/rank-assets';
   import { renderMatchCards } from './matches/render';
   import type { RiotPublicResponse } from '../../lib/riot';
@@ -293,6 +290,14 @@ import PlayerProfile from './PlayerProfile.astro';
     YouTubeFeedResponse,
     YouTubeFeedResult,
   } from '../../types/content';
+
+  // Las tres cadenas reales que Competitivo puede medir con datos que ya
+  // llegan a esta página — nunca se inventa un cuarto objetivo sin fuente.
+  const GOAL_CHAINS = {
+    'competitive-lp': COMPETITIVE_LP_CHAIN,
+    'youtube-subscribers': YOUTUBE_SUBSCRIBER_CHAIN,
+    'youtube-videos': YOUTUBE_VIDEO_CHAIN,
+  } as const;
 
   const root = document.querySelector<HTMLElement>('[data-live-root]');
   const reducedMotion = window.matchMedia(
@@ -932,51 +937,53 @@ import PlayerProfile from './PlayerProfile.astro';
     renderRelatedGameplays();
   };
 
+  // Cada objetivo se recalcula contra el valor real de esta misma carga —
+  // nunca contra un target fijo editado a mano. Un hito ya conseguido se
+  // muestra como logro, no como una barra que sigue "en progreso".
   const updateGoals = () =>
     root
-      ?.querySelectorAll<HTMLElement>('[data-goal-source]')
+      ?.querySelectorAll<HTMLElement>('[data-goal-chain]')
       .forEach((item) => {
-        const source = item.dataset.goalSource;
-        const dynamicTarget =
-          source === 'youtube'
-            ? youtubeData?.nextGoal
-            : Number(item.dataset.goalTarget) || undefined;
+        const chainKey = item.dataset.goalChain as keyof typeof GOAL_CHAINS;
+        const chain = GOAL_CHAINS[chainKey];
         const current =
-          source === 'riot'
+          chainKey === 'competitive-lp'
             ? riotData?.ranked.leaguePoints
-            : source === 'youtube-videos'
-              ? youtubeData?.videoCount
-              : source === 'youtube'
-                ? youtubeData?.subscriberCount
-                : undefined;
+            : chainKey === 'youtube-subscribers'
+              ? youtubeData?.subscriberCount
+              : youtubeData?.videoCount;
+        const resolved = chain
+          ? primaryFromChain(resolveChain(chain, current))
+          : undefined;
         const value = item.querySelector<HTMLElement>('[data-goal-value]');
         const track = item.querySelector<HTMLElement>('[data-goal-track]');
         const bar = track?.querySelector<HTMLElement>('i');
-        if (source === 'manual') {
-          if (value) value.textContent = 'Objetivo a largo plazo';
-          return;
-        }
-        if (current === undefined || dynamicTarget === undefined) {
+        value?.classList.remove('data-skeleton');
+        if (track) track.hidden = true;
+        if (
+          !resolved ||
+          resolved.status === 'no-data' ||
+          resolved.status === 'unavailable'
+        ) {
           if (value)
-            value.textContent = source?.startsWith('youtube')
-              ? 'YouTube no responde ahora mismo — vuelve en un momento'
-              : 'Riot no responde ahora mismo — vuelve en un momento';
-          if (track) track.hidden = true;
+            value.textContent =
+              chainKey === 'competitive-lp'
+                ? 'Riot no responde ahora mismo — vuelve en un momento'
+                : 'YouTube no responde ahora mismo — vuelve en un momento';
           return;
         }
-        const progress = goalProgress(current, dynamicTarget);
-        if (source === 'youtube')
-          item.querySelector('span')!.textContent =
-            `${number(dynamicTarget)} suscriptores`;
+        if (resolved.status === 'paused') {
+          if (value) value.textContent = 'Objetivo pausado.';
+          return;
+        }
+        if (resolved.status === 'completed') {
+          if (value) value.textContent = `${resolved.title} · Conseguido`;
+          return;
+        }
         if (value)
-          animateValues(
-            `[data-goal-id="${item.dataset.goalId}"] [data-goal-value]`,
-            [current, dynamicTarget, progress ?? 0],
-            ([animatedCurrent, target, animatedProgress]) =>
-              `${number(Math.round(animatedCurrent ?? 0))} / ${number(Math.round(target ?? 0))} · ${percent(Math.round((animatedProgress ?? 0) * 10) / 10)}`,
-          );
+          value.textContent = `${number(Math.round(resolved.current ?? 0))} / ${number(resolved.target)} ${resolved.unit} · ${percent(Math.round((resolved.progress ?? 0) * 10) / 10)}`;
         if (track) track.hidden = false;
-        animateBar(bar, progress ?? 0);
+        animateBar(bar, resolved.progress ?? 0);
       });
 
   const updateActivity = () => {

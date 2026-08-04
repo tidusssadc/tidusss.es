@@ -8,7 +8,10 @@ import {
   getPrimaryConnection,
   resolveConnections,
 } from '../../src/domain/content-graph/registry.ts';
-import { validateContentGraph } from '../../src/domain/content-graph/invariants.ts';
+import {
+  findNavigablePlannedEntities,
+  validateContentGraph,
+} from '../../src/domain/content-graph/invariants.ts';
 import type {
   ContentEntity,
   ContentRelation,
@@ -119,22 +122,30 @@ test('getPrimaryConnection devuelve la conexión de mayor prioridad de un nodo r
 // --- Regresión: entidades `planned` nunca navegables ---
 
 /**
- * `twitch-partner` (src/config/goals.ts) es un objetivo `status: 'future'`
- * hoy — su ContentEntity debe resolver a `status: 'planned'` y, por tanto,
- * sin `href`. Antes de esta consolidación, `href` se rellenaba para todos
- * los objetivos sin condicionarlo a su estado, violando la invariante
- * "una entidad planned nunca es navegable" (docs/content-graph.md §10.2).
+ * `findNavigablePlannedEntities` es la invariante pura que garantiza que
+ * ninguna entidad `planned` lleve `href` — se prueba aquí con un fixture
+ * sintético en vez de depender de que el grafo real tenga hoy alguna
+ * entidad `planned` (los objetivos ya no viven en el Content Graph desde
+ * Fase VI: `domain/goals` los resuelve en vivo, no en build time).
  */
-test('un objetivo futuro (planned) del grafo real no lleva href', () => {
-  const futureGoal = getContentEntity('goal:twitch-partner');
-  assert.ok(futureGoal, 'goal:twitch-partner debe seguir existiendo en config/goals.ts');
-  assert.equal(futureGoal?.status, 'planned');
-  assert.equal(futureGoal?.href, undefined);
+test('findNavigablePlannedEntities detecta una entidad planned con href', () => {
+  const entities: ContentEntity[] = [
+    {
+      id: 'guide:futura',
+      kind: 'guide',
+      title: 'Guía futura',
+      href: '/guias/futura',
+      source: 'editorial',
+      status: 'planned',
+    },
+  ];
+  const violations = findNavigablePlannedEntities(entities);
+  assert.equal(violations.length, 1);
+  assert.equal(violations[0]?.id, 'guide:futura');
 });
 
 test('ninguna entidad planned del grafo real es navegable', () => {
   const planned = contentGraph.entities.filter((entity) => entity.status === 'planned');
-  assert.ok(planned.length > 0, 'debe existir al menos una entidad planned para que esta prueba sea significativa');
   for (const entity of planned) {
     assert.equal(entity.href, undefined, `${entity.id} es planned pero tiene href`);
   }

@@ -1,12 +1,12 @@
 ---
 import { integrationEndpoints } from '../config/platforms';
-import { goals } from '../config/goals';
 import { siteUpdates } from '../data/updates';
 import { PREGUNTA_GENERAL_SUGGESTIONS } from '../data/pregunta';
 import { knowledgeDocuments } from '../domain/knowledge-index';
 import { assembleAnswer } from '../domain/knowledge-answering';
 import { toPublicAnswer } from '../domain/knowledge-answering/public';
 import { createLocalProvider } from '../domain/knowledge-retrieval';
+import { resolveEditorialGoals } from '../lib/editorial-goals';
 
 /**
  * Rotación determinista por semana real (no aleatoria, no diaria-falsa):
@@ -56,9 +56,14 @@ const recommendations = [
 ] as const;
 const recommendation = recommendations[(weekIndex + 1) % recommendations.length];
 
-// --- Objetivo actual: uno solo, rotado entre los objetivos activos reales ---
-const activeGoals = goals.filter((goal) => goal.status === 'active');
-const featuredGoal = activeGoals[(weekIndex + 2) % activeGoals.length];
+// --- Objetivos editoriales: conocidos en build time (campeones revisados,
+// conceptos de Academia, matchups publicados) — no requieren ninguna
+// petición de red, así que se conocen y publican de inmediato. El objetivo
+// realmente protagonista (editorial, de canal o competitivo) se decide en
+// el cliente, combinando estos con LP/suscriptores/vídeos ya en vivo. ---
+const editorialGoals = resolveEditorialGoals().filter(
+  (goal) => goal.status === 'active',
+);
 
 // --- Qué ha cambiado: los 3 más recientes del historial editorial real ---
 const recentUpdates = siteUpdates.slice(0, 3);
@@ -73,9 +78,7 @@ const latestUpdate = siteUpdates[0];
   data-today-module
   data-youtube-stats={integrationEndpoints.youtubeStats}
   data-riot={integrationEndpoints.riot}
-  data-goal-id={featuredGoal?.id}
-  data-goal-source={featuredGoal?.source}
-  data-goal-target={featuredGoal?.target}
+  data-editorial-goals={JSON.stringify(editorialGoals)}
   data-update-title={latestUpdate.title}
   data-update-text={latestUpdate.description}
   data-update-href={latestUpdate.href}
@@ -91,38 +94,50 @@ const latestUpdate = siteUpdates[0];
       aria-live="polite"
       data-state="default"
     >
-      <span class="today-primary-badge" data-home-context-badge aria-hidden="true"
-      ></span>
-      <strong data-home-context-label>{latestUpdate.title}</strong>
-      <p data-home-context-text>{latestUpdate.description}</p>
-      <a
-        class="today-primary-cta"
-        data-home-context-action
-        href={latestUpdate.href}
-      >
-        Ver la actualización <b aria-hidden="true">→</b>
-      </a>
+      <img
+        class="today-primary-image"
+        data-home-context-image
+        alt=""
+        width="480"
+        height="270"
+        loading="lazy"
+        decoding="async"
+        hidden
+      />
+      <div class="today-primary-body">
+        <span class="today-primary-badge" data-home-context-badge aria-hidden="true"
+        ></span>
+        <strong data-home-context-label>{latestUpdate.title}</strong>
+        <p data-home-context-text>{latestUpdate.description}</p>
+        <a
+          class="today-primary-cta"
+          data-home-context-action
+          href={latestUpdate.href}
+        >
+          Ver la actualización <b aria-hidden="true">→</b>
+        </a>
+      </div>
     </aside>
 
-    <div class="today-widgets">
-      <div class="today-widget" data-today-widget="goal">
-        <span class="today-widget-label">Mi objetivo ahora mismo</span>
-        {
-          featuredGoal && (
-            <>
-              <strong>{featuredGoal.label}</strong>
-              <div class="today-widget-bar">
-                <i data-today-goal-bar style="width: 0%" />
-              </div>
-              <span data-today-goal-progress class="showcase-skeleton">
-                &nbsp;
-              </span>
-            </>
-          )
-        }
-        <a href="/comunidad">Ver todos los objetivos <b aria-hidden="true">→</b></a>
+    <div class="today-goal-strip" data-today-goal-strip hidden>
+      <span class="today-goal-strip-label">Objetivo en marcha</span>
+      <div class="today-goal-strip-body">
+        <strong data-today-goal-strip-title>&nbsp;</strong>
+        <div class="today-goal-strip-track">
+          <i data-today-goal-strip-bar style="width: 0%"></i>
+        </div>
+        <span data-today-goal-strip-value>&nbsp;</span>
       </div>
+      <a
+        class="today-goal-strip-cta"
+        data-today-goal-strip-link
+        href="/comunidad"
+      >
+        Seguir el progreso <b aria-hidden="true">→</b>
+      </a>
+    </div>
 
+    <div class="today-widgets">
       <div class="today-widget" data-today-widget="changes">
         <span class="today-widget-label">Qué ha cambiado</span>
         <ul>
@@ -160,7 +175,14 @@ const latestUpdate = siteUpdates[0];
 
 <script>
   import { publishHomeSignal } from '../domain/home-state';
-  import { goalProgress } from '../config/goals';
+  import {
+    COMPETITIVE_LP_CHAIN,
+    YOUTUBE_SUBSCRIBER_CHAIN,
+    YOUTUBE_VIDEO_CHAIN,
+    resolveChain,
+    selectPrimaryGoal,
+  } from '../domain/goals';
+  import type { ResolvedGoal } from '../domain/goals/types';
   import type { YouTubeStatsResponse } from '../types/platforms';
   import type { RiotPublicResponse } from '../lib/riot';
 
@@ -176,54 +198,81 @@ const latestUpdate = siteUpdates[0];
       href: root.dataset.updateHref ?? '/actualizaciones',
     });
 
-    // --- Objetivo actual ---
-    const goalSource = root.dataset.goalSource;
-    const goalTarget = Number(root.dataset.goalTarget) || undefined;
-    const setGoalProgress = (current: number, target: number) => {
-      const bar = root.querySelector<HTMLElement>('[data-today-goal-bar]');
-      const label = root.querySelector<HTMLElement>('[data-today-goal-progress]');
-      const progress = goalProgress(current, target) ?? 0;
-      if (bar) bar.style.width = `${Math.min(100, progress)}%`;
-      if (label) {
-        label.textContent = `${new Intl.NumberFormat('es-ES').format(current)} / ${new Intl.NumberFormat('es-ES').format(target)}`;
-        label.classList.remove('showcase-skeleton');
-      }
-    };
-    const setGoalFailed = () => {
-      const label = root.querySelector<HTMLElement>('[data-today-goal-progress]');
-      if (label) {
-        label.textContent = 'No he podido consultar el progreso ahora mismo';
-        label.classList.remove('showcase-skeleton');
-      }
-    };
-    if (goalSource === 'riot') {
-      fetch(root.dataset.riot!)
-        .then((response) => response.json() as Promise<RiotPublicResponse>)
-        .then((payload) => {
-          if (!payload.ok || payload.data.ranked.leaguePoints === undefined || !goalTarget)
-            throw new Error('unavailable');
-          setGoalProgress(payload.data.ranked.leaguePoints, goalTarget);
-        })
-        .catch(setGoalFailed);
-    } else if (goalSource === 'youtube' || goalSource === 'youtube-videos') {
-      fetch(root.dataset.youtubeStats!)
-        .then((response) => response.json() as Promise<YouTubeStatsResponse>)
-        .then((payload) => {
-          if (!payload.ok) throw new Error('unavailable');
-          if (goalSource === 'youtube') {
-            if (
-              payload.data.subscriberCount === undefined ||
-              payload.data.nextGoal === undefined
-            )
-              throw new Error('unavailable');
-            setGoalProgress(payload.data.subscriberCount, payload.data.nextGoal);
-          } else {
-            if (payload.data.videoCount === undefined || !goalTarget)
-              throw new Error('unavailable');
-            setGoalProgress(payload.data.videoCount, goalTarget);
-          }
-        })
-        .catch(setGoalFailed);
+    // --- Objetivos editoriales: ya resueltos en build time, sin fetch ---
+    let editorialGoals: ResolvedGoal[] = [];
+    try {
+      editorialGoals = JSON.parse(root.dataset.editorialGoals ?? '[]');
+    } catch {
+      editorialGoals = [];
     }
+    if (editorialGoals.length)
+      publishHomeSignal({
+        type: 'editorial-progress',
+        goals: editorialGoals
+          .filter((goal) => goal.current !== undefined)
+          .map((goal) => ({
+            id: goal.id,
+            category: goal.category,
+            label: goal.unit,
+            current: goal.current!,
+            target: goal.target,
+            progress: goal.progress ?? 0,
+            href: goal.href,
+          })),
+      });
+
+    // --- Objetivo principal de la tira compacta: el mismo algoritmo
+    // determinista que decide en Comunidad y en el estado narrativo de
+    // Home — nunca gira aleatoriamente ni se congela en un valor fijo. ---
+    const strip = root.querySelector<HTMLElement>('[data-today-goal-strip]');
+    const renderPrimaryGoal = (goals: ResolvedGoal[]) => {
+      const primary = selectPrimaryGoal(goals);
+      if (!strip || !primary || primary.current === undefined) return;
+      const title = strip.querySelector('[data-today-goal-strip-title]');
+      if (title) title.textContent = primary.title;
+      const value = strip.querySelector('[data-today-goal-strip-value]');
+      if (value)
+        value.textContent = `${new Intl.NumberFormat('es-ES').format(primary.current)} / ${new Intl.NumberFormat('es-ES').format(primary.target)} ${primary.unit}`;
+      const bar = strip.querySelector<HTMLElement>(
+        '[data-today-goal-strip-bar]',
+      );
+      if (bar)
+        bar.style.width = `${Math.max(0, Math.min(100, primary.progress ?? 0))}%`;
+      const link = strip.querySelector<HTMLAnchorElement>(
+        '[data-today-goal-strip-link]',
+      );
+      if (link) link.href = primary.href;
+      strip.hidden = false;
+    };
+
+    Promise.allSettled([
+      fetch(root.dataset.riot!).then(
+        (response) => response.json() as Promise<RiotPublicResponse>,
+      ),
+      fetch(root.dataset.youtubeStats!).then(
+        (response) => response.json() as Promise<YouTubeStatsResponse>,
+      ),
+    ]).then(([riotResult, youtubeResult]) => {
+      const liveGoals: ResolvedGoal[] = [];
+      if (riotResult.status === 'fulfilled' && riotResult.value.ok)
+        liveGoals.push(
+          ...resolveChain(
+            COMPETITIVE_LP_CHAIN,
+            riotResult.value.data.ranked.leaguePoints,
+          ).filter((goal) => goal.status === 'active'),
+        );
+      if (youtubeResult.status === 'fulfilled' && youtubeResult.value.ok) {
+        const { subscriberCount, videoCount } = youtubeResult.value.data;
+        liveGoals.push(
+          ...resolveChain(YOUTUBE_SUBSCRIBER_CHAIN, subscriberCount).filter(
+            (goal) => goal.status === 'active',
+          ),
+          ...resolveChain(YOUTUBE_VIDEO_CHAIN, videoCount).filter(
+            (goal) => goal.status === 'active',
+          ),
+        );
+      }
+      renderPrimaryGoal([...liveGoals, ...editorialGoals]);
+    });
   }
 </script>

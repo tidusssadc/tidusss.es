@@ -1,0 +1,60 @@
+---
+export interface MilestoneEntry {
+  id: string;
+  title: string;
+  href: string;
+  source: 'youtube' | 'riot' | 'editorial';
+}
+
+interface Props {
+  completed: MilestoneEntry[];
+  upcoming: MilestoneEntry[];
+}
+
+const { completed, upcoming } = Astro.props;
+
+const sourceLabel: Record<MilestoneEntry['source'], string> = {
+  youtube: 'YouTube',
+  riot: 'Competitivo',
+  editorial: 'Editorial',
+};
+---
+
+<div class="milestone-history" data-milestone-history>
+  <div class="milestone-track">
+    <span class="milestone-track-label">Hitos conseguidos</span>
+    <p class="milestone-empty" data-milestone-empty="completed" hidden={completed.length > 0}>
+      Todavía no hay ningún hito real conseguido en estas cadenas. En cuanto
+      se alcance uno, aparecerá aquí — nunca se inventa una fecha ni un
+      logro que no ha ocurrido.
+    </p>
+    <ol class="milestone-list" data-milestone-list="completed">
+      {
+        completed.map((entry) => (
+          <li class="milestone-item milestone-item--done" data-milestone-id={entry.id}>
+            <span class="milestone-item-source">{sourceLabel[entry.source]}</span>
+            <a href={entry.href}>{entry.title}</a>
+            <span class="milestone-item-tag">Conseguido</span>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+
+  <div class="milestone-track">
+    <span class="milestone-track-label">Próximos objetivos</span>
+    <p class="milestone-empty" data-milestone-empty="upcoming" hidden={upcoming.length > 0}>
+      No hay ningún siguiente hito definido ahora mismo en estas cadenas.
+    </p>
+    <ol class="milestone-list" data-milestone-list="upcoming">
+      {
+        upcoming.map((entry) => (
+          <li class="milestone-item" data-milestone-id={entry.id}>
+            <span class="milestone-item-source">{sourceLabel[entry.source]}</span>
+            <a href={entry.href}>{entry.title}</a>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</div>

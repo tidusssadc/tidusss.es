@@ -3,11 +3,38 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import Navbar from '../components/Navbar.astro';
 import Footer from '../components/Footer.astro';
 import LaboratoryHero from '../components/laboratory/LaboratoryHero.astro';
+import MilestoneHistory from '../components/MilestoneHistory.astro';
 import { integrationEndpoints, platforms } from '../config/platforms';
-import { goals } from '../config/goals';
+import {
+  resolveEditorialGoals,
+  resolvePrimaryEditorialGoals,
+} from '../lib/editorial-goals';
 
-const activeGoals = goals.filter((goal) => goal.status === 'active');
-const futureGoals = goals.filter((goal) => goal.status === 'future');
+// --- Objetivos editoriales: conocidos en build time, sin ninguna petición
+// de red — campeones revisados, conceptos de Academia, matchups reales. ---
+const editorialGoals = resolveEditorialGoals();
+const primaryEditorialGoals = resolvePrimaryEditorialGoals();
+const activeEditorialGoals = primaryEditorialGoals.filter(
+  (goal) => goal.status === 'active',
+);
+
+const editorialCompleted = editorialGoals
+  .filter((goal) => goal.status === 'completed')
+  .map((goal) => ({
+    id: goal.id,
+    title: goal.title,
+    href: goal.href,
+    source: goal.source,
+  }));
+
+const editorialUpcoming = primaryEditorialGoals
+  .filter((goal) => goal.status === 'active' && goal.nextMilestone)
+  .map((goal) => ({
+    id: goal.nextMilestone!.id,
+    title: goal.nextMilestone!.title,
+    href: goal.href,
+    source: goal.source,
+  }));
 
 const inProgressTeaser = {
   title: 'Documentar los primeros matchups de Lucian',
@@ -19,7 +46,7 @@ const changelog = [
   {
     date: '2026-08-03',
     summary:
-      'Segunda fase de producto: Academia ADC, Herramientas, Roadmap y Actualizaciones.',
+      'Nuevas secciones publicadas: Academia ADC, Herramientas, Roadmap y Actualizaciones.',
   },
   {
     date: '2026-08-03',
@@ -41,36 +68,143 @@ const pageDescription =
       title="Estado del proyecto"
       description="Objetivos actuales, qué se está preparando y qué ha cambiado recientemente. Sin promesas de fechas: solo lo que es real hoy."
     />
-    <section class="community-page section-shell" aria-labelledby="community-goals-title">
+
+    <section
+      class="community-page section-shell"
+      aria-labelledby="community-primary-goal-title"
+    >
       <div class="mx-auto max-w-7xl px-5 sm:px-8">
         <header class="community-section-heading">
-          <p class="eyebrow">Objetivos</p>
-          <h2 id="community-goals-title">Hacia dónde va el canal ahora mismo</h2>
+          <p class="eyebrow">Objetivo actual</p>
+          <h2 id="community-primary-goal-title">
+            Hacia dónde va el canal ahora mismo
+          </h2>
+        </header>
+        <div
+          class="community-primary-goal"
+          data-community-primary-goal
+          data-editorial-goals={JSON.stringify(activeEditorialGoals)}
+          data-youtube-stats={integrationEndpoints.youtubeStats}
+          data-riot={integrationEndpoints.riot}
+          hidden
+        >
+          <strong data-primary-goal-title>&nbsp;</strong>
+          <p data-primary-goal-context></p>
+          <div class="community-primary-goal-progress">
+            <div class="community-primary-goal-track">
+              <i data-primary-goal-bar style="width: 0%"></i>
+            </div>
+            <span data-primary-goal-value>&nbsp;</span>
+          </div>
+          <a data-primary-goal-link href="/competitivo">
+            Ver el detalle <span aria-hidden="true">→</span>
+          </a>
+        </div>
+        <p class="community-primary-goal-empty" data-community-primary-goal-empty hidden>
+          No hay ningún objetivo activo medible ahora mismo con datos reales.
+        </p>
+      </div>
+    </section>
+
+    <section
+      class="community-page section-shell"
+      aria-labelledby="community-milestones-title"
+    >
+      <div class="mx-auto max-w-7xl px-5 sm:px-8">
+        <header class="community-section-heading">
+          <p class="eyebrow">Trayectoria</p>
+          <h2 id="community-milestones-title">
+            Próximos objetivos e hitos conseguidos
+          </h2>
+        </header>
+        <MilestoneHistory completed={editorialCompleted} upcoming={editorialUpcoming} />
+      </div>
+    </section>
+
+    <section
+      class="community-page section-shell"
+      aria-labelledby="community-growth-title"
+    >
+      <div class="mx-auto max-w-7xl px-5 sm:px-8">
+        <header class="community-section-heading">
+          <p class="eyebrow">Crecimiento del canal</p>
+          <h2 id="community-growth-title">YouTube en cifras reales</h2>
         </header>
         <div
           class="community-goals"
-          data-community-goals
+          data-community-channel-goals
           data-youtube-stats={integrationEndpoints.youtubeStats}
+        >
+          <div class="community-goal" data-goal-chain="youtube-subscribers">
+            <strong>Suscriptores</strong>
+            <div class="community-goal-bar"><i style="width: 0%" data-goal-bar></i></div>
+            <span data-goal-progress class="showcase-skeleton">&nbsp;</span>
+          </div>
+          <div class="community-goal" data-goal-chain="youtube-videos">
+            <strong>Vídeos publicados</strong>
+            <div class="community-goal-bar"><i style="width: 0%" data-goal-bar></i></div>
+            <span data-goal-progress class="showcase-skeleton">&nbsp;</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section
+      class="community-page section-shell"
+      aria-labelledby="community-competitive-title"
+    >
+      <div class="mx-auto max-w-7xl px-5 sm:px-8">
+        <header class="community-section-heading">
+          <p class="eyebrow">Progreso competitivo</p>
+          <h2 id="community-competitive-title">SoloQ ahora mismo</h2>
+        </header>
+        <div
+          class="community-goals"
+          data-community-competitive-goals
           data-riot={integrationEndpoints.riot}
         >
+          <div class="community-goal" data-goal-chain="competitive-lp">
+            <strong>Liga de puntos</strong>
+            <div class="community-goal-bar"><i style="width: 0%" data-goal-bar></i></div>
+            <span data-goal-progress class="showcase-skeleton">&nbsp;</span>
+          </div>
+          <div class="community-goal community-goal-context">
+            <strong>Muestra reciente</strong>
+            <span data-competitive-recent class="showcase-skeleton">&nbsp;</span>
+            <p>
+              Referencia informativa, nunca progreso de objetivo: una racha
+              corta no mide un hito real.
+            </p>
+          </div>
+        </div>
+        <a class="button-secondary mt-8 inline-flex" href="/competitivo">
+          Ver las últimas partidas <span aria-hidden="true">→</span>
+        </a>
+      </div>
+    </section>
+
+    <section
+      class="community-page section-shell"
+      aria-labelledby="community-editorial-title"
+    >
+      <div class="mx-auto max-w-7xl px-5 sm:px-8">
+        <header class="community-section-heading">
+          <p class="eyebrow">Progreso editorial</p>
+          <h2 id="community-editorial-title">El Laboratorio en cifras reales</h2>
+        </header>
+        <div class="community-goals">
           {
-            activeGoals.map((goal) => (
-              <div class="community-goal" data-goal={goal.id} data-goal-target={goal.target}>
-                <strong>{goal.label}</strong>
-                {goal.description && <p>{goal.description}</p>}
+            primaryEditorialGoals.map((goal) => (
+              <div class="community-goal">
+                <strong>{goal.title}</strong>
                 <div class="community-goal-bar">
-                  <i style="width: 0%" data-goal-bar />
+                  <i style={`width: ${goal.status === 'completed' ? 100 : (goal.progress ?? 0)}%`} />
                 </div>
-                <span data-goal-progress class="showcase-skeleton">&nbsp;</span>
-              </div>
-            ))
-          }
-          {
-            futureGoals.map((goal) => (
-              <div class="community-goal community-goal-future" data-goal={goal.id}>
-                <strong>{goal.label}</strong>
-                {goal.description && <p>{goal.description}</p>}
-                <span class="community-goal-tag">Objetivo a largo plazo</span>
+                <span>
+                  {goal.status === 'completed'
+                    ? 'Conseguido'
+                    : `${goal.current ?? 0} / ${goal.target} ${goal.unit}`}
+                </span>
               </div>
             ))
           }
@@ -147,73 +281,200 @@ const pageDescription =
 <script>
   import type { YouTubeStatsResponse } from '../types/platforms';
   import type { RiotPublicResponse } from '../lib/riot';
-  import { goalProgress } from '../config/goals';
+  import {
+    COMPETITIVE_LP_CHAIN,
+    YOUTUBE_SUBSCRIBER_CHAIN,
+    YOUTUBE_VIDEO_CHAIN,
+    resolveChain,
+    selectPrimaryGoal,
+  } from '../domain/goals';
+  import type { ResolvedGoal } from '../domain/goals/types';
 
-  const container = document.querySelector<HTMLElement>('[data-community-goals]');
-  // Los targets numéricos (700/800, 500...) nunca se repiten a mano en este
-  // script: se leen del `data-goal-target` que ya renderiza el frontmatter
-  // desde `config/goals.ts` — así un cambio de hito ahí no puede dejar el
-  // texto del cliente desincronizado (regresión real corregida en Fase V:
-  // el LP real ya superaba el "700" fijo aquí escrito).
-  const targetFor = (id: string): number | undefined => {
-    const raw = container?.querySelector<HTMLElement>(`[data-goal="${id}"]`)?.dataset.goalTarget;
-    return raw ? Number(raw) : undefined;
-  };
-  const setGoal = (id: string, current: string, progress?: number) => {
-    const node = container?.querySelector<HTMLElement>(`[data-goal="${id}"]`);
+  const number = (value: number) => new Intl.NumberFormat('es-ES').format(value);
+
+  const setGoalNode = (
+    node: Element | null | undefined,
+    resolved: ResolvedGoal | undefined,
+    fallback: string,
+  ) => {
     if (!node) return;
-    const progressLabel = node.querySelector<HTMLElement>('[data-goal-progress]');
     const bar = node.querySelector<HTMLElement>('[data-goal-bar]');
-    if (progressLabel) {
-      progressLabel.textContent = current;
-      progressLabel.classList.remove('showcase-skeleton');
+    const progress = node.querySelector<HTMLElement>('[data-goal-progress]');
+    if (!resolved || resolved.current === undefined) {
+      if (progress) {
+        progress.textContent = fallback;
+        progress.classList.remove('showcase-skeleton');
+      }
+      return;
     }
-    if (bar && progress !== undefined)
-      bar.style.width = `${Math.min(100, Math.max(0, progress))}%`;
+    if (bar) bar.style.width = `${Math.max(0, Math.min(100, resolved.progress ?? (resolved.status === 'completed' ? 100 : 0)))}%`;
+    if (progress) {
+      progress.textContent =
+        resolved.status === 'completed'
+          ? `${resolved.title} · Conseguido`
+          : `${number(resolved.current)} / ${number(resolved.target)} ${resolved.unit}`;
+      progress.classList.remove('showcase-skeleton');
+    }
   };
 
-  if (container) {
-    const videosTarget = targetFor('videos-500');
-    const lpTarget = targetFor('soloqueue-700');
+  const appendMilestone = (
+    key: 'completed' | 'upcoming',
+    entry: { id: string; title: string; href: string; source: ResolvedGoal['source'] },
+  ) => {
+    const history = document.querySelector<HTMLElement>('[data-milestone-history]');
+    const list = history?.querySelector<HTMLElement>(`[data-milestone-list="${key}"]`);
+    if (!list || list.querySelector(`[data-milestone-id="${entry.id}"]`)) return;
+    const empty = history?.querySelector<HTMLElement>(`[data-milestone-empty="${key}"]`);
+    if (empty) empty.hidden = true;
+    const item = document.createElement('li');
+    item.className = key === 'completed' ? 'milestone-item milestone-item--done' : 'milestone-item';
+    item.dataset.milestoneId = entry.id;
+    const sourceLabel: Record<ResolvedGoal['source'], string> = {
+      youtube: 'YouTube',
+      riot: 'Competitivo',
+      editorial: 'Editorial',
+    };
+    const source = document.createElement('span');
+    source.className = 'milestone-item-source';
+    source.textContent = sourceLabel[entry.source];
+    const link = document.createElement('a');
+    link.href = entry.href;
+    link.textContent = entry.title;
+    item.append(source, link);
+    if (key === 'completed') {
+      const tag = document.createElement('span');
+      tag.className = 'milestone-item-tag';
+      tag.textContent = 'Conseguido';
+      item.append(tag);
+    }
+    list.append(item);
+  };
 
-    fetch(container.dataset.youtubeStats!)
-      .then((response) => response.json() as Promise<YouTubeStatsResponse>)
-      .then((payload) => {
-        if (!payload.ok) throw new Error(payload.error.code);
-        const { data } = payload;
-        if (data.subscriberCount !== undefined && data.nextGoal !== undefined)
-          setGoal(
-            'youtube-next',
-            `${new Intl.NumberFormat('es-ES').format(data.subscriberCount)} / ${new Intl.NumberFormat('es-ES').format(data.nextGoal)} suscriptores`,
-            data.progress,
-          );
-        if (data.videoCount !== undefined && videosTarget !== undefined)
-          setGoal(
-            'videos-500',
-            `${new Intl.NumberFormat('es-ES').format(data.videoCount)} / ${new Intl.NumberFormat('es-ES').format(videosTarget)} vídeos`,
-            goalProgress(data.videoCount, videosTarget),
-          );
-      })
-      .catch(() => {
-        setGoal('youtube-next', 'YouTube no responde ahora mismo — reintenta en un rato');
-        setGoal('videos-500', 'YouTube no responde ahora mismo — reintenta en un rato');
-      });
-
-    fetch(container.dataset.riot!)
-      .then((response) => response.json() as Promise<RiotPublicResponse>)
-      .then((payload) => {
-        if (!payload.ok) throw new Error(payload.error.code);
-        const { ranked } = payload.data;
-        if (ranked.leaguePoints !== undefined && lpTarget !== undefined)
-          setGoal(
-            'soloqueue-700',
-            `${ranked.leaguePoints} / ${lpTarget} LP`,
-            goalProgress(ranked.leaguePoints, lpTarget),
-          );
-        else setGoal('soloqueue-700', 'Sin clasificación por ahora');
-      })
-      .catch(() => {
-        setGoal('soloqueue-700', 'Riot no responde ahora mismo — reintenta en un rato');
-      });
+  // --- Objetivo actual: mismo algoritmo determinista que Home ---
+  const primaryContainer = document.querySelector<HTMLElement>(
+    '[data-community-primary-goal]',
+  );
+  const primaryEmpty = document.querySelector<HTMLElement>(
+    '[data-community-primary-goal-empty]',
+  );
+  let editorialGoals: ResolvedGoal[] = [];
+  try {
+    editorialGoals = JSON.parse(primaryContainer?.dataset.editorialGoals ?? '[]');
+  } catch {
+    editorialGoals = [];
   }
+
+  const renderPrimaryGoal = (liveGoals: ResolvedGoal[]) => {
+    const primary = selectPrimaryGoal([...liveGoals, ...editorialGoals]);
+    if (!primaryContainer || !primary || primary.current === undefined) {
+      if (primaryEmpty) primaryEmpty.hidden = false;
+      return;
+    }
+    const title = primaryContainer.querySelector('[data-primary-goal-title]');
+    if (title) title.textContent = primary.title;
+    const context = primaryContainer.querySelector('[data-primary-goal-context]');
+    if (context)
+      context.textContent =
+        primary.description ??
+        `El objetivo con más peso real ahora mismo entre canal, competitivo y contenido editorial.`;
+    const bar = primaryContainer.querySelector<HTMLElement>('[data-primary-goal-bar]');
+    if (bar) bar.style.width = `${Math.max(0, Math.min(100, primary.progress ?? 0))}%`;
+    const value = primaryContainer.querySelector('[data-primary-goal-value]');
+    if (value)
+      value.textContent = `${number(primary.current)} / ${number(primary.target)} ${primary.unit}`;
+    const link = primaryContainer.querySelector<HTMLAnchorElement>('[data-primary-goal-link]');
+    if (link) link.href = primary.href;
+    primaryContainer.hidden = false;
+  };
+
+  const loadRiot = () =>
+    fetch(primaryContainer?.dataset.riot ?? '')
+      .then((response) => response.json() as Promise<RiotPublicResponse>)
+      .catch(() => undefined);
+
+  const loadYouTube = () =>
+    fetch(primaryContainer?.dataset.youtubeStats ?? '')
+      .then((response) => response.json() as Promise<YouTubeStatsResponse>)
+      .catch(() => undefined);
+
+  Promise.all([loadRiot(), loadYouTube()]).then(([riotPayload, youtubePayload]) => {
+    const liveGoals: ResolvedGoal[] = [];
+
+    // --- Progreso competitivo ---
+    const lpNode = document.querySelector('[data-goal-chain="competitive-lp"]');
+    const recentNode = document.querySelector('[data-competitive-recent]');
+    if (riotPayload?.ok) {
+      const { ranked, recent } = riotPayload.data;
+      const resolved = resolveChain(COMPETITIVE_LP_CHAIN, ranked.leaguePoints);
+      const active = resolved.find((goal) => goal.status === 'active');
+      const completed = resolved.filter((goal) => goal.status === 'completed');
+      if (active) liveGoals.push(active);
+      completed.forEach((goal) => appendMilestone('completed', goal));
+      setGoalNode(
+        lpNode,
+        active ?? completed[completed.length - 1],
+        'Sin clasificación por ahora',
+      );
+      if (recentNode) {
+        recentNode.textContent = recent.sampleSize
+          ? `${recent.wins}V · ${recent.losses}D en ${recent.sampleSize} partidas`
+          : 'Sin partidas recientes';
+        recentNode.classList.remove('showcase-skeleton');
+      }
+    } else {
+      setGoalNode(lpNode, undefined, 'Riot no responde ahora mismo — reintenta en un rato');
+      if (recentNode) {
+        recentNode.textContent = 'Riot no responde ahora mismo';
+        recentNode.classList.remove('showcase-skeleton');
+      }
+    }
+
+    // --- Crecimiento del canal ---
+    const subsNode = document.querySelector('[data-goal-chain="youtube-subscribers"]');
+    const videosNode = document.querySelector('[data-goal-chain="youtube-videos"]');
+    if (youtubePayload?.ok) {
+      const { subscriberCount, videoCount } = youtubePayload.data;
+      const subsResolved = resolveChain(YOUTUBE_SUBSCRIBER_CHAIN, subscriberCount);
+      const videosResolved = resolveChain(YOUTUBE_VIDEO_CHAIN, videoCount);
+      const activeSubs = subsResolved.find((goal) => goal.status === 'active');
+      const activeVideos = videosResolved.find((goal) => goal.status === 'active');
+      if (activeSubs) liveGoals.push(activeSubs);
+      if (activeVideos) liveGoals.push(activeVideos);
+      subsResolved
+        .filter((goal) => goal.status === 'completed')
+        .forEach((goal) => appendMilestone('completed', goal));
+      videosResolved
+        .filter((goal) => goal.status === 'completed')
+        .forEach((goal) => appendMilestone('completed', goal));
+      if (activeSubs?.nextMilestone)
+        appendMilestone('upcoming', {
+          id: activeSubs.nextMilestone.id,
+          title: activeSubs.nextMilestone.title,
+          href: activeSubs.href,
+          source: activeSubs.source,
+        });
+      if (activeVideos?.nextMilestone)
+        appendMilestone('upcoming', {
+          id: activeVideos.nextMilestone.id,
+          title: activeVideos.nextMilestone.title,
+          href: activeVideos.href,
+          source: activeVideos.source,
+        });
+      setGoalNode(
+        subsNode,
+        activeSubs ?? subsResolved.filter((goal) => goal.status === 'completed').pop(),
+        'YouTube no responde ahora mismo — reintenta en un rato',
+      );
+      setGoalNode(
+        videosNode,
+        activeVideos ?? videosResolved.filter((goal) => goal.status === 'completed').pop(),
+        'YouTube no responde ahora mismo — reintenta en un rato',
+      );
+    } else {
+      setGoalNode(subsNode, undefined, 'YouTube no responde ahora mismo — reintenta en un rato');
+      setGoalNode(videosNode, undefined, 'YouTube no responde ahora mismo — reintenta en un rato');
+    }
+
+    renderPrimaryGoal(liveGoals);
+  });
 </script>

@@ -1,4 +1,5 @@
 import type { ContentEntity, ContentEntityId } from '../content-graph/types';
+import type { GoalCategory } from '../goals/types';
 
 export type HomeStateId =
   | 'live'
@@ -19,11 +20,15 @@ export type HomePriorityTarget =
   | 'editorial';
 
 export interface HomeGoalSignal {
-  id: ContentEntityId;
+  /** Id estable del hito real (`domain/goals`) — ya no depende de que exista una entidad del Content Graph con este id. */
+  id: string;
+  category: GoalCategory;
   label: string;
   current: number;
   target: number;
   progress: number;
+  /** URL real del hito — el propio publicador la conoce siempre (no necesita resolverse contra ningún grafo). */
+  href: string;
 }
 
 export type HomeSignal =
@@ -38,6 +43,8 @@ export type HomeSignal =
       type: 'latest-video';
       entity: ContentEntity;
       publishedAt: string;
+      /** Miniatura real de YouTube — nunca un placeholder inventado. */
+      thumbnailUrl?: string;
     }
   | {
       type: 'youtube-progress';
@@ -47,6 +54,13 @@ export type HomeSignal =
       type: 'competitive';
       rank?: string;
       leaguePoints?: number;
+      goals: HomeGoalSignal[];
+    }
+  | {
+      /** Objetivos editoriales (campeones/conceptos/matchups revisados) —
+       * conocidos en build time, sin fetch: se publican de inmediato al
+       * cargar la página, no tras resolverse una petición de red. */
+      type: 'editorial-progress';
       goals: HomeGoalSignal[];
     }
   | {
@@ -79,6 +93,8 @@ export interface HomeState {
   target: HomePriorityTarget;
   label: string;
   text: string;
+  /** Miniatura real opcional (hoy solo la publica el estado 'new-video'). */
+  image?: string;
   action: HomeStateAction;
 }
 

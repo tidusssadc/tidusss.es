@@ -96,7 +96,7 @@ export const lucian: LabChampion = {
       date: '2026-07-26',
       title: 'La ficha de Lucian se rediseña como guía completa',
       summary:
-        'Se rediseña la ficha de Lucian como guía editorial completa: arquitectura preparada para build, runas, matchups, sinergias y conceptos. El contenido de esas secciones todavía está pendiente de redacción.',
+        'Se rediseña la ficha de Lucian como guía editorial completa, lista para reunir build, runas, matchups, sinergias y conceptos. El contenido de esas secciones todavía está pendiente de redacción.',
     },
     {
       date: '2026-07-26',

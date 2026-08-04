@@ -12,6 +12,9 @@
     const action = context?.querySelector<HTMLAnchorElement>(
       '[data-home-context-action]',
     );
+    const image = context?.querySelector<HTMLImageElement>(
+      '[data-home-context-image]',
+    );
 
     if (!context || !label || !text || !action) return;
 
@@ -23,6 +26,17 @@
       document
         .querySelector<HTMLElement>(`[data-home-target="${state.target}"]`)
         ?.toggleAttribute('data-home-priority', true);
+
+      if (image) {
+        if (state.image) {
+          image.src = state.image;
+          image.alt = state.label;
+          image.hidden = false;
+        } else {
+          image.hidden = true;
+          image.removeAttribute('src');
+        }
+      }
 
       label.textContent = state.label;
       text.textContent = state.text;

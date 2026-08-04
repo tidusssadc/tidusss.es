@@ -1,4 +1,3 @@
-import { goals } from '../../config/goals';
 import { platforms } from '../../config/platforms';
 import {
   leagueLaboratoryEntities,
@@ -70,21 +69,6 @@ const coreEntities: ContentEntity[] = [
     source: 'riot',
     status: 'available',
   },
-  ...goals.map<ContentEntity>((goal) => {
-    const status = goal.status === 'active' ? 'available' : 'planned';
-    return {
-      id: `goal:${goal.id}`,
-      kind: 'goal',
-      title: goal.label,
-      description: goal.description,
-      // Una entidad `planned` no es navegable: `href` solo se rellena
-      // cuando el objetivo está realmente activo (invariante de grafo,
-      // `docs/content-graph.md` §10.2).
-      ...(status === 'available' ? { href: '/competitivo/#objetivos' } : {}),
-      source: goal.source === 'riot' ? 'riot' : 'editorial',
-      status,
-    };
-  }),
   ...leagueLaboratoryEntities,
 ];
 
@@ -150,14 +134,6 @@ const relations: ContentRelation[] = [
     priority: 60,
     source: 'provider',
   },
-  ...goals.map<ContentRelation>((goal) => ({
-    from: 'creator-project:live',
-    to: `goal:${goal.id}`,
-    kind: 'tracks',
-    label: `Seguir: ${goal.label}`,
-    priority: 40 - goal.order,
-    source: 'editorial',
-  })),
   ...leagueLaboratoryRelations,
 ];
 
