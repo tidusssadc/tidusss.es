@@ -14,8 +14,11 @@ interface Props {
   champions: Map<LabChampionId, ChampionCatalogEntry>;
   role: Role;
   dataDragonVersion: string;
+  /** Campeones cuya /campeones/<slug> es de verdad una guía editorial publicada, no solo una ficha básica. */
+  championIdsWithGuide: ReadonlySet<LabChampionId>;
 }
-const { entries, champions, role, dataDragonVersion } = Astro.props;
+const { entries, champions, role, dataDragonVersion, championIdsWithGuide } =
+  Astro.props;
 ---
 
 {
@@ -59,6 +62,11 @@ const { entries, champions, role, dataDragonVersion } = Astro.props;
                   idealIf={entry.idealIf}
                   watchFor={entry.watchFor}
                   championHref={`/campeones/${champion.slug}`}
+                  championLinkLabel={
+                    championIdsWithGuide.has(entry.championId)
+                      ? `Guía de ${champion.name}`
+                      : 'Ficha del campeón'
+                  }
                 />
               </li>
             )

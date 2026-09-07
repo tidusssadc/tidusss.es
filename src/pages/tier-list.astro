@@ -60,6 +60,14 @@ const championsById = new Map(
   championCatalog.map((champion) => [champion.id, champion] as const),
 );
 
+// "Guía de <Campeón>" solo tiene sentido cuando /campeones/<slug> es de
+// verdad una guía editorial (perfil publicado) — el resto son fichas
+// básicas y conservan "Ficha del campeón" (ver ChampionIdentity/
+// EditorialTakeCard y `hasProfile` en pages/campeones/[slug].astro).
+const championIdsWithGuide = new Set(
+  adcLabChampions.filter((champion) => champion.profile).map((champion) => champion.id),
+);
+
 const allEntries = tierList?.entries ?? [];
 const reviewedEntries = allEntries.filter(
   (entry): entry is ReviewedTierListEntry => entry.reviewStatus === 'reviewed',
@@ -135,6 +143,7 @@ const pageDescription = patchLabel
                     champions={championsById}
                     role={role}
                     dataDragonVersion={dataDragonVersion}
+                    championIdsWithGuide={championIdsWithGuide}
                   />
                 ))}
               </div>
@@ -143,6 +152,7 @@ const pageDescription = patchLabel
                 champions={championsById}
                 role={role}
                 dataDragonVersion={dataDragonVersion}
+                championIdsWithGuide={championIdsWithGuide}
               />
               <TierListPendingSection
                 entries={placeholderEntries}

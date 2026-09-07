@@ -33,7 +33,7 @@ export const officialAdcTierListEntries: TierListEntry[] = [
   entry('champion:zeri', 'S', {
     editorialTake: {
       verdict:
-        'Uno de los ADC que más se beneficia del meta actual. Escala de maravilla y con Yuntal se vuelve una locura de rápida.',
+        'Uno de los ADC que más se beneficia del meta actual. Escala de maravilla y con Yun Tal se vuelve una locura de rápida.',
       reasoning:
         'El ecosistema de velocidad de ataque de este parche le sienta especialmente bien: mucha movilidad, mucho escalado y capacidad de convertir cualquier ventaja en snowball. Para mí es top del meta ahora mismo.',
       confidence: 'high',
@@ -43,7 +43,7 @@ export const officialAdcTierListEntries: TierListEntry[] = [
   entry('champion:jinx', 'S', {
     editorialTake: {
       verdict:
-        'Hipercarry claro de este parche. La velocidad de ataque y Yuntal la potencian muchísimo.',
+        'Hipercarry claro de este parche. La velocidad de ataque y Yun Tal la potencian muchísimo.',
       reasoning:
         'Tiene menos movilidad que otros hipercarries como Zeri, así que es más fácil de castigar en línea si te adelantas. Pero cuando consigue objetos, el daño sostenido y los resets son brutales.',
       confidence: 'high',
@@ -72,7 +72,7 @@ export const officialAdcTierListEntries: TierListEntry[] = [
     editorialTake: {
       verdict: 'La considero de las mejores opciones del meta ahora mismo.',
       reasoning:
-        'No depende obligatoriamente de Yuntal como otros hipercarries, pero igualmente aprovecha muy bien el ecosistema actual de velocidad de ataque. Para mí está entre los mejores picks de ADC este parche.',
+        'No depende obligatoriamente de Yun Tal como otros hipercarries, pero igualmente aprovecha muy bien el ecosistema actual de velocidad de ataque. Para mí está entre los mejores picks de ADC este parche.',
       confidence: 'high',
       lastReviewedPatch,
     },
@@ -103,7 +103,7 @@ export const officialAdcTierListEntries: TierListEntry[] = [
       verdict:
         'Uno de mis campeones favoritos, y sí, mi valoración tiene un punto personal que prefiero reconocer directamente.',
       reasoning:
-        'El meta actual no le favorece especialmente frente a los hipercarries que aprovechan mejor Yuntal. Aun así, con un dúo agresivo y una línea donde pueda generar ventaja sigue teniendo muchísimo potencial de snowball. Lo mantengo alto, pero no lo voy a vender como uno de los mejores ADC absolutos de este parche.',
+        'El meta actual no le favorece especialmente frente a los hipercarries que aprovechan mejor Yun Tal. Aun así, con un dúo agresivo y una línea donde pueda generar ventaja sigue teniendo muchísimo potencial de snowball. Lo mantengo alto, pero no lo voy a vender como uno de los mejores ADC absolutos de este parche.',
       confidence: 'medium',
       lastReviewedPatch,
     },
@@ -115,7 +115,7 @@ export const officialAdcTierListEntries: TierListEntry[] = [
     editorialTake: {
       verdict: 'La considero una ADC fuerte ahora mismo.',
       reasoning:
-        'Yuntal le sienta muy bien, y sus rebotes aprovechan de maravilla el ecosistema actual de velocidad de ataque.',
+        'Yun Tal le sienta muy bien, y sus rebotes aprovechan de maravilla el ecosistema actual de velocidad de ataque.',
       confidence: 'high',
       lastReviewedPatch,
     },
@@ -172,7 +172,7 @@ export const officialAdcTierListEntries: TierListEntry[] = [
     editorialTake: {
       verdict: 'Lo considero decente, no top.',
       reasoning:
-        'Tiene escalado y Yuntal puede favorecerle, pero su fase de líneas, la falta de movilidad y lo vulnerable que es limitan mucho el pick.',
+        'Tiene escalado y Yun Tal puede favorecerle, pero su fase de líneas, la falta de movilidad y lo vulnerable que es limitan mucho el pick.',
       confidence: 'high',
       lastReviewedPatch,
     },
@@ -274,7 +274,7 @@ export const officialAdcTierListEntries: TierListEntry[] = [
   // --- Counter · su valor depende del matchup, no de la escalera general ---
   entry('champion:xayah', 'A', {
     editorialTake: {
-      verdict: 'Muy fuerte actualmente. Yuntal le sienta genial.',
+      verdict: 'Muy fuerte actualmente. Yun Tal le sienta genial.',
       reasoning:
         'Con Rakan al lado puede ser especialmente potente. Se puede jugar a ciegas sin problema, aunque no la considero necesariamente el mejor blind pick que hay.',
       confidence: 'high',
@@ -305,7 +305,7 @@ export const adcMetaState2617: MetaState = {
   id: 'meta-state:adc-26-17',
   patchId: patch2617.id,
   summary:
-    'Lo que más está marcando este parche para mí es la fuerza del ecosistema de velocidad de ataque y, sobre todo, de Yuntal. Favorece mucho a los ADC que escalan bien, aprovechan la velocidad de ataque y pueden incorporar Yuntal con eficacia — por eso varios hipercarries están tan arriba en esta Tier List.',
+    'Lo que más está marcando este parche para mí es la fuerza del ecosistema de velocidad de ataque y, sobre todo, de Yun Tal. Favorece mucho a los ADC que escalan bien, aprovechan la velocidad de ataque y pueden incorporar Yun Tal con eficacia — por eso varios hipercarries están tan arriba en esta Tier List.',
   risingChampionIds: [
     'champion:zeri',
     'champion:jinx',

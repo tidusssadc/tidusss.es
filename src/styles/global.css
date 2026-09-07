@@ -6036,35 +6036,21 @@ body[data-home-state='near-goal'] .environment-rays {
   color: #9aa5b8;
 }
 
+/* Línea ligera, no una caja: el wrap natural en móvil basta, sin grid de
+   columnas ni borde/fondo propios. */
 .tier-list-legend {
-  margin-top: 2.5rem;
-  padding: 1rem 1.15rem;
-  border: 1px solid rgb(255 255 255 / 6%);
-  background: rgb(255 255 255 / 1.5%);
-}
-.tier-list-legend ul {
-  display: grid;
-  gap: 0.6rem;
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-.tier-list-legend li {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 0.75rem;
-  font-size: 0.85rem;
+  gap: 0.4rem 1.25rem;
+  margin-top: 2rem;
+  font-size: 0.8rem;
   color: #9aa5b8;
 }
-@media (min-width: 640px) {
-  .tier-list-legend ul {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-@media (min-width: 1024px) {
-  .tier-list-legend ul {
-    grid-template-columns: repeat(3, 1fr);
-  }
+.tier-list-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
 }
 
 .tier-list-filters {
@@ -6303,12 +6289,16 @@ body[data-home-state='near-goal'] .environment-rays {
 .editorial-take-details summary::-webkit-details-marker {
   display: none;
 }
-.editorial-take-details summary::after {
-  content: '+';
-  font-weight: 900;
+/* El propio texto cambia con el estado nativo de <details> — sin JS: solo
+   uno de los dos rótulos está visible según [open]. */
+.editorial-take-details summary [data-state='open'] {
+  display: none;
 }
-.editorial-take-details[open] summary::after {
-  content: '−';
+.editorial-take-details[open] summary [data-state='closed'] {
+  display: none;
+}
+.editorial-take-details[open] summary [data-state='open'] {
+  display: inline;
 }
 .editorial-take-label {
   display: block;

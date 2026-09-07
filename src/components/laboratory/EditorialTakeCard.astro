@@ -13,9 +13,24 @@ interface Props {
   watchFor?: string;
   /** Enlace a la ficha del campeón en el Laboratorio, cuando existe una página real. */
   championHref?: string;
+  /**
+   * "Guía de <Campeón>" solo cuando /campeones/<slug> es de verdad una guía
+   * editorial (perfil publicado) — si no, se mantiene "Ficha del campeón"
+   * (ver `hasChampionGuide` en TierListSection/TierListCounterSection/
+   * TierListPendingSection).
+   */
+  championLinkLabel?: string;
 }
-const { take, reviewStatus, strengths, weaknesses, idealIf, watchFor, championHref } =
-  Astro.props;
+const {
+  take,
+  reviewStatus,
+  strengths,
+  weaknesses,
+  idealIf,
+  watchFor,
+  championHref,
+  championLinkLabel = 'Ficha del campeón',
+} = Astro.props;
 ---
 
 <div class="editorial-take" data-review-status={reviewStatus}>
@@ -30,7 +45,10 @@ const { take, reviewStatus, strengths, weaknesses, idealIf, watchFor, championHr
         <p class="editorial-take-verdict">{take.verdict}</p>
         <div class="editorial-take-actions">
           <details class="editorial-take-details">
-            <summary>Ver mi análisis</summary>
+            <summary>
+              <span data-state="closed">Ver análisis ↓</span>
+              <span data-state="open">Cerrar análisis ↑</span>
+            </summary>
             <div class="editorial-take-body">
               <span class="editorial-take-label">El veredicto de Tidusss</span>
               <p class="editorial-take-reasoning">{take.reasoning}</p>
@@ -52,7 +70,7 @@ const { take, reviewStatus, strengths, weaknesses, idealIf, watchFor, championHr
           </details>
           {championHref && (
             <a class="editorial-take-champion-link" href={championHref}>
-              Ficha del campeón <span aria-hidden="true">→</span>
+              {championLinkLabel} <span aria-hidden="true">→</span>
             </a>
           )}
         </div>
