@@ -313,6 +313,17 @@ interface TierListEntryBase {
   weaknesses?: readonly string[];
   buildId?: BuildId;
   runePageId?: RunePageId;
+  /** Cuándo elegirlo en SoloQ — solo cuando se puede derivar de una opinión real, nunca rellenado por completar la ficha. */
+  idealIf?: string;
+  /** El riesgo/contexto que lo hace peor pick — mismo criterio que `idealIf`: ausente si no hay opinión real que lo respalde. */
+  watchFor?: string;
+  /**
+   * `'counter'`: un pick cuyo valor depende del matchup/composición, no de
+   * la escalera general S–D — se sigue clasificando con un `tier` real (para
+   * ordenarlo/filtrarlo), pero la página lo muestra en su propia sección en
+   * vez de forzarlo a competir en la fila de su tier. Ausente = pick general.
+   */
+  pickType?: 'counter';
 }
 
 export interface ReviewedTierListEntry extends TierListEntryBase {
@@ -327,13 +338,35 @@ export interface PlaceholderTierListEntry extends TierListEntryBase {
 
 export type TierListEntry = ReviewedTierListEntry | PlaceholderTierListEntry;
 
+/** Vídeo real asociado a una edición de la Tier List — nunca un embed, un enlace de salida (mismo patrón que `Matchup.videoUrl`). */
+export interface TierListVideo {
+  title: string;
+  url: string;
+}
+
 export interface TierList {
   id: TierListId;
   title: string;
   patchId: PatchId;
+  /**
+   * Cuando esta edición reutiliza el análisis de un parche anterior sin
+   * cambios reales (el propio Tidusss confirma que su criterio no varió),
+   * este campo documenta de qué parche procede el análisis original —
+   * `patchId` sigue siendo el parche vigente que se muestra como actual.
+   * Nunca se duplica la Tier List entera para representar esto.
+   */
+  basedOnPatchId?: PatchId;
   role?: Role;
   queue: CompetitiveQueue;
   entries: readonly TierListEntry[];
+  /**
+   * "Mis picks para subir Elo" — 2-3 campeones destacados de esta misma
+   * edición, nunca elegidos independientemente de `entries`. Ausente hasta
+   * que exista una selección editorial real y explícita: la sección
+   * correspondiente simplemente no se muestra mientras tanto.
+   */
+  picks?: readonly LabChampionId[];
+  video?: TierListVideo;
   methodologyNote?: string;
   publishedAt?: string;
   status: 'draft' | 'published';

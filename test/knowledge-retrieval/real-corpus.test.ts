@@ -86,11 +86,22 @@ test('Draven: se reconoce como campeón real del catálogo pero no existe ningú
   assert.deepEqual(result.documents, []);
 });
 
-test('Jinx: existe en el catálogo pero es un campeón draft sin perfil — información insuficiente, nunca contenido de Lucian mezclado', () => {
+test('Jinx: no tiene build propia, pero sí una entrada real en la Tier List — se recupera esa, nunca contenido de Lucian mezclado ni una build inventada', () => {
   const result = local.retrieve({ text: '¿Cuál es la build de Jinx?' });
-  assert.equal(result.insufficientInformation, true);
+  assert.equal(result.insufficientInformation, false);
   assert.equal(result.filtersApplied.championId, 'champion:jinx');
-  assert.deepEqual(result.documents, []);
+  assert.deepEqual(
+    result.documents.map((d) => d.document.id),
+    ['knowledge:tier-list:official-adc:entry:champion:jinx'],
+  );
+  assert.ok(
+    result.documents.every((d) => !d.document.id.includes('lucian')),
+    'no debe mezclar contenido de Lucian',
+  );
+  assert.ok(
+    result.documents.every((d) => d.document.type !== 'build-item'),
+    'Jinx no tiene ninguna build real: nunca se debe inventar una',
+  );
 });
 
 // --- Guardrails (Fase 6) ---

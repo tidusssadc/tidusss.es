@@ -1,0 +1,64 @@
+---
+import type {
+  ChampionCatalogEntry,
+  LabChampionId,
+  TierListEntry,
+} from '../../../domain/league-laboratory';
+import { dataDragonUrls } from '../../../lib/riot/datadragon';
+import TierBadge from '../TierBadge.astro';
+
+interface Props {
+  picks: readonly LabChampionId[];
+  entries: readonly TierListEntry[];
+  champions: Map<LabChampionId, ChampionCatalogEntry>;
+  dataDragonVersion: string;
+}
+const { picks, entries, champions, dataDragonVersion } = Astro.props;
+
+const cards = picks.flatMap((championId) => {
+  const champion = champions.get(championId);
+  const entry = entries.find((candidate) => candidate.championId === championId);
+  if (!champion || !entry || entry.reviewStatus !== 'reviewed') return [];
+  return [{ champion, entry }];
+});
+---
+
+{
+  cards.length > 0 && (
+    <section class="tier-list-picks" aria-labelledby="tier-list-picks-heading">
+      <header>
+        <p class="eyebrow">Mis picks para subir Elo</p>
+        <h3 id="tier-list-picks-heading">
+          Si tuviera que elegir solo unos pocos ADC para jugar SoloQ este
+          parche, serían estos
+        </h3>
+      </header>
+      <ul>
+        {cards.map(({ champion, entry }) => (
+          <li class="tier-list-pick-card">
+            <img
+              src={dataDragonUrls(dataDragonVersion).championLoading(
+                champion.dataDragonKey,
+              )}
+              alt=""
+              width="308"
+              height="560"
+              loading="lazy"
+              decoding="async"
+            />
+            <div>
+              <div class="tier-list-pick-card-head">
+                <strong>{champion.name}</strong>
+                <TierBadge tier={entry.tier} compact />
+              </div>
+              <p>{entry.editorialTake.verdict}</p>
+              <a href={`/campeones/${champion.slug}`}>
+                Ver ficha del campeón <span aria-hidden="true">→</span>
+              </a>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}

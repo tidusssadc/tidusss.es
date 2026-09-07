@@ -1,0 +1,53 @@
+---
+import type { TierListVideo } from '../../../domain/league-laboratory';
+
+interface Props {
+  video: TierListVideo;
+}
+const { video } = Astro.props;
+
+/**
+ * Miniatura real de YouTube por id de vídeo — CDN pública, sin API key ni
+ * embed: mismo nivel de confianza que Data Dragon para los iconos de
+ * campeón. Si la URL no tiene un id reconocible, simplemente no se muestra
+ * miniatura (nunca un placeholder inventado).
+ */
+const videoId = video.url.match(
+  /(?:youtu\.be\/|[?&]v=|\/embed\/)([\w-]{11})/,
+)?.[1];
+const thumbnailUrl = videoId
+  ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
+  : undefined;
+---
+
+<section class="tier-list-video" aria-labelledby="tier-list-video-heading">
+  <div class="tier-list-video-body">
+    <p class="eyebrow">Análisis completo</p>
+    <h3 id="tier-list-video-heading">
+      Te explico campeón por campeón por qué los he colocado aquí
+    </h3>
+    <a class="tier-list-video-link" href={video.url} target="_blank" rel="noopener noreferrer">
+      Ver el vídeo <span aria-hidden="true">↗</span>
+    </a>
+  </div>
+  {
+    thumbnailUrl && (
+      <a
+        class="tier-list-video-thumb"
+        href={video.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label={video.title}
+      >
+        <img
+          src={thumbnailUrl}
+          width="480"
+          height="360"
+          loading="lazy"
+          decoding="async"
+          alt=""
+        />
+      </a>
+    )
+  }
+</section>

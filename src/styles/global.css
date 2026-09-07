@@ -5962,6 +5962,31 @@ body[data-home-state='near-goal'] .environment-rays {
   letter-spacing: -0.03em;
   color: white;
 }
+.tier-list-subtitle {
+  margin-top: 0.4rem;
+  font-size: 1rem;
+  color: #9aa5b8;
+}
+.tier-list-author {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-top: 0.9rem;
+  font-size: 0.82rem;
+}
+.tier-list-author strong {
+  color: #d6b56b;
+  font-weight: 750;
+}
+.tier-list-author span {
+  color: #7583a0;
+}
+.tier-list-based-on {
+  margin-top: 0.6rem;
+  font-size: 0.8rem;
+  color: #7583a0;
+  font-style: italic;
+}
 .tier-list-methodology {
   margin-top: 1.25rem;
   padding: 1rem 1.15rem;
@@ -6155,6 +6180,13 @@ body[data-home-state='near-goal'] .environment-rays {
   background: var(--lab-tier-d);
   font-size: 0.85rem;
 }
+/* Versión pequeña — junto a cada fila, para que el tier se reconozca sin
+   depender de la cabecera de sección (clave en móvil). */
+.tier-badge[data-compact] {
+  min-width: 1.9rem;
+  padding: 0.15rem 0.4rem;
+  font-size: 0.68rem !important;
+}
 
 .tier-list-entry {
   display: grid;
@@ -6191,6 +6223,15 @@ body[data-home-state='near-goal'] .environment-rays {
 .champion-identity .lab-badge {
   margin-top: 0.35rem;
   padding: 0.15rem 0.5rem;
+}
+
+/* Fila compacta siempre visible: icono + nombre + tier, sin depender de
+   abrir el veredicto para saber quién está en cada tier. */
+.tier-list-entry-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
 }
 
 .confidence-indicator {
@@ -6234,6 +6275,7 @@ body[data-home-state='near-goal'] .environment-rays {
   text-transform: uppercase;
 }
 .editorial-take-verdict {
+  margin-top: 0.6rem;
   font-size: 0.98rem;
   line-height: 1.6;
   color: #dce4f0;
@@ -6267,6 +6309,44 @@ body[data-home-state='near-goal'] .environment-rays {
   font-size: 0.88rem;
   line-height: 1.65;
   color: #9aa5b8;
+}
+.editorial-take-reasoning {
+  color: #7583a0;
+}
+.editorial-take-hint {
+  padding: 0.5rem 0.7rem !important;
+  border-left: 2px solid rgb(255 255 255 / 14%);
+  background: rgb(255 255 255 / 2%);
+  font-size: 0.82rem !important;
+}
+.editorial-take-hint span {
+  display: block;
+  margin-bottom: 0.2rem;
+  color: #7583a0;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.editorial-take-hint--ideal {
+  border-left-color: #34d399;
+}
+.editorial-take-hint--watch {
+  border-left-color: #f0b429;
+}
+.editorial-take-champion-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.9rem;
+  color: #4ba3ff;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+.editorial-take-champion-link:hover,
+.editorial-take-champion-link:focus-visible {
+  color: #7fbcff;
 }
 .trait-list {
   margin-top: 0.75rem;
@@ -6309,6 +6389,190 @@ body[data-home-state='near-goal'] .environment-rays {
   margin-top: 1.25rem;
   list-style: none;
   padding: 0;
+}
+
+.tier-list-counter {
+  margin-top: 2.5rem;
+  padding-top: 2rem;
+  border-top: 1px solid rgb(255 255 255 / 8%);
+}
+.tier-list-counter header h3 {
+  color: white;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+.tier-list-counter header p {
+  margin-top: 0.4rem;
+  max-width: 36rem;
+  font-size: 0.85rem;
+  color: #7583a0;
+}
+.tier-list-counter ul {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.25rem;
+  list-style: none;
+  padding: 0;
+}
+
+.tier-list-picks {
+  margin-top: 3rem;
+  padding-top: 2.5rem;
+  border-top: 1px solid rgb(255 255 255 / 8%);
+}
+.tier-list-picks header h3 {
+  margin-top: 0.5rem;
+  max-width: 32rem;
+  font-size: clamp(1.3rem, 2.4vw, 1.7rem);
+  font-weight: 750;
+  color: white;
+}
+.tier-list-picks ul {
+  display: grid;
+  gap: 1.25rem;
+  margin-top: 1.75rem;
+  list-style: none;
+  padding: 0;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+}
+.tier-list-pick-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgb(255 255 255 / 8%);
+  border-radius: 0.6rem;
+  background: rgb(255 255 255 / 1.5%);
+}
+.tier-list-pick-card img {
+  display: block;
+  width: 100%;
+  height: 12rem;
+  object-fit: cover;
+  object-position: top;
+}
+.tier-list-pick-card > div {
+  padding: 1rem 1.1rem 1.2rem;
+}
+.tier-list-pick-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+.tier-list-pick-card-head strong {
+  color: white;
+  font-size: 1.05rem;
+}
+.tier-list-pick-card p {
+  margin-top: 0.6rem;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: #9aa5b8;
+}
+.tier-list-pick-card a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.75rem;
+  color: #4ba3ff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+.tier-list-pick-card a:hover,
+.tier-list-pick-card a:focus-visible {
+  color: #7fbcff;
+}
+
+/* Secundaria a propósito: el producto principal sigue siendo la Tier List
+   ADC, esto es una nota, no una segunda tier list. */
+.tier-list-mage-note {
+  margin-top: 2.5rem;
+  padding: 1.1rem 1.25rem;
+  border: 1px solid rgb(255 255 255 / 8%);
+  border-left: 2px solid #9146ff;
+  background: rgb(255 255 255 / 1.5%);
+}
+.tier-list-mage-note h3 {
+  color: white;
+  font-size: 1rem;
+  font-weight: 700;
+}
+.tier-list-mage-note p {
+  margin-top: 0.5rem;
+  max-width: 40rem;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: #9aa5b8;
+}
+.tier-list-mage-note ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.9rem;
+  margin-top: 0.75rem;
+  padding: 0;
+  list-style: none;
+}
+.tier-list-mage-note a {
+  color: #9146ff;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+.tier-list-mage-note a:hover,
+.tier-list-mage-note a:focus-visible {
+  color: #b794ff;
+}
+
+.tier-list-video {
+  display: flex;
+  flex-wrap: wrap-reverse;
+  align-items: center;
+  gap: 1.5rem;
+  margin-top: 3rem;
+  padding: 1.5rem 1.75rem;
+  border: 1px solid rgb(214 181 107 / 18%);
+  border-radius: 0.7rem;
+  background: rgb(214 181 107 / 4%);
+}
+.tier-list-video-body {
+  flex: 1 1 16rem;
+}
+.tier-list-video-body h3 {
+  margin-top: 0.4rem;
+  max-width: 28rem;
+  font-size: clamp(1.1rem, 2vw, 1.4rem);
+  font-weight: 700;
+  color: white;
+}
+.tier-list-video-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 44px;
+  margin-top: 1rem;
+  padding-block: 0.4rem;
+  color: #edcf8d;
+  font-size: 0.88rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+.tier-list-video-link:hover,
+.tier-list-video-link:focus-visible {
+  color: #fff;
+}
+.tier-list-video-thumb {
+  flex: 0 0 auto;
+  display: block;
+  width: 11rem;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  border: 1px solid rgb(255 255 255 / 10%);
+}
+.tier-list-video-thumb img {
+  display: block;
+  width: 100%;
+  height: 8.25rem;
+  object-fit: cover;
 }
 
 .empty-laboratory-state {

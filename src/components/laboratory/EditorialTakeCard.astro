@@ -8,24 +8,50 @@ interface Props {
   reviewStatus: EditorialReviewStatus;
   strengths?: readonly string[];
   weaknesses?: readonly string[];
+  /** Cuándo elegirlo en SoloQ — solo si hay una opinión real detrás. */
+  idealIf?: string;
+  /** El riesgo/contexto que lo hace peor pick — mismo criterio que `idealIf`. */
+  watchFor?: string;
+  /** Enlace a la ficha del campeón en el Laboratorio, cuando existe una página real. */
+  championHref?: string;
 }
-const { take, reviewStatus, strengths, weaknesses } = Astro.props;
+const { take, reviewStatus, strengths, weaknesses, idealIf, watchFor, championHref } =
+  Astro.props;
 ---
 
 <div class="editorial-take" data-review-status={reviewStatus}>
   {
-    reviewStatus === 'placeholder' && (
-      <span class="editorial-take-draft-flag">
-        Borrador · pendiente de revisión
-      </span>
+    reviewStatus === 'placeholder' ? (
+      <>
+        <span class="editorial-take-draft-flag">Análisis de Tidusss próximamente</span>
+        <p class="editorial-take-verdict">{take.verdict}</p>
+      </>
+    ) : (
+      <details class="editorial-take-details" open>
+        <summary>El veredicto de Tidusss</summary>
+        <p class="editorial-take-verdict">{take.verdict}</p>
+        <p class="editorial-take-reasoning">{take.reasoning}</p>
+        {idealIf && (
+          <p class="editorial-take-hint editorial-take-hint--ideal">
+            <span>Ideal si</span>
+            {idealIf}
+          </p>
+        )}
+        {watchFor && (
+          <p class="editorial-take-hint editorial-take-hint--watch">
+            <span>Cuidado con</span>
+            {watchFor}
+          </p>
+        )}
+        <TraitList label="Fortalezas" items={strengths ?? []} />
+        <TraitList label="Debilidades" items={weaknesses ?? []} />
+        <ConfidenceIndicator confidence={take.confidence} />
+        {championHref && (
+          <a class="editorial-take-champion-link" href={championHref}>
+            Ver ficha del campeón <span aria-hidden="true">→</span>
+          </a>
+        )}
+      </details>
     )
   }
-  <p class="editorial-take-verdict">{take.verdict}</p>
-  <details class="editorial-take-details">
-    <summary>Ver razonamiento</summary>
-    <p>{take.reasoning}</p>
-    <TraitList label="Fortalezas" items={strengths ?? []} />
-    <TraitList label="Debilidades" items={weaknesses ?? []} />
-  </details>
-  <ConfidenceIndicator confidence={take.confidence} />
 </div>

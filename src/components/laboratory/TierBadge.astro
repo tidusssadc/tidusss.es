@@ -3,9 +3,14 @@ import type { TierGrade } from '../../domain/league-laboratory';
 
 interface Props {
   tier: TierGrade;
+  /** Versión pequeña para mostrar el tier junto a cada fila, no solo en la cabecera de sección. */
+  compact?: boolean;
 }
-const { tier } = Astro.props;
+const { tier, compact = false } = Astro.props;
 const slug = tier.toLowerCase().replace('+', '-plus');
 ---
 
-<span class="tier-badge" data-tier={slug}>{tier}</span>
+<span class="tier-badge" data-tier={slug} data-compact={compact ? true : undefined}
+  >{tier}</span
+>
+

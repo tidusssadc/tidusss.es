@@ -47,6 +47,18 @@ const tierSlug = (tier: string) => tier.toLowerCase().replace('+', '-plus');
   const pendingSection =
     document.querySelector<HTMLElement>('.tier-list-pending');
 
+  // En móvil, cada campeón debe poder escanearse por icono/nombre/tier antes
+  // de leer el veredicto completo — así que el veredicto empieza cerrado.
+  // Sin JavaScript, el HTML ya llega con `open`, así que sigue siendo
+  // completamente legible (principio ya establecido en esta página: la
+  // ausencia de JS nunca hace desaparecer contenido, solo cambia la
+  // densidad por defecto). El deep link de campeón, más abajo, vuelve a
+  // abrir el que corresponda sin importar este paso.
+  if (window.matchMedia('(max-width: 767px)').matches)
+    document
+      .querySelectorAll<HTMLDetailsElement>('.editorial-take-details')
+      .forEach((details) => details.removeAttribute('open'));
+
   let activeTier = 'all';
 
   const championName = (entry: HTMLElement) =>

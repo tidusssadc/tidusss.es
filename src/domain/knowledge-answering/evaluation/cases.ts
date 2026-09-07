@@ -122,11 +122,11 @@ export const answerEvaluationCases: AnswerEvaluationCase[] = [
   {
     id: 'build-jinx',
     question: '¿Cuál es la build de Jinx?',
-    expectedStatus: 'insufficient-information',
-    minimumSourceIds: [],
-    forbiddenSourceIds: [],
-    expectedCoverage: 'none',
-    note: 'Jinx es un campeón real (draft, sin perfil) — nunca se mezcla con contenido de Lucian.',
+    expectedStatus: 'sufficient',
+    minimumSourceIds: ['knowledge:tier-list:official-adc:entry:champion:jinx'],
+    forbiddenSourceIds: ['knowledge:champion:lucian:identity'],
+    expectedCoverage: 'full',
+    note: 'Jinx no tiene build propia, pero sí una entrada real en la Tier List — se responde con esa, nunca con contenido de Lucian.',
   },
   {
     id: 'quien-gano-el-mundial',

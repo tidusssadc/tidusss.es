@@ -10,11 +10,14 @@ import EmptyLaboratoryState from '../components/laboratory/EmptyLaboratoryState.
 import TierListLegend from '../components/laboratory/tier-list/TierListLegend.astro';
 import TierListFilters from '../components/laboratory/tier-list/TierListFilters.astro';
 import TierListSection from '../components/laboratory/tier-list/TierListSection.astro';
+import TierListCounterSection from '../components/laboratory/tier-list/TierListCounterSection.astro';
 import TierListPendingSection from '../components/laboratory/tier-list/TierListPendingSection.astro';
+import TierListPicks from '../components/laboratory/tier-list/TierListPicks.astro';
+import TierListVideo from '../components/laboratory/tier-list/TierListVideo.astro';
 import ShareLinkButton from '../components/ShareLinkButton.astro';
 import {
   buildLabRegistry,
-  getTierList,
+  getCurrentTierList,
   type PlaceholderTierListEntry,
   type ReviewedTierListEntry,
   type Role,
@@ -22,49 +25,66 @@ import {
 } from '../domain/league-laboratory';
 import {
   adcLabChampions,
+  adcMetaState2617,
+  adcSecondaryMageNote,
+  adcTierListEditions,
   championCatalog,
+  championCatalogVersion,
   leagueLaboratoryPatches,
-  officialAdcTierList,
 } from '../data/league-laboratory';
+
+const role: Role = 'BOTTOM';
 
 const registry = buildLabRegistry({
   catalog: championCatalog,
   champions: adcLabChampions,
   patches: leagueLaboratoryPatches,
-  tierLists: [officialAdcTierList],
+  tierLists: adcTierListEditions,
+  metaStates: [adcMetaState2617],
 });
 
-const patch = leagueLaboratoryPatches.find(
-  (candidate) => candidate.id === officialAdcTierList.patchId,
-);
-const role: Role = officialAdcTierList.role ?? 'BOTTOM';
-const tierList = patch
-  ? getTierList(registry, officialAdcTierList.patchId, role)
+// La edición vigente se elige sola por `Patch.sequence` — nunca a mano.
+// Ver `getCurrentTierList` (domain/league-laboratory/registry.ts).
+const tierList = getCurrentTierList(registry, role);
+const patch = tierList
+  ? leagueLaboratoryPatches.find((candidate) => candidate.id === tierList.patchId)
+  : undefined;
+const basedOnPatch = tierList?.basedOnPatchId
+  ? leagueLaboratoryPatches.find((candidate) => candidate.id === tierList.basedOnPatchId)
+  : undefined;
+const metaState = patch
+  ? registry.metaStates.find((state) => state.patchId === patch.id)
   : undefined;
 
 const championsById = new Map(
   championCatalog.map((champion) => [champion.id, champion] as const),
 );
 
-const reviewedEntries = (tierList?.entries ?? []).filter(
+const allEntries = tierList?.entries ?? [];
+const reviewedEntries = allEntries.filter(
   (entry): entry is ReviewedTierListEntry => entry.reviewStatus === 'reviewed',
 );
-const placeholderEntries = (tierList?.entries ?? []).filter(
-  (entry): entry is PlaceholderTierListEntry =>
-    entry.reviewStatus === 'placeholder',
+const placeholderEntries = allEntries.filter(
+  (entry): entry is PlaceholderTierListEntry => entry.reviewStatus === 'placeholder',
 );
+// Los picks de counter tienen su propia sección — no compiten en la
+// escalera S–D general (ver `pickType` en domain/league-laboratory/types.ts).
+const ladderEntries = reviewedEntries.filter((entry) => entry.pickType !== 'counter');
+const counterEntries = reviewedEntries.filter((entry) => entry.pickType === 'counter');
 
 const tierOrder: TierGrade[] = ['S+', 'S', 'A', 'B', 'C', 'D'];
 const entriesByTier = tierOrder.map((tier) => ({
   tier,
-  entries: reviewedEntries.filter((entry) => entry.tier === tier),
+  entries: ladderEntries.filter((entry) => entry.tier === tier),
 }));
 
-const dataDragonVersion = patch?.dataDragonVersion ?? '15.14.1';
-const roleLabelForCopy = role === 'BOTTOM' ? 'ADC' : role;
-const pageTitle = `${officialAdcTierList.title} · tidusss.es`;
-const pageDescription = patch
-  ? `Tier list ${roleLabelForCopy} de Tidusss para el parche ${patch.label}: criterio editorial de un jugador Master, no un promedio de win rate.`
+const dataDragonVersion = patch?.dataDragonVersion ?? championCatalogVersion;
+const patchLabel = patch?.label;
+const pageTitle = patchLabel
+  ? `Tier List ADC ${patchLabel} para SoloQ | Tidusss`
+  : `${tierList?.title ?? 'Tier List ADC'} · tidusss.es`;
+const pageDescription = patchLabel
+  ? `Tier list de ADC para el parche ${patchLabel} basada en mi experiencia jugando SoloQ en Master EUW. Ranking, opiniones y recomendaciones campeón por campeón.`
   : 'Tier list editorial de Tidusss, Master ADC en EUW.';
 ---
 
@@ -81,22 +101,36 @@ const pageDescription = patch
     >
       <div class="mx-auto max-w-7xl px-5 sm:px-8">
         <header class="tier-list-header">
-          <p class="eyebrow">El Laboratorio · Tier List</p>
-          <h2 id="tier-list-title">{officialAdcTierList.title}</h2>
+          <p class="eyebrow">Tier List ADC</p>
+          <h2 id="tier-list-title">
+            {patchLabel ? `Parche ${patchLabel}` : tierList?.title}
+          </h2>
+          <p class="tier-list-subtitle">Mi ranking de ADC para SoloQ.</p>
+          <div class="tier-list-author">
+            <strong>Tidusss</strong>
+            <span>Master EUW · ADC</span>
+          </div>
           {
             patch && (
               <LaboratoryMetadata
                 patch={patch}
                 role={role}
-                queue={officialAdcTierList.queue}
-                updatedAt={officialAdcTierList.publishedAt}
+                queue={tierList?.queue}
+                updatedAt={tierList?.publishedAt}
               />
             )
           }
           {
-            officialAdcTierList.methodologyNote && (
+            basedOnPatch && (
+              <p class="tier-list-based-on">
+                Clasificación sin cambios respecto al parche {basedOnPatch.label}.
+              </p>
+            )
+          }
+          {
+            tierList?.methodologyNote && (
               <EditorialCallout icon="💬" label="Cómo hago esta Tier List" variant="take">
-                {officialAdcTierList.methodologyNote}
+                {tierList.methodologyNote}
               </EditorialCallout>
             )
           }
@@ -104,6 +138,14 @@ const pageDescription = patch
             <ShareLinkButton label="Compartir Tier List" />
           </div>
         </header>
+
+        {
+          metaState && (
+            <EditorialCallout icon="📈" label="¿Qué está definiendo el meta?" variant="insight">
+              {metaState.summary}
+            </EditorialCallout>
+          )
+        }
 
         {
           tierList ? (
@@ -121,12 +163,45 @@ const pageDescription = patch
                   />
                 ))}
               </div>
+              <TierListCounterSection
+                entries={counterEntries}
+                champions={championsById}
+                role={role}
+                dataDragonVersion={dataDragonVersion}
+              />
               <TierListPendingSection
                 entries={placeholderEntries}
                 champions={championsById}
                 role={role}
                 dataDragonVersion={dataDragonVersion}
               />
+              {
+                tierList.picks && (
+                  <TierListPicks
+                    picks={tierList.picks}
+                    entries={tierList.entries}
+                    champions={championsById}
+                    dataDragonVersion={dataDragonVersion}
+                  />
+                )
+              }
+              <section class="tier-list-mage-note" aria-labelledby="tier-list-mage-note-heading">
+                <h3 id="tier-list-mage-note-heading">{adcSecondaryMageNote.title}</h3>
+                <p>{adcSecondaryMageNote.body}</p>
+                <ul>
+                  {adcSecondaryMageNote.championIds.map((championId) => {
+                    const champion = championsById.get(championId);
+                    return (
+                      champion && (
+                        <li>
+                          <a href={`/campeones/${champion.slug}`}>{champion.name}</a>
+                        </li>
+                      )
+                    );
+                  })}
+                </ul>
+              </section>
+              {tierList.video && <TierListVideo video={tierList.video} />}
             </>
           ) : (
             <EmptyLaboratoryState

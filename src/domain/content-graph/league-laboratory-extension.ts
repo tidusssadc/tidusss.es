@@ -10,6 +10,7 @@ import {
   officialAdcTierList,
   patch1514,
   patch2614,
+  patch2617,
 } from '../../data/league-laboratory';
 import {
   buildDocumentsChampionRelation,
@@ -169,6 +170,11 @@ export const leagueLaboratoryEntities: ContentEntity[] = [
   // relaciones `changed-in` reales hacia este parche (ver más abajo) — sin
   // este nodo, esas relaciones serían aristas colgantes.
   patchToContentEntity(patch2614),
+  // Fase VII: la Tier List ADC pasa a `patchId: patch2617.id` (edición
+  // vigente 26.17, análisis original sin cambios desde 26.16) — registrado
+  // por el mismo motivo que patch2614: `tierListTracksPatchRelation` genera
+  // una relación real hacia este parche.
+  patchToContentEntity(patch2617),
   { ...tierListToContentEntity(officialAdcTierList), href: '/tier-list' },
   championHubEntity,
   preguntaToolEntity,
@@ -259,14 +265,24 @@ export const leagueLaboratoryEntities: ContentEntity[] = [
 ];
 
 export const leagueLaboratoryRelations: ContentRelation[] = [
-  ...officialAdcTierList.entries.flatMap((entry) => [
-    tierListFeaturesChampionRelation(
-      officialAdcTierList,
-      entry.championId,
-      `Ver el perfil de ${getCatalogEntryOrThrow(entry.championId).name}`,
-    ),
-    championAppearsInTierListRelation(officialAdcTierList, entry.championId),
-  ]),
+  // Solo los campeones con `LabChampion` registrado tienen una entidad
+  // `champion:*` real en el grafo (ver `leagueLaboratoryEntities` más
+  // arriba) — el resto de la Tier List (Fase VII, muchos más campeones que
+  // curación editorial propia) sigue siendo perfectamente visitable desde
+  // `/tier-list` en sí, simplemente no genera una relación de grafo hacia
+  // una entidad que no existe.
+  ...officialAdcTierList.entries
+    .filter((entry) =>
+      adcLabChampions.some((champion) => champion.id === entry.championId),
+    )
+    .flatMap((entry) => [
+      tierListFeaturesChampionRelation(
+        officialAdcTierList,
+        entry.championId,
+        `Ver el perfil de ${getCatalogEntryOrThrow(entry.championId).name}`,
+      ),
+      championAppearsInTierListRelation(officialAdcTierList, entry.championId),
+    ]),
   tierListTracksPatchRelation(officialAdcTierList),
   ...leagueLaboratoryBuilds.map((build) =>
     buildDocumentsChampionRelation(

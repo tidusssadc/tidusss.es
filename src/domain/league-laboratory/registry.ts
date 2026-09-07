@@ -212,6 +212,29 @@ export const getTierList = (
     (tierList) => tierList.patchId === patchId && tierList.role === role,
   );
 
+/**
+ * La edición vigente de la Tier List para un rol: la publicada cuyo parche
+ * tiene el `sequence` más alto. Reutiliza `Patch.sequence` (ya existente,
+ * pensado exactamente para poder ordenar parches sin comparar strings) en
+ * vez de introducir un flag "actual" separado que pudiera desincronizarse.
+ * Prepara el histórico por parche sin ningún selector ni ruta nueva: cuando
+ * exista una segunda edición publicada, esta función simplemente empieza a
+ * devolver la más reciente.
+ */
+export const getCurrentTierList = (registry: LabRegistry, role?: Role) =>
+  registry.tierLists
+    .filter(
+      (tierList) => tierList.role === role && tierList.status === 'published',
+    )
+    .map((tierList) => {
+      const patch = registry.patches.find((p) => p.id === tierList.patchId);
+      return patch ? { tierList, patch } : undefined;
+    })
+    .filter((entry): entry is { tierList: TierList; patch: Patch } =>
+      Boolean(entry),
+    )
+    .sort((a, b) => b.patch.sequence - a.patch.sequence)[0]?.tierList;
+
 export const getMetaTimeline = (registry: LabRegistry) =>
   registry.metaStates
     .map((state) => {

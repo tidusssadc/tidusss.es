@@ -38,10 +38,12 @@ test('Draven: información insuficiente, nunca un matchup inventado en la respue
   assert.equal(answer.sources.length, 0);
 });
 
-test('Jinx: información insuficiente, nunca contenido de Lucian filtrado como si fuera de Jinx', () => {
+test('Jinx: no tiene build propia, pero responde con su entrada real de la Tier List — nunca contenido de Lucian filtrado como si fuera de Jinx', () => {
   const answer = assembleAnswer(local.retrieve({ text: '¿Cuál es la build de Jinx?' }));
-  assert.equal(answer.status, 'insufficient-information');
-  assert.equal(answer.sources.length, 0);
+  assert.equal(answer.status, 'sufficient');
+  assert.equal(answer.sources.length, 1);
+  assert.equal(answer.sources[0]?.documentId, 'knowledge:tier-list:official-adc:entry:champion:jinx');
+  assert.ok(!answer.sources.some((source) => source.documentId.includes('lucian')));
 });
 
 test('el Mundial: fuera de alcance, se rechaza sin intentar responder', () => {

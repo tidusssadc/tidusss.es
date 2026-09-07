@@ -37,11 +37,13 @@ const { entries, champions, role, dataDragonVersion } = Astro.props;
                 data-champion={champion.slug}
                 id={`campeon-${champion.slug}`}
               >
-                <ChampionIdentity
-                  champion={champion}
-                  role={role}
-                  dataDragonVersion={dataDragonVersion}
-                />
+                <div class="tier-list-entry-summary">
+                  <ChampionIdentity
+                    champion={champion}
+                    role={role}
+                    dataDragonVersion={dataDragonVersion}
+                  />
+                </div>
                 <EditorialTakeCard
                   take={entry.editorialTake}
                   reviewStatus="placeholder"

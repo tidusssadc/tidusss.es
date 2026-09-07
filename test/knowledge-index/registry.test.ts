@@ -47,12 +47,33 @@ test('el índice real no viola ninguna invariante (validateKnowledgeIndex)', () 
 
 // --- Exclusión de borradores y pendientes ---
 
-test('ningún documento del índice real proviene de un campeón sin perfil (Kai\'Sa, Jinx, Ezreal)', () => {
+// Un documento `champion-*` (identidad, entendimiento, rasgos...) exige un
+// `ChampionProfile` real detrás — eso sí se sigue prohibiendo aquí. Un
+// `tier-list-entry`, en cambio, tiene su propio contenido real e
+// independiente (el veredicto de esa Tier List concreta): desde la Fase VII
+// del Laboratorio, Kai'Sa/Jinx/Ezreal tienen una opinión real de Tidusss en
+// la Tier List aunque todavía no tengan una ficha de campeón completa — eso
+// es exactamente el tipo de contenido parcial y auténtico que este índice
+// debe poder representar, no un fallo.
+const championProfileDocumentTypes = new Set([
+  'champion-identity',
+  'champion-understanding',
+  'champion-editorial-take',
+  'champion-strength',
+  'champion-weakness',
+  'champion-common-mistake',
+  'champion-power-spike',
+  'champion-quick-tip',
+  'champion-editorial-history',
+]);
+
+test('ningún documento de perfil de campeón (identidad, entendimiento, rasgos...) proviene de un campeón sin perfil (Kai\'Sa, Jinx, Ezreal)', () => {
   const draftChampionIds = new Set(
     adcLabChampions.filter((champion) => !champion.profile).map((champion) => champion.id),
   );
   assert.ok(draftChampionIds.size > 0, 'debe existir al menos un campeón draft para que esta prueba sea significativa');
   for (const document of knowledgeDocuments) {
+    if (!championProfileDocumentTypes.has(document.type)) continue;
     assert.ok(!draftChampionIds.has(document.sourceEntityId as never), `${document.id} proviene de un campeón draft`);
     assert.ok(
       !document.relatedEntityIds.some((id) => draftChampionIds.has(id as never)),
@@ -61,18 +82,25 @@ test('ningún documento del índice real proviene de un campeón sin perfil (Kai
   }
 });
 
-test('ninguna entrada placeholder de la Tier List genera un documento', () => {
-  const placeholderChampionIds = new Set(
+test('cada documento de Tier List corresponde a una entrada realmente revisada (nunca placeholder)', () => {
+  const reviewedChampionIds = new Set(
     officialAdcTierList.entries
-      .filter((entry) => entry.reviewStatus === 'placeholder')
+      .filter((entry) => entry.reviewStatus === 'reviewed')
       .map((entry) => entry.championId),
   );
-  assert.ok(placeholderChampionIds.size > 0);
   const tierListDocuments = knowledgeDocuments.filter((document) => document.type === 'tier-list-entry');
-  assert.equal(tierListDocuments.length, 1);
+  assert.ok(tierListDocuments.length > 0);
+  assert.equal(
+    tierListDocuments.length,
+    reviewedChampionIds.size,
+    'debe existir exactamente un documento de Tier List por entrada revisada, ni más ni menos',
+  );
   for (const document of tierListDocuments) {
     for (const relatedId of document.relatedEntityIds) {
-      assert.ok(!placeholderChampionIds.has(relatedId as never));
+      assert.ok(
+        reviewedChampionIds.has(relatedId as never),
+        `${document.id} relaciona a ${relatedId}, que no es una entrada revisada de la Tier List`,
+      );
     }
   }
 });
@@ -102,8 +130,13 @@ test('todos los documentos de build/rune-page cuyo relatedEntityIds incluye a un
 
 // --- Separación de parches ---
 
-test('los documentos que declaran patchId lo hacen con un valor real presente en los datos de origen (15.14 o 26.14)', () => {
-  const knownPatchIds = new Set(['patch:15-14', 'patch:26-14']);
+test('los documentos que declaran patchId lo hacen con un valor real presente en los datos de origen', () => {
+  const knownPatchIds = new Set([
+    'patch:15-14',
+    'patch:26-14',
+    'patch:26-16',
+    'patch:26-17',
+  ]);
   const withPatch = knowledgeDocuments.filter((document) => document.patchId);
   assert.ok(withPatch.length > 0);
   for (const document of withPatch) {

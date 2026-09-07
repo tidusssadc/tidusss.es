@@ -4,35 +4,30 @@ import type {
   LabChampionId,
   ReviewedTierListEntry,
   Role,
-  TierGrade,
 } from '../../../domain/league-laboratory';
 import ChampionIdentity from '../ChampionIdentity.astro';
 import EditorialTakeCard from '../EditorialTakeCard.astro';
 import TierBadge from '../TierBadge.astro';
 
 interface Props {
-  tier: TierGrade;
   entries: ReviewedTierListEntry[];
   champions: Map<LabChampionId, ChampionCatalogEntry>;
   role: Role;
   dataDragonVersion: string;
 }
-const { tier, entries, champions, role, dataDragonVersion } = Astro.props;
-const slug = tier.toLowerCase().replace('+', '-plus');
+const { entries, champions, role, dataDragonVersion } = Astro.props;
 ---
 
 {
   entries.length > 0 && (
-    <section
-      class="tier-list-row"
-      data-tier={slug}
-      aria-labelledby={`tier-${slug}-heading`}
-    >
+    <section class="tier-list-counter" aria-labelledby="tier-list-counter-heading">
       <header>
-        <TierBadge tier={tier} />
-        <h3 id={`tier-${slug}-heading`} class="sr-only">
-          Tier {tier}
-        </h3>
+        <h3 id="tier-list-counter-heading">Picks de counter</h3>
+        <p>
+          Su valor depende especialmente del matchup o de la composición
+          rival — no significa que sean peores que un Tier S, significa que
+          hay que elegirlos con más criterio.
+        </p>
       </header>
       <ul>
         {entries.map((entry) => {
@@ -50,7 +45,7 @@ const slug = tier.toLowerCase().replace('+', '-plus');
                     role={role}
                     dataDragonVersion={dataDragonVersion}
                   />
-                  <TierBadge tier={tier} compact />
+                  <TierBadge tier={entry.tier} compact />
                 </div>
                 <EditorialTakeCard
                   take={entry.editorialTake}
