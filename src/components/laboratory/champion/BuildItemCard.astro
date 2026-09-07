@@ -20,8 +20,8 @@ const iconUrl =
       iconUrl ? (
         <img
           src={iconUrl}
-          width="48"
-          height="48"
+          width="56"
+          height="56"
           loading="lazy"
           decoding="async"
           alt=""
@@ -42,10 +42,16 @@ const iconUrl =
   <p class="build-item-card-reasoning">{choice.reasoning}</p>
   {
     (choice.pros?.length || choice.cons?.length) && (
-      <div class="build-item-card-traits">
-        <TraitList label="Ventajas" items={choice.pros ?? []} />
-        <TraitList label="Inconvenientes" items={choice.cons ?? []} />
-      </div>
+      <details class="editorial-take-details build-item-card-traits-toggle">
+        <summary>
+          <span data-state="closed">Ver detalles ↓</span>
+          <span data-state="open">Cerrar ↑</span>
+        </summary>
+        <div class="editorial-take-body build-item-card-traits">
+          <TraitList label="Ventajas" items={choice.pros ?? []} />
+          <TraitList label="Inconvenientes" items={choice.cons ?? []} />
+        </div>
+      </details>
     )
   }
   {

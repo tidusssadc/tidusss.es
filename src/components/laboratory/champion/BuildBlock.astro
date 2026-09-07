@@ -10,6 +10,17 @@ interface Props {
   patch?: Patch;
 }
 const { build, dataDragonVersion, patch } = Astro.props;
+
+/**
+ * Título corto para la primera capa de lectura: `build.title` ya trae
+ * "— Lucian ADC (parche X)" repitiendo datos que la propia página ya
+ * muestra (nombre del campeón, parche) — se recorta la presentación, no
+ * el dato en sí, que sigue intacto en `build.title`.
+ */
+const shortTitle = build.title.split(' — ')[0] ?? build.title;
+
+/** Misma ruta real que ya listan los "Objetos clave" más abajo, solo unida en una línea para escanear de un vistazo. */
+const coreRoute = build.coreItems.map((item) => item.name).join(' → ');
 ---
 
 <article class="build-block" data-variant={build.variant}>
@@ -26,7 +37,8 @@ const { build, dataDragonVersion, patch } = Astro.props;
       </span>
       {patch && <PatchBadge patch={patch} />}
     </div>
-    <h4>{build.title}</h4>
+    <h4>{shortTitle}</h4>
+    {coreRoute && <p class="build-block-route">{coreRoute}</p>}
     {
       build.variant === 'situational' && build.situationalContext && (
         <p class="build-block-context">{build.situationalContext}</p>
@@ -112,5 +124,11 @@ const { build, dataDragonVersion, patch } = Astro.props;
     )
   }
 
-  <EditorialTakeBlock take={build.editorialTake} label="📌 Si tuviera que resumir esta build" />
+  <details class="build-block-summary">
+    <summary>
+      <span data-state="closed">Ver resumen de la build ↓</span>
+      <span data-state="open">Cerrar ↑</span>
+    </summary>
+    <EditorialTakeBlock take={build.editorialTake} label="📌 Si tuviera que resumir esta build" />
+  </details>
 </article>

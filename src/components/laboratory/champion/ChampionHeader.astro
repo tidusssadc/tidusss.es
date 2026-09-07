@@ -5,7 +5,6 @@ import type {
   Role,
 } from '../../../domain/league-laboratory';
 import { dataDragonUrls } from '../../../lib/riot/datadragon';
-import ConfidenceIndicator from '../ConfidenceIndicator.astro';
 import RoleBadge from '../RoleBadge.astro';
 import ShareLinkButton from '../../ShareLinkButton.astro';
 
@@ -40,10 +39,6 @@ const hasProfile = Boolean(labChampion?.profile);
     <p class="champion-header-title">{catalogEntry.title}</p>
     <div class="champion-header-badges">
       {role && <RoleBadge role={role} />}
-      <span class="lab-badge lab-badge--class">
-        <span class="lab-badge-label">Clase</span>
-        <strong>{catalogEntry.tags.join(' · ')}</strong>
-      </span>
       {
         labChampion?.isSignatureChampion && (
           <span class="lab-badge lab-badge--signature">
@@ -52,24 +47,22 @@ const hasProfile = Boolean(labChampion?.profile);
         )
       }
     </div>
+    {
+      hasProfile ? (
+        <p class="champion-header-byline">
+          <strong>Guía de Tidusss</strong>
+          <span>Master EUW · ADC</span>
+        </p>
+      ) : (
+        <p class="champion-header-status">
+          Tidusss todavía no ha escrito su perfil editorial
+        </p>
+      )
+    }
     <p class="champion-header-riot-difficulty">
       Dificultad según Riot{' '}
       <strong>{catalogEntry.riotDifficulty} / 10</strong>
     </p>
-    <p class="champion-header-status">
-      {
-        hasProfile
-          ? 'Perfil editorial de Tidusss completo'
-          : 'Tidusss todavía no ha escrito su perfil editorial'
-      }
-    </p>
-    {
-      hasProfile && labChampion?.profile && (
-        <ConfidenceIndicator
-          confidence={labChampion.profile.editorialTake.confidence}
-        />
-      )
-    }
     {
       hasProfile && (
         <div class="champion-header-actions">

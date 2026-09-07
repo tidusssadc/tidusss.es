@@ -20,6 +20,7 @@ const appearance = tierListAppearances[0];
       class="champion-tier-status"
       href={`/tier-list?champion=${championSlug}`}
     >
+      <span class="champion-tier-status-label">Tier List actual</span>
       <div class="champion-tier-status-heading">
         {appearance.entry.reviewStatus === 'reviewed' ? (
           <TierBadge tier={appearance.entry.tier} compact />

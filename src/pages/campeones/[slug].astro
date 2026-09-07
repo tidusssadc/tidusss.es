@@ -3,7 +3,6 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import Navbar from '../../components/Navbar.astro';
 import Footer from '../../components/Footer.astro';
 import ExploreNext from '../../components/ExploreNext.astro';
-import LaboratoryHero from '../../components/laboratory/LaboratoryHero.astro';
 import LaboratoryMetadata from '../../components/laboratory/LaboratoryMetadata.astro';
 import ChampionKnowledgeSection from '../../components/laboratory/ChampionKnowledgeSection.astro';
 import EmptyLaboratoryState from '../../components/laboratory/EmptyLaboratoryState.astro';
@@ -77,17 +76,6 @@ const labChampion = knowledge?.labChampion;
 const hasProfile = Boolean(labChampion?.profile);
 const role = labChampion?.signatureRole ?? labChampion?.roles[0];
 
-// El parche solo se muestra cuando hay contenido editorial anclado a él —
-// mostrar "Parche 15.14" en un campeón del que Tidusss no ha dicho nada
-// insinuaría un contexto que no existe.
-const lastReviewedPatchId =
-  labChampion?.profile?.editorialTake.lastReviewedPatch;
-const reviewPatch = lastReviewedPatchId
-  ? leagueLaboratoryPatches.find(
-      (candidate) => candidate.id === lastReviewedPatchId,
-    )
-  : undefined;
-
 // Las imágenes del campeón siempre usan la versión con la que se generó el
 // catálogo — no la del parche de la Tier List, que es un dato editorial
 // distinto y puede quedar desactualizado sin que las imágenes dejen de
@@ -126,7 +114,7 @@ const partnersFor = (championIds: readonly string[]) =>
 
 // Estado real en la Tier List: mismo dato que ya usa `ChampionTierStatus`,
 // solo resolviendo aquí el parche vigente de esa edición (26.17) — un dato
-// distinto de `reviewPatch` (el último parche revisado del PERFIL, 26.14).
+// distinto del parche de la GUÍA (`primaryBuildPatch`, 26.14 para Lucian).
 // Nunca se duplica el veredicto a mano: viene directo de `tierListAppearances`.
 const tierListAppearance = knowledge?.tierListAppearances[0];
 const tierListPatchLabel = tierListAppearance
@@ -162,6 +150,27 @@ const genericSynergyTake = synergies.find((synergy) =>
 
 const quickTips = labChampion?.profile?.quickTips ?? [];
 const editorialHistory = labChampion?.editorialHistory ?? [];
+
+/**
+ * Resumen compacto de power spikes para "Datos rápidos" — mismo texto real
+ * que ya despliega `PowerSpikeStory` en el cuerpo principal (mismo criterio
+ * de corte: "momento: explicación"), solo mostrando el momento breve en vez
+ * del párrafo completo. Nunca se inventa una frase nueva ni se duplica la
+ * explicación larga, que sigue viviendo únicamente en el perfil.
+ */
+const powerSpikeMoment = (entry: string): string | undefined => {
+  const cutAt = (needle: string) => {
+    const index = entry.indexOf(needle);
+    return index === -1 ? undefined : entry.slice(0, index);
+  };
+  const moment = cutAt(': ') ?? cutAt(', ');
+  return moment && moment.length <= 60 ? moment : undefined;
+};
+const powerSpikeSummary = (labChampion?.profile?.powerSpikes ?? [])
+  .map(powerSpikeMoment)
+  .filter((moment): moment is string => Boolean(moment))
+  .slice(0, 2)
+  .join(' · ');
 
 // Panel contextual: solo aporta valor cuando ya hay una build real que
 // resumir — no se muestra para campeones sin perfil ni build.
@@ -260,12 +269,6 @@ const structuredData = hasProfile
   }
   <Navbar />
   <main>
-    <LaboratoryHero
-      eyebrow="El Laboratorio"
-      title="Explorador de campeones"
-      description="Cada campeón, con su propia identidad: quién es, por qué jugarlo y qué opina Tidusss realmente."
-      headingLevel="h2"
-    />
     <section
       class="champion-page section-shell"
       aria-labelledby="champion-name"
@@ -279,12 +282,24 @@ const structuredData = hasProfile
         />
 
         {
-          reviewPatch && (
-            <LaboratoryMetadata
-              patch={reviewPatch}
-              role={role}
-              updatedAt={officialAdcTierList.publishedAt}
-            />
+          // Deliberadamente distinto del bloque de Tier List de abajo: esto
+          // es el parche en el que se escribió la GUÍA (la build real, la
+          // única fecha de parche que de verdad existe hoy para el perfil),
+          // casi siempre más antiguo que el parche vigente de la Tier List —
+          // no se actualiza solo ni se asume vigente sin que Tidusss lo
+          // confirme. `lastEditorialDate` es la fecha real del propio
+          // historial editorial del campeón, nunca la de la Tier List.
+          primaryBuildPatch && (
+            <div class="champion-guide-revision">
+              <span class="champion-guide-revision-label">
+                Guía · Última revisión
+              </span>
+              <LaboratoryMetadata
+                patch={primaryBuildPatch}
+                role={role}
+                updatedAt={lastEditorialDate}
+              />
+            </div>
           )
         }
 
@@ -306,7 +321,7 @@ const structuredData = hasProfile
                     patch={primaryBuildPatch}
                     buildItemNames={coreItemNames}
                     lastUpdated={lastEditorialDate}
-                    powerSpike={labChampion?.profile?.powerSpikes[0]}
+                    powerSpike={powerSpikeSummary || undefined}
                     relatedQuestion={
                       catalogEntry.slug === 'lucian' ? primaryQuestion : undefined
                     }

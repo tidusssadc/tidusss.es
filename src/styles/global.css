@@ -6639,7 +6639,10 @@ body[data-home-state='near-goal'] .environment-rays {
    bloques, tipografía como jerarquía principal, sin reveals de scroll ni
    animaciones de entrada. La calma es el efecto visual. */
 .champion-page {
-  padding-top: clamp(2rem, 5vw, 3.5rem);
+  /* Sin hero genérico encima (Fase de densidad): el propio campeón debe
+     ser lo primero que se lea, con solo el aire justo bajo la barra de
+     navegación — no el hueco que antes dejaba el hero del índice. */
+  padding-top: clamp(2.5rem, 6vw, 4.5rem);
 }
 
 .champion-header {
@@ -6701,51 +6704,83 @@ body[data-home-state='near-goal'] .environment-rays {
   color: #7583a0;
   font-size: 0.8rem;
 }
-.champion-header-identity .confidence-indicator {
-  margin-top: 0.5rem;
-}
 .champion-header-actions {
   margin-top: 0.9rem;
 }
+.champion-header-byline {
+  margin-top: 0.75rem;
+  font-size: 0.85rem;
+}
+.champion-header-byline strong {
+  color: #d6b56b;
+  font-weight: 750;
+}
+.champion-header-byline span {
+  margin-left: 0.4rem;
+  color: #7583a0;
+}
 
+/* Parche de la GUÍA (build/perfil) — deliberadamente distinto del bloque de
+   Tier List de abajo, casi siempre un parche distinto y más antiguo. Misma
+   etiqueta pequeña que ya usa `.champion-tier-status-label`, para que la
+   distinción se lea de un vistazo sin confundirse con un error. */
+.champion-guide-revision {
+  margin-top: 1.25rem;
+}
+.champion-guide-revision-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #7583a0;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Referencia editorial secundaria — no otra card grande: una tira fina con
+   acento de borde, no una caja con su propio fondo/padding generoso. */
 .champion-tier-status {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.35rem;
   align-items: flex-start;
-  max-width: 32rem;
-  margin-top: 2.5rem;
-  padding: 0.9rem 1.15rem;
-  border: 1px solid rgb(255 255 255 / 10%);
-  border-radius: 2px;
+  max-width: 30rem;
+  margin-top: 1.75rem;
+  padding: 0.15rem 0 0.15rem 0.9rem;
+  border-left: 2px solid rgb(214 181 107 / 35%);
   color: inherit;
   text-decoration: none;
-  transition:
-    border-color 0.2s ease,
-    transform 0.2s ease;
+  transition: border-color 0.2s ease;
+}
+.champion-tier-status-label {
+  color: #7583a0;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 .champion-tier-status-heading {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.55rem;
 }
 .champion-tier-status-heading strong {
   color: white;
-  font-size: 1.05rem;
+  font-size: 0.95rem;
 }
 .champion-tier-status-patch {
   color: #7583a0;
-  font-size: 0.8rem;
+  font-size: 0.76rem;
 }
 .champion-tier-status-verdict {
-  font-size: 0.9rem;
-  line-height: 1.6;
-  color: #b9c2d0;
+  font-size: 0.85rem;
+  line-height: 1.55;
+  color: #9aa5b8;
 }
 .champion-tier-status-link {
   color: #7583a0;
-  font-size: 0.8rem;
+  font-size: 0.74rem;
   font-weight: 700;
 }
 .tier-badge[data-tier='pending'] {
@@ -6755,16 +6790,15 @@ body[data-home-state='near-goal'] .environment-rays {
 }
 @media (hover: hover) {
   .champion-tier-status:hover {
-    border-color: rgb(214 181 107 / 45%);
-    transform: translateY(-2px);
+    border-left-color: rgb(214 181 107 / 75%);
   }
 }
 
 .champion-profile {
   display: grid;
-  gap: 2.5rem;
-  margin-top: 3rem;
-  padding-top: 2.5rem;
+  gap: 1.9rem;
+  margin-top: 2.25rem;
+  padding-top: 1.9rem;
   border-top: 1px solid rgb(255 255 255 / 8%);
 }
 .champion-profile-copy h2 {
@@ -6773,22 +6807,21 @@ body[data-home-state='near-goal'] .environment-rays {
   color: white;
 }
 .champion-profile-copy h3 {
-  margin-top: 1.5rem;
+  margin-top: 1.25rem;
   font-size: 1.1rem;
   font-weight: 700;
   color: white;
 }
 .champion-profile-copy p {
-  margin-top: 0.75rem;
+  margin-top: 0.6rem;
   max-width: 42rem;
   font-size: 1rem;
-  line-height: 1.75;
+  line-height: 1.7;
   color: #b9c2d0;
 }
 .champion-profile-take {
-  padding: 1.5rem;
+  padding: 1.1rem 1.25rem;
   border-left: 2px solid #d6b56b;
-  background: rgb(255 255 255 / 2%);
 }
 .champion-profile-verdict {
   margin-top: 0.6rem;
@@ -6883,16 +6916,14 @@ body[data-home-state='near-goal'] .environment-rays {
 @media (min-width: 1100px) {
   .champion-quick-facts {
     display: block;
-    padding: 1.2rem 1.2rem 1.4rem;
-    border: 1px solid rgb(255 255 255 / 8%);
-    border-radius: 0.75rem;
-    background: rgb(255 255 255 / 2%);
+    padding: 0 0 0.3rem 0.9rem;
+    border-left: 1px solid rgb(255 255 255 / 10%);
   }
   .champion-quick-facts dl {
     display: flex;
     flex-direction: column;
-    gap: 0.9rem;
-    margin-top: 0.9rem;
+    gap: 0.75rem;
+    margin-top: 0.8rem;
   }
   .champion-quick-facts dt {
     font-size: 0.62rem;
@@ -7394,15 +7425,21 @@ body[data-home-state='near-goal'] .environment-rays {
 /* Build */
 .build-block-list {
   display: grid;
-  gap: 2.5rem;
+  gap: 1.75rem;
 }
 .build-block {
-  padding: 1.75rem;
+  padding: 1.35rem 1.5rem;
   border: 1px solid rgb(255 255 255 / 8%);
   background: rgb(255 255 255 / 1.5%);
 }
 .build-block[data-variant='situational'] {
   border-style: dashed;
+}
+/* La ruta personal no necesita el mismo peso visual que la principal — se
+   entiende igual de bien un poco más pequeña y sin blanco puro. */
+.build-block[data-variant='situational'] .build-block-header h4 {
+  font-size: 1.05rem;
+  color: #dce4f0;
 }
 .build-block-badges {
   display: flex;
@@ -7422,35 +7459,75 @@ body[data-home-state='near-goal'] .environment-rays {
   font-weight: 700;
   color: white;
 }
+/* Primera capa de lectura: la ruta core de un vistazo, antes de bajar a
+   objeto por objeto. Mismos nombres que "Objetos clave" más abajo. */
+.build-block-route {
+  margin-top: 0.3rem;
+  color: #b9c2d0;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
 /* Callout, no solo texto en cursiva: la diferencia entre "recomendación
    general" y "preferencia personal" debe notarse incluso sin distinguir el
    color del borde. */
 .build-block-context {
-  margin-top: 0.85rem;
-  padding: 0.85rem 1rem;
+  margin-top: 0.75rem;
+  padding: 0.7rem 0.9rem;
   border: 1px solid rgb(75 163 255 / 25%);
   border-left: 2px solid #4ba3ff;
   background: rgb(75 163 255 / 5%);
   color: #b9c2d0;
-  font-size: 0.88rem;
-  line-height: 1.6;
+  font-size: 0.85rem;
+  line-height: 1.55;
 }
 .build-block-section {
-  margin-top: 1.75rem;
+  margin-top: 1.35rem;
 }
 .build-block-section h5 {
   color: #7583a0;
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 .build-block-section > p {
   max-width: 42rem;
-  margin-top: 0.6rem;
+  margin-top: 0.5rem;
   color: #9aa5b8;
-  font-size: 0.88rem;
-  line-height: 1.65;
+  font-size: 0.86rem;
+  line-height: 1.6;
+}
+/* Resumen de la build: profundidad opcional, no compite con la ruta core
+   que ya se lee arriba. Mismo mecanismo nativo de <details> que el resto
+   del sitio, con sus propias reglas para no chocar con los estilos de
+   EditorialTakeBlock (compartido con Sinergias/Matchups/Runas). */
+.build-block-summary {
+  margin-top: 1rem;
+}
+.build-block-summary summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: #4ba3ff;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  list-style: none;
+}
+.build-block-summary summary::-webkit-details-marker {
+  display: none;
+}
+.build-block-summary summary [data-state='open'] {
+  display: none;
+}
+.build-block-summary[open] summary [data-state='closed'] {
+  display: none;
+}
+.build-block-summary[open] summary [data-state='open'] {
+  display: inline;
+}
+.build-block-summary .editorial-take-block {
+  margin-top: 0.75rem;
 }
 .build-skill-order {
   display: flex;
@@ -7476,8 +7553,8 @@ body[data-home-state='near-goal'] .environment-rays {
 
 .build-item-grid {
   display: grid;
-  gap: 1.25rem;
-  margin-top: 1rem;
+  gap: 0.85rem;
+  margin-top: 0.85rem;
   padding: 0;
   list-style: none;
 }
@@ -7487,7 +7564,7 @@ body[data-home-state='near-goal'] .environment-rays {
   }
 }
 .build-item-card {
-  padding: 1.1rem;
+  padding: 0.85rem 1rem;
   border: 1px solid rgb(255 255 255 / 8%);
   background: rgb(255 255 255 / 1.5%);
 }
@@ -7497,26 +7574,29 @@ body[data-home-state='near-goal'] .environment-rays {
   align-items: center;
   gap: 0.75rem;
 }
+/* Los iconos ganan protagonismo: son el ancla visual de cada objeto, no un
+   detalle más pequeño que el propio nombre. */
 .build-item-card-header img {
-  border-radius: 2px;
+  border-radius: 3px;
 }
 .build-item-card-icon-placeholder {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 48px;
-  height: 48px;
+  width: 56px;
+  height: 56px;
   flex-shrink: 0;
   border: 1px solid rgb(255 255 255 / 12%);
-  border-radius: 2px;
+  border-radius: 3px;
   color: #9aa5b8;
   font-weight: 800;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
 }
 .build-item-card-icon-placeholder--small {
   width: 28px;
   height: 28px;
   font-size: 0.75rem;
+  border-radius: 2px;
 }
 .build-item-card-name {
   color: white;
@@ -7532,15 +7612,18 @@ body[data-home-state='near-goal'] .environment-rays {
 }
 .build-item-card-reasoning {
   max-width: 42rem;
-  margin-top: 0.85rem;
-  font-size: 0.9rem;
-  line-height: 1.65;
+  margin-top: 0.6rem;
+  font-size: 0.87rem;
+  line-height: 1.6;
   color: #9aa5b8;
+}
+.build-item-card-traits-toggle {
+  margin-top: 0.5rem;
 }
 .build-item-card-traits {
   display: grid;
   gap: 1rem;
-  margin-top: 0.5rem;
+  margin-top: 0.6rem;
 }
 @media (min-width: 480px) {
   .build-item-card-traits {
@@ -7574,10 +7657,10 @@ body[data-home-state='near-goal'] .environment-rays {
 /* Runas */
 .rune-block-list {
   display: grid;
-  gap: 2.5rem;
+  gap: 1.75rem;
 }
 .rune-block {
-  padding: 1.75rem;
+  padding: 1.35rem 1.5rem;
   border: 1px solid rgb(255 255 255 / 8%);
   background: rgb(255 255 255 / 1.5%);
 }
@@ -7594,7 +7677,7 @@ body[data-home-state='near-goal'] .environment-rays {
   color: white;
 }
 .rune-block-tree {
-  margin-top: 1.75rem;
+  margin-top: 1.25rem;
 }
 .rune-choice-list {
   display: grid;
@@ -7879,11 +7962,9 @@ body[data-home-state='near-goal'] .environment-rays {
   font-style: italic;
 }
 .champion-match-history-empty {
-  padding: 1.5rem;
-  border: 1px dashed rgb(255 255 255 / 14%);
-  text-align: center;
+  padding: 0.85rem 1.1rem;
   color: #7583a0;
-  font-size: 0.88rem;
+  font-size: 0.85rem;
 }
 
 @media (prefers-reduced-motion: reduce) {
