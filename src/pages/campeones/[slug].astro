@@ -18,9 +18,12 @@ import EditorialHistoryTimeline from '../../components/laboratory/champion/Edito
 import ChampionGuideToc from '../../components/laboratory/champion/ChampionGuideToc.astro';
 import ChampionQuickFacts from '../../components/laboratory/champion/ChampionQuickFacts.astro';
 import ChampionMatchHistory from '../../components/laboratory/champion/ChampionMatchHistory.astro';
+import ChampionRelatedVideos from '../../components/laboratory/champion/ChampionRelatedVideos.astro';
 import EditorialCallout from '../../components/laboratory/EditorialCallout.astro';
 import AskTidusssPrompt from '../../components/AskTidusssPrompt.astro';
 import { PREGUNTA_LUCIAN_SUGGESTIONS } from '../../data/pregunta';
+import { videoContentLinks } from '../../config/video-content-links';
+import { resolvedVideoContent } from '../../lib/resolved-video-content';
 import {
   buildLabRegistry,
   getChampionKnowledge,
@@ -69,6 +72,7 @@ const registry = buildLabRegistry({
   matchups: leagueLaboratoryMatchups,
   synergies: leagueLaboratorySynergies,
   concepts: leagueLaboratoryConcepts,
+  videoLinks: videoContentLinks,
 });
 
 const knowledge = getChampionKnowledge(registry, catalogEntry.id);
@@ -111,6 +115,19 @@ const partnersFor = (championIds: readonly string[]) =>
       const entry = championCatalog.find((candidate) => candidate.id === id);
       return entry ? [entry] : [];
     });
+
+// Vídeos relacionados: `knowledge.videos` ya filtra la metadata editorial
+// por championId (mismo patrón que builds/matchups/sinergias); aquí solo
+// se cruza con los datos REALES ya resueltos una vez en build time
+// (`resolvedVideoContent`) — nunca se inventa título/miniatura/duración,
+// y si un vídeo no se pudo resolver (sin clave, fallo de red), simplemente
+// no aparece, en vez de romper la página. Más recientes primero.
+const videoIdsForChampion = new Set(
+  (knowledge?.videos ?? []).map((link) => link.youtubeVideoId),
+);
+const videosForPage = resolvedVideoContent
+  .filter((video) => videoIdsForChampion.has(video.id))
+  .sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
 
 // Estado real en la Tier List: mismo dato que ya usa `ChampionTierStatus`,
 // solo resolviendo aquí el parche vigente de esa edición (26.17) — un dato
@@ -188,6 +205,7 @@ const tocEntries = hasProfile
       { id: 'build', label: 'Build', show: orderedBuilds.length > 0 },
       { id: 'runas', label: 'Runas', show: (knowledge?.runePages.length ?? 0) > 0 },
       { id: 'partidas', label: 'Partidas', show: true },
+      { id: 'videos', label: 'Vídeos', show: videosForPage.length > 0 },
       { id: 'matchups', label: 'Matchups', show: matchups.length > 0 },
       { id: 'sinergias', label: 'Sinergias', show: synergies.length > 0 },
       {
@@ -396,6 +414,20 @@ const structuredData = hasProfile
             <h3 id="partidas-heading">Partidas donde aparece</h3>
             <ChampionMatchHistory championName={catalogEntry.name} />
           </div>
+
+          {
+            /* Fuera del `hasProfile`: Jhin/Ashe/Sivir/Twitch no tienen
+               perfil curado en `adcLabChampions`, pero sí pueden tener
+               vídeos reales conectados — igual criterio que Partidas,
+               justo arriba. */
+          }
+          <ChampionKnowledgeSection
+            id="videos"
+            title="Vídeos relacionados"
+            hasContent={videosForPage.length > 0}
+          >
+            <ChampionRelatedVideos videos={videosForPage} />
+          </ChampionKnowledgeSection>
 
           {hasProfile && (
           <>

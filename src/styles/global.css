@@ -7037,6 +7037,31 @@ body[data-home-state='near-goal'] .environment-rays {
   line-height: 1.7;
 }
 
+/* Vídeos relacionados: reutiliza tal cual las tarjetas ya existentes de
+   ContentSection (`.content-grid`/`.content-grid-card`, Home) — sin
+   inventar otro diseño de tarjeta de YouTube. Solo el disclosure de "ver
+   más" es propio de esta sección, mismo idioma visual que el resto de la
+   guía (`.editorial-take-details`/`.build-block-summary`). */
+.champion-related-videos-more {
+  margin-top: 0.85rem;
+}
+.champion-related-videos-more summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: #4ba3ff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  list-style: none;
+}
+.champion-related-videos-more summary::-webkit-details-marker {
+  display: none;
+}
+.champion-related-videos-more .champion-related-videos-grid {
+  margin-top: 0.85rem;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .champion-tier-status {
     transition: none;

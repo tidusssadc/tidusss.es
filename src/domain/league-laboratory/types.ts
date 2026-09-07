@@ -1,3 +1,5 @@
+import type { VideoContentLink } from '../../config/video-content-links';
+
 export type Role = 'TOP' | 'JUNGLE' | 'MIDDLE' | 'BOTTOM' | 'UTILITY';
 
 export type TierGrade = 'S+' | 'S' | 'A' | 'B' | 'C' | 'D';
@@ -392,6 +394,8 @@ export interface ChampionKnowledge {
   guides: readonly Guide[];
   concepts: readonly Concept[];
   tierListAppearances: readonly { tierList: TierList; entry: TierListEntry }[];
+  /** Vídeos reales conectados con este campeón — ver `config/video-content-links.ts`. Solo metadata editorial; el título/miniatura/duración reales se resuelven aparte contra `YouTubeVideo`. */
+  videos: readonly VideoContentLink[];
 }
 
 export interface PatchKnowledge {

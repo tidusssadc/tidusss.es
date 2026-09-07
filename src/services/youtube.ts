@@ -260,6 +260,47 @@ export const getYouTubeChannel = async (
   };
 };
 
+/**
+ * Núcleo compartido de mapeo `videos.list` → `YouTubeVideo[]` — usado tanto
+ * por "los N más recientes" (`getLatestFromYouTubeApi`) como por "estos ids
+ * concretos" (`getVideoDetailsByIds`). Un único sitio decide qué es un
+ * Short, cómo se arma la URL y qué miniatura se prioriza, para que ambos
+ * caminos nunca puedan divergir en el criterio.
+ */
+const mapVideoDetails = (details: YouTubeDetailsResponse): YouTubeVideo[] =>
+  (details.items ?? []).flatMap((item): YouTubeVideo[] => {
+    if (!isYouTubeVideoId(item.id) || !item.snippet?.title) return [];
+    const durationSeconds = item.contentDetails?.duration
+      ? parseIsoDuration(item.contentDetails.duration)
+      : null;
+    // La API no expone un indicador de Shorts; la duración es metadata editorial.
+    const isShort = durationSeconds !== null && durationSeconds <= 180;
+    const thumbnails = item.snippet.thumbnails;
+    return [
+      {
+        id: item.id,
+        title: item.snippet.title,
+        publishedAt: item.snippet.publishedAt ?? '',
+        thumbnailUrl:
+          thumbnails?.maxres?.url ??
+          thumbnails?.standard?.url ??
+          thumbnails?.high?.url ??
+          thumbnails?.medium?.url ??
+          thumbnails?.default?.url ??
+          `https://i.ytimg.com/vi/${item.id}/hqdefault.jpg`,
+        durationSeconds,
+        durationLabel:
+          durationSeconds === null ? null : formatDuration(durationSeconds),
+        viewCount: asCount(item.statistics?.viewCount),
+        isShort,
+        contentType: isShort ? 'short' : 'video',
+        url: isShort
+          ? `https://www.youtube.com/shorts/${item.id}`
+          : `https://www.youtube.com/watch?v=${item.id}`,
+      },
+    ];
+  });
+
 export const getLatestFromYouTubeApi = async (
   apiKey: string,
   limit = 8,
@@ -294,38 +335,7 @@ export const getLatestFromYouTubeApi = async (
     `https://www.googleapis.com/youtube/v3/videos?${detailsParams}`,
     'videos.list',
   );
-  const videos = (details.items ?? []).flatMap((item): YouTubeVideo[] => {
-    if (!isYouTubeVideoId(item.id) || !item.snippet?.title) return [];
-    const durationSeconds = item.contentDetails?.duration
-      ? parseIsoDuration(item.contentDetails.duration)
-      : null;
-    // La API no expone un indicador de Shorts; la duración es metadata editorial.
-    const isShort = durationSeconds !== null && durationSeconds <= 180;
-    const thumbnails = item.snippet.thumbnails;
-    return [
-      {
-        id: item.id,
-        title: item.snippet.title,
-        publishedAt: item.snippet.publishedAt ?? '',
-        thumbnailUrl:
-          thumbnails?.maxres?.url ??
-          thumbnails?.standard?.url ??
-          thumbnails?.high?.url ??
-          thumbnails?.medium?.url ??
-          thumbnails?.default?.url ??
-          `https://i.ytimg.com/vi/${item.id}/hqdefault.jpg`,
-        durationSeconds,
-        durationLabel:
-          durationSeconds === null ? null : formatDuration(durationSeconds),
-        viewCount: asCount(item.statistics?.viewCount),
-        isShort,
-        contentType: isShort ? 'short' : 'video',
-        url: isShort
-          ? `https://www.youtube.com/shorts/${item.id}`
-          : `https://www.youtube.com/watch?v=${item.id}`,
-      },
-    ];
-  });
+  const videos = mapVideoDetails(details);
   if (!videos.length)
     throw new YouTubeServiceError(
       'YOUTUBE_INVALID_RESPONSE',
@@ -335,6 +345,45 @@ export const getLatestFromYouTubeApi = async (
   return {
     videos,
     state: videos.length === videoIds.length ? 'available' : 'partial',
+    updatedAt,
+  };
+};
+
+/**
+ * Vídeos concretos por id — mismo `videos.list` que ya usa
+ * `getLatestFromYouTubeApi` para resolver detalles, pero sin pasar antes
+ * por `playlistItems.list`: no necesitamos "los más recientes", ya
+ * conocemos los ids exactos (los mismos que ya cita
+ * `config/video-content-links.ts`). Reutiliza la API ya integrada, no una
+ * nueva — mismo endpoint, mismas credenciales, mismo mapeo.
+ */
+export const getVideoDetailsByIds = async (
+  apiKey: string,
+  videoIds: readonly string[],
+): Promise<YouTubeFeedResult> => {
+  const updatedAt = new Date().toISOString();
+  if (!apiKey)
+    throw new YouTubeServiceError(
+      'YOUTUBE_NOT_CONFIGURED',
+      'configuration',
+      503,
+    );
+  const validIds = videoIds.filter(isYouTubeVideoId);
+  if (!validIds.length) return { videos: [], state: 'empty', updatedAt };
+
+  const detailsParams = new URLSearchParams({
+    part: 'snippet,contentDetails,statistics',
+    id: validIds.join(','),
+    key: apiKey,
+  });
+  const details = await requestJson<YouTubeDetailsResponse>(
+    `https://www.googleapis.com/youtube/v3/videos?${detailsParams}`,
+    'videos.list',
+  );
+  const videos = mapVideoDetails(details);
+  return {
+    videos,
+    state: videos.length === validIds.length ? 'available' : 'partial',
     updatedAt,
   };
 };

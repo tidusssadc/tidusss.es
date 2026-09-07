@@ -1,3 +1,4 @@
+import type { VideoContentLink } from '../../config/video-content-links';
 import type {
   Build,
   ChampionCatalogEntry,
@@ -34,6 +35,8 @@ export interface LabRegistry {
   articles: readonly KnowledgeArticle[];
   tierLists: readonly TierList[];
   metaStates: readonly MetaState[];
+  /** Metadata editorial de vídeos reales — ver `config/video-content-links.ts`. */
+  videoLinks: readonly VideoContentLink[];
 }
 
 /**
@@ -54,6 +57,7 @@ export const buildLabRegistry = (seed: Partial<LabRegistry>): LabRegistry => ({
   articles: seed.articles ?? [],
   tierLists: seed.tierLists ?? [],
   metaStates: seed.metaStates ?? [],
+  videoLinks: seed.videoLinks ?? [],
 });
 
 export const getCatalogEntry = (registry: LabRegistry, id: LabChampionId) =>
@@ -162,6 +166,9 @@ export const getChampionKnowledge = (
       );
       return entry ? [{ tierList, entry }] : [];
     }),
+    videos: registry.videoLinks.filter((link) =>
+      link.championIds?.includes(id),
+    ),
   };
 };
 

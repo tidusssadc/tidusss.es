@@ -1,0 +1,63 @@
+---
+import type { YouTubeVideo } from '../../../types/content';
+
+interface Props {
+  /** Ya resueltos contra `YouTubeVideo` real — nunca título/miniatura inventados aquí. */
+  videos: readonly YouTubeVideo[];
+}
+const { videos } = Astro.props;
+
+const visible = videos.slice(0, 3);
+const rest = videos.slice(3);
+---
+
+{
+  visible.length > 0 && (
+    <div class="content-grid champion-related-videos-grid">
+      {visible.map((video) => (
+        <a
+          class="content-grid-card"
+          href={video.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={`Ver en YouTube: ${video.title}`}
+        >
+          <span class="content-grid-media">
+            <img src={video.thumbnailUrl} alt="" loading="lazy" decoding="async" />
+            {video.durationLabel && (
+              <span class="content-grid-duration">{video.durationLabel}</span>
+            )}
+          </span>
+          <strong>{video.title}</strong>
+        </a>
+      ))}
+    </div>
+  )
+}
+
+{
+  rest.length > 0 && (
+    <details class="champion-related-videos-more">
+      <summary>Ver más vídeos ({rest.length})</summary>
+      <div class="content-grid champion-related-videos-grid">
+        {rest.map((video) => (
+          <a
+            class="content-grid-card"
+            href={video.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`Ver en YouTube: ${video.title}`}
+          >
+            <span class="content-grid-media">
+              <img src={video.thumbnailUrl} alt="" loading="lazy" decoding="async" />
+              {video.durationLabel && (
+                <span class="content-grid-duration">{video.durationLabel}</span>
+              )}
+            </span>
+            <strong>{video.title}</strong>
+          </a>
+        ))}
+      </div>
+    </details>
+  )
+}
