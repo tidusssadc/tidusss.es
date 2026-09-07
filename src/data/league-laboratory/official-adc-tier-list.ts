@@ -79,12 +79,13 @@ export const officialAdcTierListEntries: TierListEntry[] = [
   }),
 
   // --- A · fuertes, un peldaño por debajo del núcleo superior ---
-  entry('champion:xayah', 'A', {
+  entry('champion:caitlyn', 'A', {
     editorialTake: {
-      verdict: 'Muy fuerte actualmente. Yuntal le sienta genial.',
+      verdict:
+        'Confirmada en la Tier List de Tidusss para este parche, en tier A.',
       reasoning:
-        'Con Rakan al lado puede ser especialmente potente. Se puede jugar a ciegas sin problema, aunque no la considero necesariamente el mejor blind pick que hay.',
-      confidence: 'high',
+        'Su posición se ha verificado directamente contra la grabación original del vídeo — Tidusss todavía no ha detallado en el canal por qué la valora así, así que este veredicto se limita a la clasificación confirmada, sin inventar un razonamiento que no ha dado.',
+      confidence: 'low',
       lastReviewedPatch,
     },
   }),
@@ -135,16 +136,6 @@ export const officialAdcTierListEntries: TierListEntry[] = [
       verdict:
         'Escala bien y puede pegar muchísimo más adelante, pero personalmente no me convence tanto como otros hipercarries que tengo disponibles.',
       reasoning: 'No la considero de las mejores opciones del meta actual.',
-      confidence: 'medium',
-      lastReviewedPatch,
-    },
-  }),
-  entry('champion:miss-fortune', 'B', {
-    editorialTake: {
-      verdict:
-        'Jugable, y capaz de snowballear muchísimo si la partida se pone de su lado.',
-      reasoning:
-        'Puede funcionar especialmente bien con determinadas sinergias de engage. Pero el meta actual no es el que más le favorece, y no la considero de las mejores opciones ahora mismo.',
       confidence: 'medium',
       lastReviewedPatch,
     },
@@ -200,18 +191,7 @@ export const officialAdcTierListEntries: TierListEntry[] = [
       lastReviewedPatch,
     },
   }),
-
-  // --- C · su potencial no compensa lo que pide el meta actual ---
-  entry('champion:ezreal', 'C', {
-    editorialTake: {
-      verdict: 'Uno de mis favoritos, pero el meta actual no le favorece.',
-      reasoning:
-        'Los objetos que se llevan ahora mismo no le benefician especialmente. Un especialista puede sacarle muchísimo rendimiento, pero eso no significa que el campeón esté fuerte — cuando juego contra un Ezreal ahora mismo no suele ser algo que me preocupe especialmente desde línea.',
-      confidence: 'high',
-      lastReviewedPatch,
-    },
-  }),
-  entry('champion:kog-maw', 'C', {
+  entry('champion:kog-maw', 'B', {
     editorialTake: {
       verdict: 'En SoloQ general prefiero otros hipercarries.',
       reasoning:
@@ -221,7 +201,7 @@ export const officialAdcTierListEntries: TierListEntry[] = [
     },
     weaknesses: ['Problemas claros de movilidad'],
   }),
-  entry('champion:samira', 'C', {
+  entry('champion:samira', 'B', {
     editorialTake: {
       verdict:
         'No está mal, es jugable, pero ahora mismo no destaca especialmente.',
@@ -230,9 +210,29 @@ export const officialAdcTierListEntries: TierListEntry[] = [
       lastReviewedPatch,
     },
   }),
+  entry('champion:aphelios', 'B', {
+    editorialTake: {
+      verdict:
+        'Puede hacer auténticas barbaridades cuando consigue varios objetos y una buena definitiva. Aun así, no lo recomendaría ahora mismo.',
+      reasoning:
+        'El techo es altísimo, pero llegar hasta ahí es demasiado exigente para lo que pide el meta actual.',
+      confidence: 'medium',
+      lastReviewedPatch,
+    },
+  }),
 
-  // --- D · no las recomienda ahora mismo ---
-  entry('champion:vayne', 'D', {
+  // --- C · su potencial no compensa lo que pide el meta actual ---
+  entry('champion:miss-fortune', 'C', {
+    editorialTake: {
+      verdict:
+        'Jugable, y capaz de snowballear muchísimo si la partida se pone de su lado.',
+      reasoning:
+        'Puede funcionar especialmente bien con determinadas sinergias de engage. Pero el meta actual no es el que más le favorece, y no la considero de las mejores opciones ahora mismo.',
+      confidence: 'medium',
+      lastReviewedPatch,
+    },
+  }),
+  entry('champion:vayne', 'C', {
     editorialTake: {
       verdict: 'No la recomendaría ahora mismo.',
       reasoning:
@@ -241,6 +241,17 @@ export const officialAdcTierListEntries: TierListEntry[] = [
       lastReviewedPatch,
     },
   }),
+  entry('champion:ezreal', 'C', {
+    editorialTake: {
+      verdict: 'Uno de mis favoritos, pero el meta actual no le favorece.',
+      reasoning:
+        'Los objetos que se llevan ahora mismo no le benefician especialmente. Un especialista puede sacarle muchísimo rendimiento, pero eso no significa que el campeón esté fuerte — cuando juego contra un Ezreal ahora mismo no suele ser algo que me preocupe especialmente desde línea.',
+      confidence: 'high',
+      lastReviewedPatch,
+    },
+  }),
+
+  // --- D · no las recomienda ahora mismo ---
   entry('champion:smolder', 'D', {
     editorialTake: {
       verdict:
@@ -259,18 +270,18 @@ export const officialAdcTierListEntries: TierListEntry[] = [
       lastReviewedPatch,
     },
   }),
-  entry('champion:aphelios', 'D', {
-    editorialTake: {
-      verdict:
-        'Puede hacer auténticas barbaridades cuando consigue varios objetos y una buena definitiva. Aun así, no lo recomendaría ahora mismo.',
-      reasoning:
-        'El techo es altísimo, pero llegar hasta ahí es demasiado exigente para lo que pide el meta actual.',
-      confidence: 'medium',
-      lastReviewedPatch,
-    },
-  }),
 
   // --- Counter · su valor depende del matchup, no de la escalera general ---
+  entry('champion:xayah', 'A', {
+    editorialTake: {
+      verdict: 'Muy fuerte actualmente. Yuntal le sienta genial.',
+      reasoning:
+        'Con Rakan al lado puede ser especialmente potente. Se puede jugar a ciegas sin problema, aunque no la considero necesariamente el mejor blind pick que hay.',
+      confidence: 'high',
+      lastReviewedPatch,
+    },
+    pickType: 'counter',
+  }),
   entry('champion:nilah', 'A', {
     editorialTake: {
       verdict:
