@@ -60,10 +60,10 @@ const recommendation = recommendations[(weekIndex + 1) % recommendations.length]
 // conceptos de Academia, matchups publicados) — no requieren ninguna
 // petición de red, así que se conocen y publican de inmediato. El objetivo
 // realmente protagonista (editorial, de canal o competitivo) se decide en
-// el cliente, combinando estos con LP/suscriptores/vídeos ya en vivo. ---
-const editorialGoals = resolveEditorialGoals().filter(
-  (goal) => goal.status === 'active',
-);
+// el cliente, combinando estos con LP/suscriptores/vídeos ya en vivo.
+// Se envían todos los estados (no solo activos) porque el cliente también
+// los usa para detectar hitos recién conseguidos y celebrarlos una vez. ---
+const editorialGoalsAll = resolveEditorialGoals();
 
 // --- Qué ha cambiado: los 3 más recientes del historial editorial real ---
 const recentUpdates = siteUpdates.slice(0, 3);
@@ -78,7 +78,7 @@ const latestUpdate = siteUpdates[0];
   data-today-module
   data-youtube-stats={integrationEndpoints.youtubeStats}
   data-riot={integrationEndpoints.riot}
-  data-editorial-goals={JSON.stringify(editorialGoals)}
+  data-editorial-goals={JSON.stringify(editorialGoalsAll)}
   data-update-title={latestUpdate.title}
   data-update-text={latestUpdate.description}
   data-update-href={latestUpdate.href}
@@ -137,6 +137,22 @@ const latestUpdate = siteUpdates[0];
       </a>
     </div>
 
+    <div
+      class="goal-celebration"
+      data-goal-celebration
+      role="status"
+      aria-live="polite"
+      hidden
+    >
+      <span aria-hidden="true">🎉</span>
+      <p>
+        Objetivo conseguido: <strong data-goal-celebration-title></strong>
+      </p>
+      <button type="button" data-goal-celebration-dismiss aria-label="Cerrar aviso">
+        ✕
+      </button>
+    </div>
+
     <div class="today-widgets">
       <div class="today-widget" data-today-widget="changes">
         <span class="today-widget-label">Qué ha cambiado</span>
@@ -180,6 +196,7 @@ const latestUpdate = siteUpdates[0];
     YOUTUBE_SUBSCRIBER_CHAIN,
     YOUTUBE_VIDEO_CHAIN,
     resolveChain,
+    selectNewlyCompletedGoal,
     selectPrimaryGoal,
   } from '../domain/goals';
   import type { ResolvedGoal } from '../domain/goals/types';
@@ -199,12 +216,15 @@ const latestUpdate = siteUpdates[0];
     });
 
     // --- Objetivos editoriales: ya resueltos en build time, sin fetch ---
-    let editorialGoals: ResolvedGoal[] = [];
+    let editorialGoalsAll: ResolvedGoal[] = [];
     try {
-      editorialGoals = JSON.parse(root.dataset.editorialGoals ?? '[]');
+      editorialGoalsAll = JSON.parse(root.dataset.editorialGoals ?? '[]');
     } catch {
-      editorialGoals = [];
+      editorialGoalsAll = [];
     }
+    const editorialGoals = editorialGoalsAll.filter(
+      (goal) => goal.status === 'active',
+    );
     if (editorialGoals.length)
       publishHomeSignal({
         type: 'editorial-progress',
@@ -245,6 +265,46 @@ const latestUpdate = siteUpdates[0];
       strip.hidden = false;
     };
 
+    // --- Celebración discreta: solo la primera vez que ESTE navegador ve un
+    // hito nuevo como conseguido — nunca al primer visitar (los hitos ya
+    // conseguidos entonces no son "recién conseguidos" para nadie), y nunca
+    // se repite para el mismo hito. El registro GLOBAL de qué está
+    // conseguido nunca depende de esto: se recalcula siempre contra el dato
+    // real (Riot/YouTube/catálogo editorial); localStorage solo recuerda,
+    // por navegador, si ya se le mostró el aviso a esta persona. ---
+    const KNOWN_COMPLETED_KEY = 'tidusss:goals:known-completed';
+    const celebration = root.querySelector<HTMLElement>(
+      '[data-goal-celebration]',
+    );
+    const celebrateNewCompletions = (completed: ResolvedGoal[]) => {
+      let known: string[] | null;
+      try {
+        const raw = window.localStorage.getItem(KNOWN_COMPLETED_KEY);
+        known = raw ? JSON.parse(raw) : null;
+      } catch {
+        known = null;
+      }
+      const justCompleted = selectNewlyCompletedGoal(completed, known);
+      try {
+        window.localStorage.setItem(
+          KNOWN_COMPLETED_KEY,
+          JSON.stringify(completed.map((goal) => goal.id)),
+        );
+      } catch {
+        // Sin almacenamiento disponible (privado, cuota agotada...): la
+        // celebración simplemente no se muestra — nunca rompe la página.
+      }
+      if (!justCompleted || !celebration) return;
+      const title = celebration.querySelector('[data-goal-celebration-title]');
+      if (title) title.textContent = justCompleted.title;
+      celebration.hidden = false;
+    };
+    celebration
+      ?.querySelector('[data-goal-celebration-dismiss]')
+      ?.addEventListener('click', () => {
+        if (celebration) celebration.hidden = true;
+      });
+
     Promise.allSettled([
       fetch(root.dataset.riot!).then(
         (response) => response.json() as Promise<RiotPublicResponse>,
@@ -254,25 +314,34 @@ const latestUpdate = siteUpdates[0];
       ),
     ]).then(([riotResult, youtubeResult]) => {
       const liveGoals: ResolvedGoal[] = [];
-      if (riotResult.status === 'fulfilled' && riotResult.value.ok)
-        liveGoals.push(
-          ...resolveChain(
-            COMPETITIVE_LP_CHAIN,
-            riotResult.value.data.ranked.leaguePoints,
-          ).filter((goal) => goal.status === 'active'),
+      const completedGoals: ResolvedGoal[] = editorialGoalsAll.filter(
+        (goal) => goal.status === 'completed',
+      );
+      if (riotResult.status === 'fulfilled' && riotResult.value.ok) {
+        const resolvedLp = resolveChain(
+          COMPETITIVE_LP_CHAIN,
+          riotResult.value.data.ranked.leaguePoints,
         );
+        liveGoals.push(...resolvedLp.filter((goal) => goal.status === 'active'));
+        completedGoals.push(
+          ...resolvedLp.filter((goal) => goal.status === 'completed'),
+        );
+      }
       if (youtubeResult.status === 'fulfilled' && youtubeResult.value.ok) {
         const { subscriberCount, videoCount } = youtubeResult.value.data;
+        const resolvedSubs = resolveChain(YOUTUBE_SUBSCRIBER_CHAIN, subscriberCount);
+        const resolvedVideos = resolveChain(YOUTUBE_VIDEO_CHAIN, videoCount);
         liveGoals.push(
-          ...resolveChain(YOUTUBE_SUBSCRIBER_CHAIN, subscriberCount).filter(
-            (goal) => goal.status === 'active',
-          ),
-          ...resolveChain(YOUTUBE_VIDEO_CHAIN, videoCount).filter(
-            (goal) => goal.status === 'active',
-          ),
+          ...resolvedSubs.filter((goal) => goal.status === 'active'),
+          ...resolvedVideos.filter((goal) => goal.status === 'active'),
+        );
+        completedGoals.push(
+          ...resolvedSubs.filter((goal) => goal.status === 'completed'),
+          ...resolvedVideos.filter((goal) => goal.status === 'completed'),
         );
       }
       renderPrimaryGoal([...liveGoals, ...editorialGoals]);
+      celebrateNewCompletions(completedGoals);
     });
   }
 </script>

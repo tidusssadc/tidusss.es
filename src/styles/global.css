@@ -9743,6 +9743,60 @@ a.tool-card:focus-visible {
   color: #fff;
 }
 
+/* Celebración discreta de hito conseguido — un aviso puntual, no un modal */
+.goal-celebration {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-top: 1rem;
+  padding: 0.8rem 1rem;
+  border: 1px solid rgb(52 211 153 / 30%);
+  border-radius: 0.65rem;
+  background: rgb(52 211 153 / 8%);
+  animation: goal-celebration-rise 320ms ease;
+}
+.goal-celebration span[aria-hidden] {
+  flex: 0 0 auto;
+  font-size: 1.1rem;
+}
+.goal-celebration p {
+  flex: 1 1 auto;
+  margin: 0;
+  font-size: 0.85rem;
+  color: #d1fae5;
+}
+.goal-celebration p strong {
+  color: #fff;
+}
+.goal-celebration button {
+  flex: 0 0 auto;
+  padding: 0.3rem 0.5rem;
+  border: none;
+  background: none;
+  color: #9aa5b8;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.goal-celebration button:hover,
+.goal-celebration button:focus-visible {
+  color: #fff;
+}
+@keyframes goal-celebration-rise {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .goal-celebration {
+    animation: none;
+  }
+}
+
 .today-widgets {
   display: grid;
   gap: 1rem;
