@@ -1,6 +1,5 @@
 ---
 import type { EditorialReviewStatus, EditorialTake } from '../../domain/league-laboratory';
-import ConfidenceIndicator from './ConfidenceIndicator.astro';
 import TraitList from './TraitList.astro';
 
 interface Props {
@@ -27,31 +26,37 @@ const { take, reviewStatus, strengths, weaknesses, idealIf, watchFor, championHr
         <p class="editorial-take-verdict">{take.verdict}</p>
       </>
     ) : (
-      <details class="editorial-take-details" open>
-        <summary>El veredicto de Tidusss</summary>
+      <>
         <p class="editorial-take-verdict">{take.verdict}</p>
-        <p class="editorial-take-reasoning">{take.reasoning}</p>
-        {idealIf && (
-          <p class="editorial-take-hint editorial-take-hint--ideal">
-            <span>Ideal si</span>
-            {idealIf}
-          </p>
-        )}
-        {watchFor && (
-          <p class="editorial-take-hint editorial-take-hint--watch">
-            <span>Cuidado con</span>
-            {watchFor}
-          </p>
-        )}
-        <TraitList label="Fortalezas" items={strengths ?? []} />
-        <TraitList label="Debilidades" items={weaknesses ?? []} />
-        <ConfidenceIndicator confidence={take.confidence} />
-        {championHref && (
-          <a class="editorial-take-champion-link" href={championHref}>
-            Ver ficha del campeón <span aria-hidden="true">→</span>
-          </a>
-        )}
-      </details>
+        <div class="editorial-take-actions">
+          <details class="editorial-take-details">
+            <summary>Ver mi análisis</summary>
+            <div class="editorial-take-body">
+              <span class="editorial-take-label">El veredicto de Tidusss</span>
+              <p class="editorial-take-reasoning">{take.reasoning}</p>
+              {idealIf && (
+                <p class="editorial-take-hint editorial-take-hint--ideal">
+                  <span>Ideal si</span>
+                  {idealIf}
+                </p>
+              )}
+              {watchFor && (
+                <p class="editorial-take-hint editorial-take-hint--watch">
+                  <span>Cuidado con</span>
+                  {watchFor}
+                </p>
+              )}
+              <TraitList label="Fortalezas" items={strengths ?? []} />
+              <TraitList label="Debilidades" items={weaknesses ?? []} />
+            </div>
+          </details>
+          {championHref && (
+            <a class="editorial-take-champion-link" href={championHref}>
+              Ficha del campeón <span aria-hidden="true">→</span>
+            </a>
+          )}
+        </div>
+      </>
     )
   }
 </div>

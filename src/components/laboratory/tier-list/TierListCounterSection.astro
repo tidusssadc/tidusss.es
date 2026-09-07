@@ -20,7 +20,11 @@ const { entries, champions, role, dataDragonVersion } = Astro.props;
 
 {
   entries.length > 0 && (
-    <section class="tier-list-counter" aria-labelledby="tier-list-counter-heading">
+    <section
+      class="tier-list-counter"
+      data-tier="counter"
+      aria-labelledby="tier-list-counter-heading"
+    >
       <header>
         <h3 id="tier-list-counter-heading">Picks de counter</h3>
         <p>

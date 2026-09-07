@@ -2,8 +2,9 @@
 import TierBadge from '../TierBadge.astro';
 import type { TierGrade } from '../../../domain/league-laboratory';
 
+// Solo los tiers/categorías reales de la Tier List 26.17: S, Counter, A, B, C, D.
+// Sin S+ ni Pendientes — no forman parte de la clasificación publicada.
 const legend: { tier: TierGrade; description: string }[] = [
-  { tier: 'S+', description: 'Pick de referencia: la especialidad de Tidusss.' },
   { tier: 'S', description: 'Fuerte y fiable en la mayoría de las partidas.' },
   { tier: 'A', description: 'Sólido, con alguna condición para brillar.' },
   { tier: 'B', description: 'Viable, exige más precisión o contexto favorable.' },
@@ -14,8 +15,16 @@ const legend: { tier: TierGrade; description: string }[] = [
 
 <div class="tier-list-legend" aria-label="Leyenda de tiers">
   <ul>
+    <li>
+      <TierBadge tier={legend[0].tier} />
+      <span>{legend[0].description}</span>
+    </li>
+    <li>
+      <span class="lab-badge">Counter</span>
+      <span>Depende del matchup o de la composición rival, no de ser flojo.</span>
+    </li>
     {
-      legend.map(({ tier, description }) => (
+      legend.slice(1).map(({ tier, description }) => (
         <li>
           <TierBadge tier={tier} />
           <span>{description}</span>

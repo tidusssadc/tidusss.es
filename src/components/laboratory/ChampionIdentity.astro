@@ -1,14 +1,14 @@
 ---
 import type { ChampionCatalogEntry, Role } from '../../domain/league-laboratory';
 import { dataDragonUrls } from '../../lib/riot/datadragon';
-import RoleBadge from './RoleBadge.astro';
 
 interface Props {
   champion: ChampionCatalogEntry;
+  /** Ya se sobreentiende en esta Tier List ADC — no se muestra aquí, ver TierListSection/TierListCounterSection/TierListPendingSection. */
   role: Role;
   dataDragonVersion: string;
 }
-const { champion, role, dataDragonVersion } = Astro.props;
+const { champion, dataDragonVersion } = Astro.props;
 const iconUrl = dataDragonUrls(dataDragonVersion).champion(
   champion.dataDragonKey,
 );
@@ -16,8 +16,5 @@ const iconUrl = dataDragonUrls(dataDragonVersion).champion(
 
 <div class="champion-identity">
   <img src={iconUrl} width="56" height="56" loading="lazy" decoding="async" alt="" />
-  <div>
-    <strong>{champion.name}</strong>
-    <RoleBadge role={role} />
-  </div>
+  <strong>{champion.name}</strong>
 </div>

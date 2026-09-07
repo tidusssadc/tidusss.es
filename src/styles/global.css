@@ -6143,6 +6143,15 @@ body[data-home-state='near-goal'] .environment-rays {
   padding: 0;
   margin: 0;
 }
+@media (min-width: 768px) {
+  /* Usa el ancho disponible como una pared de campeones escaneable, en vez
+     de una lista de una sola columna — misma tarjeta compacta que móvil,
+     solo que ahora caben varias por fila. */
+  .tier-list-row ul {
+    grid-template-columns: repeat(auto-fill, minmax(21rem, 1fr));
+    align-items: start;
+  }
+}
 
 .tier-badge {
   display: inline-flex;
@@ -6200,12 +6209,6 @@ body[data-home-state='near-goal'] .environment-rays {
   border-color: rgb(255 255 255 / 14%);
   background: transparent;
 }
-@media (min-width: 768px) {
-  .tier-list-entry {
-    grid-template-columns: 14rem 1fr;
-    align-items: start;
-  }
-}
 
 .champion-identity {
   display: flex;
@@ -6219,10 +6222,6 @@ body[data-home-state='near-goal'] .environment-rays {
   display: block;
   color: white;
   font-size: 1.05rem;
-}
-.champion-identity .lab-badge {
-  margin-top: 0.35rem;
-  padding: 0.15rem 0.5rem;
 }
 
 /* Fila compacta siempre visible: icono + nombre + tier, sin depender de
@@ -6275,7 +6274,6 @@ body[data-home-state='near-goal'] .environment-rays {
   text-transform: uppercase;
 }
 .editorial-take-verdict {
-  margin-top: 0.6rem;
   font-size: 0.98rem;
   line-height: 1.6;
   color: #dce4f0;
@@ -6283,6 +6281,14 @@ body[data-home-state='near-goal'] .environment-rays {
 [data-review-status='placeholder'] .editorial-take-verdict {
   color: #7583a0;
   font-style: italic;
+}
+/* Acciones de segundo nivel: el toggle de análisis y la ficha del campeón
+   conviven en la misma fila, sin competir con el veredicto corto de arriba. */
+.editorial-take-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 1.25rem;
 }
 .editorial-take-details summary {
   display: inline-flex;
@@ -6304,6 +6310,16 @@ body[data-home-state='near-goal'] .environment-rays {
 .editorial-take-details[open] summary::after {
   content: '−';
 }
+.editorial-take-label {
+  display: block;
+  margin-top: 0.6rem;
+  margin-bottom: 0.35rem;
+  color: #7583a0;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
 .editorial-take-details p {
   margin-top: 0.6rem;
   font-size: 0.88rem;
@@ -6312,6 +6328,7 @@ body[data-home-state='near-goal'] .environment-rays {
 }
 .editorial-take-reasoning {
   color: #7583a0;
+  margin-top: 0 !important;
 }
 .editorial-take-hint {
   padding: 0.5rem 0.7rem !important;
@@ -6338,7 +6355,6 @@ body[data-home-state='near-goal'] .environment-rays {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  margin-top: 0.9rem;
   color: #4ba3ff;
   font-size: 0.82rem;
   font-weight: 700;
@@ -6390,6 +6406,12 @@ body[data-home-state='near-goal'] .environment-rays {
   list-style: none;
   padding: 0;
 }
+@media (min-width: 768px) {
+  .tier-list-pending ul {
+    grid-template-columns: repeat(auto-fill, minmax(21rem, 1fr));
+    align-items: start;
+  }
+}
 
 .tier-list-counter {
   margin-top: 2.5rem;
@@ -6413,6 +6435,12 @@ body[data-home-state='near-goal'] .environment-rays {
   margin-top: 1.25rem;
   list-style: none;
   padding: 0;
+}
+@media (min-width: 768px) {
+  .tier-list-counter ul {
+    grid-template-columns: repeat(auto-fill, minmax(21rem, 1fr));
+    align-items: start;
+  }
 }
 
 .tier-list-picks {
@@ -6481,6 +6509,18 @@ body[data-home-state='near-goal'] .environment-rays {
 .tier-list-pick-card a:hover,
 .tier-list-pick-card a:focus-visible {
   color: #7fbcff;
+}
+
+/* Contenido de contexto, no de producto: parche/rol/cola, nota de vigencia
+   y metodología. Vive después de la Tier List a propósito — el campeón
+   llega primero, esto es lo último que alguien necesita leer. */
+.tier-list-context {
+  margin-top: 3rem;
+  padding-top: 2.5rem;
+  border-top: 1px solid rgb(255 255 255 / 8%);
+}
+.tier-list-context .laboratory-metadata {
+  margin-top: 0;
 }
 
 /* Secundaria a propósito: el producto principal sigue siendo la Tier List

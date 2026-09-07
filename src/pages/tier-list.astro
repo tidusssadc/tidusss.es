@@ -72,7 +72,9 @@ const placeholderEntries = allEntries.filter(
 const ladderEntries = reviewedEntries.filter((entry) => entry.pickType !== 'counter');
 const counterEntries = reviewedEntries.filter((entry) => entry.pickType === 'counter');
 
-const tierOrder: TierGrade[] = ['S+', 'S', 'A', 'B', 'C', 'D'];
+// Solo los tiers reales de la Tier List 26.17 — sin S+, que no forma parte
+// de la clasificación publicada (ver TierListLegend/TierListFilters).
+const tierOrder: TierGrade[] = ['S', 'A', 'B', 'C', 'D'];
 const entriesByTier = tierOrder.map((tier) => ({
   tier,
   entries: ladderEntries.filter((entry) => entry.tier === tier),
@@ -110,33 +112,6 @@ const pageDescription = patchLabel
             <strong>Tidusss</strong>
             <span>Master EUW · ADC</span>
           </div>
-          {
-            patch && (
-              <LaboratoryMetadata
-                patch={patch}
-                role={role}
-                queue={tierList?.queue}
-                updatedAt={tierList?.publishedAt}
-              />
-            )
-          }
-          {
-            basedOnPatch && (
-              <p class="tier-list-based-on">
-                Clasificación sin cambios respecto al parche {basedOnPatch.label}.
-              </p>
-            )
-          }
-          {
-            tierList?.methodologyNote && (
-              <EditorialCallout icon="💬" label="Cómo hago esta Tier List" variant="take">
-                {tierList.methodologyNote}
-              </EditorialCallout>
-            )
-          }
-          <div class="tier-list-header-actions">
-            <ShareLinkButton label="Compartir Tier List" />
-          </div>
         </header>
 
         {
@@ -151,7 +126,7 @@ const pageDescription = patchLabel
           tierList ? (
             <>
               <TierListLegend />
-              <TierListFilters />
+              <TierListFilters hasPendingEntries={placeholderEntries.length > 0} />
               <div class="tier-list-grid" data-tier-list-grid>
                 {entriesByTier.map(({ tier, entries }) => (
                   <TierListSection
@@ -185,6 +160,37 @@ const pageDescription = patchLabel
                   />
                 )
               }
+
+              <section class="tier-list-context" aria-label="Contexto de esta clasificación">
+                {
+                  patch && (
+                    <LaboratoryMetadata
+                      patch={patch}
+                      role={role}
+                      queue={tierList?.queue}
+                      updatedAt={tierList?.publishedAt}
+                    />
+                  )
+                }
+                {
+                  basedOnPatch && (
+                    <p class="tier-list-based-on">
+                      Clasificación sin cambios respecto al parche {basedOnPatch.label}.
+                    </p>
+                  )
+                }
+                {
+                  tierList?.methodologyNote && (
+                    <EditorialCallout icon="💬" label="Cómo hago esta Tier List" variant="take">
+                      {tierList.methodologyNote}
+                    </EditorialCallout>
+                  )
+                }
+                <div class="tier-list-header-actions">
+                  <ShareLinkButton label="Compartir Tier List" />
+                </div>
+              </section>
+
               <section class="tier-list-mage-note" aria-labelledby="tier-list-mage-note-heading">
                 <h3 id="tier-list-mage-note-heading">{adcSecondaryMageNote.title}</h3>
                 <p>{adcSecondaryMageNote.body}</p>

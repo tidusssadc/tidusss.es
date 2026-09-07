@@ -1,7 +1,19 @@
 ---
-const grades = ['S+', 'S', 'A', 'B', 'C', 'D'] as const;
-/** Mismo slug que TierBadge.astro/TierListSection.astro (data-tier). */
-const tierSlug = (tier: string) => tier.toLowerCase().replace('+', '-plus');
+interface Props {
+  /** Solo se muestra el chip "Pendientes" si de verdad hay campeones sin revisar publicados. */
+  hasPendingEntries?: boolean;
+}
+const { hasPendingEntries = false } = Astro.props;
+
+// Mismas categorías reales que TierListLegend: S, Counter, A, B, C, D.
+const filterChips: { value: string; label: string }[] = [
+  { value: 's', label: 'S' },
+  { value: 'counter', label: 'Counter' },
+  { value: 'a', label: 'A' },
+  { value: 'b', label: 'B' },
+  { value: 'c', label: 'C' },
+  { value: 'd', label: 'D' },
+];
 ---
 
 <div
@@ -13,15 +25,19 @@ const tierSlug = (tier: string) => tier.toLowerCase().replace('+', '-plus');
   <div class="tier-list-filter-chips" role="group" aria-label="Filtrar por tier">
     <button type="button" data-tier-filter="all" aria-pressed="true">Todos</button>
     {
-      grades.map((tier) => (
-        <button type="button" data-tier-filter={tierSlug(tier)} aria-pressed="false">
-          {tier}
+      filterChips.map(({ value, label }) => (
+        <button type="button" data-tier-filter={value} aria-pressed="false">
+          {label}
         </button>
       ))
     }
-    <button type="button" data-tier-filter="placeholder" aria-pressed="false">
-      Pendientes
-    </button>
+    {
+      hasPendingEntries && (
+        <button type="button" data-tier-filter="placeholder" aria-pressed="false">
+          Pendientes
+        </button>
+      )
+    }
   </div>
   <label class="tier-list-search">
     <span class="sr-only">Buscar campeón</span>
@@ -43,21 +59,14 @@ const tierSlug = (tier: string) => tier.toLowerCase().replace('+', '-plus');
   const entries = [
     ...document.querySelectorAll<HTMLElement>('.tier-list-entry'),
   ];
-  const rows = [...document.querySelectorAll<HTMLElement>('.tier-list-row')];
+  // El wall de campeones se agrupa en filas por tier y en la sección de
+  // counter picks — ambas se ocultan igual cuando ninguno de sus campeones
+  // coincide con el filtro activo (ver `data-tier` en ambas).
+  const rows = [
+    ...document.querySelectorAll<HTMLElement>('.tier-list-row, .tier-list-counter'),
+  ];
   const pendingSection =
     document.querySelector<HTMLElement>('.tier-list-pending');
-
-  // En móvil, cada campeón debe poder escanearse por icono/nombre/tier antes
-  // de leer el veredicto completo — así que el veredicto empieza cerrado.
-  // Sin JavaScript, el HTML ya llega con `open`, así que sigue siendo
-  // completamente legible (principio ya establecido en esta página: la
-  // ausencia de JS nunca hace desaparecer contenido, solo cambia la
-  // densidad por defecto). El deep link de campeón, más abajo, vuelve a
-  // abrir el que corresponda sin importar este paso.
-  if (window.matchMedia('(max-width: 767px)').matches)
-    document
-      .querySelectorAll<HTMLDetailsElement>('.editorial-take-details')
-      .forEach((details) => details.removeAttribute('open'));
 
   let activeTier = 'all';
 
@@ -71,7 +80,7 @@ const tierSlug = (tier: string) => tier.toLowerCase().replace('+', '-plus');
       const isPlaceholder = entry.classList.contains(
         'tier-list-entry--placeholder',
       );
-      const entryTier = entry.closest<HTMLElement>('.tier-list-row')?.dataset
+      const entryTier = entry.closest<HTMLElement>('[data-tier]')?.dataset
         .tier;
       const matchesTier =
         activeTier === 'all' ||
