@@ -26,6 +26,8 @@ import {
   buildLabRegistry,
   getChampionKnowledge,
   type ChampionCatalogEntry,
+  type EditorialTake,
+  type Synergy,
 } from '../../domain/league-laboratory';
 import {
   adcLabChampions,
@@ -39,7 +41,6 @@ import {
   leagueLaboratorySynergies,
   officialAdcTierList,
 } from '../../data/league-laboratory';
-import { platforms } from '../../config/platforms';
 
 /**
  * Una ruta por cada campeón del catálogo generado (~170), no por los 4
@@ -123,6 +124,42 @@ const partnersFor = (championIds: readonly string[]) =>
       return entry ? [entry] : [];
     });
 
+// Estado real en la Tier List: mismo dato que ya usa `ChampionTierStatus`,
+// solo resolviendo aquí el parche vigente de esa edición (26.17) — un dato
+// distinto de `reviewPatch` (el último parche revisado del PERFIL, 26.14).
+// Nunca se duplica el veredicto a mano: viene directo de `tierListAppearances`.
+const tierListAppearance = knowledge?.tierListAppearances[0];
+const tierListPatchLabel = tierListAppearance
+  ? leagueLaboratoryPatches.find(
+      (patch) => patch.id === tierListAppearance.tierList.patchId,
+    )?.label
+  : undefined;
+
+/**
+ * Sinergias: si varias comparten literalmente el mismo veredicto (todavía
+ * no hay análisis específico por pareja), se resume una sola vez en la
+ * cabecera de la sección en vez de repetir el mismo párrafo en cada
+ * tarjeta. En cuanto una pareja tenga un veredicto real y distinto, deja
+ * de coincidir con el genérico compartido y vuelve a mostrarse en su
+ * propia tarjeta — sin tocar este cálculo ni `SynergyCard`.
+ */
+const synergyTakeKey = (take: EditorialTake) =>
+  `${take.verdict} :: ${take.reasoning}`;
+const synergyTakeCounts = new Map<string, number>();
+for (const synergy of synergies) {
+  const key = synergyTakeKey(synergy.editorialTake);
+  synergyTakeCounts.set(key, (synergyTakeCounts.get(key) ?? 0) + 1);
+}
+const mostSharedSynergyTakeCount = Math.max(0, ...synergyTakeCounts.values());
+const isGenericSynergyTake = (synergy: Synergy) =>
+  synergies.length > 1 &&
+  mostSharedSynergyTakeCount > 1 &&
+  synergyTakeCounts.get(synergyTakeKey(synergy.editorialTake)) ===
+    mostSharedSynergyTakeCount;
+const genericSynergyTake = synergies.find((synergy) =>
+  isGenericSynergyTake(synergy),
+)?.editorialTake;
+
 const quickTips = labChampion?.profile?.quickTips ?? [];
 const editorialHistory = labChampion?.editorialHistory ?? [];
 
@@ -141,6 +178,7 @@ const tocEntries = hasProfile
       { id: 'resumen', label: 'Resumen', show: true },
       { id: 'build', label: 'Build', show: orderedBuilds.length > 0 },
       { id: 'runas', label: 'Runas', show: (knowledge?.runePages.length ?? 0) > 0 },
+      { id: 'partidas', label: 'Partidas', show: true },
       { id: 'matchups', label: 'Matchups', show: matchups.length > 0 },
       { id: 'sinergias', label: 'Sinergias', show: synergies.length > 0 },
       {
@@ -153,7 +191,6 @@ const tocEntries = hasProfile
         label: 'Conceptos',
         show: (knowledge?.concepts.length ?? 0) > 0,
       },
-      { id: 'partidas', label: 'Partidas', show: true },
       {
         id: 'historial-editorial',
         label: 'Historial editorial',
@@ -252,8 +289,10 @@ const structuredData = hasProfile
         }
 
         <ChampionTierStatus
+          championName={catalogEntry.name}
           championSlug={catalogEntry.slug}
           tierListAppearances={knowledge?.tierListAppearances ?? []}
+          patchLabel={tierListPatchLabel}
         />
 
         <div class="champion-guide-layout">
@@ -301,8 +340,6 @@ const structuredData = hasProfile
             title="Build"
             hasContent={orderedBuilds.length > 0}
             showShareLink
-            emptyTitle="Todavía no hay una build publicada"
-            emptyDescription={`Tidusss no ha publicado todavía una build recomendada para ${catalogEntry.name}. No es una tabla de objetos genérica lo que falta — es el razonamiento detrás de cada elección, y eso se escribe con calma.`}
           >
             <div class="build-block-list">
               {
@@ -321,8 +358,6 @@ const structuredData = hasProfile
             id="runas"
             title="Runas"
             hasContent={(knowledge?.runePages.length ?? 0) > 0}
-            emptyTitle="Todavía no hay una página de runas publicada"
-            emptyDescription={`Tidusss no ha publicado todavía runas recomendadas para ${catalogEntry.name}, con la explicación de cada elección — no solo los iconos.`}
           >
             <div class="rune-block-list">
               {
@@ -335,13 +370,24 @@ const structuredData = hasProfile
               }
             </div>
           </ChampionKnowledgeSection>
+          </>
+          )}
 
+          <div
+            id="partidas"
+            class="champion-knowledge-section"
+            aria-labelledby="partidas-heading"
+          >
+            <h3 id="partidas-heading">Partidas donde aparece</h3>
+            <ChampionMatchHistory championName={catalogEntry.name} />
+          </div>
+
+          {hasProfile && (
+          <>
           <ChampionKnowledgeSection
             id="matchups"
             title="Matchups"
             hasContent={matchups.length > 0}
-            emptyTitle="Todavía no hay matchups analizados"
-            emptyDescription={`Ningún enfrentamiento de ${catalogEntry.name} tiene todavía un análisis publicado. Aquí aparecerán como tarjetas — dificultad, explicación y consejos — nunca como una tabla de números.`}
           >
             <div class="matchup-groups">
               {
@@ -420,9 +466,18 @@ const structuredData = hasProfile
             id="sinergias"
             title="Sinergias"
             hasContent={synergies.length > 0}
-            emptyTitle="Todavía no hay sinergias documentadas"
-            emptyDescription="Las combinaciones con otros campeones (dúos de línea, combos de enganche o de protección) se añadirán aquí cuando existan, con consejos reales de ejecución."
           >
+            {
+              genericSynergyTake && (
+                <EditorialCallout
+                  icon="🔥"
+                  label={`Supports con los que Tidusss recomienda jugar ${catalogEntry.name}`}
+                  variant="take"
+                >
+                  {genericSynergyTake.verdict} {genericSynergyTake.reasoning}
+                </EditorialCallout>
+              )
+            }
             <div class="matchup-card-grid">
               {
                 synergies.map((synergy) => (
@@ -430,6 +485,7 @@ const structuredData = hasProfile
                     synergy={synergy}
                     partnerCatalogEntries={partnersFor(synergy.championIds)}
                     dataDragonVersion={dataDragonVersion}
+                    showTake={!isGenericSynergyTake(synergy)}
                   />
                 ))
               }
@@ -440,8 +496,6 @@ const structuredData = hasProfile
             id="consejos-rapidos"
             title="Consejos rápidos"
             hasContent={quickTips.length > 0}
-            emptyTitle="Todavía no hay consejos rápidos publicados"
-            emptyDescription={`Recomendaciones cortas y accionables para jugar a ${catalogEntry.name} se añadirán aquí — distintas de los errores comunes, ya documentados arriba.`}
           >
             <ul class="champion-build-list">
               {quickTips.map((tip) => <li>{tip}</li>)}
@@ -457,10 +511,8 @@ const structuredData = hasProfile
 
           <ChampionKnowledgeSection
             id="concepts"
-            title="Conceptos importantes"
+            title="Conceptos relacionados"
             hasContent={(knowledge?.concepts.length ?? 0) > 0}
-            emptyTitle="Todavía no hay conceptos vinculados"
-            emptyDescription="Las ideas de juego (spacing, power spike, snowball, trading, tempo, wave management...) se enlazarán aquí en cuanto sean relevantes para este campeón."
           >
             <ul class="concept-card-grid">
               {
@@ -472,43 +524,9 @@ const structuredData = hasProfile
           </ChampionKnowledgeSection>
 
           <ChampionKnowledgeSection
-            id="videos"
-            title="Vídeos relacionados"
-            hasContent={false}
-            emptyTitle="Todavía no hay vídeos vinculados"
-            emptyDescription="El canal no etiqueta el contenido por campeón todavía. No inventamos una relación que no existe — mientras tanto, puedes ver el canal completo."
-            emptyCtaHref={platforms.youtube.url}
-            emptyCtaLabel="Ver el canal de YouTube"
-            emptyCtaExternal
-          />
-          </>
-          )}
-
-          <div
-            id="partidas"
-            class="champion-knowledge-section"
-            aria-labelledby="partidas-heading"
-          >
-            <h3 id="partidas-heading">Partidas donde aparece</h3>
-            <ChampionMatchHistory championName={catalogEntry.name} />
-          </div>
-
-          {hasProfile && (
-          <>
-          <ChampionKnowledgeSection
-            id="cambios-recientes"
-            title="Cambios recientes del campeón"
-            hasContent={false}
-            emptyTitle="Todavía no se rastrean los parches de Riot para este campeón"
-            emptyDescription="Los ajustes de balance oficiales de Riot (buffs, nerfs, reworks) se mostrarán aquí en cuanto exista una fuente real y verificada — nunca un resumen inventado de notas de parche."
-          />
-
-          <ChampionKnowledgeSection
             id="guides"
             title="Guías"
             hasContent={(knowledge?.guides.length ?? 0) > 0}
-            emptyTitle="Todavía no hay una guía publicada"
-            emptyDescription={`Tidusss no ha escrito todavía una guía dedicada a ${catalogEntry.name}.`}
           >
             <ul class="champion-build-list">
               {knowledge?.guides.map((guide) => <li>{guide.title}</li>)}
@@ -519,8 +537,6 @@ const structuredData = hasProfile
             id="historial-editorial"
             title="Historial editorial"
             hasContent={editorialHistory.length > 0}
-            emptyTitle="Todavía no hay historial editorial"
-            emptyDescription="Aquí quedará constancia de cuándo y qué ha cambiado en el propio análisis de Tidusss sobre este campeón."
           >
             <EditorialHistoryTimeline entries={editorialHistory} />
           </ChampionKnowledgeSection>

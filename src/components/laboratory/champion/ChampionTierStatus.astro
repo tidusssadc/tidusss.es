@@ -4,10 +4,13 @@ import EmptyLaboratoryState from '../EmptyLaboratoryState.astro';
 import TierBadge from '../TierBadge.astro';
 
 interface Props {
+  championName: string;
   championSlug: string;
   tierListAppearances: ChampionKnowledge['tierListAppearances'];
+  /** Etiqueta del parche vigente de esta edición ("26.17") — resuelta por quien llama (`leagueLaboratoryPatches`), nunca inferida aquí ni duplicada a mano. */
+  patchLabel?: string;
 }
-const { championSlug, tierListAppearances } = Astro.props;
+const { championName, championSlug, tierListAppearances, patchLabel } = Astro.props;
 const appearance = tierListAppearances[0];
 ---
 
@@ -17,20 +20,31 @@ const appearance = tierListAppearances[0];
       class="champion-tier-status"
       href={`/tier-list?champion=${championSlug}`}
     >
-      {appearance.entry.reviewStatus === 'reviewed' ? (
-        <TierBadge tier={appearance.entry.tier} />
-      ) : (
-        <span class="tier-badge" data-tier="pending" aria-hidden="true">
-          ?
-        </span>
-      )}
-      <span>
-        <strong>{appearance.tierList.title}</strong>
-        <small>
-          {appearance.entry.reviewStatus === 'reviewed'
-            ? 'Ver en la Tier List oficial'
-            : 'Todavía sin clasificar — ver estado en la Tier List'}
-        </small>
+      <div class="champion-tier-status-heading">
+        {appearance.entry.reviewStatus === 'reviewed' ? (
+          <TierBadge tier={appearance.entry.tier} compact />
+        ) : (
+          <span class="tier-badge" data-tier="pending" aria-hidden="true">
+            ?
+          </span>
+        )}
+        <strong>{championName}</strong>
+        {patchLabel && (
+          <span class="champion-tier-status-patch">Parche {patchLabel}</span>
+        )}
+      </div>
+      {
+        appearance.entry.reviewStatus === 'reviewed' && (
+          <p class="champion-tier-status-verdict">
+            {appearance.entry.editorialTake.verdict}
+          </p>
+        )
+      }
+      <span class="champion-tier-status-link">
+        {appearance.entry.reviewStatus === 'reviewed'
+          ? 'Ver en la Tier List oficial'
+          : 'Todavía sin clasificar — ver estado en la Tier List'}{' '}
+        <span aria-hidden="true">→</span>
       </span>
     </a>
   ) : (

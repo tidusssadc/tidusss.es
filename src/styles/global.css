@@ -6709,9 +6709,11 @@ body[data-home-state='near-goal'] .environment-rays {
 }
 
 .champion-tier-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: flex-start;
+  max-width: 32rem;
   margin-top: 2.5rem;
   padding: 0.9rem 1.15rem;
   border: 1px solid rgb(255 255 255 / 10%);
@@ -6722,12 +6724,29 @@ body[data-home-state='near-goal'] .environment-rays {
     border-color 0.2s ease,
     transform 0.2s ease;
 }
-.champion-tier-status strong {
-  display: block;
-  color: white;
+.champion-tier-status-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
 }
-.champion-tier-status small {
+.champion-tier-status-heading strong {
+  color: white;
+  font-size: 1.05rem;
+}
+.champion-tier-status-patch {
   color: #7583a0;
+  font-size: 0.8rem;
+}
+.champion-tier-status-verdict {
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: #b9c2d0;
+}
+.champion-tier-status-link {
+  color: #7583a0;
+  font-size: 0.8rem;
+  font-weight: 700;
 }
 .tier-badge[data-tier='pending'] {
   background: transparent;
@@ -7576,17 +7595,6 @@ body[data-home-state='near-goal'] .environment-rays {
 }
 .rune-block-tree {
   margin-top: 1.75rem;
-}
-.rune-block-pending {
-  display: inline-block;
-  margin-top: 0.6rem;
-  padding: 0.3rem 0.65rem;
-  border: 1px dashed rgb(255 255 255 / 16%);
-  color: #7583a0;
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
 }
 .rune-choice-list {
   display: grid;

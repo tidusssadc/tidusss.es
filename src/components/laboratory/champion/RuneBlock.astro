@@ -38,10 +38,14 @@ const { runePage, patch } = Astro.props;
     </ul>
   </div>
 
-  <div class="rune-block-tree">
-    <span class="lab-badge-label">Rama secundaria</span>
-    {
-      runePage.secondaryRunes.length > 0 ? (
+  {
+    // Rama secundaria y fragmentos: solo se muestran cuando ya hay una
+    // elección confirmada. Sin ella, ni la etiqueta ni un "pendiente de
+    // análisis" aportan nada al visitante — la ausencia ya la explica, si
+    // hace falta, el propio veredicto de más abajo.
+    runePage.secondaryRunes.length > 0 && (
+      <div class="rune-block-tree">
+        <span class="lab-badge-label">Rama secundaria</span>
         <ul class="rune-choice-list">
           {runePage.secondaryRunes.map((choice) => (
             <li>
@@ -50,16 +54,14 @@ const { runePage, patch } = Astro.props;
             </li>
           ))}
         </ul>
-      ) : (
-        <p class="rune-block-pending">Pendiente de análisis.</p>
-      )
-    }
-  </div>
+      </div>
+    )
+  }
 
-  <div class="rune-block-tree">
-    <span class="lab-badge-label">Fragmentos de estadística</span>
-    {
-      runePage.statShards.length > 0 ? (
+  {
+    runePage.statShards.length > 0 && (
+      <div class="rune-block-tree">
+        <span class="lab-badge-label">Fragmentos de estadística</span>
         <ul class="rune-choice-list rune-choice-list--shards">
           {runePage.statShards.map((choice) => (
             <li>
@@ -68,11 +70,9 @@ const { runePage, patch } = Astro.props;
             </li>
           ))}
         </ul>
-      ) : (
-        <p class="rune-block-pending">Pendiente de análisis.</p>
-      )
-    }
-  </div>
+      </div>
+    )
+  }
 
   <EditorialTakeBlock take={runePage.editorialTake} label="🧠 Por qué estas runas" />
 </article>

@@ -13,8 +13,18 @@ interface Props {
   /** Los campeones de la sinergia, sin incluir al de la página actual. */
   partnerCatalogEntries: readonly ChampionCatalogEntry[];
   dataDragonVersion: string;
+  /**
+   * `false` cuando esta sinergia comparte el mismo veredicto genérico que
+   * el resto de parejas del campeón (ya resumido una sola vez en la
+   * cabecera de la sección, ver `[slug].astro`) — evita repetir el mismo
+   * párrafo por tarjeta. En cuanto exista un análisis específico y real
+   * para esta pareja, su veredicto deja de coincidir con el genérico y
+   * vuelve a mostrarse aquí sin tocar este componente.
+   */
+  showTake?: boolean;
 }
-const { synergy, partnerCatalogEntries, dataDragonVersion } = Astro.props;
+const { synergy, partnerCatalogEntries, dataDragonVersion, showTake = true } =
+  Astro.props;
 
 const typeLabels: Record<SynergyType, string> = {
   'lane-duo': 'Dúo de línea',
@@ -58,5 +68,9 @@ const typeLabels: Record<SynergyType, string> = {
     )
   }
 
-  <EditorialTakeBlock take={synergy.editorialTake} label="🔥 Por qué funciona esta dupla" />
+  {
+    showTake && (
+      <EditorialTakeBlock take={synergy.editorialTake} label="🔥 Por qué funciona esta dupla" />
+    )
+  }
 </article>

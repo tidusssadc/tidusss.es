@@ -46,9 +46,23 @@ const difficultyLabel: Record<ChampionDifficulty, string> = {
           </EditorialCallout>
         )
       }
-      <div class="champion-profile-traits">
-        <TraitList label="Errores frecuentes" items={profile.commonMistakes} />
-      </div>
+      {
+        // El error más habitual ya está siempre visible en el callout de
+        // arriba — el resto de la lista es profundidad opcional, no algo
+        // que compita en peso visual con veredicto/build/runas. Mismo
+        // patrón de disclosure ya usado en la Tier List (EditorialTakeCard).
+        profile.commonMistakes.length > 0 && (
+          <details class="editorial-take-details champion-profile-mistakes">
+            <summary>
+              <span data-state="closed">Ver todos los errores frecuentes ↓</span>
+              <span data-state="open">Cerrar ↑</span>
+            </summary>
+            <div class="editorial-take-body">
+              <TraitList label="Errores frecuentes" items={profile.commonMistakes} />
+            </div>
+          </details>
+        )
+      }
       <p class="champion-profile-difficulty">
         <span class="lab-badge-label">Dificultad percibida</span>{' '}
         <strong>{difficultyLabel[profile.difficulty]}</strong>

@@ -18,11 +18,13 @@ import { patch2614 } from './patches';
 const lucianBoots26_14: BuildItemChoice[] = [
   {
     name: 'Botas de Acero Revestidas (Tabis)',
+    itemId: 3047,
     reasoning:
       'Úsalas especialmente cuando el equipo rival tiene mucho daño físico, varios campeones AD o asesinos físicos.',
   },
   {
     name: 'Botas Jonias de la Lucidez',
+    itemId: 3158,
     reasoning:
       'Elígelas cuando busques más reducción de enfriamiento, lanzar habilidades con mayor frecuencia o un estilo de juego más orientado a spamear habilidades.',
   },
@@ -35,10 +37,12 @@ const lucianSkillOrderReasoning26_14 =
 const lucianSituationalItems26_14: BuildItemChoice[] = [
   {
     name: 'Últimas Palabras de Lord Dominik',
+    itemId: 3036,
     reasoning: 'Contra varios tanques o mucha armadura en el equipo rival.',
   },
   {
     name: 'Recordatorio Letal',
+    itemId: 3033,
     reasoning: 'Contra composiciones con mucha curación.',
   },
 ];
@@ -53,6 +57,7 @@ export const lucianSolidBuild26_14: Build = {
   startingItems: [
     {
       name: 'Brillo',
+      itemId: 3057,
       reasoning:
         'Tidusss intenta priorizarlo en el primer back cuando la economía de la partida lo permite, de camino a Segador de Esencia. No siempre es posible comprarlo — depende de cómo vaya la partida.',
     },
@@ -61,12 +66,14 @@ export const lucianSolidBuild26_14: Build = {
   coreItems: [
     {
       name: 'Segador de Esencia',
+      itemId: 3508,
       timing: 'Primer objeto',
       reasoning:
         'Es siempre el primer objeto de la build actual de Tidusss con Lucian en el parche 26.14.',
     },
     {
       name: 'Filo Infinito',
+      itemId: 3031,
       timing: 'Segundo objeto',
       reasoning:
         'La opción generalmente más sólida como segundo objeto: ordena mejor la progresión de la build cuando el tercer objeto tiene que aportar penetración de armadura o reducción de curaciones — con esta ruta, Lucian no llega a tres objetos sin él.',
@@ -102,6 +109,7 @@ export const lucianPersonalBuild26_14: Build = {
   startingItems: [
     {
       name: 'Brillo',
+      itemId: 3057,
       reasoning:
         'Tidusss intenta priorizarlo en el primer back cuando la economía de la partida lo permite, de camino a Segador de Esencia — igual que en la ruta más sólida.',
     },
@@ -110,12 +118,14 @@ export const lucianPersonalBuild26_14: Build = {
   coreItems: [
     {
       name: 'Segador de Esencia',
+      itemId: 3508,
       timing: 'Primer objeto',
       reasoning:
         'Es siempre el primer objeto de la build actual de Tidusss con Lucian, igual que en la ruta más sólida.',
     },
     {
       name: 'Navori',
+      itemId: 6675,
       timing: 'Segundo objeto',
       reasoning:
         'A Tidusss le encanta jugar Navori de segundo objeto — es su preferencia personal en el parche 26.14, no una regla universal.',
