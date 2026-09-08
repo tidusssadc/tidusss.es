@@ -446,6 +446,10 @@ import PlayerProfile from './PlayerProfile.astro';
     Extract<YouTubeStatsResponse, { ok: true }>['data'] | undefined;
   let videos: YouTubeFeedResult['videos'] = [];
   let fetching = false;
+  // Solo true mientras el fallo de Riot sea el motivo real por el que no
+  // hay partidas que mostrar — nunca se confunde con "sin clasificatorias
+  // recientes" (eso es data real: sampleSize === 0, no un fallo de red).
+  let riotFailed = false;
 
   const positionLabel = (position?: string) =>
     (
@@ -462,12 +466,25 @@ import PlayerProfile from './PlayerProfile.astro';
 
   const renderMatches = () => {
     const list = root?.querySelector('[data-live-matches]');
-    if (!list || !riotData) return;
-    renderMatchCards(list, riotData.recent.matches.slice(0, 5), {
+    if (!list) return;
+    // Sin `riotData` (todavía no ha llegado o Riot ha fallado) se pasa un
+    // array vacío: `renderMatchCards` ya sabe pintar el estado vacío real
+    // (`MatchEmpty`) en vez de dejar el esqueleto de carga para siempre.
+    renderMatchCards(list, riotData?.recent.matches.slice(0, 5) ?? [], {
       formatNumber: (value) => number(value) ?? String(value),
       relativeTime,
       reducedMotion,
       videos,
+      // "No hay partidas" (sampleSize real 0) y "no se pudieron cargar"
+      // (Riot ha fallado) son cosas distintas — solo se sobrescribe el
+      // copy por defecto de MatchEmpty cuando es realmente un fallo.
+      emptyState: riotFailed
+        ? {
+            label: 'Sin conexión con Riot',
+            title: 'No se han podido cargar las partidas.',
+            detail: 'Riot no responde ahora mismo — vuelve a intentarlo en unos minutos.',
+          }
+        : undefined,
     });
   };
 
@@ -724,10 +741,13 @@ import PlayerProfile from './PlayerProfile.astro';
     const payload = (await response.json()) as RiotPublicResponse;
     if (!payload.ok) throw new Error(payload.error.code);
     riotData = payload.data;
+    riotFailed = false;
     const { profile, ranked, today, recent } = payload.data;
     text('[data-riot-id]', profile.riotId);
     text('[data-rank]', ranked.tier ?? 'Sin clasificación');
-    root?.querySelector('[data-rank]')?.classList.remove('data-skeleton');
+    root
+      ?.querySelector('[data-rank]')
+      ?.classList.remove('data-skeleton', 'live-stat-fallback');
     if (ranked.leaguePoints === undefined) {
       root
         ?.querySelector('[data-lp]')
@@ -826,7 +846,7 @@ import PlayerProfile from './PlayerProfile.astro';
     youtubeData = payload.data;
     root
       ?.querySelector('[data-subscribers]')
-      ?.classList.remove('data-skeleton');
+      ?.classList.remove('data-skeleton', 'live-stat-fallback');
     if (payload.data.subscriberCount === undefined) {
       text('[data-subscribers]', 'No visible');
       text('[data-youtube-state]', 'Suscriptores no visibles públicamente.');
@@ -891,7 +911,9 @@ import PlayerProfile from './PlayerProfile.astro';
       ?.classList.remove('data-skeleton', 'data-skeleton--copy');
     root?.toggleAttribute('data-stream-live', status.state === 'online');
     markUpdated('[data-twitch-updated]', status.updatedAt);
+    const streamStateNode = root?.querySelector('[data-stream-state]');
     if (status.state === 'online') {
+      streamStateNode?.classList.remove('live-stat-fallback');
       text('[data-stream-state]', 'EN DIRECTO');
       text('[data-stream-copy]', status.title ?? 'Tidusss está en directo.');
       text('[data-stream-category]', status.category ?? '');
@@ -911,6 +933,7 @@ import PlayerProfile from './PlayerProfile.astro';
       visible('[data-stream-meta]', true);
       text('[data-stream-link]', 'Ver directo ↗');
     } else if (status.state === 'offline') {
+      streamStateNode?.classList.remove('live-stat-fallback');
       text('[data-stream-state]', 'Offline');
       text(
         '[data-stream-copy]',
@@ -919,6 +942,10 @@ import PlayerProfile from './PlayerProfile.astro';
       visible('[data-stream-meta]', false);
       text('[data-stream-link]', 'Visitar Twitch ↗');
     } else {
+      // "Conexión pendiente" no es un estado en directo real (ni EN
+      // DIRECTO ni Offline) — es una frase, así que usa el mismo
+      // tratamiento compacto que un fallo real.
+      streamStateNode?.classList.add('live-stat-fallback');
       text('[data-stream-state]', 'Conexión con Twitch pendiente.');
       text(
         '[data-stream-copy]',
@@ -1040,30 +1067,37 @@ import PlayerProfile from './PlayerProfile.astro';
       loadFeed(),
     ]);
     if (results[0].status === 'rejected') {
-      visible('[data-riot-error]', true);
+      riotFailed = true;
       visible('[data-rank-emblem]', false);
       visible('[data-today-empty-signature]', false);
-      root?.querySelector('[data-rank]')?.classList.remove('data-skeleton');
+      // Un único mensaje compacto (aquí, en el propio rango) en vez del
+      // mismo fallo repetido en 3-4 frases distintas de esta sección: el
+      // bloque separado `.live-empty` (`[data-riot-error]`) ya no se
+      // muestra — quedaría diciendo exactamente lo mismo.
+      const rankNode = root?.querySelector('[data-rank]');
+      rankNode?.classList.remove('data-skeleton');
+      rankNode?.classList.add('live-stat-fallback');
       root
         ?.querySelector('[data-lp]')
         ?.classList.remove('data-skeleton', 'data-skeleton--line');
       root
         ?.querySelector('[data-activity]')
         ?.classList.remove('data-skeleton', 'data-skeleton--copy');
-      text('[data-rank]', 'Riot no contesta ahora mismo');
-      text('[data-lp]', 'Intentaremos actualizar pronto');
-      text('[data-activity]', 'No he podido consultar la SoloQ ahora mismo');
+      text('[data-rank]', 'Riot no disponible');
+      text('[data-lp]', '');
+      text('[data-activity]', 'Reintentaremos automáticamente en unos minutos.');
       root
         ?.querySelector('[data-riot-updated]')
         ?.classList.remove('data-skeleton', 'data-skeleton--meta');
       text('[data-riot-updated]', 'Reintentando la conexión con Riot');
+      renderMatches();
     }
     if (results[1].status === 'rejected') {
       const code =
         results[1].reason instanceof Error ? results[1].reason.message : '';
-      root
-        ?.querySelector('[data-subscribers]')
-        ?.classList.remove('data-skeleton');
+      const subscribersNode = root?.querySelector('[data-subscribers]');
+      subscribersNode?.classList.remove('data-skeleton');
+      subscribersNode?.classList.add('live-stat-fallback');
       text('[data-subscribers]', 'YouTube no responde ahora mismo');
       text(
         '[data-youtube-state]',
@@ -1081,9 +1115,9 @@ import PlayerProfile from './PlayerProfile.astro';
       );
     }
     if (results[2].status === 'rejected') {
-      root
-        ?.querySelector('[data-stream-state]')
-        ?.classList.remove('data-skeleton');
+      const streamStateNode = root?.querySelector('[data-stream-state]');
+      streamStateNode?.classList.remove('data-skeleton');
+      streamStateNode?.classList.add('live-stat-fallback');
       root
         ?.querySelector('[data-stream-copy]')
         ?.classList.remove('data-skeleton', 'data-skeleton--copy');

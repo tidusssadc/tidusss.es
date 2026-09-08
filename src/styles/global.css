@@ -2293,6 +2293,16 @@
   letter-spacing: -0.07em;
   text-transform: uppercase;
 }
+/* Estado de fallo (nunca un dato real: "MASTER", "812 LP"...) — mismo
+   elemento, tratamiento tipográfico distinto. Sin esto, una frase de
+   error se leía como si fuera la cifra destacada de la sección. */
+.today-rank strong.live-stat-fallback {
+  font-size: 1.15rem;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+  text-transform: none;
+  color: #9aa5b8;
+}
 .today-rank span {
   margin-top: 0.9rem;
   color: #d6b56b;
@@ -2446,6 +2456,13 @@
   font-size: clamp(2rem, 5vw, 3.8rem);
   letter-spacing: -0.055em;
 }
+/* Mismo criterio que .today-rank strong.live-stat-fallback: "EN DIRECTO"/
+   "Offline" son datos reales y conservan la jerarquía grande; un estado
+   sin conexión real (pendiente o fallo) es una frase, no una cifra. */
+.stream-status strong.live-stat-fallback {
+  font-size: 1.05rem;
+  letter-spacing: -0.01em;
+}
 .stream-status p {
   max-width: 28rem;
   margin-top: 1rem;
@@ -2524,6 +2541,15 @@
   line-height: 0.9;
   letter-spacing: -0.065em;
   font-variant-numeric: tabular-nums;
+}
+/* Mismo criterio: una cifra real de suscriptores conserva la jerarquía
+   grande; "YouTube no responde ahora mismo" es una frase de error, nunca
+   un contador. */
+.youtube-number strong.live-stat-fallback {
+  font-size: 1.05rem;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+  font-variant-numeric: normal;
 }
 .youtube-number span {
   margin-top: 0.75rem;

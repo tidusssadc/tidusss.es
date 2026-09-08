@@ -16,6 +16,13 @@ interface MatchRenderOptions {
   relativeTime: (value?: string) => string | undefined;
   reducedMotion: boolean;
   videos?: YouTubeVideo[];
+  /**
+   * Sobrescribe el copy por defecto de `MatchEmpty` ("sin clasificatorias
+   * recientes") solo cuando la lista está vacía por un motivo distinto de
+   * "no hay partidas reales" — hoy, un fallo de Riot. Nunca se activa
+   * cuando la muestra real es 0.
+   */
+  emptyState?: { label: string; title: string; detail: string };
 }
 
 const query = <T extends Element>(root: ParentNode, selector: string) =>
@@ -407,7 +414,18 @@ export const renderMatchCards = (
     const empty = document.querySelector<HTMLTemplateElement>(
       '[data-match-empty-template]',
     );
-    if (empty) container.replaceChildren(empty.content.cloneNode(true));
+    if (empty) {
+      const fragment = empty.content.cloneNode(true) as DocumentFragment;
+      if (options.emptyState) {
+        const label = fragment.querySelector('span');
+        const title = fragment.querySelector('strong');
+        const detail = fragment.querySelector('p');
+        if (label) label.textContent = options.emptyState.label;
+        if (title) title.textContent = options.emptyState.title;
+        if (detail) detail.textContent = options.emptyState.detail;
+      }
+      container.replaceChildren(fragment);
+    }
     return;
   }
   container.replaceChildren(
