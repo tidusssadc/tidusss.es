@@ -1,19 +1,27 @@
 /**
- * Preguntas de ejemplo para "Pregunta a Tidusss" — reales y funcionales
- * (cada una recupera contenido editorial real hoy, verificado contra
- * `domain/knowledge-answering/evaluation/cases.ts`). Se comparten entre
- * `/pregunta`, el bloque de Home y el bloque contextual de la guía de
- * Lucian para no mantener tres listas sueltas.
+ * Preguntas de ejemplo para "Pregunta a Tidusss" — reales y funcionales,
+ * cada una ejecutada contra el motor real (`createLocalProvider` +
+ * `assembleAnswer`, el mismo camino exacto que `/api/pregunta`) antes de
+ * añadirla aquí, nunca solo contra la lista de evaluación. Se comparten
+ * entre `/pregunta`, `/explorar` (las 3 primeras) y la rotación semanal de
+ * Home (`HomeTodayModule`) para no mantener listas sueltas sin verificar.
+ *
+ * Amplitud deliberada, no solo Lucian: Lucian sigue siendo la cobertura
+ * editorial más rica hoy (4 de 8), pero conceptos de Academia y otros
+ * campeones vía la Tier List demuestran que la herramienta es de
+ * conocimiento ADC, no un chatbot de un único campeón. Orden mezclado a
+ * propósito — las 3 primeras (las que se ven en /explorar) ya muestran esa
+ * variedad, no solo Lucian.
  */
 export const PREGUNTA_GENERAL_SUGGESTIONS: readonly string[] = [
-  '¿Cuándo me hago Navori?',
-  '¿Es mejor Filo Infinito o Navori?',
-  '¿Por qué Lucian necesita hacer los combos rápido?',
   '¿Cuándo empieza a ser fuerte Lucian?',
+  '¿Qué es el snowball?',
+  '¿Cuál es la build de Jinx?',
+  '¿Cuándo me hago Navori?',
   '¿Qué runa usa Tidusss con Lucian?',
   '¿Con qué supports funciona bien Lucian?',
-  '¿Por qué Lucian sufre en late?',
-  '¿Qué errores cometen los jugadores de Lucian?',
+  '¿Qué es el spacing?',
+  'Draven en la Tier List',
 ];
 
 /**

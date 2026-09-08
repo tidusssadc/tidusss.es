@@ -83,7 +83,7 @@ export const lucian: LabChampion = {
       patchId: 'patch:15-14',
       title: 'Lucian entra en la Tier List como S',
       summary:
-        'Lucian entra en The Official Tidusss ADC Tier List como S, la única entrada revisada de su primera edición.',
+        'Lucian entra en la Tier List oficial ADC de Tidusss como S, la única entrada revisada de su primera edición.',
     },
     {
       date: '2026-07-24',
