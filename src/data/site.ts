@@ -12,12 +12,18 @@ export const brandPrinciple = {
 } as const;
 
 /**
- * Navegación principal — arquitectura de producto, no de código: 4 grandes
+ * Navegación principal — arquitectura de producto, no de código: 3 grandes
  * áreas en primer nivel. "Inicio" se retiró de aquí (el logo ya lleva al
  * mismo sitio en todas las páginas) y "Pregunta a Tidusss" pasó a vivir
  * dentro de "El Laboratorio" (es una herramienta de conocimiento ADC más,
- * junto a Campeones/Tier List/Academia/Herramientas) — ninguna ruta
- * desaparece, solo su peso en el primer nivel.
+ * junto a Campeones/Tier List/Academia/Herramientas).
+ *
+ * "Comunidad" se retiró del primer nivel: sus 3 páginas (/comunidad,
+ * /roadmap, /actualizaciones) son estado del proyecto/changelog de la
+ * propia web — legítimas, pero no navegación primaria, y "Comunidad" no
+ * describía honestamente ese contenido (no hay nada de comunidad real
+ * ahí: ni foro, ni Discord, solo progreso y novedades). Ninguna ruta
+ * desaparece — siguen accesibles desde /explorar bajo "Proyecto".
  */
 export const navigation = [
   { label: 'Explorar', href: '/explorar' },
@@ -32,12 +38,4 @@ export const navigation = [
     ],
   },
   { label: 'Competitivo', href: '/competitivo' },
-  {
-    label: 'Comunidad',
-    items: [
-      { label: 'Estado del proyecto', href: '/comunidad' },
-      { label: 'Roadmap', href: '/roadmap' },
-      { label: 'Actualizaciones', href: '/actualizaciones' },
-    ],
-  },
 ] as const;

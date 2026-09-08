@@ -3,7 +3,6 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import Navbar from '../components/Navbar.astro';
 import Footer from '../components/Footer.astro';
 import LaboratoryHero from '../components/laboratory/LaboratoryHero.astro';
-import { platforms } from '../config/platforms';
 import { PREGUNTA_GENERAL_SUGGESTIONS } from '../data/pregunta';
 import {
   buildLabRegistry,
@@ -102,8 +101,14 @@ const groups = [
     })),
   },
   {
-    title: 'Comunidad',
-    description: 'Objetivos, roadmap y dónde seguir el proceso en directo.',
+    /**
+     * "Comunidad" describía mal este grupo: no hay nada de comunidad real
+     * aquí (ni foro, ni Discord — eso ya vive en Contacto/Footer), solo
+     * progreso del proyecto y su historial de cambios. "Proyecto" es
+     * honesto con lo que hay dentro.
+     */
+    title: 'Proyecto',
+    description: 'Cómo va el proyecto: objetivos, qué viene después y qué ha cambiado.',
     links: [
       {
         href: '/comunidad',
@@ -120,19 +125,13 @@ const groups = [
         title: 'Actualizaciones',
         description: 'El historial editorial completo: guías, builds y Tier List.',
       },
-      {
-        href: platforms.discord.url,
-        title: 'Servidor de Discord',
-        description: 'La comunidad más cercana para hablar de ADC.',
-        external: true,
-      },
     ],
   },
 ] as const;
 
 const pageTitle = 'Explorar · tidusss.es';
 const pageDescription =
-  'El índice completo de tidusss.es: guías, tier list, vídeos, directos, Pregunta a Tidusss y comunidad, todo en un solo sitio.';
+  'El índice completo de tidusss.es: guías, tier list, vídeos, directos, Pregunta a Tidusss y el estado del proyecto, todo en un solo sitio.';
 ---
 
 <BaseLayout title={pageTitle} description={pageDescription}>
@@ -141,7 +140,7 @@ const pageDescription =
     <LaboratoryHero
       eyebrow="Índice"
       title="Explorar"
-      description="Todo lo que hay en tidusss.es, en un solo sitio: guías, herramientas, vídeos, directos y la comunidad."
+      description="Todo lo que hay en tidusss.es, en un solo sitio: guías, herramientas, vídeos, directos y el estado del proyecto."
     />
     <section class="explore-page section-shell" aria-labelledby="explore-title">
       <div class="mx-auto max-w-7xl px-5 sm:px-8">
