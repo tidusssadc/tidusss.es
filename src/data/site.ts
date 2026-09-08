@@ -12,7 +12,7 @@ export const brandPrinciple = {
 } as const;
 
 /**
- * Navegación principal — arquitectura de producto, no de código: 3 grandes
+ * Navegación principal — arquitectura de producto, no de código: 2 grandes
  * áreas en primer nivel. "Inicio" se retiró de aquí (el logo ya lleva al
  * mismo sitio en todas las páginas) y "Pregunta a Tidusss" pasó a vivir
  * dentro de "El Laboratorio" (es una herramienta de conocimiento ADC más,
@@ -20,13 +20,18 @@ export const brandPrinciple = {
  *
  * "Comunidad" se retiró del primer nivel: sus 3 páginas (/comunidad,
  * /roadmap, /actualizaciones) son estado del proyecto/changelog de la
- * propia web — legítimas, pero no navegación primaria, y "Comunidad" no
- * describía honestamente ese contenido (no hay nada de comunidad real
- * ahí: ni foro, ni Discord, solo progreso y novedades). Ninguna ruta
- * desaparece — siguen accesibles desde /explorar bajo "Proyecto".
+ * propia web — legítimas, pero no navegación primaria. Siguen accesibles
+ * desde Home ("Sigue explorando" ya enlaza directamente a /comunidad, y
+ * desde ahí a /roadmap y /actualizaciones — las 3 páginas ya se enlazan
+ * entre sí).
+ *
+ * "Explorar" también se retiró: es un índice/mapa de superficies que ya
+ * tienen su propia vía razonable (El Laboratorio, Competitivo, Home,
+ * búsqueda) — ningún producto principal dependía de /explorar como único
+ * camino. La página sigue existiendo y funcionando igual, solo deja de
+ * ocupar navegación primaria; Home ya enlaza a ella directamente.
  */
 export const navigation = [
-  { label: 'Explorar', href: '/explorar' },
   {
     label: 'El Laboratorio',
     items: [
