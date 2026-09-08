@@ -6,6 +6,7 @@ import LaboratoryHero from '../components/laboratory/LaboratoryHero.astro';
 import { PREGUNTA_GENERAL_SUGGESTIONS } from '../data/pregunta';
 import {
   buildLabRegistry,
+  getAdcRoster,
   getCatalogCoverage,
 } from '../domain/league-laboratory';
 import {
@@ -25,6 +26,7 @@ const registry = buildLabRegistry({
   tierLists: [officialAdcTierList],
 });
 const coverage = getCatalogCoverage(registry);
+const adcRoster = getAdcRoster(registry);
 
 const stats = [
   { value: coverage.total, label: 'Campeones en el catálogo' },
@@ -37,9 +39,9 @@ const stats = [
 
 const groups = [
   {
-    title: 'El Laboratorio',
+    title: 'ADCs',
     description:
-      'El criterio de Tidusss sobre League of Legends, documentado campeón a campeón.',
+      'El criterio de Tidusss sobre los ADC que juega y analiza, documentado campeón a campeón.',
     links: [
       {
         href: '/campeones/lucian',
@@ -49,8 +51,8 @@ const groups = [
       },
       {
         href: '/campeones',
-        title: 'Centro de Campeones',
-        description: `Los ${coverage.total} campeones del catálogo, busca y filtra por estado.`,
+        title: 'ADCs',
+        description: `Los ${adcRoster.length} ADC de la Tier List de Tidusss: tier, guías y vídeos relacionados.`,
       },
       {
         href: '/tier-list',
@@ -59,13 +61,8 @@ const groups = [
       },
       {
         href: '/academia',
-        title: 'Academia ADC',
+        title: 'Aprende ADC',
         description: 'El vocabulario y los fundamentos de ADC, en fichas navegables.',
-      },
-      {
-        href: '/herramientas',
-        title: 'Herramientas',
-        description: 'Todas las utilidades del Laboratorio, disponibles y en camino.',
       },
     ],
   },
@@ -146,7 +143,7 @@ const pageDescription =
       <div class="mx-auto max-w-7xl px-5 sm:px-8">
         <h2 id="explore-title" class="sr-only">Explorar tidusss.es</h2>
 
-        <dl class="explore-stats" aria-label="El Laboratorio en cifras">
+        <dl class="explore-stats" aria-label="ADCs en cifras">
           {
             stats.map((stat) => (
               <div>

@@ -13,10 +13,23 @@ export const brandPrinciple = {
 
 /**
  * Navegación principal — arquitectura de producto, no de código: 2 grandes
- * áreas en primer nivel. "Inicio" se retiró de aquí (el logo ya lleva al
- * mismo sitio en todas las páginas) y "Pregunta a Tidusss" pasó a vivir
- * dentro de "El Laboratorio" (es una herramienta de conocimiento ADC más,
- * junto a Campeones/Tier List/Academia/Herramientas).
+ * áreas en primer nivel, reflejando los 2 pilares públicos de tidusss.es
+ * (conocimiento ADC / actividad competitiva real). "Inicio" no está aquí
+ * (el logo ya lleva al mismo sitio en todas las páginas).
+ *
+ * "El Laboratorio" (naming interno de la fase anterior) se retira como
+ * naming PÚBLICO: el grupo pasa a llamarse "ADCs", que es lo que
+ * realmente representa — el conocimiento, la valoración y el contenido de
+ * Tidusss sobre los ADC de su Tier List. "Centro de Campeones" pasa a
+ * "Todos los ADCs" y "Academia ADC" a "Aprende ADC" por el mismo motivo:
+ * el nombre debe decir qué es, no cómo se llamaba el módulo internamente
+ * (las carpetas/tipos internos como `league-laboratory` no cambian).
+ *
+ * "Herramientas" se retira del dropdown: auditado, el 100% de su contenido
+ * "disponible" son enlaces puros a páginas ya alcanzables desde este mismo
+ * dropdown (Todos los ADCs/Tier List/Pregunta) — cero funcionalidad
+ * propia. La página sigue existiendo en /herramientas (no se borra ni se
+ * rompe su URL), simplemente deja de tener acceso privilegiado.
  *
  * "Comunidad" se retiró del primer nivel: sus 3 páginas (/comunidad,
  * /roadmap, /actualizaciones) son estado del proyecto/changelog de la
@@ -26,19 +39,18 @@ export const brandPrinciple = {
  * entre sí).
  *
  * "Explorar" también se retiró: es un índice/mapa de superficies que ya
- * tienen su propia vía razonable (El Laboratorio, Competitivo, Home,
- * búsqueda) — ningún producto principal dependía de /explorar como único
- * camino. La página sigue existiendo y funcionando igual, solo deja de
- * ocupar navegación primaria; Home ya enlaza a ella directamente.
+ * tienen su propia vía razonable (ADCs, Competitivo, Home, búsqueda) —
+ * ningún producto principal dependía de /explorar como único camino. La
+ * página sigue existiendo y funcionando igual, solo deja de ocupar
+ * navegación primaria; Home ya enlaza a ella directamente.
  */
 export const navigation = [
   {
-    label: 'El Laboratorio',
+    label: 'ADCs',
     items: [
-      { label: 'Centro de Campeones', href: '/campeones' },
+      { label: 'Todos los ADCs', href: '/campeones' },
       { label: 'Tier List', href: '/tier-list' },
-      { label: 'Academia ADC', href: '/academia' },
-      { label: 'Herramientas', href: '/herramientas' },
+      { label: 'Aprende ADC', href: '/academia' },
       { label: 'Pregunta a Tidusss', href: '/pregunta' },
     ],
   },

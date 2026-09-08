@@ -64,9 +64,9 @@ import type { ContentEntity, ContentRelation } from './types';
 const championHubEntity: ContentEntity = {
   id: 'tool:champion-hub',
   kind: 'tool',
-  title: 'Centro de Campeones',
+  title: 'ADCs',
   description:
-    'Busca y filtra en el catálogo completo de campeones del Laboratorio.',
+    'Los ADC sobre los que Tidusss tiene criterio y contenido publicado.',
   href: '/campeones',
   source: 'editorial',
   status: 'available',
@@ -86,7 +86,7 @@ const preguntaToolEntity: ContentEntity = {
 const academiaToolEntity: ContentEntity = {
   id: 'tool:academia',
   kind: 'tool',
-  title: 'Academia ADC',
+  title: 'Aprende ADC',
   description:
     'El vocabulario y los fundamentos de ADC, organizados en fichas navegables.',
   href: '/academia',
@@ -99,7 +99,7 @@ const toolsHubEntity: ContentEntity = {
   kind: 'tool',
   title: 'Herramientas',
   description:
-    'Todas las utilidades del Laboratorio en un solo sitio, disponibles y en camino.',
+    'Todas las utilidades de tidusss.es en un solo sitio, disponibles y en camino.',
   href: '/herramientas',
   source: 'editorial',
   status: 'available',
@@ -353,7 +353,7 @@ export const leagueLaboratoryRelations: ContentRelation[] = [
         from: labChampion.id,
         to: championHubEntity.id,
         kind: 'related-to' as const,
-        label: 'Ver el catálogo completo de campeones',
+        label: 'Ver todos los ADC',
         priority: 45,
         source: 'editorial' as const,
       },
@@ -371,7 +371,7 @@ export const leagueLaboratoryRelations: ContentRelation[] = [
     from: officialAdcTierList.id,
     to: championHubEntity.id,
     kind: 'related-to',
-    label: 'Explorar el catálogo completo de campeones',
+    label: 'Explorar todos los ADC',
     priority: 55,
     source: 'editorial',
   },
@@ -431,7 +431,7 @@ export const leagueLaboratoryRelations: ContentRelation[] = [
         from: concept.id,
         to: academiaToolEntity.id,
         kind: 'related-to' as const,
-        label: 'Ver todos los conceptos de la Academia ADC',
+        label: 'Ver todos los conceptos de Aprende ADC',
         priority: 40,
         source: 'editorial' as const,
       },

@@ -8,10 +8,15 @@ interface Props {
   dataDragonVersion: string;
 }
 const { entry, dataDragonVersion } = Astro.props;
-const { catalogEntry, tier, isCounterPick } = entry;
+const { catalogEntry, labChampion, tier, isCounterPick } = entry;
 const iconUrl = dataDragonUrls(dataDragonVersion).champion(
   catalogEntry.dataDragonKey,
 );
+// Única señal editorial que se muestra en la tarjeta compacta del roster:
+// si Tidusss ya tiene guía completa (perfil real) para este ADC. Nunca se
+// muestra "en curación"/"pendiente" aquí — sería ruido repetido en 24 de
+// las 25 tarjetas; esa distinción ya vive en la propia ficha del campeón.
+const hasGuide = Boolean(labChampion?.profile);
 ---
 
 <a
@@ -31,5 +36,6 @@ const iconUrl = dataDragonUrls(dataDragonVersion).champion(
   <span class="adc-roster-card-name">
     <strong>{catalogEntry.name}</strong>
     {isCounterPick && <small>Counter pick</small>}
+    {hasGuide && <small class="adc-roster-card-guide">Guía completa</small>}
   </span>
 </a>

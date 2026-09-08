@@ -4,19 +4,12 @@ import Navbar from '../../components/Navbar.astro';
 import Footer from '../../components/Footer.astro';
 import ExploreNext from '../../components/ExploreNext.astro';
 import LaboratoryHero from '../../components/laboratory/LaboratoryHero.astro';
-import LaboratoryCoverageSummary from '../../components/laboratory/LaboratoryCoverageSummary.astro';
-import LaboratorySearch from '../../components/laboratory/LaboratorySearch.astro';
 import ChampionEditorialCard from '../../components/laboratory/champion/ChampionEditorialCard.astro';
 import ChampionAdcRosterCard from '../../components/laboratory/champion/ChampionAdcRosterCard.astro';
-import ChampionCatalogRow from '../../components/laboratory/champion/ChampionCatalogRow.astro';
 import {
   buildLabRegistry,
   getAdcRoster,
-  getCatalogCoverage,
   getFeaturedChampions,
-  getLabChampion,
-  isChampionInAnyTierList,
-  resolveChampionEditorialStatus,
 } from '../../domain/league-laboratory';
 import {
   adcLabChampions,
@@ -33,41 +26,32 @@ const registry = buildLabRegistry({
   tierLists: [officialAdcTierList],
 });
 
-const coverage = getCatalogCoverage(registry);
 const dataDragonVersion = championCatalogVersion;
 
 /**
- * Jerarquía real, no una grid de 173 elementos iguales: contenido
- * destacado (solo campeones con perfil editorial completo — hoy, uno),
- * el rol ADC de Tidusss (los reales de su Tier List), y el catálogo
- * completo, compacto, para todo lo demás. Ver `domain/league-laboratory/hub.ts`
- * para cómo se deriva cada lista — nunca elegida a mano aquí.
+ * Hub público de ADCs — no el catálogo completo de campeones de League.
+ * `championCatalog` (~173, factual, generado desde Data Dragon) sigue
+ * existiendo y sigue siendo necesario internamente (partidas Riot,
+ * supports, enemigos, relaciones, metadata de vídeos), pero esta página ya
+ * no lo presenta como si los 173 fueran conocimiento editorial de Tidusss.
+ * Lo único que se muestra aquí es: (1) contenido destacado (perfil
+ * editorial completo — hoy, solo Lucian) y (2) el roster ADC de Tidusss,
+ * derivado SIEMPRE de `officialAdcTierList` vía `getAdcRoster` — nunca una
+ * segunda lista mantenida a mano. Hoy son 25.
  */
 const featuredChampions = getFeaturedChampions(registry);
 const adcRoster = getAdcRoster(registry);
 
-const catalogRows = championCatalog.map((catalogEntry) => ({
-  catalogEntry,
-  status: resolveChampionEditorialStatus(
-    getLabChampion(registry, catalogEntry.id),
-  ),
-  inTierList: isChampionInAnyTierList(registry, catalogEntry.id),
-}));
-
-const classOptions = [
-  ...new Set(championCatalog.flatMap((entry) => entry.tags)),
-].sort((a, b) => a.localeCompare(b, 'es'));
-
-const pageTitle = 'Centro de Campeones · El Laboratorio · tidusss.es';
-const pageDescription = `Explora los ${coverage.total} campeones del catálogo del Laboratorio: contenido destacado con análisis completo, los ADC de la Tier List de Tidusss, y el catálogo completo para encontrar cualquier otro campeón.`;
+const pageTitle = 'ADCs · tidusss.es';
+const pageDescription = `Los ${adcRoster.length} ADC sobre los que gira el conocimiento de Tidusss, Master ADC en EUW: tier actual de la Tier List, guía completa cuando existe y vídeos relacionados.`;
 ---
 
 <BaseLayout title={pageTitle} description={pageDescription}>
   <Navbar />
   <main>
     <LaboratoryHero
-      title="Centro de Campeones"
-      description="El punto de partida para explorar el catálogo de campeones del Laboratorio: qué campeones tienen ya el criterio de Tidusss, sus ADC de referencia, y dónde encontrar cualquier otro campeón del juego."
+      title="ADCs"
+      description="Aquí reúno lo que sé de verdad sobre los ADC que juego y analizo: valoración, criterio y contenido real — no una lista de todos los campeones del juego."
     />
     <section
       class="champion-hub section-shell"
@@ -75,11 +59,9 @@ const pageDescription = `Explora los ${coverage.total} campeones del catálogo d
     >
       <div class="mx-auto max-w-7xl px-5 sm:px-8">
         <header class="champion-hub-header">
-          <p class="eyebrow">El Laboratorio · Centro de Campeones</p>
-          <h2 id="champion-hub-title" class="sr-only">Centro de Campeones</h2>
+          <p class="eyebrow">ADCs</p>
+          <h2 id="champion-hub-title" class="sr-only">ADCs</h2>
         </header>
-
-        <LaboratoryCoverageSummary coverage={coverage} />
 
         {
           featuredChampions.length > 0 && (
@@ -87,8 +69,9 @@ const pageDescription = `Explora los ${coverage.total} campeones del catálogo d
               <p class="eyebrow">Contenido destacado</p>
               <h2>Análisis editorial completo</h2>
               <p class="champion-hub-section-lead">
-                Los campeones con veredicto propio de Tidusss: build, runas,
-                sinergias y criterio real — no solo presencia en el catálogo.
+                Los ADC con veredicto propio de Tidusss: build, runas,
+                sinergias y criterio real — no solo presencia en la Tier
+                List.
               </p>
               <div class="champion-editorial-grid">
                 {featuredChampions.map(({ catalogEntry, labChampion }) => (
@@ -107,13 +90,16 @@ const pageDescription = `Explora los ${coverage.total} campeones del catálogo d
         {
           adcRoster.length > 0 && (
             <div class="champion-hub-section champion-hub-adc">
-              <p class="eyebrow">ADC</p>
-              <h2>El rol competitivo de Tidusss</h2>
+              <p class="eyebrow">Roster</p>
+              <h2>
+                Los {adcRoster.length} ADC de la Tier List de Tidusss
+              </h2>
               <p class="champion-hub-section-lead">
                 Cada ADC con entrada real en la Tier List de Tidusss, de un
-                vistazo. Esto no sustituye la Tier List — solo dice qué
-                conocimiento existe de cada uno. Para el veredicto completo,
-                la edición oficial.
+                vistazo: tier actual y, cuando existe, guía completa. Esto no
+                sustituye la Tier List — solo dice qué conocimiento existe de
+                cada uno. Para el veredicto y el razonamiento completo, la
+                edición oficial.
               </p>
               <div class="adc-roster-grid">
                 {adcRoster.map((entry) => (
@@ -130,46 +116,12 @@ const pageDescription = `Explora los ${coverage.total} campeones del catálogo d
             </div>
           )
         }
-
-        <div class="champion-hub-section champion-hub-catalog">
-          <p class="eyebrow">Catálogo completo</p>
-          <h2>Busca cualquier campeón ({catalogRows.length})</h2>
-          <p class="champion-hub-section-lead">
-            Cada campeón de League of Legends tiene ya su propia ficha en{' '}
-            <code>/campeones/&lt;campeón&gt;</code>, generada a partir de
-            datos oficiales de Riot — tenga o no todavía el criterio
-            editorial de Tidusss.
-          </p>
-          <LaboratorySearch classOptions={classOptions} />
-          <ul class="champion-catalog-grid" data-champion-catalog-grid>
-            {
-              catalogRows.map(({ catalogEntry, status, inTierList }) => (
-                <ChampionCatalogRow
-                  catalogEntry={catalogEntry}
-                  status={status}
-                  dataDragonVersion={dataDragonVersion}
-                  inTierList={inTierList}
-                />
-              ))
-            }
-          </ul>
-          <p class="champion-catalog-empty" data-champion-catalog-empty hidden>
-            Ningún campeón coincide con estos filtros. Prueba a quitar alguno o
-            a buscar con otro término.
-          </p>
-          <button
-            type="button"
-            class="champion-catalog-show-more"
-            data-champion-catalog-show-more
-            hidden
-          />
-        </div>
       </div>
     </section>
     <ExploreNext
       source="tool:champion-hub"
       eyebrow="Sigue explorando"
-      title="Relacionado con el Centro de Campeones"
+      title="Relacionado con los ADC"
     />
   </main>
   <Footer />

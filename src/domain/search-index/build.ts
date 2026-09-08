@@ -28,6 +28,23 @@ const patchLabel = (id: PatchId) => patchLabelById.get(id) ?? id;
 const conceptTitle = (id: ConceptId) => conceptById.get(id)?.title ?? id;
 
 /**
+ * El universo público de ADCs: exactamente los campeones con entrada
+ * `reviewed` en `officialAdcTierList` — misma fuente de verdad que ya usa
+ * `getAdcRoster` (domain/league-laboratory/hub.ts), nunca una segunda
+ * lista mantenida a mano aquí. Search deja de ofrecer como destino
+ * editorial las fichas factual-only de campeones fuera de este roster
+ * (p. ej. Zed, Darius): esos nombres siguen resolviendo internamente
+ * (`catalogById`, usado más abajo como metadata/keywords de vídeos,
+ * builds, sinergias...) pero ya no generan una entrada `campeon` propia en
+ * el índice público.
+ */
+const adcRosterIds = new Set(
+  officialAdcTierList.entries
+    .filter((entry) => entry.reviewStatus === 'reviewed')
+    .map((entry) => entry.championId),
+);
+
+/**
  * Una página estática por ruta pública real — no genera thin content:
  * `/buscar` no se incluye a sí misma como resultado de sí misma, y las
  * rutas dinámicas (campeones, actualizaciones...) se indexan por su propia
@@ -37,34 +54,41 @@ const staticPageEntries = (): SearchEntry[] => [
   { id: 'page:inicio', category: 'pagina', title: 'Inicio', description: 'La portada del sitio: qué está pasando ahora mismo y por dónde seguir.', href: '/', keywords: ['home', 'portada'] },
   { id: 'page:explorar', category: 'pagina', title: 'Explorar', description: 'El índice completo del sitio, con cifras reales del catálogo.', href: '/explorar', keywords: ['indice', 'catalogo', 'todo'] },
   { id: 'page:competitivo', category: 'pagina', title: 'Competitivo', description: 'Rango, LP, partidas recientes y objetivos, actualizados en vivo.', href: '/competitivo', keywords: ['rango', 'lp', 'partidas', 'live', 'directo'] },
-  { id: 'page:academia', category: 'pagina', title: 'Academia ADC', description: 'El vocabulario y los fundamentos de ADC, en fichas navegables.', href: '/academia', keywords: ['conceptos', 'fundamentos', 'vocabulario'] },
-  { id: 'page:herramientas', category: 'pagina', title: 'Herramientas', description: 'Todas las herramientas del Laboratorio en un solo sitio.', href: '/herramientas', keywords: ['tools'] },
+  { id: 'page:academia', category: 'pagina', title: 'Aprende ADC', description: 'El vocabulario y los fundamentos de ADC, en fichas navegables.', href: '/academia', keywords: ['conceptos', 'fundamentos', 'vocabulario'] },
+  { id: 'page:herramientas', category: 'pagina', title: 'Herramientas', description: 'Todas las herramientas de tidusss.es en un solo sitio.', href: '/herramientas', keywords: ['tools'] },
   { id: 'page:actividad', category: 'pagina', title: 'Actividad', description: 'Vídeos, directos, partidas y cambios editoriales, en orden.', href: '/actividad', keywords: ['timeline', 'feed'] },
   { id: 'page:actualizaciones', category: 'pagina', title: 'Actualizaciones', description: 'El historial editorial completo del sitio.', href: '/actualizaciones', keywords: ['changelog', 'cambios', 'historial'] },
   { id: 'page:comunidad', category: 'pagina', title: 'Comunidad', description: 'Objetivos, roadmap y qué acaba de cambiar en el proyecto.', href: '/comunidad', keywords: ['objetivos', 'estado del proyecto'] },
   { id: 'page:roadmap', category: 'pagina', title: 'Roadmap', description: 'Qué viene después en el proyecto.', href: '/roadmap', keywords: ['futuro', 'planes'] },
-  { id: 'page:campeones', category: 'pagina', title: 'Centro de Campeones', description: `Los ${championCatalog.length} campeones del catálogo: busca, filtra y ordena.`, href: '/campeones', keywords: ['catalogo', 'champions'] },
+  { id: 'page:campeones', category: 'pagina', title: 'ADCs', description: `Los ${adcRosterIds.size} ADC de la Tier List de Tidusss: tier, guías y vídeos relacionados.`, href: '/campeones', keywords: ['adc', 'campeones', 'roster'] },
   { id: 'page:tier-list', category: 'pagina', title: 'Tier List oficial ADC', description: officialAdcTierList.title, href: '/tier-list', keywords: ['tierlist', 'meta', 'clasificacion'] },
   { id: 'page:pregunta', category: 'pagina', title: 'Pregunta a Tidusss', description: 'Construye una respuesta editorial a una duda concreta con el contenido ya publicado.', href: '/pregunta', keywords: ['preguntar', 'duda', 'qa'] },
 ];
 
-/** Un resultado por campeón del catálogo (~170) — real incluso cuando está pendiente de curación editorial: la ficha factual ya existe. */
+/**
+ * Un resultado por ADC del roster público (25) — nunca por los ~170
+ * campeones del catálogo factual: presentar una ficha factual-only (p. ej.
+ * Zed, Darius) como destino de búsqueda daría a entender que Tidusss tiene
+ * conocimiento editorial sobre ella cuando solo existe el dato de Riot.
+ */
 const championEntries = (): SearchEntry[] =>
-  championCatalog.map((entry) => {
-    const labChampion = labChampionById.get(entry.id);
-    const status = resolveChampionEditorialStatus(labChampion);
-    const statusLabel =
-      status === 'reviewed' ? 'Guía completa' : status === 'draft' ? 'Ficha en curación' : 'Ficha factual';
-    return {
-      id: `champion:${entry.id}`,
-      category: 'campeon',
-      title: entry.name,
-      description: `${entry.title} · ${statusLabel}`,
-      href: championUrl(entry.slug),
-      keywords: [entry.dataDragonKey, ...entry.tags],
-      editorialStatus: status,
-    };
-  });
+  championCatalog
+    .filter((entry) => adcRosterIds.has(entry.id))
+    .map((entry) => {
+      const labChampion = labChampionById.get(entry.id);
+      const status = resolveChampionEditorialStatus(labChampion);
+      const statusLabel =
+        status === 'reviewed' ? 'Guía completa' : status === 'draft' ? 'Ficha en curación' : 'ADC de la Tier List';
+      return {
+        id: `champion:${entry.id}`,
+        category: 'campeon',
+        title: entry.name,
+        description: `${entry.title} · ${statusLabel}`,
+        href: championUrl(entry.slug),
+        keywords: [entry.dataDragonKey, ...entry.tags],
+        editorialStatus: status,
+      };
+    });
 
 /** Un resultado por campeón realmente curado (con perfil): la guía larga, distinta de la ficha factual anterior. */
 const guideEntries = (): SearchEntry[] =>
@@ -162,8 +186,8 @@ const academiaEntries = (): SearchEntry[] =>
 /** Un resultado por herramienta con destino real — nunca las "próximamente" de /herramientas, que no tienen `href`. */
 const herramientaEntries = (): SearchEntry[] => [
   { id: 'tool:tier-list', category: 'herramienta', title: 'Tier List oficial ADC', description: 'Clasificación editorial del meta actual, con filtros por tier.', href: '/tier-list', keywords: [] },
-  { id: 'tool:campeones', category: 'herramienta', title: 'Centro de Campeones', description: 'Busca, filtra y ordena el catálogo completo por estado editorial.', href: '/campeones', keywords: [] },
-  { id: 'tool:academia', category: 'herramienta', title: 'Academia ADC', description: 'El vocabulario y los fundamentos de ADC, organizados en fichas.', href: '/academia', keywords: [] },
+  { id: 'tool:campeones', category: 'herramienta', title: 'ADCs', description: 'Los ADC de la Tier List de Tidusss: tier, guías y vídeos relacionados.', href: '/campeones', keywords: [] },
+  { id: 'tool:academia', category: 'herramienta', title: 'Aprende ADC', description: 'El vocabulario y los fundamentos de ADC, organizados en fichas.', href: '/academia', keywords: [] },
   { id: 'tool:competitivo', category: 'herramienta', title: 'Centro competitivo', description: 'Rango, LP, últimas partidas y objetivos, actualizados en vivo.', href: '/competitivo', keywords: [] },
 ];
 

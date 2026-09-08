@@ -2,8 +2,15 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { buildSearchIndex } from '../../src/domain/search-index/build.ts';
 import { SEARCH_CATEGORY_LABEL } from '../../src/domain/search-index/types.ts';
-import { championCatalog } from '../../src/data/league-laboratory/index.ts';
+import { officialAdcTierList } from '../../src/data/league-laboratory/index.ts';
 import { siteUpdates } from '../../src/data/updates.ts';
+
+// Único universo público de "campeón" en Search: los ADC reviewed de la
+// Tier List — misma fuente que `championEntries()` usa en build.ts, nunca
+// una segunda cuenta mantenida a mano.
+const adcRosterCount = officialAdcTierList.entries.filter(
+  (entry) => entry.reviewStatus === 'reviewed',
+).length;
 
 const index = buildSearchIndex();
 
@@ -73,9 +80,9 @@ test('todos los href son rutas relativas reales del sitio (empiezan por "/"), nu
 
 // --- Cobertura real por categoría ---
 
-test('hay exactamente una entrada de campeón por cada campeón real del catálogo', () => {
+test('hay exactamente una entrada de campeón por cada ADC real del roster (Tier List) — nunca por los ~173 del catálogo factual', () => {
   const championEntries = index.filter((entry) => entry.category === 'campeon');
-  assert.equal(championEntries.length, championCatalog.length);
+  assert.equal(championEntries.length, adcRosterCount);
 });
 
 test('cada entrada de campeón resuelve a una página /campeones/<slug> real', () => {
@@ -83,6 +90,17 @@ test('cada entrada de campeón resuelve a una página /campeones/<slug> real', (
   for (const entry of championEntries) {
     assert.match(entry.href, /^\/campeones\/[a-z0-9-]+$/);
   }
+});
+
+test('un campeón fuera del roster ADC (Zed, Darius) NO aparece como destino editorial en Search', () => {
+  const championEntries = index.filter((entry) => entry.category === 'campeon');
+  // Por título, no por `id`: el `id` real de cada entrada de campeón lleva
+  // un prefijo `champion:` duplicado (`champion:champion:zed`, bug
+  // preexistente y fuera del alcance de esta fase) — comparar por título es
+  // lo que de verdad protege "Zed no aparece como destino editorial".
+  const titles = new Set(championEntries.map((entry) => entry.title));
+  assert.equal(titles.has('Zed'), false);
+  assert.equal(titles.has('Darius'), false);
 });
 
 test('hay exactamente una entrada de actualización por cada entrada real de siteUpdates', () => {

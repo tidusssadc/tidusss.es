@@ -6,7 +6,7 @@ import ExploreNext from '../components/ExploreNext.astro';
 import LaboratoryHero from '../components/laboratory/LaboratoryHero.astro';
 import {
   buildLabRegistry,
-  getCatalogCoverage,
+  getAdcRoster,
 } from '../domain/league-laboratory';
 import {
   adcLabChampions,
@@ -21,7 +21,7 @@ const registry = buildLabRegistry({
   patches: leagueLaboratoryPatches,
   tierLists: [officialAdcTierList],
 });
-const coverage = getCatalogCoverage(registry);
+const adcRoster = getAdcRoster(registry);
 
 const availableTools = [
   {
@@ -38,12 +38,12 @@ const availableTools = [
   },
   {
     href: '/campeones',
-    title: 'Centro de Campeones',
-    description: `Los ${coverage.total} campeones del catálogo: busca, filtra y ordena por estado editorial.`,
+    title: 'ADCs',
+    description: `Los ${adcRoster.length} ADC de la Tier List de Tidusss: tier, guías y vídeos relacionados.`,
   },
   {
     href: '/academia',
-    title: 'Academia ADC',
+    title: 'Aprende ADC',
     description:
       'El vocabulario y los fundamentos de ADC, organizados en fichas navegables.',
   },
@@ -72,16 +72,16 @@ const upcomingTools = [
   },
 ] as const;
 
-const pageTitle = 'Herramientas · El Laboratorio · tidusss.es';
+const pageTitle = 'Herramientas · tidusss.es';
 const pageDescription =
-  'Todas las herramientas del Laboratorio en un solo sitio: Pregunta a Tidusss, Tier List, Centro de Campeones, Academia ADC y lo que está en camino.';
+  'Todas las herramientas de tidusss.es en un solo sitio: Pregunta a Tidusss, Tier List, ADCs, Aprende ADC y lo que está en camino.';
 ---
 
 <BaseLayout title={pageTitle} description={pageDescription}>
   <Navbar />
   <main>
     <LaboratoryHero
-      eyebrow="El Laboratorio"
+      eyebrow="Recursos"
       title="Herramientas"
       description="Todo lo que puedes usar para resolver una duda concreta, en un solo sitio — hoy y lo que está por llegar."
     />

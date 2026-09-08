@@ -42,7 +42,7 @@ const upcomingConcepts = [
   'Micro',
 ] as const;
 
-const pageTitle = 'Academia ADC · El Laboratorio · tidusss.es';
+const pageTitle = 'Aprende ADC · tidusss.es';
 const pageDescription =
   'El vocabulario y los fundamentos de ADC explicados con precisión: spacing, power spike, trading, tempo y wave management — la base sobre la que se construye cada guía.';
 ---
@@ -51,13 +51,13 @@ const pageDescription =
   <Navbar />
   <main>
     <LaboratoryHero
-      eyebrow="El Laboratorio"
-      title="Academia ADC"
+      eyebrow="ADCs"
+      title="Aprende ADC"
       description="El vocabulario y los fundamentos que sostienen cada guía y cada decisión en partida, explicados una sola vez y enlazados desde todas partes."
     />
     <section class="academy-page section-shell" aria-labelledby="academy-title">
       <div class="mx-auto max-w-6xl px-5 sm:px-8">
-        <h2 id="academy-title" class="sr-only">Conceptos de la Academia ADC</h2>
+        <h2 id="academy-title" class="sr-only">Fundamentos de ADC</h2>
 
         {
           conceptsByCategory.map(({ category, concepts }) => (
@@ -127,16 +127,13 @@ const pageDescription =
             Ver estos conceptos aplicados en la guía de Lucian
             <span aria-hidden="true">→</span>
           </a>
-          <a class="button-secondary" href="/herramientas">
-            Explorar todas las herramientas <span aria-hidden="true">→</span>
-          </a>
         </div>
       </div>
     </section>
     <ExploreNext
       source="tool:academia"
       eyebrow="Sigue explorando"
-      title="Relacionado con la Academia ADC"
+      title="Relacionado con Aprende ADC"
     />
   </main>
   <Footer />

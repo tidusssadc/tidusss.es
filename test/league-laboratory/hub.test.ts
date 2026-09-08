@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  getAdcRoster,
   getCatalogCoverage,
   isChampionInAnyTierList,
   resolveRiotDifficultyBucket,
@@ -52,4 +53,78 @@ test('isChampionInAnyTierList: Lucian está en la Tier List oficial', () => {
 test('isChampionInAnyTierList: un campeón sin ninguna Tier List devuelve false', () => {
   const registry = buildLabRegistry({ tierLists: [officialAdcTierList] });
   assert.equal(isChampionInAnyTierList(registry, 'champion:aatrox'), false);
+});
+
+// --- getAdcRoster: fuente única del roster público de /campeones (fase
+// "ecosistema ADC") — siempre derivado de officialAdcTierList, nunca una
+// segunda lista mantenida a mano. ---
+
+const ADC_ROSTER_REGISTRY = buildLabRegistry({
+  catalog: championCatalog,
+  champions: adcLabChampions,
+  tierLists: [officialAdcTierList],
+});
+
+const EXPECTED_ADC_ROSTER_IDS = [
+  'champion:zeri',
+  'champion:jinx',
+  'champion:tristana',
+  'champion:ashe',
+  'champion:caitlyn',
+  'champion:kaisa',
+  'champion:lucian',
+  'champion:sivir',
+  'champion:corki',
+  'champion:xayah',
+  'champion:nilah',
+  'champion:yunara',
+  'champion:kalista',
+  'champion:varus',
+  'champion:jhin',
+  'champion:twitch',
+  'champion:draven',
+  'champion:kog-maw',
+  'champion:samira',
+  'champion:aphelios',
+  'champion:miss-fortune',
+  'champion:vayne',
+  'champion:ezreal',
+  'champion:smolder',
+  'champion:senna',
+].sort();
+
+test('getAdcRoster devuelve exactamente los 25 ADC actuales de la Tier List — ni uno más, ni uno menos', () => {
+  const roster = getAdcRoster(ADC_ROSTER_REGISTRY);
+  assert.equal(roster.length, 25);
+  assert.deepEqual(
+    roster.map((entry) => entry.catalogEntry.id).sort(),
+    EXPECTED_ADC_ROSTER_IDS,
+  );
+});
+
+test('getAdcRoster: ningún campeón fuera de la Tier List ADC aparece en el roster visible', () => {
+  const roster = getAdcRoster(ADC_ROSTER_REGISTRY);
+  const rosterIds = new Set(roster.map((entry) => entry.catalogEntry.id));
+  // Aatrox, Seraphine y Vel'Koz son casos reales de campeones NO incluidos
+  // en `officialAdcTierListEntries` — Seraphine/Vel'Koz aparecen en la nota
+  // "¿Y los magos en bot?" de la propia Tier List, pero deliberadamente
+  // fuera de sus `entries`, así que no deben contar como roster ADC.
+  assert.equal(rosterIds.has('champion:aatrox'), false);
+  assert.equal(rosterIds.has('champion:seraphine'), false);
+  assert.equal(rosterIds.has('champion:velkoz'), false);
+});
+
+test('getAdcRoster: Lucian aparece en el roster con su tier real (A) y su curación editorial', () => {
+  const roster = getAdcRoster(ADC_ROSTER_REGISTRY);
+  const lucianEntry = roster.find((entry) => entry.catalogEntry.id === lucian.id);
+  assert.ok(lucianEntry, 'Lucian debería estar en el roster ADC');
+  assert.equal(lucianEntry?.tier, 'A');
+  assert.equal(lucianEntry?.labChampion?.id, lucian.id);
+});
+
+test('officialAdcTierList mantiene exactamente 25 entradas revisadas (reviewStatus === reviewed)', () => {
+  const reviewed = officialAdcTierList.entries.filter(
+    (entry) => entry.reviewStatus === 'reviewed',
+  );
+  assert.equal(reviewed.length, 25);
 });
