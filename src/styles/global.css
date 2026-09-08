@@ -1584,10 +1584,15 @@
   display: block;
   width: fit-content;
   min-width: 8rem;
+  max-width: 100%;
   color: #fff;
-  font-size: clamp(3rem, 7vw, 5.35rem);
-  letter-spacing: -0.06em;
-  line-height: 0.9;
+  /* Antes clamp(3rem, 7vw, 5.35rem) — pensado para "EN DIRECTO"/"Offline",
+     pero los estados reales también incluyen frases más largas ("Conexión
+     con Twitch pendiente.", "Estado no disponible"). A ese tamaño, esas
+     frases se envolvían en varias líneas e inflaban la sección entera. */
+  font-size: clamp(1.9rem, 3.6vw, 2.75rem);
+  letter-spacing: -0.03em;
+  line-height: 1.05;
 }
 .platform-status > p {
   min-width: 15rem;
@@ -1719,11 +1724,17 @@
 }
 .youtube-showcase-main strong {
   width: fit-content;
+  max-width: 100%;
   min-width: 11rem;
   color: #fff;
-  font-size: clamp(4.2rem, 9vw, 6.5rem);
-  letter-spacing: -0.07em;
-  line-height: 0.9;
+  /* Antes clamp(4.2rem, 9vw, 6.5rem) — pensado para un número corto
+     ("5.234"), pero el estado de error real ("YouTube no responde ahora
+     mismo") es una frase, y a ese tamaño se envolvía en varias líneas e
+     inflaba el panel entero. Ahora en línea con `.credential-rank strong`
+     (Home), del mismo rango de tamaño para una cifra destacada. */
+  font-size: clamp(2.75rem, 5vw, 4rem);
+  letter-spacing: -0.04em;
+  line-height: 1;
 }
 .youtube-showcase-main span,
 .youtube-showcase-main p {
@@ -2052,6 +2063,14 @@
     grid-template-columns: 7.5rem 1fr;
     gap: 0.75rem;
     align-items: baseline;
+  }
+  /* Home es la preview, /competitivo es el detalle: en mobile, la
+     credencial mantiene solo las dos señales de "activo ahora" (win rate y
+     última actividad) — Riot ID y la muestra ya se ven en /competitivo. En
+     desktop hay espacio de sobra (la credencial no es la sección más alta
+     de la página), así que las 4 métricas se mantienen ahí. */
+  .credential-data .credential-secondary-metric {
+    display: none;
   }
   .platform-panel {
     min-height: 31rem;
