@@ -101,7 +101,6 @@ const pageDescription =
   import { searchEntries } from '../domain/search-index';
   import type { SearchEntry, SearchEntryCategory } from '../domain/search-index';
   import { SEARCH_CATEGORY_LABEL } from '../domain/search-index';
-  import type { YouTubeFeedResponse } from '../types/content';
 
   const input = document.querySelector<HTMLInputElement>('[data-search-page-input]');
   const filtersRoot = document.querySelector<HTMLElement>('[data-search-page-filters]');
@@ -156,32 +155,16 @@ const pageDescription =
     return `${before}<mark>${match}</mark>${after}`;
   };
 
+  // Los vídeos ya vienen dentro de `/buscar-index.json` (los curados de
+  // `video-content-links.ts`) — única fuente, sin una segunda llamada
+  // propia a `/api/youtube` (esa integración sigue viva para Home/
+  // ActivityCenterCta, solo deja de usarse aquí como fuente duplicada).
   let staticEntries: SearchEntry[] = [];
-  let videoEntries: SearchEntry[] = [];
 
   const loadEntries = async (): Promise<void> => {
-    const [indexResponse] = await Promise.all([
-      fetch('/buscar-index.json').then((response) => response.json() as Promise<SearchEntry[]>),
-      fetch('/api/youtube')
-        .then((response) => response.json() as Promise<YouTubeFeedResponse>)
-        .then((payload) => {
-          if (!payload.ok) return;
-          videoEntries = payload.data.videos.slice(0, 30).map((video) => ({
-            id: `video:${video.id}`,
-            category: 'video' as const,
-            title: video.title,
-            description: video.durationLabel
-              ? `${video.isShort ? 'Short' : 'Vídeo'} · ${video.durationLabel}`
-              : video.isShort
-                ? 'Short'
-                : 'Vídeo',
-            href: video.url,
-            keywords: [],
-          }));
-        })
-        .catch(() => undefined),
-    ]);
-    staticEntries = indexResponse;
+    staticEntries = await fetch('/buscar-index.json').then(
+      (response) => response.json() as Promise<SearchEntry[]>,
+    );
   };
 
   // --- Filtros: solo los que cambian resultados de verdad. "Campeón" y
@@ -277,8 +260,7 @@ const pageDescription =
       renderEmptyIndexState();
       return;
     }
-    const allEntries = [...staticEntries, ...videoEntries];
-    const matches = searchEntries(allEntries, query, { limit: 200 });
+    const matches = searchEntries(staticEntries, query, { limit: 200 });
 
     const byCategory = new Map<SearchEntryCategory, SearchEntry[]>();
     for (const { entry } of matches) {

@@ -61,7 +61,6 @@
   import type { SearchEntry, SearchEntryCategory } from '../../domain/search-index';
   import { SEARCH_CATEGORY_LABEL } from '../../domain/search-index';
   import { readRecentPages, recordPageVisit, clearRecentPages } from '../../lib/recent-pages';
-  import type { YouTubeFeedResponse } from '../../types/content';
 
   const dialog = document.querySelector<HTMLDialogElement>('[data-search-dialog]');
   const input = document.querySelector<HTMLInputElement>('[data-search-input]');
@@ -129,38 +128,16 @@
     return `${before}<mark>${match}</mark>${after}`;
   };
 
-  // --- Índice estático (build time) + vídeos reales (cliente, como ya hacen HomeTodayModule/ActivityCenterCta) ---
+  // --- Índice estático (build time) ---
+  // Los vídeos ya vienen dentro de `/buscar-index.json` (los curados de
+  // `video-content-links.ts`, con sus relaciones reales como keywords) —
+  // única fuente para el buscador, sin una segunda llamada propia a
+  // `/api/youtube` (esa integración sigue viva para Home/ActivityCenterCta,
+  // solo deja de usarse aquí como fuente duplicada de vídeos).
   let indexPromise: Promise<SearchEntry[]> | undefined;
   const ensureIndex = (): Promise<SearchEntry[]> => {
     indexPromise ??= fetch('/buscar-index.json').then((response) => response.json());
     return indexPromise;
-  };
-
-  let videoEntries: SearchEntry[] = [];
-  let videosLoaded = false;
-  const ensureVideos = async (): Promise<void> => {
-    if (videosLoaded) return;
-    videosLoaded = true;
-    try {
-      const response = await fetch('/api/youtube');
-      const payload = (await response.json()) as YouTubeFeedResponse;
-      if (!payload.ok) return;
-      videoEntries = payload.data.videos.slice(0, 30).map((video) => ({
-        id: `video:${video.id}`,
-        category: 'video',
-        title: video.title,
-        description: video.durationLabel
-          ? `${video.isShort ? 'Short' : 'Vídeo'} · ${video.durationLabel}`
-          : video.isShort
-            ? 'Short'
-            : 'Vídeo',
-        href: video.url,
-        keywords: [],
-      }));
-      if (input.value.trim()) render(input.value);
-    } catch {
-      // Sin vídeos en este render: el resto del índice sigue funcionando — nunca se bloquea la búsqueda por esto.
-    }
   };
 
   // --- Estado de teclado/foco ---
@@ -235,6 +212,8 @@
           <button type="button" class="global-search-chip" data-search-suggestion="spacing">spacing</button>
           <button type="button" class="global-search-chip" data-search-suggestion="Tier List">Tier List</button>
           <button type="button" class="global-search-chip" data-search-suggestion="Kai'Sa">Kai'Sa</button>
+          <button type="button" class="global-search-chip" data-search-suggestion="Jhin">Jhin</button>
+          <button type="button" class="global-search-chip" data-search-suggestion="snowball">snowball</button>
         </div>
       </div>
     `;
@@ -333,9 +312,8 @@
       renderInitialState();
       return;
     }
-    const [staticEntries] = await Promise.all([ensureIndex(), ensureVideos()]);
-    const allEntries = [...staticEntries, ...videoEntries];
-    const matches = searchEntries(allEntries, query, { limit: 60 });
+    const entries = await ensureIndex();
+    const matches = searchEntries(entries, query, { limit: 60 });
     if (matches.length === 0) renderNoResults(query);
     else renderResults(query, matches);
   };
@@ -345,7 +323,6 @@
     lastFocused = document.activeElement as HTMLElement | null;
     dialog.showModal();
     void ensureIndex();
-    void ensureVideos();
     input.value = '';
     renderInitialState();
     input.focus();

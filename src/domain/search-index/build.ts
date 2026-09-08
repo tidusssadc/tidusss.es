@@ -10,8 +10,10 @@ import {
 } from '../../data/league-laboratory';
 import { PREGUNTA_GENERAL_SUGGESTIONS, PREGUNTA_LUCIAN_SUGGESTIONS } from '../../data/pregunta';
 import { siteUpdates } from '../../data/updates';
+import { videoContentLinks } from '../../config/video-content-links';
+import type { YouTubeVideo } from '../../types/content';
 import { resolveChampionEditorialStatus } from '../league-laboratory';
-import type { LabChampionId, PatchId } from '../league-laboratory';
+import type { ConceptId, LabChampionId, PatchId } from '../league-laboratory';
 import type { SearchEntry } from './types';
 
 const championUrl = (slug: string) => `/campeones/${slug}`;
@@ -19,9 +21,11 @@ const championUrl = (slug: string) => `/campeones/${slug}`;
 const catalogById = new Map(championCatalog.map((entry) => [entry.id, entry]));
 const labChampionById = new Map(adcLabChampions.map((champion) => [champion.id, champion]));
 const patchLabelById = new Map(leagueLaboratoryPatches.map((patch) => [patch.id, patch.label]));
+const conceptById = new Map(leagueLaboratoryConcepts.map((concept) => [concept.id, concept]));
 
 const championName = (id: LabChampionId) => catalogById.get(id)?.name ?? id;
 const patchLabel = (id: PatchId) => patchLabelById.get(id) ?? id;
+const conceptTitle = (id: ConceptId) => conceptById.get(id)?.title ?? id;
 
 /**
  * Una página estática por ruta pública real — no genera thin content:
@@ -203,14 +207,57 @@ const preguntaEntries = (): SearchEntry[] =>
   }));
 
 /**
+ * Un resultado por vídeo CURADO (`config/video-content-links.ts`) — nunca
+ * el volcado completo del canal: solo los que ya tienen relaciones
+ * editoriales `verified-manual` reales. Recibe los `YouTubeVideo` ya
+ * resueltos como parámetro (nunca hace la llamada a YouTube ella misma,
+ * ver `buildSearchIndex`); si un id curado todavía no se ha podido
+ * resolver (sin clave, fallo de red), simplemente no genera entrada — el
+ * mismo criterio de "sin dato real, no aparece" que ya usa el resto del
+ * índice. Las relaciones (`championIds`/`allySupportIds`/
+ * `enemyChampionIds`/`conceptIds`) se resuelven a nombres reales del
+ * catálogo/Academia como `keywords` — nunca ids internos: así "milio" o
+ * "snowball" encuentran el vídeo aunque esas palabras no estén en el
+ * título real de YouTube.
+ */
+const videoEntries = (videos: readonly YouTubeVideo[]): SearchEntry[] => {
+  if (videos.length === 0) return [];
+  const videoById = new Map(videos.map((video) => [video.id, video] as const));
+  return videoContentLinks.flatMap((link): SearchEntry[] => {
+    const video = videoById.get(link.youtubeVideoId);
+    if (!video) return [];
+    const keywords = [
+      ...(link.championIds ?? []).map(championName),
+      ...(link.allySupportIds ?? []).map(championName),
+      ...(link.enemyChampionIds ?? []).map(championName),
+      ...(link.conceptIds ?? []).map(conceptTitle),
+    ];
+    return [
+      {
+        id: `video:${video.id}`,
+        category: 'video',
+        title: video.title,
+        description: video.durationLabel ? `Vídeo · ${video.durationLabel}` : 'Vídeo',
+        href: video.url,
+        keywords,
+      },
+    ];
+  });
+};
+
+/**
  * Ensambla el índice público de búsqueda a partir de datos ya conocidos en
  * build time — sin red, sin secretos, sin estado mutable entre llamadas.
- * Los vídeos NO se incluyen aquí: son el único contenido genuinamente
- * dinámico (llegan de `/api/youtube`), así que el propio buscador los pide
- * en el cliente al abrirse, igual que ya hacen `HomeTodayModule` y
- * `ActivityCenterCta` — nunca reimplementado con una lógica de red propia.
+ * Los vídeos son la única excepción parcial: su metadata real de YouTube
+ * (`YouTubeVideo[]`) se recibe ya resuelta como parámetro OPCIONAL — esta
+ * función nunca hace la llamada ella misma, así sigue siendo pura y
+ * ejecutable sin red ni credenciales (los 480 tests existentes la llaman
+ * sin argumentos). Quien sí conoce la red (`buscar-index.json.ts`) le pasa
+ * `resolvedVideoContent`, ya resuelto una única vez en build time.
  */
-export const buildSearchIndex = (): SearchEntry[] => [
+export const buildSearchIndex = (
+  options: { videos?: readonly YouTubeVideo[] } = {},
+): SearchEntry[] => [
   ...staticPageEntries(),
   ...championEntries(),
   ...guideEntries(),
@@ -220,6 +267,7 @@ export const buildSearchIndex = (): SearchEntry[] => [
   ...academiaEntries(),
   ...herramientaEntries(),
   ...tierListEntries(),
+  ...videoEntries(options.videos ?? []),
   ...updateEntries(),
   ...preguntaEntries(),
 ];
