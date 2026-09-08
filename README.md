@@ -1,6 +1,6 @@
 # Tidusss.es
 
-Web oficial de Tidusss, creador de contenido español de League of Legends y jugador Master ADC especializado en Lucian.
+Web oficial de Tidusss, creador de contenido español de League of Legends y jugador Master ADC. Lucian es uno de sus campeones principales, no su única identidad.
 
 La portada presenta la marca y `/live` reúne la actividad actual de YouTube, Twitch y SoloQ en una vista ligera construida con Astro y JavaScript nativo.
 

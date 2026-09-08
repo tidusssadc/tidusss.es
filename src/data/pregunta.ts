@@ -16,11 +16,18 @@ export const PREGUNTA_GENERAL_SUGGESTIONS: readonly string[] = [
   '¿Qué errores cometen los jugadores de Lucian?',
 ];
 
-/** Tres preguntas cortas para el bloque de Home — subconjunto de las generales, elegidas por variedad temática (build, ejecución, sinergias). */
+/**
+ * Tres preguntas cortas para el bloque de Home — elegidas por AMPLITUD, no
+ * solo por tema: una de Lucian, una de un concepto general de ADC y una de
+ * otro campeón, para que el bloque no lea como una herramienta exclusiva de
+ * Lucian. Las tres están verificadas contra
+ * `domain/knowledge-answering/evaluation/cases.ts` (estado real del motor,
+ * nunca supuesto).
+ */
 export const PREGUNTA_HOME_SUGGESTIONS: readonly string[] = [
-  '¿Cuándo hago Navori?',
-  '¿Por qué Lucian necesita combos rápidos?',
-  '¿Qué supports funcionan mejor?',
+  '¿Cuándo empieza a ser fuerte Lucian?',
+  '¿Cómo debo jugar los intercambios?',
+  '¿Cuál es la build de Jinx?',
 ];
 
 /** Preguntas contextuales para la guía de Lucian — sobre las secciones que esa página ya muestra (build, runas, sinergias, debilidades). */

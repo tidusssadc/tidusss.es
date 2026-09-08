@@ -72,13 +72,15 @@ const isCurrentPath = (href: string) =>
         class="search-trigger-desktop"
         data-search-open
         aria-haspopup="dialog"
+        aria-label="Buscar en tidusss.es"
       >
         <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
           <circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="1.6" />
           <path d="M17 17L13.4 13.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
         </svg>
-        Buscar
-        <kbd class="search-trigger-kbd"><span data-search-kbd-mod>Ctrl</span> K</kbd>
+        <kbd class="search-trigger-kbd" aria-hidden="true"
+          ><span data-search-kbd-mod>Ctrl</span> K</kbd
+        >
       </button>
       <a
         class="button-primary px-5 py-2.5 text-sm"

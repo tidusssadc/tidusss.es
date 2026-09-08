@@ -1,6 +1,5 @@
 ---
 import About from '../components/About.astro';
-import ActivityCenterCta from '../components/ActivityCenterCta.astro';
 import AskTidusssPrompt from '../components/AskTidusssPrompt.astro';
 import BrandClosing from '../components/BrandClosing.astro';
 import BrandManifesto from '../components/BrandManifesto.astro';
@@ -12,7 +11,6 @@ import Hero from '../components/Hero.astro';
 import HomePlatformShowcase from '../components/HomePlatformShowcase.astro';
 import HomeStateEngine from '../components/HomeStateEngine.astro';
 import HomeTodayModule from '../components/HomeTodayModule.astro';
-import LiveTeaser from '../components/LiveTeaser.astro';
 import Navbar from '../components/Navbar.astro';
 import Recognition from '../components/Recognition.astro';
 import Timeline from '../components/Timeline.astro';
@@ -27,21 +25,29 @@ import { PREGUNTA_HOME_SUGGESTIONS } from '../data/pregunta';
   <Navbar />
   <HomeStateEngine />
   <main>
-    <Hero /><LiveTeaser />
+    <!--
+      Narrativa deliberada (Home V2): identidad → estado actual → hoy/contexto
+      → plataformas → contenido → pregunta → autoridad → sobre Tidusss →
+      explorar → contacto. LiveTeaser y ActivityCenterCta se retiraron de esta
+      composición (duplicaban CompetitiveCredential / HomeTodayModule /
+      ContentSection respectivamente) pero siguen existiendo como archivo.
+    -->
+    <Hero />
+    <CompetitiveCredential />
     <HomeTodayModule />
-    <HomePlatformShowcase /><CompetitiveCredential /><BrandManifesto
-    /><ContentSection />
-    <ActivityCenterCta />
+    <HomePlatformShowcase />
+    <BrandManifesto />
+    <ContentSection />
     <section
       id="pregunta-tidusss"
       class="section-shell"
-      aria-label="¿Tienes una duda sobre Lucian?"
+      aria-label="¿Tienes una duda de ADC?"
       data-reveal
     >
       <div class="mx-auto max-w-4xl px-5 sm:px-8">
         <AskTidusssPrompt
-          title="¿Tienes una duda sobre Lucian?"
-          description="Pregunta sobre builds, runas, combos, power spikes o la forma de jugar el campeón."
+          title="¿Tienes una duda de ADC?"
+          description="Pregunta sobre builds, runas, conceptos de juego o cualquier campeón de la Tier List — Lucian incluido."
           questions={PREGUNTA_HOME_SUGGESTIONS}
         />
       </div>
