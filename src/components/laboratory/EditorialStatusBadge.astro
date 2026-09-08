@@ -8,17 +8,27 @@ const { status } = Astro.props;
 
 /**
  * El texto es siempre la señal principal (nunca solo el color): alguien sin
- * percepción de color debe poder distinguir los tres estados igual que
- * alguien que sí la tiene.
+ * percepción de color debe poder distinguir los dos estados con señal igual
+ * que alguien que sí la tiene.
+ *
+ * 'pending' (~169 de 173 campeones) deliberadamente NO renderiza nada: es
+ * el estado por defecto de casi todo el catálogo, y repetir "Pendiente de
+ * revisión" una vez por fila es ruido, no información — la ausencia de
+ * insignia ya comunica "sin curar todavía". El estado se sigue calculando
+ * y sigue disponible como filtro; solo deja de imprimirse en cada fila.
  */
-const labels: Record<ChampionEditorialStatus, string> = {
+const labels: Partial<Record<ChampionEditorialStatus, string>> = {
   reviewed: 'Revisado',
   draft: 'Borrador',
-  pending: 'Pendiente de revisión',
 };
+const label = labels[status];
 ---
 
-<span class="editorial-status-badge" data-editorial-status={status}>
-  <i aria-hidden="true"></i>
-  {labels[status]}
-</span>
+{
+  label && (
+    <span class="editorial-status-badge" data-editorial-status={status}>
+      <i aria-hidden="true"></i>
+      {label}
+    </span>
+  )
+}

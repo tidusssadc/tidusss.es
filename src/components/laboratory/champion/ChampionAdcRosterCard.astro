@@ -1,0 +1,35 @@
+---
+import type { AdcRosterEntry } from '../../../domain/league-laboratory';
+import { dataDragonUrls } from '../../../lib/riot/datadragon';
+import TierBadge from '../TierBadge.astro';
+
+interface Props {
+  entry: AdcRosterEntry;
+  dataDragonVersion: string;
+}
+const { entry, dataDragonVersion } = Astro.props;
+const { catalogEntry, tier, isCounterPick } = entry;
+const iconUrl = dataDragonUrls(dataDragonVersion).champion(
+  catalogEntry.dataDragonKey,
+);
+---
+
+<a
+  class="adc-roster-card"
+  href={`/campeones/${catalogEntry.slug}`}
+  data-counter={isCounterPick ? 'true' : undefined}
+>
+  <TierBadge tier={tier} compact />
+  <img
+    src={iconUrl}
+    width="36"
+    height="36"
+    loading="lazy"
+    decoding="async"
+    alt=""
+  />
+  <span class="adc-roster-card-name">
+    <strong>{catalogEntry.name}</strong>
+    {isCounterPick && <small>Counter pick</small>}
+  </span>
+</a>

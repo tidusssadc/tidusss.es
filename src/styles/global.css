@@ -7215,14 +7215,31 @@ body[data-home-state='near-goal'] .environment-rays {
   color: #7583a0;
 }
 
-.champion-hub-featured {
-  margin-top: 2.5rem;
+.champion-hub-section {
+  margin-top: 3rem;
+  padding-top: 2.5rem;
+  border-top: 1px solid rgb(255 255 255 / 8%);
 }
-.champion-hub-featured h3,
-.champion-hub-catalog h3 {
-  font-size: 1.15rem;
+.champion-hub-section h2 {
+  margin-top: 0.5rem;
+  font-size: clamp(1.35rem, 2.5vw, 1.75rem);
   font-weight: 700;
   color: white;
+}
+.champion-hub-section-lead {
+  margin-top: 0.75rem;
+  max-width: 42rem;
+  font-size: 0.92rem;
+  line-height: 1.7;
+  color: #9aa5b8;
+}
+.champion-hub-section-lead code {
+  padding: 0.1rem 0.35rem;
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 2px;
+  background: rgb(255 255 255 / 4%);
+  font-size: 0.9em;
+  color: #cbd5e1;
 }
 .champion-editorial-grid {
   display: grid;
@@ -7295,10 +7312,57 @@ body[data-home-state='near-goal'] .environment-rays {
   }
 }
 
-.champion-hub-catalog {
-  margin-top: 3rem;
-  padding-top: 2.5rem;
-  border-top: 1px solid rgb(255 255 255 / 8%);
+/* ADC — roster compacto derivado de la Tier List real (`getAdcRoster`).
+   Deliberadamente más pequeño que `.champion-editorial-card`: aquí solo
+   hace falta tier + nombre + acceso a la ficha, nunca el veredicto
+   completo (eso vive en /tier-list). */
+.adc-roster-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  gap: 0.6rem;
+  margin-top: 1.25rem;
+}
+.adc-roster-card {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid rgb(255 255 255 / 8%);
+  background: rgb(255 255 255 / 1.5%);
+  color: inherit;
+  text-decoration: none;
+  transition:
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+.adc-roster-card img {
+  flex-shrink: 0;
+  border-radius: 2px;
+}
+.adc-roster-card-name {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.adc-roster-card-name strong {
+  overflow: hidden;
+  color: white;
+  font-size: 0.9rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.adc-roster-card-name small {
+  color: #7583a0;
+  font-size: 0.72rem;
+}
+@media (hover: hover) {
+  .adc-roster-card:hover {
+    border-color: rgb(75 163 255 / 45%);
+    transform: translateY(-2px);
+  }
+}
+.adc-roster-cta {
+  margin-top: 1.5rem;
 }
 
 .laboratory-search {
@@ -7387,20 +7451,24 @@ body[data-home-state='near-goal'] .environment-rays {
   font-size: 0.82rem;
 }
 
+/* Catálogo compacto — el mismo espacio de 1440px que antes desperdiciaba
+   una única columna ahora reparte las filas en tantas como quepan
+   (`auto-fill`), sin breakpoints manuales: 1 columna en mobile porque no
+   cabe una segunda, varias en desktop porque sí. */
 .champion-catalog-grid {
   display: grid;
-  gap: 0.6rem;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 0.5rem;
   margin-top: 1.5rem;
   list-style: none;
   padding: 0;
 }
 .champion-catalog-row a {
-  display: grid;
-  grid-template-columns: auto 1fr auto auto;
+  display: flex;
   align-items: center;
-  gap: 0.85rem;
+  gap: 0.6rem;
   min-height: 2.75rem;
-  padding: 0.6rem 0.85rem;
+  padding: 0.5rem 0.7rem;
   border: 1px solid rgb(255 255 255 / 8%);
   border-radius: 2px;
   background: rgb(255 255 255 / 1.5%);
@@ -7412,33 +7480,36 @@ body[data-home-state='near-goal'] .environment-rays {
     box-shadow 0.2s ease;
 }
 .champion-catalog-row img {
+  flex-shrink: 0;
   border-radius: 2px;
 }
 .champion-catalog-row-name {
   min-width: 0;
+  flex: 1;
 }
 .champion-catalog-row-name strong {
   display: block;
+  overflow: hidden;
   color: white;
-  font-size: 0.95rem;
+  font-size: 0.88rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .champion-catalog-row-name small {
   display: block;
   overflow: hidden;
   color: #7583a0;
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.champion-catalog-row-tags {
-  display: none;
-  color: #7583a0;
-  font-size: 0.78rem;
-}
-@media (min-width: 768px) {
-  .champion-catalog-row-tags {
-    display: block;
-  }
+/* El estado 'pending' (la inmensa mayoría) no renderiza ninguna insignia
+   (ver `EditorialStatusBadge.astro`) — nada que encoger aquí para esas
+   filas, así el nombre aprovecha todo el ancho disponible. */
+.champion-catalog-row .editorial-status-badge {
+  flex-shrink: 0;
+  padding: 0.15rem 0.5rem;
+  font-size: 0.6rem;
 }
 @media (hover: hover) {
   .champion-catalog-row a:hover {
@@ -7454,11 +7525,34 @@ body[data-home-state='near-goal'] .environment-rays {
   text-align: center;
   color: #7583a0;
 }
+.champion-catalog-show-more {
+  display: block;
+  width: 100%;
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  border: 1px dashed rgb(255 255 255 / 16%);
+  background: transparent;
+  color: #9aa5b8;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+@media (hover: hover) {
+  .champion-catalog-show-more:hover {
+    border-color: rgb(214 181 107 / 45%);
+    color: #d6b56b;
+  }
+}
 
 @media (prefers-reduced-motion: reduce) {
   .laboratory-filter-chips button,
   .champion-editorial-card,
-  .champion-catalog-row a {
+  .adc-roster-card,
+  .champion-catalog-row a,
+  .champion-catalog-show-more {
     transition: none;
   }
 }

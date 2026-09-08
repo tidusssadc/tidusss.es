@@ -3,7 +3,6 @@ import type {
   ChampionCatalogEntry,
   ChampionEditorialStatus,
 } from '../../../domain/league-laboratory';
-import { resolveRiotDifficultyBucket } from '../../../domain/league-laboratory';
 import { dataDragonUrls } from '../../../lib/riot/datadragon';
 import EditorialStatusBadge from '../EditorialStatusBadge.astro';
 
@@ -17,10 +16,6 @@ const { catalogEntry, status, dataDragonVersion, inTierList } = Astro.props;
 const iconUrl = dataDragonUrls(dataDragonVersion).champion(
   catalogEntry.dataDragonKey,
 );
-const difficultyBucket = resolveRiotDifficultyBucket(
-  catalogEntry.riotDifficulty,
-);
-const initial = catalogEntry.name.charAt(0).toLocaleUpperCase('es-ES');
 const searchText = `${catalogEntry.name} ${catalogEntry.title}`;
 ---
 
@@ -29,17 +24,15 @@ const searchText = `${catalogEntry.name} ${catalogEntry.title}`;
   data-champion-catalog-row
   data-status={status}
   data-tags={catalogEntry.tags.join(',').toLowerCase()}
-  data-difficulty={difficultyBucket}
-  data-initial={initial}
   data-tierlist={String(inTierList)}
   data-search={searchText}
   data-name={catalogEntry.name}
 >
-  <a href={`/campeones/${catalogEntry.slug}`}>
+  <a href={`/campeones/${catalogEntry.slug}`} title={catalogEntry.tags.join(' · ')}>
     <img
       src={iconUrl}
-      width="44"
-      height="44"
+      width="32"
+      height="32"
       loading="lazy"
       decoding="async"
       alt=""
@@ -48,9 +41,6 @@ const searchText = `${catalogEntry.name} ${catalogEntry.title}`;
       <strong>{catalogEntry.name}</strong>
       <small>{catalogEntry.title}</small>
     </span>
-    <span class="champion-catalog-row-tags"
-      >{catalogEntry.tags.join(' · ')}</span
-    >
     <EditorialStatusBadge status={status} />
   </a>
 </li>

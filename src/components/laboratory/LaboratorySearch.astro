@@ -1,22 +1,23 @@
 ---
 interface Props {
   classOptions: readonly string[];
-  initialOptions: readonly string[];
 }
-const { classOptions, initialOptions } = Astro.props;
+const { classOptions } = Astro.props;
 
+/**
+ * Pocos filtros, de alta utilidad, sobre datos reales — no los 6 controles
+ * de antes (estado/dificultad/clase/inicial/tier list/orden). 'Con
+ * contenido' fusiona 'reviewed' + 'draft' en el filtro (la fila individual
+ * sigue distinguiendo los dos internamente vía `EditorialStatusBadge`):
+ * para decidir "¿hay algo que leer aquí?", la distinción entre borrador y
+ * revisado es secundaria. Dificultad e inicial se retiraron: el buscador
+ * por nombre ya cubre "encontrar un campeón concreto" mejor que un
+ * selector de 27 letras.
+ */
 const statusOptions = [
   { value: 'all', label: 'Todos' },
-  { value: 'reviewed', label: 'Revisados' },
-  { value: 'draft', label: 'Borradores' },
+  { value: 'has-content', label: 'Con contenido' },
   { value: 'pending', label: 'Pendientes' },
-] as const;
-
-const difficultyOptions = [
-  { value: 'all', label: 'Todas' },
-  { value: 'low', label: 'Baja' },
-  { value: 'medium', label: 'Media' },
-  { value: 'high', label: 'Alta' },
 ] as const;
 ---
 
@@ -54,25 +55,15 @@ const difficultyOptions = [
           </button>
         ))
       }
-    </div>
-
-    <div
-      class="laboratory-filter-chips"
-      role="group"
-      aria-label="Filtrar por dificultad oficial"
-    >
-      {
-        difficultyOptions.map(({ value, label }) => (
-          <button
-            type="button"
-            data-hub-filter="difficulty"
-            data-value={value}
-            aria-pressed={value === 'all' ? 'true' : 'false'}
-          >
-            {label}
-          </button>
-        ))
-      }
+      <button
+        type="button"
+        data-hub-filter="adc"
+        data-value="adc"
+        aria-pressed="false"
+        title="Campeones con entrada real en la Tier List ADC de Tidusss"
+      >
+        ADC
+      </button>
     </div>
 
     <label class="laboratory-search-select">
@@ -88,28 +79,11 @@ const difficultyOptions = [
     </label>
 
     <label class="laboratory-search-select">
-      <span class="sr-only">Filtrar por inicial</span>
-      <select data-hub-initial-select>
-        <option value="all">Cualquier inicial</option>
-        {
-          initialOptions.map((letter) => (
-            <option value={letter}>{letter}</option>
-          ))
-        }
-      </select>
-    </label>
-
-    <label class="laboratory-search-checkbox">
-      <input type="checkbox" data-hub-tierlist-checkbox />
-      Solo en la Tier List oficial
-    </label>
-
-    <label class="laboratory-search-select">
       <span class="sr-only">Ordenar catálogo</span>
       <select data-hub-sort>
         <option value="name-asc">Nombre (A-Z)</option>
         <option value="name-desc">Nombre (Z-A)</option>
-        <option value="status">Revisados primero</option>
+        <option value="status">Con contenido primero</option>
       </select>
     </label>
   </div>
@@ -132,12 +106,6 @@ const difficultyOptions = [
   const classSelect = root?.querySelector<HTMLSelectElement>(
     '[data-hub-class-select]',
   );
-  const initialSelect = root?.querySelector<HTMLSelectElement>(
-    '[data-hub-initial-select]',
-  );
-  const tierListCheckbox = root?.querySelector<HTMLInputElement>(
-    '[data-hub-tierlist-checkbox]',
-  );
   const resultsCount = root?.querySelector<HTMLElement>(
     '[data-hub-results-count]',
   );
@@ -146,11 +114,9 @@ const difficultyOptions = [
       '[data-hub-filter="status"]',
     ) ?? []),
   ];
-  const difficultyChips = [
-    ...(root?.querySelectorAll<HTMLButtonElement>(
-      '[data-hub-filter="difficulty"]',
-    ) ?? []),
-  ];
+  const adcChip = root?.querySelector<HTMLButtonElement>(
+    '[data-hub-filter="adc"]',
+  );
   const rows = [
     ...document.querySelectorAll<HTMLElement>('[data-champion-catalog-row]'),
   ];
@@ -164,10 +130,8 @@ const difficultyOptions = [
 
   const state = {
     status: 'all',
-    difficulty: 'all',
     class: 'all',
-    initial: 'all',
-    tierlist: false,
+    adc: false,
     query: '',
     sort: 'name-asc',
   };
@@ -195,43 +159,68 @@ const difficultyOptions = [
     catalogGrid.append(...sorted);
   };
 
+  /**
+   * 173 filas siempre en el DOM sería el mismo problema de altura de
+   * antes, solo que en varias columnas. Sin ningún filtro activo se
+   * muestran como mucho `CATALOG_PREVIEW_CAP` — el resto sigue siendo
+   * real y accesible con un clic ("Mostrar los 173 campeones"), y
+   * cualquier búsqueda o filtro real desactiva el límite: nunca se oculta
+   * un resultado que el usuario pidió explícitamente.
+   */
+  const CATALOG_PREVIEW_CAP = 30;
+  let catalogExpanded = false;
+  const showMoreButton = document.querySelector<HTMLButtonElement>(
+    '[data-champion-catalog-show-more]',
+  );
+  const isDefaultState = () =>
+    !state.query && state.status === 'all' && state.class === 'all' && !state.adc;
+  // El orden real en pantalla (tras `applySort`), no el orden de carga —
+  // el límite debe respetar lo que el usuario ve, no el DOM original.
+  const orderedRows = (): HTMLElement[] =>
+    catalogGrid ? ([...catalogGrid.children] as HTMLElement[]) : rows;
+
   const applyFilters = () => {
-    let visibleCount = 0;
-    for (const row of rows) {
+    const capActive = !catalogExpanded && isDefaultState();
+    let shownCount = 0;
+    let matchedCount = 0;
+    for (const row of orderedRows()) {
+      const rowStatus = row.dataset.status;
       const matchesStatus =
-        state.status === 'all' || row.dataset.status === state.status;
-      const matchesDifficulty =
-        state.difficulty === 'all' ||
-        row.dataset.difficulty === state.difficulty;
+        state.status === 'all' ||
+        (state.status === 'has-content'
+          ? rowStatus === 'reviewed' || rowStatus === 'draft'
+          : rowStatus === state.status);
       const rowTags = (row.dataset.tags ?? '').split(',');
       const matchesClass =
         state.class === 'all' || rowTags.includes(state.class);
-      const matchesInitial =
-        state.initial === 'all' || row.dataset.initial === state.initial;
-      const matchesTierList =
-        !state.tierlist || row.dataset.tierlist === 'true';
+      const matchesAdc = !state.adc || row.dataset.tierlist === 'true';
       const matchesQuery =
         !state.query ||
         normalizeSearchText(row.dataset.search ?? '').includes(
           normalizeSearchText(state.query),
         );
-      const visible =
-        matchesStatus &&
-        matchesDifficulty &&
-        matchesClass &&
-        matchesInitial &&
-        matchesTierList &&
-        matchesQuery;
-      row.hidden = !visible;
-      if (visible) visibleCount += 1;
+      const matches =
+        matchesStatus && matchesClass && matchesAdc && matchesQuery;
+      if (matches) matchedCount += 1;
+      const shown = matches && (!capActive || shownCount < CATALOG_PREVIEW_CAP);
+      row.hidden = !shown;
+      if (shown) shownCount += 1;
     }
     if (resultsCount) {
       resultsCount.textContent =
-        visibleCount === rows.length
-          ? `Mostrando los ${rows.length} campeones del catálogo.`
-          : `${visibleCount} de ${rows.length} campeones coinciden con estos filtros.`;
+        matchedCount === rows.length
+          ? capActive
+            ? `Mostrando ${shownCount} de los ${rows.length} campeones del catálogo.`
+            : `Mostrando los ${rows.length} campeones del catálogo.`
+          : `${matchedCount} de ${rows.length} campeones coinciden con estos filtros.`;
     }
-    if (emptyState) emptyState.hidden = visibleCount > 0;
+    if (emptyState) emptyState.hidden = matchedCount > 0;
+    if (showMoreButton) {
+      const hasMore = capActive && matchedCount > shownCount;
+      showMoreButton.hidden = !hasMore;
+      if (hasMore)
+        showMoreButton.textContent = `Mostrar los ${matchedCount} campeones`;
+    }
   };
 
   const syncUrl = () => {
@@ -239,9 +228,7 @@ const difficultyOptions = [
     if (state.query) params.set('q', state.query);
     if (state.status !== 'all') params.set('estado', state.status);
     if (state.class !== 'all') params.set('clase', state.class);
-    if (state.difficulty !== 'all') params.set('dificultad', state.difficulty);
-    if (state.initial !== 'all') params.set('inicial', state.initial);
-    if (state.tierlist) params.set('tierlist', '1');
+    if (state.adc) params.set('adc', '1');
     const query = params.toString();
     const nextUrl = query ? `${location.pathname}?${query}` : location.pathname;
     history.replaceState(null, '', nextUrl);
@@ -274,24 +261,18 @@ const difficultyOptions = [
       update();
     }),
   );
-  difficultyChips.forEach((chip) =>
-    chip.addEventListener('click', () => {
-      state.difficulty = chip.dataset.value ?? 'all';
-      selectChip(difficultyChips, chip);
-      update();
-    }),
-  );
   classSelect?.addEventListener('change', () => {
     state.class = classSelect.value;
     update();
   });
-  initialSelect?.addEventListener('change', () => {
-    state.initial = initialSelect.value;
+  adcChip?.addEventListener('click', () => {
+    state.adc = !state.adc;
+    adcChip.setAttribute('aria-pressed', String(state.adc));
     update();
   });
-  tierListCheckbox?.addEventListener('change', () => {
-    state.tierlist = tierListCheckbox.checked;
-    update();
+  showMoreButton?.addEventListener('click', () => {
+    catalogExpanded = true;
+    applyFilters();
   });
 
   // Estado inicial desde la URL: un enlace con `?estado=reviewed&clase=marksman`
@@ -312,16 +293,6 @@ const difficultyOptions = [
       selectChip(statusChips, chip);
     }
   }
-  const initialDifficulty = params.get('dificultad');
-  if (initialDifficulty) {
-    const chip = difficultyChips.find(
-      (candidate) => candidate.dataset.value === initialDifficulty,
-    );
-    if (chip) {
-      state.difficulty = initialDifficulty;
-      selectChip(difficultyChips, chip);
-    }
-  }
   const initialClass = params.get('clase');
   if (initialClass && classSelect) {
     const option = [...classSelect.options].find(
@@ -332,21 +303,11 @@ const difficultyOptions = [
       state.class = initialClass;
     }
   }
-  const initialInitial = params.get('inicial');
-  if (initialInitial && initialSelect) {
-    const option = [...initialSelect.options].find(
-      (candidate) => candidate.value === initialInitial,
-    );
-    if (option) {
-      initialSelect.value = initialInitial;
-      state.initial = initialInitial;
-    }
-  }
-  if (params.get('tierlist') === '1' && tierListCheckbox) {
-    tierListCheckbox.checked = true;
-    state.tierlist = true;
+  if (params.get('adc') === '1' && adcChip) {
+    state.adc = true;
+    adcChip.setAttribute('aria-pressed', 'true');
   }
 
-  applyFilters();
   applySort();
+  applyFilters();
 </script>

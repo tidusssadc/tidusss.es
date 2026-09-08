@@ -7,10 +7,13 @@ import LaboratoryHero from '../../components/laboratory/LaboratoryHero.astro';
 import LaboratoryCoverageSummary from '../../components/laboratory/LaboratoryCoverageSummary.astro';
 import LaboratorySearch from '../../components/laboratory/LaboratorySearch.astro';
 import ChampionEditorialCard from '../../components/laboratory/champion/ChampionEditorialCard.astro';
+import ChampionAdcRosterCard from '../../components/laboratory/champion/ChampionAdcRosterCard.astro';
 import ChampionCatalogRow from '../../components/laboratory/champion/ChampionCatalogRow.astro';
 import {
   buildLabRegistry,
+  getAdcRoster,
   getCatalogCoverage,
+  getFeaturedChampions,
   getLabChampion,
   isChampionInAnyTierList,
   resolveChampionEditorialStatus,
@@ -33,26 +36,15 @@ const registry = buildLabRegistry({
 const coverage = getCatalogCoverage(registry);
 const dataDragonVersion = championCatalogVersion;
 
-const curatedByStatus = adcLabChampions
-  .map((labChampion) => {
-    const catalogEntry = championCatalog.find(
-      (entry) => entry.id === labChampion.id,
-    );
-    if (!catalogEntry) return undefined;
-    return {
-      catalogEntry,
-      labChampion,
-      status: resolveChampionEditorialStatus(labChampion),
-    };
-  })
-  .filter((entry): entry is NonNullable<typeof entry> => Boolean(entry));
-
-const reviewedChampions = curatedByStatus.filter(
-  (entry) => entry.status === 'reviewed',
-);
-const draftChampions = curatedByStatus.filter(
-  (entry) => entry.status === 'draft',
-);
+/**
+ * Jerarquía real, no una grid de 173 elementos iguales: contenido
+ * destacado (solo campeones con perfil editorial completo — hoy, uno),
+ * el rol ADC de Tidusss (los reales de su Tier List), y el catálogo
+ * completo, compacto, para todo lo demás. Ver `domain/league-laboratory/hub.ts`
+ * para cómo se deriva cada lista — nunca elegida a mano aquí.
+ */
+const featuredChampions = getFeaturedChampions(registry);
+const adcRoster = getAdcRoster(registry);
 
 const catalogRows = championCatalog.map((catalogEntry) => ({
   catalogEntry,
@@ -65,16 +57,9 @@ const catalogRows = championCatalog.map((catalogEntry) => ({
 const classOptions = [
   ...new Set(championCatalog.flatMap((entry) => entry.tags)),
 ].sort((a, b) => a.localeCompare(b, 'es'));
-const initialOptions = [
-  ...new Set(
-    championCatalog.map((entry) =>
-      entry.name.charAt(0).toLocaleUpperCase('es-ES'),
-    ),
-  ),
-].sort((a, b) => a.localeCompare(b, 'es'));
 
 const pageTitle = 'Centro de Campeones · El Laboratorio · tidusss.es';
-const pageDescription = `Explora los ${coverage.total} campeones del catálogo del Laboratorio: ${coverage.reviewed} con análisis editorial completo de Tidusss y el resto disponible mientras se revisan. Busca, filtra y encuentra la ficha de cualquier campeón.`;
+const pageDescription = `Explora los ${coverage.total} campeones del catálogo del Laboratorio: contenido destacado con análisis completo, los ADC de la Tier List de Tidusss, y el catálogo completo para encontrar cualquier otro campeón.`;
 ---
 
 <BaseLayout title={pageTitle} description={pageDescription}>
@@ -82,7 +67,7 @@ const pageDescription = `Explora los ${coverage.total} campeones del catálogo d
   <main>
     <LaboratoryHero
       title="Centro de Campeones"
-      description="El punto de partida para explorar el catálogo completo de campeones del Laboratorio: quiénes ya tienen el criterio de Tidusss y quiénes todavía están pendientes de revisión."
+      description="El punto de partida para explorar el catálogo de campeones del Laboratorio: qué campeones tienen ya el criterio de Tidusss, sus ADC de referencia, y dónde encontrar cualquier otro campeón del juego."
     />
     <section
       class="champion-hub section-shell"
@@ -91,48 +76,26 @@ const pageDescription = `Explora los ${coverage.total} campeones del catálogo d
       <div class="mx-auto max-w-7xl px-5 sm:px-8">
         <header class="champion-hub-header">
           <p class="eyebrow">El Laboratorio · Centro de Campeones</p>
-          <h2 id="champion-hub-title">Todo el catálogo, en un solo sitio</h2>
-          <p class="champion-hub-lead">
-            Cada campeón de League of Legends tiene ya su propia ficha en{' '}
-            <code>/campeones/&lt;campeón&gt;</code>, generada a partir de datos
-            oficiales de Riot. Solo un puñado cuenta hoy con el análisis
-            editorial de Tidusss — el resto sigue disponible para explorar
-            mientras el Laboratorio crece.
-          </p>
+          <h2 id="champion-hub-title" class="sr-only">Centro de Campeones</h2>
         </header>
 
         <LaboratoryCoverageSummary coverage={coverage} />
 
         {
-          reviewedChampions.length > 0 && (
-            <div class="champion-hub-featured">
-              <h3>Analizados por Tidusss</h3>
+          featuredChampions.length > 0 && (
+            <div class="champion-hub-section champion-hub-featured">
+              <p class="eyebrow">Contenido destacado</p>
+              <h2>Análisis editorial completo</h2>
+              <p class="champion-hub-section-lead">
+                Los campeones con veredicto propio de Tidusss: build, runas,
+                sinergias y criterio real — no solo presencia en el catálogo.
+              </p>
               <div class="champion-editorial-grid">
-                {reviewedChampions.map(
-                  ({ catalogEntry, labChampion, status }) => (
-                    <ChampionEditorialCard
-                      catalogEntry={catalogEntry}
-                      labChampion={labChampion}
-                      status={status}
-                      dataDragonVersion={dataDragonVersion}
-                    />
-                  ),
-                )}
-              </div>
-            </div>
-          )
-        }
-
-        {
-          draftChampions.length > 0 && (
-            <div class="champion-hub-featured">
-              <h3>Presencia curada, perfil en preparación</h3>
-              <div class="champion-editorial-grid">
-                {draftChampions.map(({ catalogEntry, labChampion, status }) => (
+                {featuredChampions.map(({ catalogEntry, labChampion }) => (
                   <ChampionEditorialCard
                     catalogEntry={catalogEntry}
                     labChampion={labChampion}
-                    status={status}
+                    status="reviewed"
                     dataDragonVersion={dataDragonVersion}
                   />
                 ))}
@@ -141,12 +104,43 @@ const pageDescription = `Explora los ${coverage.total} campeones del catálogo d
           )
         }
 
-        <div class="champion-hub-catalog">
-          <h3>Catálogo completo ({catalogRows.length})</h3>
-          <LaboratorySearch
-            classOptions={classOptions}
-            initialOptions={initialOptions}
-          />
+        {
+          adcRoster.length > 0 && (
+            <div class="champion-hub-section champion-hub-adc">
+              <p class="eyebrow">ADC</p>
+              <h2>El rol competitivo de Tidusss</h2>
+              <p class="champion-hub-section-lead">
+                Cada ADC con entrada real en la Tier List de Tidusss, de un
+                vistazo. Esto no sustituye la Tier List — solo dice qué
+                conocimiento existe de cada uno. Para el veredicto completo,
+                la edición oficial.
+              </p>
+              <div class="adc-roster-grid">
+                {adcRoster.map((entry) => (
+                  <ChampionAdcRosterCard
+                    entry={entry}
+                    dataDragonVersion={dataDragonVersion}
+                  />
+                ))}
+              </div>
+              <a class="button-secondary adc-roster-cta" href="/tier-list">
+                Ver la Tier List oficial ADC completa{' '}
+                <span aria-hidden="true">→</span>
+              </a>
+            </div>
+          )
+        }
+
+        <div class="champion-hub-section champion-hub-catalog">
+          <p class="eyebrow">Catálogo completo</p>
+          <h2>Busca cualquier campeón ({catalogRows.length})</h2>
+          <p class="champion-hub-section-lead">
+            Cada campeón de League of Legends tiene ya su propia ficha en{' '}
+            <code>/campeones/&lt;campeón&gt;</code>, generada a partir de
+            datos oficiales de Riot — tenga o no todavía el criterio
+            editorial de Tidusss.
+          </p>
+          <LaboratorySearch classOptions={classOptions} />
           <ul class="champion-catalog-grid" data-champion-catalog-grid>
             {
               catalogRows.map(({ catalogEntry, status, inTierList }) => (
@@ -163,12 +157,12 @@ const pageDescription = `Explora los ${coverage.total} campeones del catálogo d
             Ningún campeón coincide con estos filtros. Prueba a quitar alguno o
             a buscar con otro término.
           </p>
-        </div>
-
-        <div class="tier-list-cta">
-          <a class="button-secondary" href="/tier-list">
-            Ver la Tier List oficial ADC <span aria-hidden="true">→</span>
-          </a>
+          <button
+            type="button"
+            class="champion-catalog-show-more"
+            data-champion-catalog-show-more
+            hidden
+          />
         </div>
       </div>
     </section>

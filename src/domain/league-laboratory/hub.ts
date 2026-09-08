@@ -1,9 +1,15 @@
 import {
+  getCatalogEntry,
   getLabChampion,
   resolveChampionEditorialStatus,
   type LabRegistry,
 } from './registry';
-import type { LabChampionId } from './types';
+import type {
+  ChampionCatalogEntry,
+  LabChampion,
+  LabChampionId,
+  TierGrade,
+} from './types';
 
 /**
  * Todo lo que necesita el Centro de Campeones (`/campeones`) para calcular
@@ -65,3 +71,77 @@ export const isChampionInAnyTierList = (
   registry.tierLists.some((tierList) =>
     tierList.entries.some((entry) => entry.championId === championId),
   );
+
+export interface FeaturedChampion {
+  catalogEntry: ChampionCatalogEntry;
+  labChampion: LabChampion;
+}
+
+/**
+ * "Contenido destacado" del Centro de Campeones — nunca una lista fija ni
+ * elegida a mano. Un campeón se destaca únicamente cuando su estado
+ * editorial real es 'reviewed' (perfil completo: veredicto, fortalezas,
+ * debilidades, power spikes — no solo presencia curada). Hoy eso da
+ * exactamente un resultado; si mañana solo hubiera uno, la sección seguiría
+ * mostrando uno solo — nunca se completa con campeones en borrador.
+ */
+export const getFeaturedChampions = (
+  registry: LabRegistry,
+): FeaturedChampion[] =>
+  registry.champions
+    .filter(
+      (champion) => resolveChampionEditorialStatus(champion) === 'reviewed',
+    )
+    .flatMap((champion) => {
+      const catalogEntry = getCatalogEntry(registry, champion.id);
+      return catalogEntry ? [{ catalogEntry, labChampion: champion }] : [];
+    });
+
+const TIER_RANK: Record<TierGrade, number> = {
+  'S+': 0,
+  S: 1,
+  A: 2,
+  B: 3,
+  C: 4,
+  D: 5,
+};
+
+export interface AdcRosterEntry {
+  catalogEntry: ChampionCatalogEntry;
+  /** Presente solo si Tidusss también lo ha curado en el Laboratorio (además de tenerlo en la Tier List) — nunca inventado. */
+  labChampion: LabChampion | undefined;
+  tier: TierGrade;
+  isCounterPick: boolean;
+}
+
+/**
+ * El roster ADC del hub: todo campeón con una entrada real y revisada en
+ * la Tier List ADC — el rol competitivo de Tidusss, no una lista de
+ * campeones curados a mano. Nunca reproduce el veredicto/razonamiento de
+ * la Tier List (eso vive solo en /tier-list, que responde una pregunta
+ * distinta: "qué jugaría Tidusss para subir Elo"): solo el tier y el
+ * enlace a la ficha. Placeholder entries (sin tier todavía) se excluyen —
+ * nada que mostrar sin un tier real.
+ */
+export const getAdcRoster = (registry: LabRegistry): AdcRosterEntry[] =>
+  registry.tierLists
+    .flatMap((tierList) => tierList.entries)
+    .flatMap((entry) => {
+      if (entry.reviewStatus !== 'reviewed') return [];
+      const catalogEntry = getCatalogEntry(registry, entry.championId);
+      if (!catalogEntry) return [];
+      return [
+        {
+          catalogEntry,
+          labChampion: getLabChampion(registry, entry.championId),
+          tier: entry.tier,
+          isCounterPick: entry.pickType === 'counter',
+        },
+      ];
+    })
+    .sort((a, b) => {
+      if (a.isCounterPick !== b.isCounterPick) return a.isCounterPick ? 1 : -1;
+      const tierDiff = TIER_RANK[a.tier] - TIER_RANK[b.tier];
+      if (tierDiff !== 0) return tierDiff;
+      return a.catalogEntry.name.localeCompare(b.catalogEntry.name, 'es');
+    });
