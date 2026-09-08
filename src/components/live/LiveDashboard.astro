@@ -3,6 +3,7 @@ import { integrationEndpoints, platforms } from '../../config/platforms';
 import MatchCard from './matches/MatchCard.astro';
 import MatchEmpty from './matches/MatchEmpty.astro';
 import PlayerProfile from './PlayerProfile.astro';
+import { resolvedMatchVideoContent } from '../../lib/resolved-match-video-content';
 ---
 
 <main
@@ -12,6 +13,7 @@ import PlayerProfile from './PlayerProfile.astro';
   data-youtube-stats={integrationEndpoints.youtubeStats}
   data-riot={integrationEndpoints.riot}
   data-twitch={integrationEndpoints.twitch}
+  data-match-videos={JSON.stringify(resolvedMatchVideoContent)}
 >
   <section class="live-intro">
     <div class="live-container">
@@ -289,6 +291,7 @@ import PlayerProfile from './PlayerProfile.astro';
   import type {
     YouTubeFeedResponse,
     YouTubeFeedResult,
+    YouTubeVideo,
   } from '../../types/content';
 
   // Las tres cadenas reales que Competitivo puede medir con datos que ya
@@ -445,6 +448,18 @@ import PlayerProfile from './PlayerProfile.astro';
   let youtubeData:
     Extract<YouTubeStatsResponse, { ok: true }>['data'] | undefined;
   let videos: YouTubeFeedResult['videos'] = [];
+  // Vídeos de `matchVideoLinks` ya resueltos en build time (lib/resolved-
+  // match-video-content.ts) — la relación partida↔vídeo es permanente y no
+  // debe depender de que el vídeo siga entre los últimos 12 subidos del
+  // canal. Se parsean una sola vez; si el atributo faltara o viniera
+  // corrupto, se degrada a "sin vídeos de partida" en vez de romper el
+  // resto del dashboard.
+  let matchVideos: YouTubeVideo[] = [];
+  try {
+    matchVideos = JSON.parse(root?.dataset.matchVideos ?? '[]');
+  } catch {
+    matchVideos = [];
+  }
   let fetching = false;
   // Solo true mientras el fallo de Riot sea el motivo real por el que no
   // hay partidas que mostrar — nunca se confunde con "sin clasificatorias
@@ -470,11 +485,25 @@ import PlayerProfile from './PlayerProfile.astro';
     // Sin `riotData` (todavía no ha llegado o Riot ha fallado) se pasa un
     // array vacío: `renderMatchCards` ya sabe pintar el estado vacío real
     // (`MatchEmpty`) en vez de dejar el esqueleto de carga para siempre.
+    //
+    // El pool de vídeos para resolver `MatchVideoBadge`/`MatchVideoPanel` se
+    // amplía con `matchVideos` (resueltos en build time desde
+    // `matchVideoLinks`, ver lib/resolved-match-video-content.ts) para que
+    // una asociación verificada siga resolviendo aunque el vídeo ya no esté
+    // entre los últimos 12 del canal. Solo se mezcla aquí, para esta
+    // llamada — `videos` en sí no se toca, así que el resto del dashboard
+    // (vídeos relacionados, actividad reciente) sigue mostrando únicamente
+    // subidas reales y recientes del canal, sin vídeos de partida colándose.
+    const matchVideoPool = [
+      ...new Map(
+        [...videos, ...matchVideos].map((video) => [video.id, video]),
+      ).values(),
+    ];
     renderMatchCards(list, riotData?.recent.matches.slice(0, 5) ?? [], {
       formatNumber: (value) => number(value) ?? String(value),
       relativeTime,
       reducedMotion,
-      videos,
+      videos: matchVideoPool,
       // "No hay partidas" (sampleSize real 0) y "no se pudieron cargar"
       // (Riot ha fallado) son cosas distintas — solo se sobrescribe el
       // copy por defecto de MatchEmpty cuando es realmente un fallo.
