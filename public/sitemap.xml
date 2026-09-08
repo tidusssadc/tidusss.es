@@ -4,15 +4,21 @@
     <loc>https://tidusss.es/</loc>
   </url>
   <url>
-    <loc>https://tidusss.es/competitivo</loc>
+    <loc>https://tidusss.es/campeones</loc>
+  </url>
+  <url>
+    <loc>https://tidusss.es/campeones/lucian</loc>
   </url>
   <url>
     <loc>https://tidusss.es/tier-list</loc>
   </url>
   <url>
-    <loc>https://tidusss.es/campeones</loc>
+    <loc>https://tidusss.es/academia</loc>
   </url>
   <url>
-    <loc>https://tidusss.es/campeones/lucian</loc>
+    <loc>https://tidusss.es/pregunta</loc>
+  </url>
+  <url>
+    <loc>https://tidusss.es/competitivo</loc>
   </url>
 </urlset>

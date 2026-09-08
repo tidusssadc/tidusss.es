@@ -94,13 +94,37 @@ test('cada entrada de campeón resuelve a una página /campeones/<slug> real', (
 
 test('un campeón fuera del roster ADC (Zed, Darius) NO aparece como destino editorial en Search', () => {
   const championEntries = index.filter((entry) => entry.category === 'campeon');
-  // Por título, no por `id`: el `id` real de cada entrada de campeón lleva
-  // un prefijo `champion:` duplicado (`champion:champion:zed`, bug
-  // preexistente y fuera del alcance de esta fase) — comparar por título es
-  // lo que de verdad protege "Zed no aparece como destino editorial".
+  const ids = new Set(championEntries.map((entry) => entry.id));
   const titles = new Set(championEntries.map((entry) => entry.title));
+  assert.equal(ids.has('champion:zed'), false);
+  assert.equal(ids.has('champion:darius'), false);
   assert.equal(titles.has('Zed'), false);
   assert.equal(titles.has('Darius'), false);
+});
+
+// --- Regresión: bug preexistente de prefijo `champion:` duplicado en los
+// ids de las entradas de campeón (detectado y corregido en el "cierre
+// quirúrgico" de la fase ecosistema ADC — build.ts construía
+// `champion:${entry.id}` cuando `entry.id` ya era `champion:<slug>`,
+// produciendo `champion:champion:lucian` en vez de `champion:lucian`). ---
+
+test('ningún SearchEntry de campeón tiene el prefijo "champion:" duplicado', () => {
+  const championEntries = index.filter((entry) => entry.category === 'campeon');
+  assert.ok(championEntries.length > 0, 'debe existir al menos una entrada de campeón para que esta prueba sea significativa');
+  for (const entry of championEntries) {
+    assert.ok(
+      !entry.id.startsWith('champion:champion:'),
+      `id con prefijo duplicado: ${entry.id}`,
+    );
+    assert.match(entry.id, /^champion:[a-z0-9-]+$/, `id con formato inesperado: ${entry.id}`);
+  }
+});
+
+test('Lucian y Jinx siguen resolviendo con el id correcto (champion:lucian / champion:jinx)', () => {
+  const championEntries = index.filter((entry) => entry.category === 'campeon');
+  const byId = new Map(championEntries.map((entry) => [entry.id, entry]));
+  assert.equal(byId.get('champion:lucian')?.title, 'Lucian');
+  assert.equal(byId.get('champion:jinx')?.title, 'Jinx');
 });
 
 test('hay exactamente una entrada de actualización por cada entrada real de siteUpdates', () => {

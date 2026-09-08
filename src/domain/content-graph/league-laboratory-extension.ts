@@ -94,16 +94,18 @@ const academiaToolEntity: ContentEntity = {
   status: 'available',
 };
 
-const toolsHubEntity: ContentEntity = {
-  id: 'tool:tools-hub',
-  kind: 'tool',
-  title: 'Herramientas',
-  description:
-    'Todas las utilidades de tidusss.es en un solo sitio, disponibles y en camino.',
-  href: '/herramientas',
-  source: 'editorial',
-  status: 'available',
-};
+/**
+ * "Herramientas" (`/herramientas`) NO se registra como entidad del Content
+ * Graph, deliberadamente — fase "cierre quirúrgico ecosistema ADC":
+ * auditado, sus 5 elementos "disponibles" son enlaces puros a páginas que
+ * ya son entidades propias del grafo (Pregunta, Aprende ADC, ADCs, Tier
+ * List), sin ninguna relación real que ofrecer por sí misma. Registrarla
+ * solo la convertiría en un destino recomendado por "Sigue explorando" en
+ * esas mismas páginas sin aportar nada nuevo — el mismo criterio que ya
+ * excluye del grafo al catálogo factual sin curación (§1.3 de
+ * `docs/content-graph.md`). La página sigue existiendo y siendo
+ * accesible por URL directa y por Search; solo deja de promocionarse.
+ */
 
 /**
  * Único punto de resolución de un `LabChampionId` contra el catálogo
@@ -179,7 +181,6 @@ export const leagueLaboratoryEntities: ContentEntity[] = [
   championHubEntity,
   preguntaToolEntity,
   academiaToolEntity,
-  toolsHubEntity,
   // Fase B: contenido editorial real de builds — hoy, las dos rutas
   // publicadas de Lucian. `Build` no tiene concepto de borrador/placeholder
   // en el dominio de origen: todo lo que existe en `leagueLaboratoryBuilds`
@@ -375,28 +376,6 @@ export const leagueLaboratoryRelations: ContentRelation[] = [
     priority: 55,
     source: 'editorial',
   },
-  // Herramientas: el hub de utilidades enlaza a cada herramienta real y
-  // cada herramienta enlaza de vuelta — igual criterio que championHubEntity.
-  ...[preguntaToolEntity, academiaToolEntity, championHubEntity, {
-    ...tierListToContentEntity(officialAdcTierList),
-  }].flatMap((tool) => [
-    {
-      from: toolsHubEntity.id,
-      to: tool.id,
-      kind: 'features' as const,
-      label: `Abrir ${tool.title}`,
-      priority: 50,
-      source: 'editorial' as const,
-    },
-    {
-      from: tool.id,
-      to: toolsHubEntity.id,
-      kind: 'related-to' as const,
-      label: 'Ver todas las herramientas',
-      priority: 40,
-      source: 'editorial' as const,
-    },
-  ]),
   {
     from: preguntaToolEntity.id,
     to: lucian.id,

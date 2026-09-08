@@ -80,7 +80,11 @@ const championEntries = (): SearchEntry[] =>
       const statusLabel =
         status === 'reviewed' ? 'Guía completa' : status === 'draft' ? 'Ficha en curación' : 'ADC de la Tier List';
       return {
-        id: `champion:${entry.id}`,
+        // `entry.id` (LabChampionId) ya lleva el prefijo `champion:` — no se
+        // vuelve a anteponer aquí. Bug real preexistente detectado y
+        // corregido en esta fase: producía ids duplicados del tipo
+        // `champion:champion:lucian` en vez de `champion:lucian`.
+        id: entry.id,
         category: 'campeon',
         title: entry.name,
         description: `${entry.title} · ${statusLabel}`,
