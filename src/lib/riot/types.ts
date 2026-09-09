@@ -246,3 +246,41 @@ export interface RiotMatchDto {
     teams?: RiotTeamDto[];
   };
 }
+
+// --- SPECTATOR-V5 (partida en curso) ---
+
+export interface RiotCurrentGameParticipantDto {
+  puuid?: string;
+  championId?: number;
+  teamId?: number;
+  spell1Id?: number;
+  spell2Id?: number;
+  profileIconId?: number;
+  perks?: {
+    perkIds?: number[];
+    perkStyle?: number;
+    perkSubStyle?: number;
+  };
+  /** Campo heredado de Riot, ya no fiable como identidad — el Riot ID real se resuelve aparte vía account-v1 por PUUID. */
+  summonerName?: string;
+  bot?: boolean;
+}
+
+export interface RiotCurrentGameBanDto {
+  championId?: number;
+  teamId?: number;
+  pickTurn?: number;
+}
+
+export interface RiotCurrentGameInfoDto {
+  gameId?: number;
+  gameType?: string;
+  gameStartTime?: number;
+  mapId?: number;
+  gameLength?: number;
+  platformId?: string;
+  gameMode?: string;
+  bannedChampions?: RiotCurrentGameBanDto[];
+  gameQueueConfigId?: number;
+  participants?: RiotCurrentGameParticipantDto[];
+}

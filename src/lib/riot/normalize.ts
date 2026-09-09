@@ -8,7 +8,12 @@ import type {
   RiotParticipantDto,
 } from './types';
 
-const summonerSpells: Record<number, { name: string; asset: string }> = {
+/**
+ * Exportados (no solo locales de este módulo): `live-normalize.ts` los
+ * reutiliza para resolver hechizos/árbol de runas de "Partida en curso" —
+ * mismo mapa, una sola fuente, nunca duplicado.
+ */
+export const summonerSpells: Record<number, { name: string; asset: string }> = {
   1: { name: 'Cleanse', asset: 'SummonerBoost' },
   3: { name: 'Exhaust', asset: 'SummonerExhaust' },
   4: { name: 'Flash', asset: 'SummonerFlash' },
@@ -28,7 +33,7 @@ const summonerSpells: Record<number, { name: string; asset: string }> = {
  * (Inspiración es "7203_Whimsy.png"). Verificado contra
  * `cdn/16.14.1/data/es_ES/runesReforged.json` real — no es una suposición.
  */
-const runeStyles: Record<number, { name: string; imageUrl: string }> = {
+export const runeStyles: Record<number, { name: string; imageUrl: string }> = {
   8000: {
     name: 'Precisión',
     imageUrl:
@@ -67,7 +72,7 @@ const participantItems = (participant: RiotParticipantDto) =>
     participant?.item6,
   ].filter((item): item is number => Boolean(item));
 
-const queueLabels: Record<number, string> = {
+export const queueLabels: Record<number, string> = {
   400: 'Normal Draft',
   420: 'Solo Queue',
   430: 'Normal',

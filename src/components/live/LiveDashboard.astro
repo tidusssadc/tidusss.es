@@ -3,6 +3,7 @@ import { integrationEndpoints, platforms } from '../../config/platforms';
 import MatchCard from './matches/MatchCard.astro';
 import MatchEmpty from './matches/MatchEmpty.astro';
 import PlayerProfile from './PlayerProfile.astro';
+import LiveGameModule from './LiveGameModule.astro';
 import { resolvedMatchVideoContent } from '../../lib/resolved-match-video-content';
 ---
 
@@ -32,6 +33,10 @@ import { resolvedMatchVideoContent } from '../../lib/resolved-match-video-conten
       />
     </div>
   </section>
+
+  <div class="live-container">
+    <LiveGameModule />
+  </div>
 
   <div class="live-container live-grid">
     <section class="live-module live-module--wide" aria-labelledby="solo-title">

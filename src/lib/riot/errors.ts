@@ -9,15 +9,32 @@ export type RiotErrorCode =
 export type RiotRequestPhase =
   'configuration' | 'account' | 'summoner' | 'league' | 'matches';
 
+/**
+ * Sin "parameter properties" en el constructor a propósito (mismo
+ * comportamiento, escrito de forma explícita): el modo strip-only del
+ * test runner de Node no soporta esa sintaxis de TypeScript, y esta clase
+ * es justo la que impedía probar sin red cualquier código que solo
+ * necesitara `instanceof RiotApiError`/sus campos (p. ej. la
+ * normalización de "Partida en curso" en `live.ts`).
+ */
 export class RiotApiError extends Error {
+  readonly code: RiotErrorCode;
+  readonly status: number;
+  readonly retryAfterSeconds?: number;
+  readonly phase?: RiotRequestPhase;
+
   constructor(
-    public readonly code: RiotErrorCode,
-    public readonly status: number,
-    public readonly retryAfterSeconds?: number,
-    public readonly phase?: RiotRequestPhase,
+    code: RiotErrorCode,
+    status: number,
+    retryAfterSeconds?: number,
+    phase?: RiotRequestPhase,
   ) {
     super(code);
     this.name = 'RiotApiError';
+    this.code = code;
+    this.status = status;
+    this.retryAfterSeconds = retryAfterSeconds;
+    this.phase = phase;
   }
 }
 

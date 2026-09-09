@@ -1,0 +1,290 @@
+---
+/**
+ * "Partida en curso" — módulo de Competitivo, completamente client-side
+ * (igual que el resto de `LiveDashboard.astro`: este sitio es estático,
+ * no hay SSR/hidratación en tiempo de petición). Oculto por defecto: solo
+ * se revela cuando `/api/riot/live` confirma `status: 'in_game'`. Para
+ * `not_in_game`/`unavailable`/`rate_limited` el módulo se queda oculto —
+ * "SIN PARTIDA" es literalmente el dashboard de siempre, sin banner nuevo
+ * (encargo, §1) — un lector de pantalla sí recibe el cambio de estado vía
+ * la región `aria-live` invisible de abajo (§25).
+ */
+---
+
+<p class="sr-only" data-live-game-announcer aria-live="polite"></p>
+
+<section
+  class="live-game-module"
+  data-live-game-module
+  aria-labelledby="live-game-title"
+  hidden
+>
+  <header class="live-game-header">
+    <div class="live-game-status">
+      <i class="live-dot" aria-hidden="true"></i>
+      <strong id="live-game-title">Partida en curso</strong>
+    </div>
+    <div class="live-game-meta">
+      <span data-live-game-queue></span>
+      <span data-live-game-timer aria-live="off"></span>
+      <span data-live-game-map></span>
+    </div>
+  </header>
+  <div class="live-game-teams">
+    <div class="live-game-team" data-live-game-team-block="100">
+      <p class="live-game-team-label" data-team-label="100">Equipo azul</p>
+      <ol class="live-game-participant-list" data-live-game-participants="100"
+      ></ol>
+    </div>
+    <div class="live-game-vs" aria-hidden="true">VS</div>
+    <div class="live-game-team" data-live-game-team-block="200">
+      <p class="live-game-team-label" data-team-label="200">Equipo rojo</p>
+      <ol class="live-game-participant-list" data-live-game-participants="200"
+      ></ol>
+    </div>
+  </div>
+</section>
+
+<script>
+  import type { LiveGameResult, LiveParticipant } from '../../lib/riot/live-types';
+
+  const root = document.querySelector<HTMLElement>('[data-live-game-module]');
+  const announcer = document.querySelector<HTMLElement>('[data-live-game-announcer]');
+  if (root && announcer) {
+    const endpoint = '/api/riot/live';
+    // 45s: ver justificación en `functions/api/riot/live.ts` — la partida
+    // activa es lo único de esta vista que cambia mientras se juega.
+    const POLL_MS = 45_000;
+    let lastStatus: LiveGameResult['status'] | 'loading' = 'loading';
+
+    const teamLabel = (teamId: number) =>
+      teamId === 100 ? 'Equipo azul' : teamId === 200 ? 'Equipo rojo' : `Equipo ${teamId}`;
+
+    const formatGameLength = (seconds: number) => {
+      const minutes = Math.floor(seconds / 60);
+      const rest = Math.max(0, seconds % 60);
+      return `${minutes}:${String(rest).padStart(2, '0')}`;
+    };
+
+    const rankLabel = (ranked: LiveParticipant['ranked']) => {
+      if (!ranked || !ranked.available) return 'Sin clasificación';
+      const apex = new Set(['MASTER', 'GRANDMASTER', 'CHALLENGER']);
+      const tier = ranked.tier ?? '';
+      const base = apex.has(tier) ? tier : [tier, ranked.rank].filter(Boolean).join(' ');
+      return ranked.leaguePoints === undefined ? base : `${base} · ${ranked.leaguePoints} LP`;
+    };
+
+    const el = <K extends keyof HTMLElementTagNameMap>(
+      tag: K,
+      className?: string,
+      text?: string,
+    ): HTMLElementTagNameMap[K] => {
+      const node = document.createElement(tag);
+      if (className) node.className = className;
+      if (text !== undefined) node.textContent = text;
+      return node;
+    };
+
+    const renderBadges = (participant: LiveParticipant): HTMLElement | null => {
+      const identity = participant.identity;
+      if (!identity || (!identity.isPro && !identity.isStreamer)) return null;
+      const wrap = el('span', 'live-game-badges');
+      if (identity.isPro) {
+        const badge = el(
+          'span',
+          'live-game-badge live-game-badge--pro',
+          identity.team ? `PRO · ${identity.team}` : 'PRO',
+        );
+        badge.setAttribute('title', identity.team ? `Jugador profesional de ${identity.team}` : 'Jugador profesional');
+        wrap.append(badge);
+      }
+      if (identity.isStreamer) {
+        const badge = el('span', 'live-game-badge live-game-badge--streamer', 'STREAMER');
+        badge.setAttribute('title', 'Streamer verificado');
+        if (identity.streamUrl) {
+          const link = el('a', undefined);
+          link.href = identity.streamUrl;
+          link.target = '_blank';
+          link.rel = 'noopener noreferrer';
+          link.append(badge);
+          wrap.append(link);
+        } else {
+          wrap.append(badge);
+        }
+      }
+      return wrap;
+    };
+
+    const renderParticipant = (participant: LiveParticipant): HTMLLIElement => {
+      const item = el('li', 'live-game-participant');
+      item.toggleAttribute('data-self', participant.isSelf);
+      if (participant.isSelf) {
+        const youBadge = el('span', 'live-game-you-badge', 'TIDUSSS');
+        youBadge.setAttribute('aria-hidden', 'true');
+        item.append(youBadge);
+      }
+
+      const championWrap = el('span', 'live-game-participant-champion');
+      if (participant.championImageUrl) {
+        const img = el('img');
+        img.src = participant.championImageUrl;
+        img.alt = participant.championName ?? '';
+        img.width = 40;
+        img.height = 40;
+        img.loading = 'lazy';
+        img.decoding = 'async';
+        championWrap.append(img);
+      } else {
+        const placeholder = el('span', 'live-game-champion-placeholder', '?');
+        placeholder.setAttribute('aria-hidden', 'true');
+        championWrap.append(placeholder);
+      }
+      item.append(championWrap);
+
+      const info = el('div', 'live-game-participant-info');
+      const nameRow = el('div', 'live-game-participant-name-row');
+      const name = el(
+        'strong',
+        'live-game-participant-name',
+        participant.riotIdResolved ? participant.riotId : 'Invocador',
+      );
+      nameRow.append(name);
+      const badges = renderBadges(participant);
+      if (badges) nameRow.append(badges);
+      info.append(nameRow);
+
+      const statLine = el('p', 'live-game-participant-stats');
+      const rankSpan = el('span', undefined, rankLabel(participant.ranked));
+      statLine.append(rankSpan);
+      if (participant.ranked?.available && participant.ranked.winRate !== undefined) {
+        statLine.append(
+          el(
+            'span',
+            undefined,
+            `${participant.ranked.winRate}% WR (${participant.ranked.wins}V ${participant.ranked.losses}D)`,
+          ),
+        );
+      }
+      if (participant.recentForm) {
+        statLine.append(
+          el(
+            'span',
+            'live-game-recent-form',
+            `Últimas ${participant.recentForm.sampleSize}: ${participant.recentForm.wins}V ${participant.recentForm.losses}D`,
+          ),
+        );
+      }
+      info.append(statLine);
+      item.append(info);
+
+      const kit = el('div', 'live-game-participant-kit');
+      participant.summonerSpells.forEach((spell) => {
+        if (!spell.imageUrl) return;
+        const img = el('img', 'live-game-kit-icon');
+        img.src = spell.imageUrl;
+        img.alt = spell.name;
+        img.width = 22;
+        img.height = 22;
+        img.loading = 'lazy';
+        img.decoding = 'async';
+        kit.append(img);
+      });
+      if (participant.primaryRuneTree?.imageUrl) {
+        const img = el('img', 'live-game-kit-icon');
+        img.src = participant.primaryRuneTree.imageUrl;
+        img.alt = participant.primaryRuneTree.name;
+        img.width = 22;
+        img.height = 22;
+        img.loading = 'lazy';
+        img.decoding = 'async';
+        kit.append(img);
+      }
+      item.append(kit);
+
+      return item;
+    };
+
+    const renderGame = (result: Extract<LiveGameResult, { status: 'in_game' }>) => {
+      const { game } = result;
+      const queueNode = root.querySelector('[data-live-game-queue]');
+      if (queueNode) queueNode.textContent = game.queueLabel;
+      const mapNode = root.querySelector('[data-live-game-map]');
+      if (mapNode) mapNode.textContent = game.mapName ?? '';
+
+      for (const team of game.teams) {
+        const label = root.querySelector(`[data-team-label="${team.teamId}"]`);
+        if (label) label.textContent = teamLabel(team.teamId);
+        const list = root.querySelector(`[data-live-game-participants="${team.teamId}"]`);
+        if (list) list.replaceChildren(...team.participants.map(renderParticipant));
+      }
+
+      const timerNode = root.querySelector<HTMLElement>('[data-live-game-timer]');
+      if (timerNode) {
+        const start = game.gameStartedAt ? new Date(game.gameStartedAt).getTime() : undefined;
+        const tick = () => {
+          const elapsed = start
+            ? Math.max(0, Math.floor((Date.now() - start) / 1000))
+            : game.gameLengthSeconds;
+          timerNode.textContent = formatGameLength(elapsed);
+        };
+        tick();
+        window.clearInterval((timerNode as unknown as { __tick?: number }).__tick);
+        (timerNode as unknown as { __tick?: number }).__tick = window.setInterval(tick, 1000);
+      }
+
+      root.hidden = false;
+    };
+
+    const applyResult = (result: LiveGameResult) => {
+      if (result.status === lastStatus) {
+        if (result.status === 'in_game') renderGame(result);
+        return;
+      }
+      lastStatus = result.status;
+      if (result.status === 'in_game') {
+        renderGame(result);
+        announcer.textContent = 'Tidusss está en partida ahora mismo.';
+      } else {
+        root.hidden = true;
+        if (result.status === 'not_in_game') announcer.textContent = '';
+        // unavailable/rate_limited: se degrada igual que "sin partida" —
+        // el resto del dashboard ya comunica cuándo Riot no responde
+        // (sección de rango/partidas), no se duplica ese aviso aquí.
+      }
+    };
+
+    const poll = async () => {
+      try {
+        const response = await fetch(endpoint);
+        const result = (await response.json()) as LiveGameResult;
+        applyResult(result);
+      } catch {
+        // Fallo de red del propio fetch (no de Riot): se trata igual que
+        // "no disponible" — el módulo se queda oculto, sin banner nuevo.
+        if (lastStatus !== 'unavailable') {
+          lastStatus = 'unavailable';
+          root.hidden = true;
+        }
+      }
+    };
+
+    void poll();
+    const timerHandle = window.setInterval(poll, POLL_MS);
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) void poll();
+    });
+    window.addEventListener('beforeunload', () => {
+      window.clearInterval(timerHandle);
+    });
+
+    // Solo en `astro dev` (`import.meta.env.DEV`, eliminado por completo del
+    // bundle de producción — nunca llega a `npm run build`/producción):
+    // deja visualizar el estado "en partida" con datos sintéticos sin
+    // tocar la red real, para QA visual (§29 del encargo, "usar
+    // fixtures/dev mode... sin incluir datos mock en producción").
+    if (import.meta.env.DEV) {
+      (window as unknown as { __liveGameDebugApply?: typeof applyResult }).__liveGameDebugApply =
+        applyResult;
+    }
+  }
+</script>

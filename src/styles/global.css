@@ -10925,3 +10925,216 @@ a.tool-card:focus-visible {
 .share-link-button-icon span {
   display: none;
 }
+
+/* ============================================================
+   Partida en curso (Competitivo · spectator-v5) — §12 del encargo:
+   diseño propio, compacto, sin copiar OP.GG/DeepLoL. Oculto por
+   completo hasta que hay partida activa real.
+   ============================================================ */
+.live-game-module {
+  padding: 1.4rem 1.4rem 1.6rem;
+  border: 1px solid rgb(214 181 107 / 30%);
+  border-radius: 1rem;
+  background: rgb(214 181 107 / 4%);
+  box-shadow: inset 0 0 0 1px rgb(214 181 107 / 8%);
+}
+.live-game-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin-bottom: 1.1rem;
+}
+.live-game-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.live-game-status .live-dot {
+  background: #d6b56b;
+  box-shadow: 0 0 8px rgb(214 181 107 / 65%);
+  animation: live-dot-pulse 1.8s ease-in-out infinite;
+}
+.live-game-status strong {
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: #f1d9a3;
+  text-transform: uppercase;
+}
+.live-game-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  font-size: 0.75rem;
+  color: #9aa5b8;
+}
+.live-game-meta span:not(:empty) {
+  padding: 0.2rem 0.55rem;
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 999px;
+}
+.live-game-teams {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 1rem;
+  align-items: start;
+}
+.live-game-team {
+  min-width: 0;
+}
+.live-game-team-label {
+  margin-bottom: 0.6rem;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #7583a0;
+}
+[data-live-game-team-block='100'] .live-game-team-label {
+  color: #7fb6ff;
+}
+[data-live-game-team-block='200'] .live-game-team-label {
+  color: #ff8a8a;
+}
+.live-game-vs {
+  align-self: center;
+  padding-top: 1.6rem;
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #536075;
+}
+.live-game-participant-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.live-game-participant {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid rgb(255 255 255 / 7%);
+  border-radius: 0.6rem;
+  background: rgb(255 255 255 / 2%);
+}
+.live-game-participant[data-self] {
+  border-color: rgb(214 181 107 / 45%);
+  background: rgb(214 181 107 / 8%);
+}
+.live-game-you-badge {
+  position: absolute;
+  top: -0.5rem;
+  left: 0.6rem;
+  padding: 0.05rem 0.4rem;
+  border-radius: 999px;
+  background: #d6b56b;
+  color: #0a0f1d;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+.live-game-participant-champion {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  background: #0a0f1d;
+  border: 1px solid rgb(255 255 255 / 10%);
+}
+.live-game-participant-champion img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.live-game-champion-placeholder {
+  font-size: 0.8rem;
+  color: #536075;
+}
+.live-game-participant-info {
+  min-width: 0;
+  flex: 1;
+}
+.live-game-participant-name-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+.live-game-participant-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.82rem;
+  font-weight: 650;
+  color: #e2e8f0;
+}
+.live-game-badges {
+  display: inline-flex;
+  gap: 0.3rem;
+}
+.live-game-badge {
+  padding: 0.05rem 0.4rem;
+  border-radius: 0.3rem;
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+.live-game-badge--pro {
+  border: 1px solid rgb(255 138 138 / 45%);
+  color: #ff8a8a;
+}
+.live-game-badge--streamer {
+  border: 1px solid rgb(158 122 255 / 45%);
+  color: #b9a3ff;
+}
+.live-game-participant-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.15rem;
+  font-size: 0.7rem;
+  color: #9aa5b8;
+}
+.live-game-recent-form {
+  color: #7fbcff;
+}
+.live-game-participant-kit {
+  flex-shrink: 0;
+  display: flex;
+  gap: 0.25rem;
+}
+.live-game-kit-icon {
+  width: 22px;
+  height: 22px;
+  border-radius: 0.3rem;
+  border: 1px solid rgb(255 255 255 / 10%);
+}
+
+@media (max-width: 767px) {
+  .live-game-module {
+    padding: 1.1rem 1rem 1.3rem;
+  }
+  .live-game-teams {
+    grid-template-columns: 1fr;
+  }
+  .live-game-vs {
+    padding-top: 0;
+    text-align: center;
+  }
+  .live-game-participant-kit {
+    display: none;
+  }
+  .live-game-participant-stats {
+    font-size: 0.66rem;
+  }
+}

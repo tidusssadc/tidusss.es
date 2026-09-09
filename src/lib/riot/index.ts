@@ -21,6 +21,32 @@ const encode = encodeURIComponent;
 const MINUTE = 60_000;
 const HOUR = 60 * MINUTE;
 
+/**
+ * Cuenta/PUUID de Tidusss — extraído para que `getRiotOverview` y
+ * `getRiotLiveGame` (`live.ts`) compartan exactamente la misma llamada y
+ * la misma clave de caché (24h: el PUUID de una cuenta no cambia salvo que
+ * cambien el Riot ID configurado), en vez de resolverlo dos veces.
+ */
+export const resolveSelfAccount = (
+  client: ReturnType<typeof createRiotClient>,
+  regionalBase: string,
+  config: { gameName: string; tagLine: string },
+) =>
+  cached(
+    `riot:account:${config.gameName}:${config.tagLine}`,
+    24 * HOUR,
+    24 * HOUR,
+    () =>
+      client.get<RiotAccountDto>(
+        `${regionalBase}/riot/account/v1/accounts/by-riot-id/${encode(config.gameName)}/${encode(config.tagLine)}`,
+        {
+          phase: 'account',
+          endpoint:
+            'ACCOUNT-V1 /riot/account/v1/accounts/by-riot-id/{gameName}/{tagLine}',
+        },
+      ),
+  );
+
 export const getRiotOverview = async (
   environment: RiotEnvironment,
   diagnostics?: RiotDiagnosticLogger,
@@ -37,20 +63,7 @@ export const getRiotOverview = async (
   const regionalBase = `https://${config.regionalRoute}.api.riotgames.com`;
   const platformBase = `https://${config.platformRoute}.api.riotgames.com`;
 
-  const account = await cached(
-    `riot:account:${config.gameName}:${config.tagLine}`,
-    24 * HOUR,
-    24 * HOUR,
-    () =>
-      client.get<RiotAccountDto>(
-        `${regionalBase}/riot/account/v1/accounts/by-riot-id/${encode(config.gameName)}/${encode(config.tagLine)}`,
-        {
-          phase: 'account',
-          endpoint:
-            'ACCOUNT-V1 /riot/account/v1/accounts/by-riot-id/{gameName}/{tagLine}',
-        },
-      ),
-  );
+  const account = await resolveSelfAccount(client, regionalBase, config);
   const puuid = account.value.puuid;
   if (!puuid)
     throw new RiotApiError('RIOT_INVALID_RESPONSE', 502, undefined, 'account');
