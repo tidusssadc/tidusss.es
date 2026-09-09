@@ -24,4 +24,6 @@ export const integrationEndpoints = {
   youtubeStats: '/api/youtube/channel-stats',
   riot: '/api/riot/overview',
   twitch: '/api/twitch/status',
+  /** Base para `GET {riotMatchesBase}/{matchId}/timeline` — bajo demanda, nunca precargado (ver `MatchCard.astro`/`timeline-render.ts`). */
+  riotMatchesBase: '/api/riot/matches',
 } as const;

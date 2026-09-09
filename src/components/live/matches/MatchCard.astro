@@ -5,6 +5,7 @@ import MatchExpanded from './MatchExpanded.astro';
 import MatchBadges from './MatchBadges.astro';
 import MatchStats from './MatchStats.astro';
 import MatchStatus from './MatchStatus.astro';
+import MatchTimelinePanel from './MatchTimelinePanel.astro';
 import MatchVideoBadge from './MatchVideoBadge.astro';
 import MatchVideoPanel from './MatchVideoPanel.astro';
 import RunesRow from './RunesRow.astro';
@@ -60,8 +61,8 @@ import SummonersRow from './SummonersRow.astro';
       </div>
       <MatchExpanded>
         <MatchVideoPanel />
+        <MatchTimelinePanel />
       </MatchExpanded>
-      <div data-match-related-content hidden></div>
     </article>
   </li>
 </template>

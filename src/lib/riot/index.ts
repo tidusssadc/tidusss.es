@@ -6,10 +6,15 @@ import {
 import { analyzeRecentSoloQueue, analyzeTodaySoloQueue } from './analytics';
 import { cached } from './cache';
 import { createRiotClient, type RiotDiagnosticLogger } from './client';
-import { dataDragonUrls, getDataDragonVersion } from './datadragon';
+import {
+  dataDragonUrls,
+  getDataDragonItems,
+  getDataDragonVersion,
+} from './datadragon';
 import { RiotApiError } from './errors';
 import { normalizeMatch, normalizeRanked } from './normalize';
 import { buildProfilePerformance } from './performance';
+import { normalizeMatchTimeline } from './timeline-normalize';
 import type {
   RiotAccountDto,
   RiotLeagueEntryDto,
@@ -17,6 +22,7 @@ import type {
   RiotOverview,
   RiotSummonerDto,
 } from './types';
+import type { MatchTimeline, RiotTimelineDto } from './timeline-types';
 
 const encode = encodeURIComponent;
 const MINUTE = 60_000;
@@ -201,10 +207,119 @@ export const getRiotOverview = async (
   };
 };
 
+// --- Match Timeline (Match-V5 Timeline) — on-demand, nunca en la ruta
+// crítica de /api/riot/overview ni /api/riot/live (encargo §29). ---
+
+/**
+ * Formato real de un matchId de Riot: `{PLATAFORMA}_{id numérico}` (p. ej.
+ * `EUW1_1234567890`). Validado ANTES de tocar red — nunca se envía a Riot
+ * (ni se acepta como parámetro de caché) un matchId con forma sospechosa.
+ */
+export const MATCH_ID_PATTERN = /^[A-Z]{2,4}[0-9]?_\d{1,15}$/;
+
+export const getMatchTimeline = async (
+  environment: RiotEnvironment,
+  matchId: string,
+  diagnostics?: RiotDiagnosticLogger,
+): Promise<MatchTimeline> => {
+  const config = getRiotConfig(environment);
+  if (!config.apiKey)
+    throw new RiotApiError(
+      'RIOT_API_KEY_MISSING',
+      503,
+      undefined,
+      'configuration',
+    );
+  if (!MATCH_ID_PATTERN.test(matchId))
+    throw new RiotApiError('RIOT_MATCH_ID_INVALID', 400, undefined, 'timeline');
+
+  const client = createRiotClient({ apiKey: config.apiKey, diagnostics });
+  const regionalBase = `https://${config.regionalRoute}.api.riotgames.com`;
+
+  const account = await resolveSelfAccount(client, regionalBase, config);
+  const puuid = account.value.puuid;
+  if (!puuid)
+    throw new RiotApiError('RIOT_INVALID_RESPONSE', 502, undefined, 'account');
+
+  // Alcance (encargo §5): el matchId pedido debe pertenecer al conjunto
+  // reciente conocido de Tidusss — misma clave de caché que ya usa
+  // `getRiotOverview`, así que en caché caliente esto no añade ninguna
+  // llamada Riot nueva. Nunca se acepta un matchId ajeno solo por tener
+  // forma válida: este endpoint no es un proxy Riot arbitrario.
+  const matchIds = await cached(`riot:matches:${puuid}`, 5 * MINUTE, HOUR, () =>
+    client.get<string[]>(
+      `${regionalBase}/lol/match/v5/matches/by-puuid/${encode(puuid)}/ids?start=0&count=${riotDefaults.recentMatchIds}`,
+      {
+        phase: 'matches',
+        endpoint: 'MATCH-V5 /lol/match/v5/matches/by-puuid/{puuid}/ids',
+      },
+    ),
+  );
+  if (!matchIds.value.includes(matchId))
+    throw new RiotApiError('RIOT_MATCH_NOT_FOUND', 404, undefined, 'timeline');
+
+  const [matchDetail, timelineDetail, dataDragonVersion] = await Promise.all([
+    // Misma clave que `getRiotOverview` — si el detalle de esta partida ya
+    // está caliente (lo normal: todo el Historial visible viene de esas
+    // mismas 30), esto es una lectura de caché, no una llamada Riot nueva.
+    cached(`riot:match:${matchId}`, 24 * HOUR, 7 * 24 * HOUR, () =>
+      client.get<RiotMatchDto>(
+        `${regionalBase}/lol/match/v5/matches/${encode(matchId)}`,
+        {
+          phase: 'matches',
+          endpoint: 'MATCH-V5 /lol/match/v5/matches/{matchId}',
+        },
+      ),
+    ),
+    // Una partida terminada es prácticamente inmutable: TTL de 30 días.
+    // Caché de memoria de proceso — el mismo tipo (isolate-local, no
+    // compartida) que el resto de este proyecto; ver informe de entrega
+    // para la distinción honesta proceso/edge.
+    cached(
+      `riot:timeline:${matchId}`,
+      30 * 24 * HOUR,
+      30 * 24 * HOUR,
+      () =>
+        client.get<RiotTimelineDto>(
+          `${regionalBase}/lol/match/v5/matches/${encode(matchId)}/timeline`,
+          {
+            phase: 'timeline',
+            endpoint:
+              'MATCH-V5 /lol/match/v5/matches/{matchId}/timeline',
+          },
+        ),
+    ),
+    getDataDragonVersion(),
+  ]);
+
+  const itemIndex = await getDataDragonItems(dataDragonVersion);
+  const urls = dataDragonUrls(dataDragonVersion);
+
+  const timeline = normalizeMatchTimeline({
+    matchId,
+    timelineDto: timelineDetail.value,
+    matchDto: matchDetail.value,
+    selfPuuid: puuid,
+    itemIndex,
+    itemImageUrl: urls.item,
+    updatedAt: new Date().toISOString(),
+  });
+  if (!timeline)
+    throw new RiotApiError(
+      'RIOT_INVALID_RESPONSE',
+      502,
+      undefined,
+      'timeline',
+    );
+  return timeline;
+};
+
 export * from './analytics';
 export * from './cache';
 export * from './errors';
 export * from './normalize';
 export * from './performance';
+export * from './timeline-normalize';
 export type { RiotDiagnosticEvent, RiotDiagnosticLogger } from './client';
 export type * from './types';
+export type * from './timeline-types';

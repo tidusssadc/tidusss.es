@@ -4,10 +4,19 @@ export type RiotErrorCode =
   | 'RIOT_ACCOUNT_NOT_FOUND'
   | 'RIOT_RATE_LIMITED'
   | 'RIOT_TEMPORARILY_UNAVAILABLE'
-  | 'RIOT_INVALID_RESPONSE';
+  | 'RIOT_INVALID_RESPONSE'
+  // --- Match Timeline (Sprint 3) ---
+  /** El matchId no pasa nuestra propia validación de formato/alcance — nunca llega a pedirse a Riot. Nunca se convierte este endpoint en un proxy Riot arbitrario. */
+  | 'RIOT_MATCH_ID_INVALID'
+  | 'RIOT_MATCH_NOT_FOUND';
 
 export type RiotRequestPhase =
-  'configuration' | 'account' | 'summoner' | 'league' | 'matches';
+  | 'configuration'
+  | 'account'
+  | 'summoner'
+  | 'league'
+  | 'matches'
+  | 'timeline';
 
 /**
  * Sin "parameter properties" en el constructor a propósito (mismo
@@ -53,6 +62,8 @@ export const publicRiotError = (error: unknown) => {
       'Los datos competitivos no están disponibles en este momento.',
     RIOT_INVALID_RESPONSE:
       'Los datos competitivos no están disponibles en este momento.',
+    RIOT_MATCH_ID_INVALID: 'Esa partida no se puede analizar.',
+    RIOT_MATCH_NOT_FOUND: 'No se ha podido encontrar el análisis de esa partida.',
   };
   return { code, message: messages[code] };
 };

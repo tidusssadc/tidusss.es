@@ -910,8 +910,7 @@
   }
 }
 
-.twitch-showcase[data-online] .platform-cta,
-[data-stream-live] [data-stream-link] {
+.twitch-showcase[data-online] .platform-cta {
   animation: soul-live-breathe 3.8s ease-in-out infinite;
 }
 
@@ -935,8 +934,7 @@
     transform: none;
     transition: none;
   }
-  .twitch-showcase[data-online] .platform-cta,
-  [data-stream-live] [data-stream-link] {
+  .twitch-showcase[data-online] .platform-cta {
     animation: none;
   }
 }
@@ -2402,15 +2400,9 @@
   background-size: 200% 100%;
   animation: live-skeleton 1.4s ease-in-out infinite;
 }
-.today-rank .data-skeleton,
-.youtube-number .data-skeleton {
+.today-rank .data-skeleton {
   width: min(15rem, 65vw);
   min-height: 0.75em;
-  border-radius: 2px;
-}
-.stream-status .data-skeleton {
-  width: min(17rem, 72vw);
-  min-height: 0.86em;
   border-radius: 2px;
 }
 .data-skeleton--line {
@@ -2448,59 +2440,11 @@
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
-.stream-status {
-  min-height: 9rem;
-  margin-top: 3rem;
-}
-.stream-status strong {
-  font-size: clamp(2rem, 5vw, 3.8rem);
-  letter-spacing: -0.055em;
-}
-/* Mismo criterio que .today-rank strong.live-stat-fallback: "EN DIRECTO"/
-   "Offline" son datos reales y conservan la jerarquía grande; un estado
-   sin conexión real (pendiente o fallo) es una frase, no una cifra. */
-.stream-status strong.live-stat-fallback {
-  font-size: 1.05rem;
-  letter-spacing: -0.01em;
-}
-.stream-status p {
-  max-width: 28rem;
-  margin-top: 1rem;
-  color: #78859a;
-  line-height: 1.6;
-}
-.stream-status small {
-  display: block;
-  margin-top: 0.75rem;
-  color: #667287;
-}
-.stream-status small span:not(:empty) {
-  display: inline;
-}
-.stream-status small span:not(:empty) + span:not(:empty)::before {
-  margin-inline: 0.45rem;
-  color: #354055;
-  content: '·';
-}
 .live-dot {
   width: 0.55rem;
   height: 0.55rem;
   border-radius: 50%;
   background: #536075;
-}
-[data-stream-live] .live-dot {
-  background: #d6b56b;
-  box-shadow: 0 0 8px rgb(214 181 107 / 65%);
-  animation: live-dot-pulse 1.8s ease-in-out infinite;
-}
-[data-stream-live] .live-module:has(.live-dot) {
-  border-color: rgb(214 181 107 / 35%);
-  box-shadow:
-    inset 0 0 0 1px rgb(214 181 107 / 10%),
-    0 20px 60px rgb(214 181 107 / 10%);
-}
-[data-stream-live] .stream-status strong {
-  color: #d6b56b;
 }
 @keyframes live-dot-pulse {
   50% {
@@ -2508,105 +2452,14 @@
     transform: scale(0.86);
   }
 }
-.live-action {
-  display: inline-flex;
-  min-height: 44px;
-  align-items: center;
-  border-bottom: 1px solid #d6b56b;
-  color: #fff;
-  font-size: 0.78rem;
-  transition:
-    color 180ms ease,
-    border-color 180ms ease,
-    transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-.live-action:hover {
-  border-color: #fff;
-  color: #d6b56b;
-  transform: translate3d(0, -1px, 0);
-}
-.live-action:focus-visible {
-  outline: 2px solid #d6b56b;
-  outline-offset: 4px;
-}
-.youtube-number {
-  margin-top: 3rem;
-}
-.youtube-number strong,
-.youtube-number span {
-  display: block;
-}
-.youtube-number strong {
-  font-size: clamp(3rem, 7vw, 5.2rem);
-  line-height: 0.9;
-  letter-spacing: -0.065em;
-  font-variant-numeric: tabular-nums;
-}
-/* Mismo criterio: una cifra real de suscriptores conserva la jerarquía
-   grande; "YouTube no responde ahora mismo" es una frase de error, nunca
-   un contador. */
-.youtube-number strong.live-stat-fallback {
-  font-size: 1.05rem;
-  line-height: 1.4;
-  letter-spacing: -0.01em;
-  font-variant-numeric: normal;
-}
-.youtube-number span {
-  margin-top: 0.75rem;
-  color: #78859a;
-}
-.goal-line,
-.channel-metrics {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  color: #758196;
-  font-size: 0.7rem;
-}
-.goal-line {
-  margin-top: 2.1rem;
-}
-.goal-line b,
-.goal-line strong,
-.channel-metrics b {
-  color: #dce4f0;
-}
-.progress-track,
-.goals-list article > div {
-  height: 2px;
-  margin-top: 0.75rem;
-  overflow: hidden;
-  background: rgb(255 255 255 / 7%);
-}
-.progress-track span,
-.goals-list i {
-  display: block;
-  width: 0;
-  height: 100%;
-  background: #d6b56b;
-  transition: width 850ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-.channel-metrics {
-  margin-top: 1.5rem;
-  padding-top: 1.2rem;
-  border-top: 1px solid rgb(255 255 255 / 7%);
-}
 .live-updated {
   display: block;
   margin-top: 1.2rem;
 }
-.provider-state {
-  margin-top: 1.5rem;
-  color: #8793a5;
-  font-size: 0.78rem;
-  line-height: 1.55;
-}
-.live-match-list,
-.activity-list {
+.live-match-list {
   margin-top: 2rem;
 }
-.live-match-list li,
-.activity-list li {
+.live-match-list li {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto auto;
   align-items: center;
@@ -2614,20 +2467,15 @@
   min-height: 4.3rem;
   border-top: 1px solid rgb(255 255 255 / 6%);
 }
-.live-match-list .compact-empty,
-.activity-list .compact-empty {
+.live-match-list .compact-empty {
   display: block;
   min-height: 0;
 }
 .live-match-list strong,
-.live-match-list span,
-.activity-list strong,
-.activity-list span {
+.live-match-list span {
   display: block;
 }
-.live-match-list div span,
-.activity-list span,
-.activity-list time {
+.live-match-list div span {
   margin-top: 0.25rem;
   color: #647186;
   font-size: 0.65rem;
@@ -3249,6 +3097,227 @@
   outline-offset: 3px;
 }
 
+/* --- Match Timeline V1 (Sprint 3) — integrado en el Historial, nunca como
+   un plugin aparte: mismos colores/tipografía que el resto de la tarjeta,
+   sin nueva estética. --- */
+.match-timeline {
+  margin-top: 1.5rem;
+  border-top: 1px solid rgb(255 255 255 / 7%);
+  padding-top: 1.25rem;
+}
+.timeline-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 38px;
+  border: 1px solid rgb(214 181 107 / 32%);
+  padding: 0 1rem;
+  color: #d6b56b;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  transition:
+    border-color 180ms ease,
+    background-color 180ms ease;
+}
+.timeline-trigger:hover {
+  border-color: #d6b56b;
+  background: rgb(214 181 107 / 8%);
+}
+.timeline-trigger:focus-visible {
+  outline: 2px solid #d6b56b;
+  outline-offset: 3px;
+}
+.timeline-trigger i {
+  width: 0.4rem;
+  height: 0.4rem;
+  border-right: 1px solid currentColor;
+  border-bottom: 1px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform 220ms ease;
+}
+.timeline-trigger[aria-expanded='true'] i {
+  transform: rotate(225deg);
+}
+.timeline-panel {
+  margin-top: 1.25rem;
+}
+.timeline-error {
+  padding: 1rem 0;
+}
+.timeline-error strong {
+  display: block;
+  color: #dce2eb;
+  font-size: 0.8rem;
+}
+.timeline-error p {
+  margin-top: 0.4rem;
+  color: #7e8a9d;
+  font-size: 0.68rem;
+}
+/* 01 · Resumen de línea */
+.timeline-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.1rem;
+  margin-top: 0.5rem;
+}
+.timeline-stat {
+  border-left: 1px solid rgb(255 255 255 / 8%);
+  padding-left: 0.85rem;
+}
+.timeline-stat span {
+  display: block;
+  color: #59667a;
+  font-size: 0.52rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.timeline-stat strong {
+  display: block;
+  margin-top: 0.35rem;
+  color: #f0f3f7;
+  font-size: clamp(1rem, 2.2vw, 1.3rem);
+  font-variant-numeric: tabular-nums;
+}
+.timeline-stat small {
+  display: block;
+  margin-top: 0.25rem;
+  color: #7e8a9d;
+  font-size: 0.58rem;
+}
+.timeline-summary-note {
+  margin-top: 0.9rem;
+  color: #59667a;
+  font-size: 0.62rem;
+}
+/* 02 · Evolución */
+.timeline-evolution {
+  margin-top: 1.5rem;
+}
+.timeline-evolution-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.timeline-evolution-head h4,
+.timeline-moments h4 {
+  color: #dbe1ea;
+  font-size: 0.74rem;
+}
+.timeline-metric-toggle {
+  display: flex;
+  border: 1px solid rgb(255 255 255 / 10%);
+}
+.timeline-metric-toggle button {
+  min-height: 26px;
+  padding: 0 0.75rem;
+  color: #7e8a9d;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.timeline-metric-toggle button[aria-pressed='true'] {
+  background: rgb(214 181 107 / 12%);
+  color: #d6b56b;
+}
+.timeline-metric-toggle button:focus-visible {
+  outline: 2px solid #d6b56b;
+  outline-offset: 2px;
+}
+.timeline-chart-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-top: 0.85rem;
+}
+.timeline-chart-axis {
+  fill: #59667a;
+  font-size: 8px;
+}
+.timeline-chart-grid {
+  stroke: rgb(255 255 255 / 6%);
+  stroke-width: 1;
+}
+.timeline-chart-line-self {
+  stroke: #d6b56b;
+  stroke-width: 2;
+}
+.timeline-chart-line-rival {
+  stroke: #6c7c95;
+  stroke-width: 2;
+  stroke-dasharray: 4 3;
+}
+.timeline-chart-legend-self {
+  fill: #d6b56b;
+  font-size: 8px;
+}
+.timeline-chart-legend-rival {
+  fill: #8793a6;
+  font-size: 8px;
+}
+.timeline-chart-empty {
+  margin-top: 0.85rem;
+  color: #59667a;
+  font-size: 0.62rem;
+}
+/* 03 · Momentos clave */
+.timeline-moments {
+  margin-top: 1.5rem;
+}
+.timeline-moments ol {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.85rem;
+  max-height: 15rem;
+  overflow-y: auto;
+}
+.timeline-moment {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  border-left: 2px solid rgb(255 255 255 / 12%);
+  padding: 0.3rem 0 0.3rem 0.75rem;
+  color: #a9b3c2;
+  font-size: 0.64rem;
+}
+.timeline-moment time {
+  flex-shrink: 0;
+  min-width: 2.4rem;
+  color: #59667a;
+  font-variant-numeric: tabular-nums;
+}
+.timeline-moment img {
+  flex-shrink: 0;
+  border-radius: 3px;
+  background: #0d121d;
+}
+.timeline-moment--kill,
+.timeline-moment--objective-team {
+  border-left-color: #4caf82;
+}
+.timeline-moment--death {
+  border-left-color: #c96a6a;
+}
+.timeline-moment--assist {
+  border-left-color: #6c8ecb;
+}
+.timeline-moment--objective-enemy {
+  border-left-color: #8793a6;
+}
+.timeline-moment--multikill {
+  color: #f1d9a3;
+  font-weight: 700;
+}
+.timeline-moments-empty {
+  margin-top: 0.85rem;
+  color: #59667a;
+  font-size: 0.62rem;
+}
+
 .profile-subhead {
   display: flex;
   align-items: baseline;
@@ -3680,71 +3749,43 @@
   width: 100%;
   min-width: 0;
 }
-.goals-list {
-  margin-top: 1.75rem;
-}
-.goals-list article {
-  padding: 1rem 0;
-  border-top: 1px solid rgb(255 255 255 / 6%);
-}
-.goals-list article > span {
-  color: #cbd5e1;
-  font-size: 0.78rem;
-}
-.goals-list article > strong {
-  float: right;
-  color: #69768c;
-  font-size: 0.65rem;
-}
-.goals-list article > small {
-  display: block;
-  margin-top: 0.35rem;
-  color: #4f5c70;
-  font-size: 0.58rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-.activity-list li {
-  grid-template-columns: 1fr auto;
-}
-.profile-refresh-body {
+/* "01 Ahora" — actualización manual como acción discreta junto a la hora
+   de la última actualización, no una sección propia para un solo botón
+   (encargo Sprint 3 §33: cerrar /competitivo con intención). */
+.status-module-meta {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  margin-top: 2rem;
+  gap: 0.85rem;
 }
-.profile-refresh-body p {
-  color: #78859a;
-  font-size: 0.8rem;
-}
-.profile-refresh button {
-  min-height: 48px;
-  background: #d6b56b;
-  padding: 0 1.4rem;
-  color: #090b10;
-  font-weight: 750;
+.status-refresh {
+  min-height: 30px;
+  border: 1px solid rgb(214 181 107 / 35%);
+  padding: 0 0.85rem;
+  color: #d6b56b;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   transition:
-    transform 180ms cubic-bezier(0.22, 1, 0.36, 1),
-    background-color 180ms ease,
-    opacity 180ms ease;
+    border-color 180ms ease,
+    background-color 180ms ease;
 }
-.profile-refresh button:hover:not(:disabled) {
-  background: #e0c27c;
-  transform: translate3d(0, -1px, 0);
+.status-refresh:hover:not(:disabled) {
+  border-color: #d6b56b;
+  background: rgb(214 181 107 / 8%);
 }
-.profile-refresh button:focus-visible {
-  outline: 2px solid #4ba3ff;
+.status-refresh:focus-visible {
+  outline: 2px solid #d6b56b;
   outline-offset: 3px;
 }
-.profile-refresh button:disabled {
+.status-refresh:disabled {
   cursor: wait;
   opacity: 0.6;
 }
-.profile-refresh-state {
-  margin-top: 0.8rem;
+.status-refresh-state {
+  margin-top: 0.6rem;
   color: #68758a;
-  font-size: 0.7rem;
+  font-size: 0.62rem;
 }
 .live-teaser {
   border-bottom: 1px solid rgb(255 255 255 / 7%);
@@ -3835,8 +3876,26 @@
   .live-module {
     margin-top: 0.75rem;
   }
+  .status-module .live-module-head {
+    flex-wrap: wrap;
+    row-gap: 0.75rem;
+  }
+  .status-module-meta {
+    flex-basis: 100%;
+    justify-content: space-between;
+  }
   .today-rank {
     display: block;
+  }
+  .timeline-summary {
+    gap: 0.75rem;
+  }
+  .timeline-evolution-head {
+    flex-wrap: wrap;
+    row-gap: 0.6rem;
+  }
+  .timeline-moment {
+    font-size: 0.62rem;
   }
   .today-rank p {
     margin-top: 1.5rem;
@@ -3987,13 +4046,6 @@
     border-bottom: 1px solid rgb(255 255 255 / 7%);
     padding: 0.9rem;
   }
-  .profile-refresh-body {
-    display: block;
-  }
-  .profile-refresh button {
-    width: 100%;
-    margin-top: 1rem;
-  }
 }
 @media (min-width: 768px) and (max-width: 1023px) {
   .live-intro h1 {
@@ -4045,8 +4097,6 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .progress-track span,
-  .goals-list i,
   .data-skeleton,
   .live-loading--row i {
     transition: none;
@@ -4060,7 +4110,6 @@
     transform: none;
   }
   [data-motion-ready] .rank-emblem:not([hidden]),
-  [data-stream-live] .live-dot,
   [data-teaser-live] [data-teaser-twitch]::before {
     animation: none;
   }

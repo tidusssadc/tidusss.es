@@ -1,0 +1,76 @@
+<!--
+  Match Timeline V1 — bajo demanda dentro del Historial (encargo Sprint 3).
+  El botón vive siempre; el análisis solo se pide a Riot cuando se pulsa
+  (ver `timeline-render.ts`) — abrir /competitivo sin tocar esto dispara
+  0 llamadas a Timeline-V5.
+-->
+<div class="match-timeline" data-match-timeline>
+  <button
+    type="button"
+    class="timeline-trigger"
+    data-timeline-trigger
+    aria-expanded="false"
+  >
+    <span>Analizar partida</span><i aria-hidden="true"></i>
+  </button>
+  <div class="timeline-panel" data-timeline-panel hidden aria-hidden="true">
+    <div
+      class="live-loading live-loading--row timeline-loading"
+      data-timeline-loading
+      aria-label="Cargando análisis"
+    >
+      <i></i><i></i><i></i>
+    </div>
+    <div class="timeline-error" data-timeline-error hidden>
+      <strong data-timeline-error-title></strong>
+      <p data-timeline-error-detail></p>
+    </div>
+    <div class="timeline-content" data-timeline-content hidden>
+      <div class="timeline-summary">
+        <div class="timeline-stat" data-timeline-stat="cs">
+          <span>CS @ 10</span>
+          <strong data-timeline-cs10></strong>
+          <small data-timeline-cs10-diff></small>
+        </div>
+        <div class="timeline-stat" data-timeline-stat="gold">
+          <span>Oro @ 10</span>
+          <strong data-timeline-gold10></strong>
+          <small data-timeline-gold10-diff></small>
+        </div>
+        <div class="timeline-stat" data-timeline-stat="xp">
+          <span>XP @ 10</span>
+          <strong data-timeline-xp10></strong>
+          <small data-timeline-xp10-diff></small>
+        </div>
+      </div>
+      <p class="timeline-summary-note" data-timeline-summary-note></p>
+
+      <div class="timeline-evolution">
+        <div class="timeline-evolution-head">
+          <h4>Evolución</h4>
+          <div
+            class="timeline-metric-toggle"
+            data-timeline-metric-toggle
+            role="group"
+            aria-label="Métrica del gráfico"
+          >
+            <button type="button" data-timeline-metric="gold" aria-pressed="true">Oro</button>
+            <button type="button" data-timeline-metric="cs" aria-pressed="false">CS</button>
+          </div>
+        </div>
+        <div data-timeline-chart></div>
+        <p class="timeline-chart-empty" data-timeline-chart-empty hidden>
+          Sin datos de evolución suficientes para esta partida.
+        </p>
+      </div>
+
+      <div class="timeline-moments">
+        <h4>Momentos clave</h4>
+        <ol data-timeline-moments></ol>
+        <p class="timeline-moments-empty" data-timeline-moments-empty hidden>
+          Riot no ha dado eventos suficientes para destacar momentos en esta partida.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>

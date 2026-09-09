@@ -10,6 +10,7 @@ import {
   validateMatchVideoLinks,
 } from '../../../lib/match-video-links';
 import type { YouTubeVideo } from '../../../types/content';
+import { wireTimeline } from './timeline-render';
 
 interface MatchRenderOptions {
   formatNumber: (value: number) => string;
@@ -23,6 +24,8 @@ interface MatchRenderOptions {
    * cuando la muestra real es 0.
    */
   emptyState?: { label: string; title: string; detail: string };
+  /** Base de `/api/riot/matches` — Match Timeline se pide siempre bajo demanda, nunca al renderizar la tarjeta. */
+  matchesBase: string;
 }
 
 const query = <T extends Element>(root: ParentNode, selector: string) =>
@@ -389,6 +392,10 @@ const renderCard = (
     blueIsAlly ? 'Equipo enemigo' : 'Equipo aliado',
   );
   wireExpansion(card, match.matchId);
+  wireTimeline(card, match.matchId, {
+    matchesBase: options.matchesBase,
+    formatNumber: options.formatNumber,
+  });
   requestAnimationFrame(() => card.classList.add('is-ready'));
   return fragment;
 };

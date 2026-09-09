@@ -1,5 +1,5 @@
 ---
-import { integrationEndpoints, platforms } from '../../config/platforms';
+import { integrationEndpoints } from '../../config/platforms';
 import MatchCard from './matches/MatchCard.astro';
 import MatchEmpty from './matches/MatchEmpty.astro';
 import PerformanceProfile from './PerformanceProfile.astro';
@@ -11,9 +11,8 @@ import { resolvedMatchVideoContent } from '../../lib/resolved-match-video-conten
   class="live-page"
   data-live-root
   data-youtube={integrationEndpoints.youtube}
-  data-youtube-stats={integrationEndpoints.youtubeStats}
   data-riot={integrationEndpoints.riot}
-  data-twitch={integrationEndpoints.twitch}
+  data-riot-matches-base={integrationEndpoints.riotMatchesBase}
   data-match-videos={JSON.stringify(resolvedMatchVideoContent)}
 >
   <section class="live-intro">
@@ -44,13 +43,24 @@ import { resolvedMatchVideoContent } from '../../lib/resolved-match-video-conten
         <div>
           <span>01 / Ahora</span><h2 id="solo-title">Estado competitivo</h2>
         </div>
-        <small
-          data-riot-updated
-          class="data-skeleton data-skeleton--meta"
-          aria-label="Actualizando datos competitivos"
-          aria-live="polite">&nbsp;</small
-        >
+        <div class="status-module-meta">
+          <small
+            data-riot-updated
+            class="data-skeleton data-skeleton--meta"
+            aria-label="Actualizando datos competitivos"
+            aria-live="polite">&nbsp;</small
+          >
+          <button type="button" class="status-refresh" data-profile-refresh>
+            Actualizar
+          </button>
+        </div>
       </header>
+      <p
+        class="status-refresh-state"
+        data-profile-refresh-state
+        aria-live="polite"
+      >
+      </p>
       <div class="profile-context">
         <strong data-riot-id>Tidusss#FFX</strong><span>EUW · Solo/Duo</span>
       </div>
@@ -153,172 +163,19 @@ import { resolvedMatchVideoContent } from '../../lib/resolved-match-video-conten
       <div data-related-gameplays-list></div>
     </div>
 
-    <section class="live-module" aria-labelledby="twitch-title">
-      <header class="live-module-head">
-        <div><span>06 / Twitch</span><h2 id="twitch-title">Directo</h2></div>
-        <i class="live-dot" aria-hidden="true"></i>
-      </header>
-      <div class="stream-status" aria-live="polite">
-        <strong
-          data-stream-state
-          class="data-skeleton"
-          aria-label="Actualizando Twitch">&nbsp;</strong
-        >
-        <p data-stream-copy class="data-skeleton data-skeleton--copy">&nbsp;</p>
-        <small data-stream-meta hidden>
-          <span data-stream-category></span>
-          <span data-stream-viewers></span>
-          <span data-stream-duration></span>
-        </small>
-      </div>
-      <small
-        class="live-updated data-skeleton data-skeleton--meta"
-        data-twitch-updated
-        aria-label="Actualizando estado de Twitch">&nbsp;</small
-      >
-      <a
-        class="live-action"
-        href={platforms.twitch.url}
-        target="_blank"
-        rel="noreferrer"
-        data-stream-link>Visitar Twitch ↗</a
-      >
-    </section>
-
-    <section class="live-module" aria-labelledby="youtube-title">
-      <header class="live-module-head">
-        <div><span>07 / YouTube</span><h2 id="youtube-title">Canal</h2></div>
-        <small>Dato proporcionado por YouTube</small>
-      </header>
-      <div class="youtube-number">
-        <strong
-          data-subscribers
-          class="data-skeleton"
-          aria-label="Actualizando suscriptores">&nbsp;</strong
-        ><span>Suscriptores</span>
-      </div>
-      <p class="provider-state" data-youtube-state hidden></p>
-      <div data-youtube-details hidden>
-        <div class="goal-line">
-          <span>Próximo objetivo <b data-subscriber-goal></b></span><strong
-            data-subscriber-progress></strong>
-        </div>
-        <div class="progress-track"><span data-subscriber-bar></span></div>
-        <div class="channel-metrics">
-          <span><b data-views></b> visualizaciones</span><span
-            ><b data-video-count></b> vídeos</span
-          >
-        </div>
-      </div>
-      <small
-        class="live-updated data-skeleton data-skeleton--meta"
-        data-youtube-updated
-        aria-label="Actualizando estadísticas">&nbsp;</small
-      >
-    </section>
-
-    <section id="objetivos" class="live-module" aria-labelledby="goals-title">
-      <header class="live-module-head">
-        <div><span>08 / Progreso</span><h2 id="goals-title">Objetivos</h2></div>
-      </header>
-      <div class="goals-list">
-        <article data-goal-chain="competitive-lp">
-          <span>Objetivo competitivo</span>
-          <strong data-goal-value class="data-skeleton">&nbsp;</strong>
-          <div data-goal-track hidden><i></i></div>
-        </article>
-        <article data-goal-chain="youtube-subscribers">
-          <span>Suscriptores</span>
-          <strong data-goal-value class="data-skeleton">&nbsp;</strong>
-          <div data-goal-track hidden><i></i></div>
-        </article>
-        <article data-goal-chain="youtube-videos">
-          <span>Vídeos publicados</span>
-          <strong data-goal-value class="data-skeleton">&nbsp;</strong>
-          <div data-goal-track hidden><i></i></div>
-        </article>
-      </div>
-    </section>
-
-    <section class="live-module" aria-labelledby="activity-title">
-      <header class="live-module-head">
-        <div>
-          <span>09 / Canal</span><h2 id="activity-title">Actividad reciente</h2>
-        </div>
-      </header>
-      <ol class="activity-list" data-activity-feed aria-live="polite">
-        <li
-          class="live-loading live-loading--row"
-          aria-label="Actualizando actividad"
-        >
-          <i></i><i></i>
-        </li>
-      </ol>
-    </section>
-
-    <section
-      class="live-module live-module--wide profile-refresh"
-      aria-labelledby="profile-title"
-    >
-      <header class="live-module-head">
-        <div>
-          <span>10 / Perfil</span><h2 id="profile-title">
-            Consultar perfil competitivo
-          </h2>
-        </div><small>Tidusss#FFX · EUW</small>
-      </header>
-      <div class="profile-refresh-body">
-        <p>
-          Actualiza el rango, las partidas y la actividad competitiva de
-          Tidusss#FFX.
-        </p>
-        <button type="button" data-profile-refresh>Actualizar perfil</button>
-      </div>
-      <p
-        class="profile-refresh-state"
-        data-profile-refresh-state
-        aria-live="polite"
-      >
-      </p>
-    </section>
   </div>
 </main>
 
 <script>
-  import { buildActivity } from '../../lib/activity';
-  import {
-    elapsedDuration,
-    madridTime,
-    relativeTime,
-    updatedAgo,
-  } from '../../lib/time';
-  import {
-    COMPETITIVE_LP_CHAIN,
-    YOUTUBE_SUBSCRIBER_CHAIN,
-    YOUTUBE_VIDEO_CHAIN,
-    primaryFromChain,
-    resolveChain,
-  } from '../../domain/goals';
+  import { madridTime, relativeTime, updatedAgo } from '../../lib/time';
   import { rankAssetFor } from '../../config/rank-assets';
   import { renderMatchCards } from './matches/render';
   import type { RiotPublicResponse } from '../../lib/riot';
-  import type {
-    TwitchStatusResponse,
-    YouTubeStatsResponse,
-  } from '../../types/platforms';
   import type {
     YouTubeFeedResponse,
     YouTubeFeedResult,
     YouTubeVideo,
   } from '../../types/content';
-
-  // Las tres cadenas reales que Competitivo puede medir con datos que ya
-  // llegan a esta página — nunca se inventa un cuarto objetivo sin fuente.
-  const GOAL_CHAINS = {
-    'competitive-lp': COMPETITIVE_LP_CHAIN,
-    'youtube-subscribers': YOUTUBE_SUBSCRIBER_CHAIN,
-    'youtube-videos': YOUTUBE_VIDEO_CHAIN,
-  } as const;
 
   const root = document.querySelector<HTMLElement>('[data-live-root]');
   const reducedMotion = window.matchMedia(
@@ -386,25 +243,6 @@ import { resolvedMatchVideoContent } from '../../lib/resolved-match-video-conten
     valueObserver?.observe(node);
   };
 
-  const animateBar = (
-    node: HTMLElement | null | undefined,
-    progress: number,
-  ) => {
-    if (!node) return;
-    const target = `${Math.max(0, Math.min(100, progress))}%`;
-    if (reducedMotion || node.dataset.progressReady) {
-      node.style.width = target;
-      return;
-    }
-    node.style.width = '0%';
-    node.dataset.progressReady = 'true';
-    requestAnimationFrame(() =>
-      requestAnimationFrame(() => {
-        node.style.width = target;
-      }),
-    );
-  };
-
   if (!reducedMotion) {
     valueObserver = new IntersectionObserver(
       (entries) =>
@@ -446,25 +284,7 @@ import { resolvedMatchVideoContent } from '../../lib/resolved-match-video-conten
     value === undefined
       ? undefined
       : new Intl.NumberFormat('es-ES').format(value);
-  const percent = (value?: number) =>
-    value === undefined ? undefined : `${String(value).replace('.', ',')} %`;
-  const appendEmpty = (
-    container: Element,
-    titleCopy: string,
-    detailCopy: string,
-  ) => {
-    const item = document.createElement('li');
-    item.className = 'compact-empty';
-    const title = document.createElement('strong');
-    title.textContent = titleCopy;
-    const detail = document.createElement('span');
-    detail.textContent = detailCopy;
-    item.append(title, detail);
-    container.append(item);
-  };
   let riotData: Extract<RiotPublicResponse, { ok: true }>['data'] | undefined;
-  let youtubeData:
-    Extract<YouTubeStatsResponse, { ok: true }>['data'] | undefined;
   let videos: YouTubeFeedResult['videos'] = [];
   // Vídeos de `matchVideoLinks` ya resueltos en build time (lib/resolved-
   // match-video-content.ts) — la relación partida↔vídeo es permanente y no
@@ -509,6 +329,7 @@ import { resolvedMatchVideoContent } from '../../lib/resolved-match-video-conten
       relativeTime,
       reducedMotion,
       videos: matchVideoPool,
+      matchesBase: root?.dataset.riotMatchesBase ?? '/api/riot/matches',
       // "No hay partidas" (sampleSize real 0) y "no se pudieron cargar"
       // (Riot ha fallado) son cosas distintas — solo se sobrescribe el
       // copy por defecto de MatchEmpty cuando es realmente un fallo.
@@ -702,122 +523,6 @@ import { resolvedMatchVideoContent } from '../../lib/resolved-match-video-conten
     renderMatches();
   };
 
-  const loadYouTube = async () => {
-    const response = await fetch(root!.dataset.youtubeStats!);
-    const payload = (await response.json()) as YouTubeStatsResponse;
-    if (!payload.ok) throw new Error(payload.error.code);
-    youtubeData = payload.data;
-    root
-      ?.querySelector('[data-subscribers]')
-      ?.classList.remove('data-skeleton', 'live-stat-fallback');
-    if (payload.data.subscriberCount === undefined) {
-      text('[data-subscribers]', 'No visible');
-      text('[data-youtube-state]', 'Suscriptores no visibles públicamente.');
-      visible('[data-youtube-state]', true);
-    } else {
-      animateValues(
-        '[data-subscribers]',
-        [payload.data.subscriberCount],
-        ([value]) => number(Math.round(value ?? 0)) ?? '',
-      );
-      visible('[data-youtube-state]', false);
-    }
-    visible('[data-youtube-details]', true);
-    text(
-      '[data-subscriber-goal]',
-      number(payload.data.nextGoal) ?? 'Hito máximo alcanzado',
-    );
-    if (payload.data.progress === undefined)
-      text('[data-subscriber-progress]', 'Sin porcentaje');
-    else
-      animateValues(
-        '[data-subscriber-progress]',
-        [payload.data.progress],
-        ([value]) =>
-          percent(Math.round((value ?? 0) * 10) / 10) ?? 'Sin porcentaje',
-      );
-    if (payload.data.viewCount === undefined)
-      text('[data-views]', 'No visibles');
-    else
-      animateValues(
-        '[data-views]',
-        [payload.data.viewCount],
-        ([value]) => number(Math.round(value ?? 0)) ?? '',
-      );
-    if (payload.data.videoCount === undefined)
-      text('[data-video-count]', 'No visibles');
-    else
-      animateValues(
-        '[data-video-count]',
-        [payload.data.videoCount],
-        ([value]) => number(Math.round(value ?? 0)) ?? '',
-      );
-    markUpdated(
-      '[data-youtube-updated]',
-      payload.data.updatedAt,
-      'cifra redondeada por YouTube',
-    );
-    const bar = root?.querySelector<HTMLElement>('[data-subscriber-bar]');
-    animateBar(bar, payload.data.progress ?? 0);
-  };
-
-  const loadTwitch = async () => {
-    const response = await fetch(root!.dataset.twitch!);
-    const payload = (await response.json()) as TwitchStatusResponse;
-    if (!payload.ok) throw new Error(payload.error.code);
-    const status = payload.data;
-    root
-      ?.querySelector('[data-stream-state]')
-      ?.classList.remove('data-skeleton');
-    root
-      ?.querySelector('[data-stream-copy]')
-      ?.classList.remove('data-skeleton', 'data-skeleton--copy');
-    root?.toggleAttribute('data-stream-live', status.state === 'online');
-    markUpdated('[data-twitch-updated]', status.updatedAt);
-    const streamStateNode = root?.querySelector('[data-stream-state]');
-    if (status.state === 'online') {
-      streamStateNode?.classList.remove('live-stat-fallback');
-      text('[data-stream-state]', 'EN DIRECTO');
-      text('[data-stream-copy]', status.title ?? 'Tidusss está en directo.');
-      text('[data-stream-category]', status.category ?? '');
-      if (status.viewerCount === undefined) text('[data-stream-viewers]', '');
-      else
-        animateValues(
-          '[data-stream-viewers]',
-          [status.viewerCount],
-          ([value]) => `${number(Math.round(value ?? 0))} espectadores`,
-        );
-      text(
-        '[data-stream-duration]',
-        status.startedAt
-          ? `${elapsedDuration(status.startedAt) ?? ''} en directo`
-          : '',
-      );
-      visible('[data-stream-meta]', true);
-      text('[data-stream-link]', 'Ver directo ↗');
-    } else if (status.state === 'offline') {
-      streamStateNode?.classList.remove('live-stat-fallback');
-      text('[data-stream-state]', 'Offline');
-      text(
-        '[data-stream-copy]',
-        'Pásate por el canal o revisa la actividad reciente.',
-      );
-      visible('[data-stream-meta]', false);
-      text('[data-stream-link]', 'Visitar Twitch ↗');
-    } else {
-      // "Conexión pendiente" no es un estado en directo real (ni EN
-      // DIRECTO ni Offline) — es una frase, así que usa el mismo
-      // tratamiento compacto que un fallo real.
-      streamStateNode?.classList.add('live-stat-fallback');
-      text('[data-stream-state]', 'Conexión con Twitch pendiente.');
-      text(
-        '[data-stream-copy]',
-        'El canal sigue disponible desde el enlace inferior.',
-      );
-      visible('[data-stream-meta]', false);
-    }
-  };
-
   const loadFeed = async () => {
     const response = await fetch(root!.dataset.youtube!);
     const payload = (await response.json()) as YouTubeFeedResponse;
@@ -827,94 +532,6 @@ import { resolvedMatchVideoContent } from '../../lib/resolved-match-video-conten
     renderRelatedGameplays();
   };
 
-  // Cada objetivo se recalcula contra el valor real de esta misma carga —
-  // nunca contra un target fijo editado a mano. Un hito ya conseguido se
-  // muestra como logro, no como una barra que sigue "en progreso".
-  const updateGoals = () =>
-    root
-      ?.querySelectorAll<HTMLElement>('[data-goal-chain]')
-      .forEach((item) => {
-        const chainKey = item.dataset.goalChain as keyof typeof GOAL_CHAINS;
-        const chain = GOAL_CHAINS[chainKey];
-        const current =
-          chainKey === 'competitive-lp'
-            ? riotData?.ranked.leaguePoints
-            : chainKey === 'youtube-subscribers'
-              ? youtubeData?.subscriberCount
-              : youtubeData?.videoCount;
-        const resolved = chain
-          ? primaryFromChain(resolveChain(chain, current))
-          : undefined;
-        const value = item.querySelector<HTMLElement>('[data-goal-value]');
-        const track = item.querySelector<HTMLElement>('[data-goal-track]');
-        const bar = track?.querySelector<HTMLElement>('i');
-        value?.classList.remove('data-skeleton');
-        if (track) track.hidden = true;
-        if (
-          !resolved ||
-          resolved.status === 'no-data' ||
-          resolved.status === 'unavailable'
-        ) {
-          if (value)
-            value.textContent =
-              chainKey === 'competitive-lp'
-                ? 'Riot no responde ahora mismo — vuelve en un momento'
-                : 'YouTube no responde ahora mismo — vuelve en un momento';
-          return;
-        }
-        if (resolved.status === 'paused') {
-          if (value) value.textContent = 'Objetivo pausado.';
-          return;
-        }
-        if (resolved.status === 'completed') {
-          if (value) value.textContent = `${resolved.title} · Conseguido`;
-          return;
-        }
-        if (value)
-          value.textContent = `${number(Math.round(resolved.current ?? 0))} / ${number(resolved.target)} ${resolved.unit} · ${percent(Math.round((resolved.progress ?? 0) * 10) / 10)}`;
-        if (track) track.hidden = false;
-        animateBar(bar, resolved.progress ?? 0);
-      });
-
-  const updateActivity = () => {
-    const feed = root?.querySelector('[data-activity-feed]');
-    if (!feed) return;
-    const events = buildActivity(
-      riotData?.recent.matches.slice(0, 3),
-      videos.slice(0, 3),
-    );
-    feed.replaceChildren(
-      ...events.map((event) => {
-        const item = document.createElement('li');
-        const copy = document.createElement('div');
-        const title = event.href
-          ? document.createElement('a')
-          : document.createElement('strong');
-        title.textContent = event.title;
-        if (title instanceof HTMLAnchorElement) {
-          title.href = event.href!;
-          title.target = '_blank';
-          title.rel = 'noreferrer';
-        }
-        const detail = document.createElement('span');
-        detail.textContent = event.detail;
-        copy.append(title, detail);
-        const time = document.createElement('time');
-        time.dateTime = event.timestamp;
-        time.textContent = relativeTime(event.timestamp) ?? '';
-        item.append(copy, time);
-        return item;
-      }),
-    );
-    if (!events.length) {
-      appendEmpty(
-        feed,
-        'Todavía no hay actividad reciente disponible.',
-        'Las nuevas partidas, vídeos y directos aparecerán aquí automáticamente.',
-      );
-    }
-  };
-
   const refresh = async (manual = false) => {
     if (fetching || (!manual && document.hidden)) return;
     fetching = true;
@@ -922,13 +539,8 @@ import { resolvedMatchVideoContent } from '../../lib/resolved-match-video-conten
       '[data-profile-refresh]',
     );
     if (button) button.disabled = true;
-    if (manual) text('[data-profile-refresh-state]', 'Actualizando perfil…');
-    const results = await Promise.allSettled([
-      loadRiot(),
-      loadYouTube(),
-      loadTwitch(),
-      loadFeed(),
-    ]);
+    if (manual) text('[data-profile-refresh-state]', 'Actualizando…');
+    const results = await Promise.allSettled([loadRiot(), loadFeed()]);
     if (results[0].status === 'rejected') {
       riotFailed = true;
       visible('[data-rank-emblem]', false);
@@ -955,53 +567,12 @@ import { resolvedMatchVideoContent } from '../../lib/resolved-match-video-conten
       text('[data-riot-updated]', 'Reintentando la conexión con Riot');
       renderMatches();
     }
-    if (results[1].status === 'rejected') {
-      const code =
-        results[1].reason instanceof Error ? results[1].reason.message : '';
-      const subscribersNode = root?.querySelector('[data-subscribers]');
-      subscribersNode?.classList.remove('data-skeleton');
-      subscribersNode?.classList.add('live-stat-fallback');
-      text('[data-subscribers]', 'YouTube no responde ahora mismo');
-      text(
-        '[data-youtube-state]',
-        code === 'YOUTUBE_NOT_CONFIGURED'
-          ? 'Canal pendiente de conexión.'
-          : 'YouTube no me deja consultar el canal ahora mismo.',
-      );
-      visible('[data-youtube-state]', true);
-      root
-        ?.querySelector('[data-youtube-updated]')
-        ?.classList.remove('data-skeleton', 'data-skeleton--meta');
-      text(
-        '[data-youtube-updated]',
-        'Se conservará el último dato válido cuando exista.',
-      );
-    }
-    if (results[2].status === 'rejected') {
-      const streamStateNode = root?.querySelector('[data-stream-state]');
-      streamStateNode?.classList.remove('data-skeleton');
-      streamStateNode?.classList.add('live-stat-fallback');
-      root
-        ?.querySelector('[data-stream-copy]')
-        ?.classList.remove('data-skeleton', 'data-skeleton--copy');
-      root
-        ?.querySelector('[data-twitch-updated]')
-        ?.classList.remove('data-skeleton', 'data-skeleton--meta');
-      text('[data-stream-state]', 'Estado temporalmente no disponible.');
-      text(
-        '[data-stream-copy]',
-        'Pásate por el canal o revisa la actividad reciente.',
-      );
-      text('[data-twitch-updated]', 'Intentaremos actualizar pronto');
-    }
-    updateGoals();
-    updateActivity();
     if (manual)
       text(
         '[data-profile-refresh-state]',
         results[0].status === 'fulfilled'
-          ? 'Perfil actualizado.'
-          : 'No se ha podido actualizar el perfil ahora mismo.',
+          ? 'Actualizado.'
+          : 'No se ha podido actualizar ahora mismo.',
       );
     if (button) button.disabled = false;
     fetching = false;
