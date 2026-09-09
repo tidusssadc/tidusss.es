@@ -4,6 +4,7 @@ import MatchCard from './matches/MatchCard.astro';
 import MatchEmpty from './matches/MatchEmpty.astro';
 import PerformanceProfile from './PerformanceProfile.astro';
 import LiveGameModule from './LiveGameModule.astro';
+import RankEvolution from './RankEvolution.astro';
 import { resolvedMatchVideoContent } from '../../lib/resolved-match-video-content';
 ---
 
@@ -87,6 +88,7 @@ import { resolvedMatchVideoContent } from '../../lib/resolved-match-video-conten
       <div class="season-record" data-season-record hidden>
         <span data-season-record-line></span>
       </div>
+      <RankEvolution />
       <div class="today-metrics" data-today-metrics hidden>
         <div><strong data-today-games></strong><span>Partidas hoy</span></div>
         <div>

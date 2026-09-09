@@ -4,6 +4,7 @@ import {
   compareRank,
   detectRankTransitions,
   highestRank,
+  rankOrdinal,
 } from '../../../src/lib/rank-history/rank-order.ts';
 
 // --- compareRank ---
@@ -124,4 +125,54 @@ test('detectRankTransitions: entrar en Master desde Diamond I es una transición
   const transitions = detectRankTransitions(chronological);
   assert.equal(transitions.length, 1);
   assert.equal(transitions[0]!.direction, 'up');
+});
+
+// --- rankOrdinal (solo posición de gráfico, nunca un dato mostrado) ---
+
+test('rankOrdinal: nunca lanza y es coherente con compareRank en todo el rango real de tiers', () => {
+  const samples: Array<{ tier?: string; rank?: string; leaguePoints?: number }> = [
+    {},
+    { tier: 'IRON', rank: 'IV', leaguePoints: 0 },
+    { tier: 'IRON', rank: 'I', leaguePoints: 99 },
+    { tier: 'BRONZE', rank: 'IV', leaguePoints: 0 },
+    { tier: 'GOLD', rank: 'III', leaguePoints: 40 },
+    { tier: 'DIAMOND', rank: 'I', leaguePoints: 95 },
+    { tier: 'MASTER', leaguePoints: 0 },
+    { tier: 'MASTER', leaguePoints: 245 },
+    { tier: 'GRANDMASTER', leaguePoints: 100 },
+    { tier: 'CHALLENGER', leaguePoints: 1200 },
+  ];
+  for (let i = 1; i < samples.length; i += 1) {
+    const prev = samples[i - 1]!;
+    const curr = samples[i]!;
+    assert.ok(
+      rankOrdinal(curr) > rankOrdinal(prev),
+      `rankOrdinal(${JSON.stringify(curr)}) debería ser mayor que rankOrdinal(${JSON.stringify(prev)})`,
+    );
+    assert.ok(compareRank(curr, prev) >= 0);
+  }
+});
+
+test('rankOrdinal: Platinum IV 0 LP siempre por encima de Gold I 95 LP, igual que compareRank', () => {
+  const gold = { tier: 'GOLD', rank: 'I', leaguePoints: 95 };
+  const platinum = { tier: 'PLATINUM', rank: 'IV', leaguePoints: 0 };
+  assert.ok(rankOrdinal(platinum) > rankOrdinal(gold));
+});
+
+test('rankOrdinal: Diamond I 80 LP queda por debajo de Master 0 LP (el problema real de un eje de LP crudo)', () => {
+  const diamond = { tier: 'DIAMOND', rank: 'I', leaguePoints: 80 };
+  const master = { tier: 'MASTER', leaguePoints: 0 };
+  assert.ok(rankOrdinal(master) > rankOrdinal(diamond));
+});
+
+test('rankOrdinal: sin clasificar es siempre el punto más bajo, por debajo incluso de Iron IV 0 LP', () => {
+  assert.ok(rankOrdinal({ tier: 'IRON', rank: 'IV', leaguePoints: 0 }) > rankOrdinal({}));
+});
+
+test('rankOrdinal: un LP fuera de rango (ruido de Riot) nunca rompe el orden entre divisiones', () => {
+  // LP > 99 puede aparecer brevemente antes de una promoción — se recorta,
+  // pero Gold III con LP "inflado" nunca debe superar a Gold II real.
+  const goldIIIInflated = { tier: 'GOLD', rank: 'III', leaguePoints: 500 };
+  const goldII = { tier: 'GOLD', rank: 'II', leaguePoints: 0 };
+  assert.ok(rankOrdinal(goldII) > rankOrdinal(goldIIIInflated));
 });

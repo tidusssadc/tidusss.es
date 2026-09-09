@@ -2319,6 +2319,63 @@
   color: #8793a5;
   font-size: 0.75rem;
 }
+/* --- Evolución de rango observada (Night Shift 2026-09-09, Fase D) --- */
+.rank-evolution {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgb(255 255 255 / 7%);
+}
+.rank-evolution-empty strong {
+  display: block;
+  color: #dbe1ea;
+  font-size: 0.82rem;
+}
+.rank-evolution-empty span {
+  display: block;
+  margin-top: 0.3rem;
+  max-width: 28rem;
+  color: #5f6c81;
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+.rank-evolution-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+}
+.rank-evolution-head strong {
+  color: #f0f3f7;
+  font-size: 1.05rem;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+}
+.rank-evolution-head span {
+  color: #d6b56b;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+.rank-evolution-chart {
+  display: block;
+  width: 100%;
+  max-width: 280px;
+  height: auto;
+  margin-top: 0.75rem;
+}
+.rank-evolution-chart path {
+  fill: none;
+  stroke: #d6b56b;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.rank-evolution-meta {
+  margin-top: 0.4rem;
+  color: #8793a5;
+  font-size: 0.7rem;
+}
+.rank-evolution-transition {
+  color: #9fb3d6;
+}
 .today-metrics {
   display: grid;
   grid-template-columns: repeat(4, 1fr);

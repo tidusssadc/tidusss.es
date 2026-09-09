@@ -74,6 +74,35 @@ export const highestRank = <T extends ComparableRank>(
     undefined,
   );
 
+/** Ancho reservado por tier en `rankOrdinal` — cuatro huecos de 100 (uno por división) más margen. */
+const TIER_BLOCK = 500;
+/** Techo del hueco de LP dentro de un tier con divisiones (LP normal 0-99; se recorta, nunca rompe el orden entre divisiones). */
+const DIVISION_LP_CAP = 99;
+/** Techo del hueco de LP dentro de un tier apex (Master+); el LP ahí es una escala real sin tope de división. */
+const APEX_LP_CAP = TIER_BLOCK - 1;
+
+/**
+ * Posición numérica MONÓTONA para dibujar el sparkline de evolución de
+ * rango — NUNCA un dato real, nunca se muestra como número en ningún
+ * sitio (encargo §27: "Chart LP" no puede ser un eje de LP crudo, porque
+ * Diamond I 80 LP < Master 0 LP a pesar de tener menos "número"). Solo
+ * sirve para decidir la altura Y de un punto respecto a los demás — el
+ * texto real que ve el usuario siempre sale de `tier`/`rank`/`leaguePoints`
+ * tal cual, nunca de este valor. Mismo orden que `compareRank` (tier →
+ * division → LP), aplanado a un único número creciente.
+ */
+export const rankOrdinal = (entry: ComparableRank): number => {
+  const tier = tierIndex(entry.tier);
+  // -1, no 0: Iron IV 0 LP (el rango real más bajo) también vale 0 en este
+  // esquema — "sin clasificar" debe quedar estrictamente por debajo de eso.
+  if (tier === -1) return -1;
+  const isApex = entry.tier ? APEX_TIERS.has(entry.tier.toUpperCase()) : false;
+  const lp = Math.max(0, entry.leaguePoints ?? 0);
+  if (isApex) return tier * TIER_BLOCK + Math.min(lp, APEX_LP_CAP);
+  const division = Math.max(0, divisionIndex(entry.rank));
+  return tier * TIER_BLOCK + division * 100 + Math.min(lp, DIVISION_LP_CAP);
+};
+
 export type RankTransitionDirection = 'up' | 'down';
 
 export interface RankTransition<T extends ComparableRank = ComparableRank> {
