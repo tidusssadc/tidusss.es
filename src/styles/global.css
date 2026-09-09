@@ -2533,6 +2533,14 @@
   padding: 1.25rem 0;
 }
 .match-row-item {
+  /* `.live-match-list` es un grid: por defecto un item de grid no encoge
+     por debajo del ancho mínimo de su contenido (`min-width: auto`),
+     aunque sus hijos flex ya sepan envolver — así, en viewports estrechos,
+     esta fila forzaba scroll horizontal en TODA la página en vez de
+     envolver internamente (Night Shift 2026-09-09, Fase F — hallazgo real,
+     confirmado en /competitivo a 320-375px, corregido por estar acotado a
+     Match History, nunca a un componente global). */
+  min-width: 0;
   border-top: 1px solid rgb(255 255 255 / 6%);
   opacity: 0;
   transform: translate3d(0, 6px, 0);

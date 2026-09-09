@@ -42,10 +42,15 @@ const recordRankSnapshotIfPossible = async (
   data: Awaited<ReturnType<typeof getRiotOverview>>,
 ) => {
   if (!data.ranked.available) return;
+  // Sin binding DB (estado real de producción hoy: D1 aún no aprovisionado),
+  // ni siquiera merece la pena resolver el PUUID — `recordObservationIfDue`
+  // se degradaría igual, pero así no se hace ni ese trabajo de más en cada
+  // petición (Night Shift 2026-09-09, Fase F — hallazgo de hardening).
+  if (!env.DB) return;
   try {
     const puuid = await resolveSelfAccountPuuid(env);
     if (!puuid) return;
-    const repository = env.DB ? new D1RankSnapshotRepository(env.DB) : undefined;
+    const repository = new D1RankSnapshotRepository(env.DB);
     await recordObservationIfDue(
       repository,
       {
