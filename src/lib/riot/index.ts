@@ -207,6 +207,32 @@ export const getRiotOverview = async (
   };
 };
 
+/**
+ * El PUUID real de Tidusss, solo — para el histórico de rango (Night
+ * Shift 2026-09-09, `src/lib/rank-history`), que necesita una identidad
+ * técnica estable pero NUNCA debe volver a resolver la cuenta por su
+ * cuenta. Reutiliza `resolveSelfAccount` (misma clave de caché de 24h
+ * que ya calienta `getRiotOverview`/`getRiotLiveGame`) — en el caso real
+ * (se llama justo después de un `getRiotOverview` en la misma petición),
+ * esto es una lectura de caché de memoria, cero llamadas Riot nuevas.
+ * El PUUID nunca se expone en `RiotOverview` (tipo público del cliente).
+ */
+export const resolveSelfAccountPuuid = async (
+  environment: RiotEnvironment,
+  diagnostics?: RiotDiagnosticLogger,
+): Promise<string | undefined> => {
+  const config = getRiotConfig(environment);
+  if (!config.apiKey) return undefined;
+  const client = createRiotClient({ apiKey: config.apiKey, diagnostics });
+  const regionalBase = `https://${config.regionalRoute}.api.riotgames.com`;
+  try {
+    const account = await resolveSelfAccount(client, regionalBase, config);
+    return account.value.puuid;
+  } catch {
+    return undefined;
+  }
+};
+
 // --- Match Timeline (Match-V5 Timeline) — on-demand, nunca en la ruta
 // crítica de /api/riot/overview ni /api/riot/live (encargo §29). ---
 
