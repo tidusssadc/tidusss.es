@@ -14,7 +14,13 @@ export const riotDefaults = {
   regionLabel: 'EUW',
   queueType: 'RANKED_SOLO_5x5',
   soloQueueId: 420,
-  recentMatchIds: 15,
+  // 30: suficiente para que el perfil competitivo avanzado (KDA/CSM/GPM/DPM
+  // por ventana, campeones, actividad, sinergias) tenga una muestra con
+  // sentido sin descargar la temporada completa en cada caché fría — cada
+  // partida se cachea 7 días de forma independiente (`riot:match:{id}` en
+  // `index.ts`), así que solo paga esta llamada quien encuentra la caché
+  // vacía o expirada, nunca cada visitante.
+  recentMatchIds: 30,
   recentSoloSample: 10,
 } as const;
 

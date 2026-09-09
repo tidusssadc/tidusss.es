@@ -162,6 +162,7 @@ export const normalizeMatch = (
       visionScore: Math.max(0, player.visionScore ?? 0),
       items: playerItems,
       itemImageUrls: playerItems.map(itemUrl),
+      position: player.teamPosition || player.individualPosition || undefined,
     };
   };
   const teams = (info.teams ?? []).map((team) => ({

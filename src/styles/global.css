@@ -3391,6 +3391,165 @@
   font-weight: 500;
   text-align: right;
 }
+/* --- Perfil competitivo avanzado (Match-V5, sin Timeline ni persistencia) --- */
+.performance-profile .performance-loading {
+  margin-top: 1.25rem;
+}
+.performance-windows {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem;
+  margin-top: 1.25rem;
+}
+.performance-windows article {
+  border: 1px solid rgb(255 255 255 / 8%);
+  padding: 1.1rem 1.25rem;
+}
+.performance-windows > article > span {
+  color: #68758a;
+  font-size: 0.56rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.performance-windows > article > strong {
+  display: block;
+  margin-top: 0.45rem;
+  color: #dce2eb;
+  font-size: 0.82rem;
+}
+.performance-windows dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin-top: 0.9rem;
+}
+.performance-windows dt {
+  color: #59667a;
+  font-size: 0.54rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.performance-windows dd {
+  margin-top: 0.3rem;
+  color: #dce2eb;
+  font-size: 0.74rem;
+  font-variant-numeric: tabular-nums;
+}
+.performance-trend {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+.performance-trend li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.6rem;
+  border-left: 2px solid #d6b56b;
+  padding-left: 0.75rem;
+  font-size: 0.65rem;
+}
+.performance-trend strong {
+  color: #dce2eb;
+}
+.performance-trend span {
+  color: #7e8a9d;
+}
+.performance-champions {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin-top: 1rem;
+}
+.performance-champions li {
+  min-width: 0;
+  border: 1px solid rgb(255 255 255 / 6%);
+  padding: 0.8rem;
+}
+.performance-champions li > img {
+  background: #0d121d;
+}
+.performance-champions li > div {
+  margin-top: 0.65rem;
+}
+.performance-champions strong {
+  display: block;
+  color: #dce2eb;
+  font-size: 0.72rem;
+}
+.performance-champions span,
+.performance-champions p {
+  display: block;
+  margin-top: 0.3rem;
+  color: #647186;
+  font-size: 0.54rem;
+  line-height: 1.5;
+}
+.performance-bars {
+  display: grid;
+  gap: 0.55rem;
+  margin-top: 1rem;
+}
+.performance-bars li {
+  display: grid;
+  grid-template-columns: 6.5rem minmax(0, 1fr) 6rem;
+  gap: 0.8rem;
+  align-items: center;
+  color: #7e8a9d;
+  font-size: 0.6rem;
+}
+.performance-bars i {
+  display: block;
+  max-width: 100%;
+  height: 1px;
+  background: #d6b56b;
+}
+.performance-bars strong {
+  color: #9aa6b8;
+  font-weight: 500;
+  text-align: right;
+}
+.performance-bars-empty {
+  color: #59667a;
+  font-size: 0.62rem;
+}
+.performance-split-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.75rem;
+  margin-top: 1.75rem;
+}
+.performance-relations {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+.performance-relations li {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  border: 1px solid rgb(255 255 255 / 6%);
+  padding: 0.55rem 0.75rem;
+  font-size: 0.64rem;
+  color: #dce2eb;
+}
+.performance-relations img {
+  border-radius: 3px;
+  background: #0d121d;
+}
+.performance-relations span {
+  flex: 1;
+}
+.performance-relations strong {
+  color: #9aa6b8;
+  font-weight: 500;
+  font-size: 0.6rem;
+}
+.performance-duration-summary {
+  margin-top: 0.75rem;
+  color: #7e8a9d;
+  font-size: 0.62rem;
+}
 .related-gameplays [data-related-gameplays-list] {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -3766,6 +3925,15 @@
     display: block;
     margin-top: 0.35rem;
   }
+  .performance-windows,
+  .performance-champions,
+  .performance-split-grid {
+    grid-template-columns: 1fr;
+  }
+  .performance-bars li {
+    grid-template-columns: 5rem minmax(0, 1fr) 4.5rem;
+    font-size: 0.56rem;
+  }
   .related-gameplays [data-related-gameplays-list] {
     grid-template-columns: 1fr;
   }
@@ -3827,6 +3995,12 @@
   }
   .recent-champions ol {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .performance-champions {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .performance-split-grid {
+    grid-template-columns: 1fr;
   }
   .related-gameplays [data-related-gameplays-list] {
     grid-template-columns: 1fr;

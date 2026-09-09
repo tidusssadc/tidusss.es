@@ -9,6 +9,7 @@ import { createRiotClient, type RiotDiagnosticLogger } from './client';
 import { dataDragonUrls, getDataDragonVersion } from './datadragon';
 import { RiotApiError } from './errors';
 import { normalizeMatch, normalizeRanked } from './normalize';
+import { buildProfilePerformance } from './performance';
 import type {
   RiotAccountDto,
   RiotLeagueEntryDto,
@@ -20,6 +21,31 @@ import type {
 const encode = encodeURIComponent;
 const MINUTE = 60_000;
 const HOUR = 60 * MINUTE;
+
+/**
+ * Con `recentMatchIds` en 30 (antes 15), pedir el detalle de cada partida
+ * a la vez con `Promise.all`/`allSettled` sin ningún límite arriesgaría un
+ * pico de 30 peticiones simultáneas contra Match-V5 — el cliente Riot
+ * (`client.ts`) no aplica ningún throttle propio. En la práctica esto solo
+ * ocurre con la caché fría (cada partida individual se cachea 7 días), pero
+ * sigue siendo el único punto real de riesgo de rate limit de toda esta
+ * fase — de ahí el lote de 10 en 10 en vez de anadir una librería nueva.
+ */
+const CONCURRENT_MATCH_FETCHES = 10;
+const mapWithConcurrency = async <T, R>(
+  items: readonly T[],
+  limit: number,
+  mapper: (item: T) => Promise<R>,
+): Promise<PromiseSettledResult<R>[]> => {
+  const results: PromiseSettledResult<R>[] = [];
+  for (let index = 0; index < items.length; index += limit) {
+    const batch = items.slice(index, index + limit);
+    results.push(
+      ...(await Promise.allSettled(batch.map((item) => mapper(item)))),
+    );
+  }
+  return results;
+};
 
 /**
  * Cuenta/PUUID de Tidusss — extraído para que `getRiotOverview` y
@@ -101,8 +127,10 @@ export const getRiotOverview = async (
     ]);
 
   const urls = dataDragonUrls(dataDragonVersion);
-  const matchResults = await Promise.allSettled(
-    matchIds.value.map((matchId) =>
+  const matchResults = await mapWithConcurrency(
+    matchIds.value,
+    CONCURRENT_MATCH_FETCHES,
+    (matchId) =>
       cached(`riot:match:${matchId}`, 24 * HOUR, 7 * 24 * HOUR, () =>
         client.get<RiotMatchDto>(
           `${regionalBase}/lol/match/v5/matches/${encode(matchId)}`,
@@ -112,7 +140,6 @@ export const getRiotOverview = async (
           },
         ),
       ),
-    ),
   );
   const normalizedMatches = matchResults.flatMap((result) => {
     if (result.status !== 'fulfilled') return [];
@@ -127,6 +154,9 @@ export const getRiotOverview = async (
   });
   const recent = analyzeRecentSoloQueue(normalizedMatches);
   const today = analyzeTodaySoloQueue(normalizedMatches);
+  // Mismo `normalizedMatches` que `recent`/`today` — el perfil competitivo
+  // avanzado no dispara ninguna llamada Riot adicional (encargo §18/§19).
+  const performance = buildProfilePerformance(normalizedMatches);
   const ranked = normalizeRanked(leagueEntries.value);
   const partial =
     matchResults.some((result) => result.status === 'rejected') ||
@@ -157,6 +187,7 @@ export const getRiotOverview = async (
     ranked,
     recent,
     today,
+    performance,
     updatedAt: new Date().toISOString(),
     stale,
     state: partial
@@ -174,5 +205,6 @@ export * from './analytics';
 export * from './cache';
 export * from './errors';
 export * from './normalize';
+export * from './performance';
 export type { RiotDiagnosticEvent, RiotDiagnosticLogger } from './client';
 export type * from './types';

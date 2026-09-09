@@ -17,6 +17,10 @@ const average = (values: number[]) =>
       )
     : undefined;
 
+/** Total / minutos de partida — mismo criterio que `csPerMinute` en `normalize.ts` (mínimo 1s para no dividir por cero en un remake). */
+const perMinute = (total: number, durationSeconds: number) =>
+  Number((total / (Math.max(1, durationSeconds) / 60)).toFixed(1));
+
 export const championPerformance = (
   championName: string,
   matches: RecentMatch[],
@@ -40,6 +44,14 @@ export const championPerformance = (
     averageKda: average(championMatches.map((match) => match.kda)) ?? 0,
     averageCsPerMinute:
       average(championMatches.map((match) => match.csPerMinute)) ?? 0,
+    averageGoldPerMinute: average(
+      championMatches.map((match) => perMinute(match.goldEarned, match.durationSeconds)),
+    ),
+    averageDamagePerMinute: average(
+      championMatches.map((match) =>
+        perMinute(match.damageToChampions, match.durationSeconds),
+      ),
+    ),
   };
 };
 

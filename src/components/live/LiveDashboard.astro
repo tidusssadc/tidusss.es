@@ -3,6 +3,7 @@ import { integrationEndpoints, platforms } from '../../config/platforms';
 import MatchCard from './matches/MatchCard.astro';
 import MatchEmpty from './matches/MatchEmpty.astro';
 import PlayerProfile from './PlayerProfile.astro';
+import PerformanceProfile from './PerformanceProfile.astro';
 import LiveGameModule from './LiveGameModule.astro';
 import { resolvedMatchVideoContent } from '../../lib/resolved-match-video-content';
 ---
@@ -118,6 +119,8 @@ import { resolvedMatchVideoContent } from '../../lib/resolved-match-video-conten
     </section>
 
     <PlayerProfile />
+
+    <PerformanceProfile />
 
     <section class="live-module" aria-labelledby="twitch-title">
       <header class="live-module-head">

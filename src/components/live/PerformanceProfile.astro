@@ -1,0 +1,473 @@
+---
+import { integrationEndpoints } from '../../config/platforms';
+---
+
+<!--
+  "Perfil competitivo avanzado" — autónomo, con su propio fetch a
+  `/api/riot/overview` (misma respuesta que ya cachea el resto de
+  Competitivo server-side; un segundo fetch del cliente no dispara
+  ninguna llamada Riot adicional). No toca `LiveDashboard.astro` ni su
+  script — un fallo aquí nunca puede romper el resto del dashboard.
+  Todo lo que se pinta es DIRECTA/DERIVADA de Match-V5
+  (`src/lib/riot/performance.ts`) — nunca una estimación ni un "score"
+  propio.
+-->
+<section
+  class="live-module live-module--wide performance-profile"
+  aria-labelledby="performance-profile-title"
+  data-performance-profile
+  data-riot={integrationEndpoints.riot}
+>
+  <header class="live-module-head">
+    <div>
+      <span>01C / Rendimiento</span>
+      <h2 id="performance-profile-title">Perfil competitivo avanzado</h2>
+    </div>
+    <small data-performance-sample>Actividad reciente</small>
+  </header>
+
+  <div
+    class="live-loading live-loading--row performance-loading"
+    data-performance-loading
+    aria-label="Actualizando perfil de rendimiento"
+  >
+    <i></i><i></i><i></i>
+  </div>
+
+  <div data-performance-body hidden>
+    <div class="performance-windows">
+      <article data-performance-window="recent">
+        <span>Últimas 20</span>
+        <strong data-window-record></strong>
+        <dl>
+          <div><dt>Win rate</dt><dd data-window-wr></dd></div>
+          <div><dt>KDA</dt><dd data-window-kda></dd></div>
+          <div><dt>KP</dt><dd data-window-kp></dd></div>
+          <div><dt>CS/min</dt><dd data-window-csm></dd></div>
+          <div><dt>Oro/min</dt><dd data-window-gpm></dd></div>
+          <div><dt>Daño/min</dt><dd data-window-dpm></dd></div>
+          <div><dt>Duración media</dt><dd data-window-duration></dd></div>
+        </dl>
+      </article>
+      <article data-performance-window="full">
+        <span data-window-full-label>Muestra completa</span>
+        <strong data-window-full-record></strong>
+        <dl>
+          <div><dt>Win rate</dt><dd data-window-full-wr></dd></div>
+          <div><dt>KDA</dt><dd data-window-full-kda></dd></div>
+          <div><dt>KP</dt><dd data-window-full-kp></dd></div>
+          <div><dt>CS/min</dt><dd data-window-full-csm></dd></div>
+          <div><dt>Oro/min</dt><dd data-window-full-gpm></dd></div>
+          <div><dt>Daño/min</dt><dd data-window-full-dpm></dd></div>
+          <div><dt>Duración media</dt><dd data-window-full-duration></dd></div>
+        </dl>
+      </article>
+    </div>
+
+    <div class="profile-subhead">
+      <h3>Tendencia reciente</h3>
+      <small>Ventanas rodantes, solo cuando hay muestra suficiente para llenarlas</small>
+    </div>
+    <ul class="performance-trend" data-performance-trend></ul>
+
+    <div class="profile-subhead">
+      <h3>Rendimiento por campeón</h3>
+      <small data-performance-champions-note></small>
+    </div>
+    <ol class="performance-champions" data-performance-champions></ol>
+
+    <div class="profile-subhead">
+      <h3>Distribución de campeones</h3>
+      <small data-performance-distribution-note></small>
+    </div>
+    <ul class="performance-bars" data-performance-distribution></ul>
+
+    <div class="performance-split-grid">
+      <div>
+        <div class="profile-subhead"><h3>Actividad por día</h3></div>
+        <ul class="performance-bars" data-performance-weekday></ul>
+      </div>
+      <div>
+        <div class="profile-subhead"><h3>Actividad por franja</h3></div>
+        <ul class="performance-bars" data-performance-hourband></ul>
+      </div>
+    </div>
+
+    <div class="performance-split-grid">
+      <div>
+        <div class="profile-subhead"><h3>Sinergia con support</h3></div>
+        <small data-performance-synergy-note></small>
+        <ul class="performance-relations" data-performance-synergy></ul>
+      </div>
+      <div>
+        <div class="profile-subhead"><h3>Matchups de ADC rival</h3></div>
+        <small data-performance-matchups-note></small>
+        <ul class="performance-relations" data-performance-matchups></ul>
+      </div>
+    </div>
+
+    <div class="performance-split-grid">
+      <div>
+        <div class="profile-subhead"><h3>Lado del mapa</h3></div>
+        <ul class="performance-bars" data-performance-side></ul>
+      </div>
+      <div>
+        <div class="profile-subhead"><h3>Duración de partida</h3></div>
+        <p class="performance-duration-summary" data-performance-duration-summary></p>
+        <ul class="performance-bars" data-performance-duration></ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="compact-empty" data-performance-empty hidden>
+    <strong>La muestra reciente todavía no contiene partidas de Solo/Duo.</strong>
+    <span>El perfil de rendimiento se completará en cuanto Riot devuelva actividad clasificatoria.</span>
+  </div>
+
+  <div class="live-empty" data-performance-error hidden>
+    <strong>Riot no responde ahora mismo.</strong>
+    <p>El resto de Competitivo sigue funcionando — este bloque se actualizará solo.</p>
+  </div>
+</section>
+
+<script>
+  import type { RiotPublicResponse } from '../../lib/riot';
+  import type {
+    ActivityBucket,
+    AdcMatchupEntry,
+    ChampionPerformance,
+    DurationBucketEntry,
+    PerformanceWindow,
+    ProfilePerformance,
+    SideSplitEntry,
+    SupportSynergyEntry,
+    TrendPoint,
+  } from '../../lib/riot';
+
+  const root = document.querySelector<HTMLElement>('[data-performance-profile]');
+  if (root) {
+    const decimal = (value?: number) =>
+      value === undefined ? '—' : value.toFixed(2).replace('.', ',');
+    const percent = (value?: number) => (value === undefined ? '—' : `${value}%`);
+    const durationLabel = (seconds?: number) => {
+      if (seconds === undefined) return '—';
+      const minutes = Math.round(seconds / 60);
+      return `${minutes} min`;
+    };
+    const text = (selector: string, value: string) => {
+      const node = root.querySelector<HTMLElement>(selector);
+      if (node) node.textContent = value;
+    };
+    const el = <K extends keyof HTMLElementTagNameMap>(
+      tag: K,
+      className?: string,
+    ): HTMLElementTagNameMap[K] => {
+      const node = document.createElement(tag);
+      if (className) node.className = className;
+      return node;
+    };
+
+    const renderWindow = (prefix: string, window: PerformanceWindow) => {
+      text(
+        `[data-window${prefix}-record]`,
+        window.sampleSize
+          ? `${window.sampleSize} partidas · ${window.wins}V ${window.losses}D`
+          : 'Sin partidas en la muestra',
+      );
+      text(`[data-window${prefix}-wr]`, percent(window.winRate));
+      text(`[data-window${prefix}-kda]`, decimal(window.averageKda));
+      text(
+        `[data-window${prefix}-kp]`,
+        window.averageKillParticipation === undefined
+          ? '—'
+          : `${String(window.averageKillParticipation).replace('.', ',')}%`,
+      );
+      text(`[data-window${prefix}-csm]`, decimal(window.averageCsPerMinute));
+      text(`[data-window${prefix}-gpm]`, decimal(window.averageGoldPerMinute));
+      text(`[data-window${prefix}-dpm]`, decimal(window.averageDamagePerMinute));
+      text(`[data-window${prefix}-duration]`, durationLabel(window.averageDurationSeconds));
+    };
+
+    const renderBar = (
+      container: Element | null,
+      items: Array<{ label: string; games: number; percentage?: number; winRate?: number }>,
+      emptyCopy: string,
+    ) => {
+      if (!container) return;
+      if (!items.length) {
+        const item = el('li', 'performance-bars-empty');
+        item.textContent = emptyCopy;
+        container.replaceChildren(item);
+        return;
+      }
+      container.replaceChildren(
+        ...items.map((entry) => {
+          const item = el('li');
+          const label = el('span');
+          label.textContent = entry.label;
+          const bar = el('i');
+          bar.style.width = `${entry.percentage ?? Math.min(100, entry.games * 10)}%`;
+          const value = el('strong');
+          value.textContent =
+            entry.winRate === undefined
+              ? `${entry.games}`
+              : `${entry.games} · ${entry.winRate}% WR`;
+          item.append(label, bar, value);
+          return item;
+        }),
+      );
+    };
+
+    const renderTrend = (trend: TrendPoint[]) => {
+      const list = root.querySelector('[data-performance-trend]');
+      if (!list) return;
+      if (!trend.length) {
+        const item = el('li', 'performance-bars-empty');
+        item.textContent = 'Sin muestra suficiente para calcular una tendencia.';
+        list.replaceChildren(item);
+        return;
+      }
+      list.replaceChildren(
+        ...trend.map((point) => {
+          const item = el('li');
+          const label = el('strong');
+          label.textContent = `Últimas ${point.windowSize}`;
+          const detail = el('span');
+          detail.textContent = `${percent(point.winRate)} WR · ${decimal(point.averageKda)} KDA · ${decimal(point.averageCsPerMinute)} CS/min · ${decimal(point.averageDamagePerMinute)} DPM`;
+          item.append(label, detail);
+          return item;
+        }),
+      );
+    };
+
+    const renderChampions = (champions: ChampionPerformance[]) => {
+      const list = root.querySelector('[data-performance-champions]');
+      if (!list) return;
+      list.replaceChildren(
+        ...champions.slice(0, 8).map((champion) => {
+          const item = el('li');
+          if (champion.championImageUrl) {
+            const image = el('img');
+            image.src = champion.championImageUrl;
+            image.alt = '';
+            image.width = 40;
+            image.height = 40;
+            image.loading = 'lazy';
+            image.decoding = 'async';
+            item.append(image);
+          }
+          const identity = el('div');
+          const name = el('strong');
+          name.textContent = champion.championName;
+          const record = el('span');
+          record.textContent = `${champion.games} partidas · ${champion.wins}V ${champion.losses}D`;
+          identity.append(name, record);
+          const metrics = el('p');
+          const parts = [
+            `${champion.winRate}% WR`,
+            `${decimal(champion.averageKda)} KDA`,
+            `${decimal(champion.averageCsPerMinute)} CS/min`,
+          ];
+          if (champion.averageGoldPerMinute !== undefined)
+            parts.push(`${decimal(champion.averageGoldPerMinute)} oro/min`);
+          if (champion.averageDamagePerMinute !== undefined)
+            parts.push(`${decimal(champion.averageDamagePerMinute)} daño/min`);
+          metrics.textContent = parts.join(' · ');
+          item.append(identity, metrics);
+          return item;
+        }),
+      );
+      text(
+        '[data-performance-champions-note]',
+        champions.length
+          ? `${champions.length} campeones distintos en la muestra`
+          : 'Sin campeones en la muestra',
+      );
+    };
+
+    const renderRelations = (
+      selector: string,
+      entries: Array<{ label: string; games: number; winRate?: number; imageUrl?: string }>,
+    ) => {
+      const list = root.querySelector(selector);
+      if (!list) return;
+      if (!entries.length) {
+        const item = el('li', 'performance-bars-empty');
+        item.textContent = 'Todavía sin muestra suficiente (mínimo 3 partidas juntas).';
+        list.replaceChildren(item);
+        return;
+      }
+      list.replaceChildren(
+        ...entries.map((entry) => {
+          const item = el('li');
+          if (entry.imageUrl) {
+            const image = el('img');
+            image.src = entry.imageUrl;
+            image.alt = '';
+            image.width = 28;
+            image.height = 28;
+            image.loading = 'lazy';
+            image.decoding = 'async';
+            item.append(image);
+          }
+          const name = el('span');
+          name.textContent = entry.label;
+          const value = el('strong');
+          value.textContent = `${entry.games} partidas · ${entry.winRate ?? 0}% WR`;
+          item.append(name, value);
+          return item;
+        }),
+      );
+    };
+
+    const renderDuration = (
+      buckets: DurationBucketEntry[],
+      averageSeconds?: number,
+      averageWinSeconds?: number,
+      averageLossSeconds?: number,
+    ) => {
+      renderBar(
+        root.querySelector('[data-performance-duration]'),
+        buckets.map((bucket) => ({
+          label: bucket.label,
+          games: bucket.games,
+          percentage: Math.min(100, bucket.games * 12),
+          winRate: bucket.winRate,
+        })),
+        'Sin partidas suficientes para desglosar por duración.',
+      );
+      text(
+        '[data-performance-duration-summary]',
+        averageSeconds === undefined
+          ? 'Sin muestra suficiente.'
+          : `Media: ${durationLabel(averageSeconds)} · Victorias: ${durationLabel(averageWinSeconds)} · Derrotas: ${durationLabel(averageLossSeconds)}`,
+      );
+    };
+
+    const render = (performance: ProfilePerformance) => {
+      const hasSample = performance.sampleSize > 0;
+      root.querySelector<HTMLElement>('[data-performance-loading]')!.hidden = true;
+      root.querySelector<HTMLElement>('[data-performance-body]')!.hidden = !hasSample;
+      root.querySelector<HTMLElement>('[data-performance-empty]')!.hidden = hasSample;
+      root.querySelector<HTMLElement>('[data-performance-error]')!.hidden = true;
+      text(
+        '[data-performance-sample]',
+        `${performance.sampleSize} ${performance.sampleSize === 1 ? 'partida analizada' : 'partidas analizadas'}`,
+      );
+      if (!hasSample) return;
+
+      renderWindow('', performance.windowRecent);
+      renderWindow('-full', performance.windowFull);
+      text(
+        '[data-window-full-label]',
+        `Muestra completa (${performance.windowFull.sampleSize})`,
+      );
+      renderTrend(performance.trend);
+      renderChampions(performance.champions);
+      renderBar(
+        root.querySelector('[data-performance-distribution]'),
+        performance.championDistribution.entries.slice(0, 6).map((entry) => ({
+          label: entry.championName,
+          games: entry.games,
+          percentage: entry.percentage,
+        })),
+        'Sin muestra suficiente.',
+      );
+      text(
+        '[data-performance-distribution-note]',
+        performance.championDistribution.top3Percentage === undefined
+          ? ''
+          : `Top 1: ${percent(performance.championDistribution.top1Percentage)} · Top 3: ${percent(performance.championDistribution.top3Percentage)} · Top 5: ${percent(performance.championDistribution.top5Percentage)}`,
+      );
+      renderBar(
+        root.querySelector('[data-performance-weekday]'),
+        performance.activityByWeekday.map((entry: ActivityBucket) => ({
+          label: entry.label,
+          games: entry.games,
+          percentage: Math.min(100, entry.games * 12),
+          winRate: entry.winRate,
+        })),
+        'Sin actividad registrada.',
+      );
+      renderBar(
+        root.querySelector('[data-performance-hourband]'),
+        performance.activityByHourBand.map((entry: ActivityBucket) => ({
+          label: entry.label,
+          games: entry.games,
+          percentage: Math.min(100, entry.games * 12),
+          winRate: entry.winRate,
+        })),
+        'Sin actividad registrada.',
+      );
+      text(
+        '[data-performance-synergy-note]',
+        'Solo supports con 3+ partidas junto a Tidusss de ADC.',
+      );
+      renderRelations(
+        '[data-performance-synergy]',
+        performance.supportSynergy.map((entry: SupportSynergyEntry) => ({
+          label: entry.supportName,
+          games: entry.games,
+          winRate: entry.winRate,
+        })),
+      );
+      text(
+        '[data-performance-matchups-note]',
+        'Solo ADC rivales con 3+ partidas de muestra.',
+      );
+      renderRelations(
+        '[data-performance-matchups]',
+        performance.adcMatchups.map((entry: AdcMatchupEntry) => ({
+          label: entry.enemyChampionName,
+          games: entry.games,
+          winRate: entry.winRate,
+          imageUrl: entry.enemyChampionImageUrl,
+        })),
+      );
+      renderBar(
+        root.querySelector('[data-performance-side]'),
+        performance.sideSplit.map((entry: SideSplitEntry) => ({
+          label: entry.side === 'blue' ? 'Lado azul' : 'Lado rojo',
+          games: entry.games,
+          percentage: Math.min(100, entry.games * 12),
+          winRate: entry.winRate,
+        })),
+        'Sin muestra suficiente.',
+      );
+      renderDuration(
+        performance.duration.buckets,
+        performance.duration.averageSeconds,
+        performance.duration.averageWinSeconds,
+        performance.duration.averageLossSeconds,
+      );
+    };
+
+    const load = async () => {
+      try {
+        const response = await fetch(root.dataset.riot!);
+        const payload = (await response.json()) as RiotPublicResponse;
+        if (!payload.ok) throw new Error(payload.error.code);
+        render(payload.data.performance);
+      } catch {
+        root.querySelector<HTMLElement>('[data-performance-loading]')!.hidden = true;
+        root.querySelector<HTMLElement>('[data-performance-body]')!.hidden = true;
+        root.querySelector<HTMLElement>('[data-performance-empty]')!.hidden = true;
+        root.querySelector<HTMLElement>('[data-performance-error]')!.hidden = false;
+      }
+    };
+
+    void load();
+    window.setInterval(load, 120_000);
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) void load();
+    });
+
+    // Solo en `astro dev` (eliminado del bundle de producción, igual que el
+    // hook equivalente de `LiveGameModule.astro`): permite forzar el render
+    // con datos sintéticos para QA visual sin tocar la red real.
+    if (import.meta.env.DEV) {
+      (window as unknown as { __performanceProfileDebugRender?: typeof render })
+        .__performanceProfileDebugRender = render;
+    }
+  }
+</script>
