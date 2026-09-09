@@ -15,8 +15,15 @@ export type LiveGameStatus =
 
 /** Identidad curada de un jugador conocido (PRO/streamer) — nunca inferida por similitud de nombre. Ver `config/known-players.ts`. */
 export interface KnownPlayerIdentity {
-  /** Preferido: match exacto por PUUID. */
-  puuid?: string;
+  /**
+   * Preferido: match exacto por PUUID. Plural a propósito — una misma
+   * persona puede tener varias cuentas verificadas (main, smurfs, cuentas
+   * pasadas) y TODAS deben resolver a esta misma identidad, nunca una
+   * identidad separada por cuenta (ver `scripts/identities/`, que es quien
+   * puebla este campo — cada PUUID aquí viene siempre de Riot Account-V1,
+   * nunca copiado de una fuente externa sin revalidar).
+   */
+  puuids?: readonly string[];
   /** Fallback controlado: Riot ID exacto ("GameName#TAG"), comparación insensible a mayúsculas. */
   riotIds?: readonly string[];
   displayName: string;

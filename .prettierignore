@@ -10,3 +10,6 @@ LICENSE
 # del script deben producir el mismo archivo, y un `prettier --write` intermedio
 # introduciría una diferencia que el propio script nunca reproduciría.
 src/data/league-laboratory/catalog/champions.generated.ts
+
+# Mismo motivo — generado por scripts/identities/verify-identities.ts.
+src/config/known-players.generated.ts

@@ -18,7 +18,7 @@ test('sobre el registro real (vacío), ninguna búsqueda resuelve nada — nunca
 // fallback controlado, nunca por parecido de nombre. ---
 
 const pro: KnownPlayerIdentity = {
-  puuid: 'puuid-pro-1',
+  puuids: ['puuid-pro-1'],
   riotIds: ['ProPlayer#KC1'],
   displayName: 'Jugador Pro',
   isPro: true,
@@ -29,7 +29,7 @@ const pro: KnownPlayerIdentity = {
 };
 
 const streamer: KnownPlayerIdentity = {
-  puuid: 'puuid-streamer-1',
+  puuids: ['puuid-streamer-1'],
   riotIds: ['StreamerName#EUW'],
   displayName: 'Streamer Conocido',
   isPro: false,
@@ -40,7 +40,7 @@ const streamer: KnownPlayerIdentity = {
 };
 
 const proAndStreamer: KnownPlayerIdentity = {
-  puuid: 'puuid-both-1',
+  puuids: ['puuid-both-1'],
   riotIds: ['ProStreamer#EUW'],
   displayName: 'Pro y Streamer',
   isPro: true,
@@ -106,7 +106,7 @@ test('ninguna coincidencia parcial de nombre resuelve una identidad: sin PUUID e
 
 test('una identidad puede tener varias cuentas conocidas (varios riotIds) y cualquiera de ellas resuelve', () => {
   const multiAccount: KnownPlayerIdentity = {
-    puuid: 'puuid-main',
+    puuids: ['puuid-main'],
     riotIds: ['Cuenta1#EUW', 'Cuenta2#EUW'],
     displayName: 'Con dos cuentas',
     isPro: true,
@@ -115,4 +115,18 @@ test('una identidad puede tener varias cuentas conocidas (varios riotIds) y cual
   const localRegistry = [multiAccount];
   assert.equal(findKnownPlayerIdentity(undefined, 'Cuenta1#EUW', localRegistry)?.displayName, 'Con dos cuentas');
   assert.equal(findKnownPlayerIdentity(undefined, 'Cuenta2#EUW', localRegistry)?.displayName, 'Con dos cuentas');
+});
+
+test('una identidad puede tener varios PUUIDs verificados (multicuenta) y CUALQUIERA de ellos resuelve por PUUID exacto — nunca una identidad separada por cuenta', () => {
+  const multiAccount: KnownPlayerIdentity = {
+    puuids: ['puuid-main-a', 'puuid-main-b', 'puuid-main-c'],
+    riotIds: ['CuentaA#EUW', 'CuentaB#EUW', 'CuentaC#EUW'],
+    displayName: 'Jugador Multicuenta',
+    isPro: true,
+    isStreamer: false,
+  };
+  const localRegistry = [multiAccount];
+  assert.equal(findKnownPlayerIdentity('puuid-main-a', undefined, localRegistry)?.displayName, 'Jugador Multicuenta');
+  assert.equal(findKnownPlayerIdentity('puuid-main-b', undefined, localRegistry)?.displayName, 'Jugador Multicuenta');
+  assert.equal(findKnownPlayerIdentity('puuid-main-c', undefined, localRegistry)?.displayName, 'Jugador Multicuenta');
 });

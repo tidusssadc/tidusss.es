@@ -15,6 +15,7 @@
     "eval:retrieval": "node --import ./scripts/testing/register-ts-loader.mjs scripts/knowledge-retrieval/evaluate.ts",
     "eval:answering": "node --import ./scripts/testing/register-ts-loader.mjs scripts/knowledge-answering/evaluate.ts",
     "eval:generation": "node --import ./scripts/testing/register-ts-loader.mjs scripts/knowledge-generation/evaluate.ts",
+    "identities:verify": "node --env-file=.env --import ./scripts/testing/register-ts-loader.mjs scripts/identities/verify-identities.ts",
     "test": "node --import ./scripts/testing/register-ts-loader.mjs --test \"test/**/*.test.ts\""
   },
   "engines": {
