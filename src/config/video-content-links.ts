@@ -92,4 +92,49 @@ export const videoContentLinks: VideoContentLink[] = [
     championIds: ['champion:twitch'],
     source: 'verified-manual',
   },
+  // --- Ampliación validada manualmente por Tidusss (7 vídeos, fase
+  // "curación manual + Aprende ADC") — cada relación de abajo fue
+  // confirmada explícitamente por el usuario a partir de un inventario de
+  // candidatos, nunca inferida automáticamente del título del vídeo. Solo
+  // se persiste lo que se validó: sin enemigos/conceptos/matchups que no
+  // estuvieran ya confirmados para estos vídeos concretos. "Vayne" pasa a
+  // tener un vídeo curado sin que eso cambie su estado editorial (sigue sin
+  // `LabChampion`, sigue siendo `pending` — ver `resolveChampionEditorialStatus`).
+  {
+    youtubeVideoId: 'UZ196a7wYwM',
+    championIds: ['champion:lucian'],
+    source: 'verified-manual',
+  },
+  {
+    youtubeVideoId: 'VSaYyIBNk2o',
+    championIds: ['champion:vayne'],
+    source: 'verified-manual',
+  },
+  {
+    youtubeVideoId: 'ETQnkBc381Q',
+    championIds: ['champion:lucian'],
+    source: 'verified-manual',
+  },
+  {
+    youtubeVideoId: 'q7vhVJ_pvMI',
+    championIds: ['champion:lucian'],
+    source: 'verified-manual',
+  },
+  {
+    youtubeVideoId: '__Mml-XvyAg',
+    championIds: ['champion:lucian'],
+    allySupportIds: ['champion:milio'],
+    source: 'verified-manual',
+  },
+  {
+    youtubeVideoId: '3Zgrl-HbZt4',
+    championIds: ['champion:lucian'],
+    source: 'verified-manual',
+  },
+  {
+    youtubeVideoId: 'N918ahYrxos',
+    championIds: ['champion:lucian'],
+    allySupportIds: ['champion:nami'],
+    source: 'verified-manual',
+  },
 ];

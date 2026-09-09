@@ -5,11 +5,14 @@ import Footer from '../components/Footer.astro';
 import ExploreNext from '../components/ExploreNext.astro';
 import LaboratoryHero from '../components/laboratory/LaboratoryHero.astro';
 import ShareLinkButton from '../components/ShareLinkButton.astro';
+import ChampionRelatedVideos from '../components/laboratory/champion/ChampionRelatedVideos.astro';
 import {
   adcLabChampions,
   championCatalog,
   leagueLaboratoryConcepts,
 } from '../data/league-laboratory';
+import { videosForConcept } from '../lib/concept-videos';
+import { resolvedVideoContent } from '../lib/resolved-video-content';
 
 const conceptSlug = (id: string) => id.replace('concept:', '');
 
@@ -66,6 +69,7 @@ const pageDescription =
               <div class="academy-concept-grid">
                 {concepts.map((concept) => {
                   const relatedChampions = appliesTo(concept.id);
+                  const relatedVideos = videosForConcept(concept.id, resolvedVideoContent);
                   return (
                     <article
                       id={conceptSlug(concept.id)}
@@ -92,6 +96,12 @@ const pageDescription =
                               </li>
                             ))}
                           </ul>
+                        </div>
+                      )}
+                      {relatedVideos.length > 0 && (
+                        <div class="academy-concept-applies">
+                          <span>Vídeos relacionados</span>
+                          <ChampionRelatedVideos videos={relatedVideos} />
                         </div>
                       )}
                     </article>
