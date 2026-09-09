@@ -14,8 +14,11 @@ import {
   computeSupportSynergy,
   computeTrend,
   soloQueueMatches,
+  splitChampionsByAdcRoster,
+  tierChampionsBySampleSize,
+  topChampionsByDamagePerMinute,
 } from '../../../src/lib/riot/performance.ts';
-import type { MatchParticipant, MatchTeam, RecentMatch } from '../../../src/lib/riot/types.ts';
+import type { ChampionPerformance, MatchParticipant, MatchTeam, RecentMatch } from '../../../src/lib/riot/types.ts';
 
 const SOLO_QUEUE_ID = 420;
 
@@ -360,4 +363,85 @@ test('windowRecent se limita a las últimas 20 partidas aunque la muestra comple
   assert.equal(performance.sampleSize, 25);
   assert.equal(performance.windowRecent.sampleSize, 20);
   assert.equal(performance.windowFull.sampleSize, 25);
+});
+
+// --- Champion Pool: ADC-first, sample-size tiers, DPM ranking ---
+
+const championPerf = (overrides: Partial<ChampionPerformance> = {}): ChampionPerformance => ({
+  championName: 'Lucian',
+  games: 10,
+  wins: 6,
+  losses: 4,
+  winRate: 60,
+  averageKills: 6,
+  averageDeaths: 3,
+  averageAssists: 4,
+  averageKda: 3.33,
+  averageCsPerMinute: 7.5,
+  ...overrides,
+});
+
+test('splitChampionsByAdcRoster separa el roster ADC oficial del resto, por igualdad exacta de nombre (formato Riot)', () => {
+  const champions = [
+    championPerf({ championName: 'Lucian' }),
+    championPerf({ championName: 'Jhin' }),
+    championPerf({ championName: 'LeeSin' }), // off-role real (p. ej. jungla de emergencia)
+  ];
+  const { adcChampions, offRoleChampions } = splitChampionsByAdcRoster(champions, ['Lucian', 'Jhin', 'Kaisa']);
+  assert.deepEqual(adcChampions.map((c) => c.championName), ['Lucian', 'Jhin']);
+  assert.deepEqual(offRoleChampions.map((c) => c.championName), ['LeeSin']);
+});
+
+test('splitChampionsByAdcRoster con roster vacío no revienta: todo cae en off-role, nada en ADC', () => {
+  const champions = [championPerf({ championName: 'Lucian' })];
+  const { adcChampions, offRoleChampions } = splitChampionsByAdcRoster(champions, []);
+  assert.deepEqual(adcChampions, []);
+  assert.equal(offRoleChampions.length, 1);
+});
+
+test('tierChampionsBySampleSize separa por el umbral de 3 partidas por defecto — 1 partida nunca es "primary"', () => {
+  const champions = [
+    championPerf({ championName: 'Lucian', games: 10, winRate: 60 }),
+    championPerf({ championName: 'Jhin', games: 3, winRate: 100 }),
+    championPerf({ championName: 'Jinx', games: 1, winRate: 100 }),
+  ];
+  const { primary, secondary } = tierChampionsBySampleSize(champions);
+  assert.deepEqual(primary.map((c) => c.championName), ['Lucian', 'Jhin']);
+  assert.deepEqual(secondary.map((c) => c.championName), ['Jinx']);
+});
+
+test('tierChampionsBySampleSize acepta un umbral explícito distinto de 3', () => {
+  const champions = [championPerf({ championName: 'Lucian', games: 2 })];
+  assert.equal(tierChampionsBySampleSize(champions, 2).primary.length, 1);
+  assert.equal(tierChampionsBySampleSize(champions, 3).primary.length, 0);
+});
+
+test('topChampionsByDamagePerMinute ordena de mayor a menor DPM real, sin escalas engañosas', () => {
+  const champions = [
+    championPerf({ championName: 'Jhin', averageDamagePerMinute: 980 }),
+    championPerf({ championName: 'Lucian', averageDamagePerMinute: 1120 }),
+    championPerf({ championName: 'Jinx', averageDamagePerMinute: 910 }),
+  ];
+  const ranked = topChampionsByDamagePerMinute(champions);
+  assert.deepEqual(
+    ranked.map((c) => c.championName),
+    ['Lucian', 'Jhin', 'Jinx'],
+  );
+  assert.equal(ranked[0]?.averageDamagePerMinute, 1120);
+});
+
+test('topChampionsByDamagePerMinute omite campeones sin DPM conocido, nunca inventa un 0', () => {
+  const champions = [
+    championPerf({ championName: 'Lucian', averageDamagePerMinute: 1000 }),
+    championPerf({ championName: 'Jhin', averageDamagePerMinute: undefined }),
+  ];
+  const ranked = topChampionsByDamagePerMinute(champions);
+  assert.deepEqual(ranked.map((c) => c.championName), ['Lucian']);
+});
+
+test('topChampionsByDamagePerMinute respeta el límite dado', () => {
+  const champions = Array.from({ length: 10 }, (_, index) =>
+    championPerf({ championName: `Campeon${index}`, averageDamagePerMinute: index }),
+  );
+  assert.equal(topChampionsByDamagePerMinute(champions, 3).length, 3);
 });

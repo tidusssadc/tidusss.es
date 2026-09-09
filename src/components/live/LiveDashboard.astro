@@ -2,7 +2,6 @@
 import { integrationEndpoints, platforms } from '../../config/platforms';
 import MatchCard from './matches/MatchCard.astro';
 import MatchEmpty from './matches/MatchEmpty.astro';
-import PlayerProfile from './PlayerProfile.astro';
 import PerformanceProfile from './PerformanceProfile.astro';
 import LiveGameModule from './LiveGameModule.astro';
 import { resolvedMatchVideoContent } from '../../lib/resolved-match-video-content';
@@ -40,10 +39,10 @@ import { resolvedMatchVideoContent } from '../../lib/resolved-match-video-conten
   </div>
 
   <div class="live-container live-grid">
-    <section class="live-module live-module--wide" aria-labelledby="solo-title">
+    <section class="live-module live-module--wide status-module" aria-labelledby="solo-title">
       <header class="live-module-head">
         <div>
-          <span>01 / Competitivo</span><h2 id="solo-title">Hoy en SoloQ</h2>
+          <span>01 / Ahora</span><h2 id="solo-title">Estado competitivo</h2>
         </div>
         <small
           data-riot-updated
@@ -75,8 +74,11 @@ import { resolvedMatchVideoContent } from '../../lib/resolved-match-video-conten
           hidden
         />
       </div>
+      <div class="season-record" data-season-record hidden>
+        <span data-season-record-line></span>
+      </div>
       <div class="today-metrics" data-today-metrics hidden>
-        <div><strong data-today-games></strong><span>Partidas</span></div>
+        <div><strong data-today-games></strong><span>Partidas hoy</span></div>
         <div>
           <strong data-today-record></strong><span>Victorias · Derrotas</span>
         </div>
@@ -118,13 +120,42 @@ import { resolvedMatchVideoContent } from '../../lib/resolved-match-video-conten
       </div>
     </section>
 
-    <PlayerProfile />
-
     <PerformanceProfile />
+
+    <section
+      class="live-module live-module--wide"
+      aria-labelledby="matches-title"
+    >
+      <header class="live-module-head">
+        <div>
+          <span>05 / Historial</span><h2 id="matches-title">Últimas partidas</h2>
+        </div><small>Solo/Duo ranked</small>
+      </header>
+      <ol class="live-match-list" data-live-matches aria-live="polite">
+        <li
+          class="live-loading live-loading--row match-card-skeleton"
+          aria-label="Actualizando partidas"
+        >
+          <i></i><i></i><i></i>
+        </li>
+      </ol>
+      <MatchCard />
+      <MatchEmpty />
+    </section>
+
+    <div class="related-gameplays live-module live-module--wide" data-related-gameplays hidden>
+      <div class="profile-subhead">
+        <h3>Gameplays recientes</h3>
+        <small
+          >Contenido real del canal; no implica asociación con una partida.</small
+        >
+      </div>
+      <div data-related-gameplays-list></div>
+    </div>
 
     <section class="live-module" aria-labelledby="twitch-title">
       <header class="live-module-head">
-        <div><span>02 / Twitch</span><h2 id="twitch-title">Directo</h2></div>
+        <div><span>06 / Twitch</span><h2 id="twitch-title">Directo</h2></div>
         <i class="live-dot" aria-hidden="true"></i>
       </header>
       <div class="stream-status" aria-live="polite">
@@ -156,7 +187,7 @@ import { resolvedMatchVideoContent } from '../../lib/resolved-match-video-conten
 
     <section class="live-module" aria-labelledby="youtube-title">
       <header class="live-module-head">
-        <div><span>03 / YouTube</span><h2 id="youtube-title">Canal</h2></div>
+        <div><span>07 / YouTube</span><h2 id="youtube-title">Canal</h2></div>
         <small>Dato proporcionado por YouTube</small>
       </header>
       <div class="youtube-number">
@@ -186,30 +217,9 @@ import { resolvedMatchVideoContent } from '../../lib/resolved-match-video-conten
       >
     </section>
 
-    <section
-      class="live-module live-module--wide"
-      aria-labelledby="matches-title"
-    >
-      <header class="live-module-head">
-        <div>
-          <span>04 / Sesión</span><h2 id="matches-title">Últimas partidas</h2>
-        </div><small>Solo/Duo ranked</small>
-      </header>
-      <ol class="live-match-list" data-live-matches aria-live="polite">
-        <li
-          class="live-loading live-loading--row match-card-skeleton"
-          aria-label="Actualizando partidas"
-        >
-          <i></i><i></i><i></i>
-        </li>
-      </ol>
-      <MatchCard />
-      <MatchEmpty />
-    </section>
-
     <section id="objetivos" class="live-module" aria-labelledby="goals-title">
       <header class="live-module-head">
-        <div><span>05 / Progreso</span><h2 id="goals-title">Objetivos</h2></div>
+        <div><span>08 / Progreso</span><h2 id="goals-title">Objetivos</h2></div>
       </header>
       <div class="goals-list">
         <article data-goal-chain="competitive-lp">
@@ -233,7 +243,7 @@ import { resolvedMatchVideoContent } from '../../lib/resolved-match-video-conten
     <section class="live-module" aria-labelledby="activity-title">
       <header class="live-module-head">
         <div>
-          <span>06 / Ahora</span><h2 id="activity-title">Actividad reciente</h2>
+          <span>09 / Canal</span><h2 id="activity-title">Actividad reciente</h2>
         </div>
       </header>
       <ol class="activity-list" data-activity-feed aria-live="polite">
@@ -252,7 +262,7 @@ import { resolvedMatchVideoContent } from '../../lib/resolved-match-video-conten
     >
       <header class="live-module-head">
         <div>
-          <span>07 / Perfil</span><h2 id="profile-title">
+          <span>10 / Perfil</span><h2 id="profile-title">
             Consultar perfil competitivo
           </h2>
         </div><small>Tidusss#FFX · EUW</small>
@@ -474,19 +484,6 @@ import { resolvedMatchVideoContent } from '../../lib/resolved-match-video-conten
   // recientes" (eso es data real: sampleSize === 0, no un fallo de red).
   let riotFailed = false;
 
-  const positionLabel = (position?: string) =>
-    (
-      ({
-        BOTTOM: 'ADC',
-        UTILITY: 'Support',
-        MIDDLE: 'Mid',
-        TOP: 'Top',
-        JUNGLE: 'Jungle',
-      }) as Record<string, string>
-    )[position ?? ''] ??
-    position ??
-    'Sin dato';
-
   const renderMatches = () => {
     const list = root?.querySelector('[data-live-matches]');
     if (!list) return;
@@ -525,192 +522,21 @@ import { resolvedMatchVideoContent } from '../../lib/resolved-match-video-conten
     });
   };
 
-  const renderPlayerProfile = () => {
+  /**
+   * Registro de temporada (ranked.wins/losses/winRate) — antes vivía en el
+   * `PerformanceProfile`/`PlayerProfile` separado; ahora es una sola línea
+   * de contexto dentro de "01 · Ahora", justo debajo del rango — el mismo
+   * dato, sin una card entera solo para tres números (encargo §3/§17).
+   */
+  const renderSeasonRecord = () => {
     if (!riotData) return;
-    const { profile, ranked, recent } = riotData;
-    const hasMatches = recent.sampleSize > 0;
-    const championGroups = new Map<string, typeof recent.matches>();
-    recent.matches.forEach((match) =>
-      championGroups.set(match.championName, [
-        ...(championGroups.get(match.championName) ?? []),
-        match,
-      ]),
-    );
-    const derivedChampions = [...championGroups.entries()]
-      .map(([championName, matches]) => {
-        const wins = matches.filter((match) => match.win).length;
-        const average = (values: number[]) =>
-          values.reduce((sum, value) => sum + value, 0) / values.length;
-        return {
-          championName,
-          championImageUrl: matches[0]?.championImageUrl,
-          games: matches.length,
-          wins,
-          losses: matches.length - wins,
-          winRate: Math.round((wins / matches.length) * 100),
-          averageKda: average(matches.map((match) => match.kda)),
-          averageCsPerMinute: average(
-            matches.map((match) => match.csPerMinute),
-          ),
-        };
-      })
-      .sort(
-        (a, b) =>
-          b.games - a.games || a.championName.localeCompare(b.championName),
-      );
-    const profileChampions = recent.champions ?? derivedChampions;
-    const positionGroups = new Map<string, number>();
-    recent.matches.forEach((match) =>
-      positionGroups.set(
-        match.position,
-        (positionGroups.get(match.position) ?? 0) + 1,
-      ),
-    );
-    const derivedPositions = [...positionGroups.entries()]
-      .map(([position, games]) => ({
-        position,
-        games,
-        percentage: Math.round((games / recent.matches.length) * 100),
-      }))
-      .sort(
-        (a, b) => b.games - a.games || a.position.localeCompare(b.position),
-      );
-    const profilePositions = recent.positions ?? derivedPositions;
-    const primaryPosition =
-      recent.primaryPosition ?? recent.matches[0]?.position;
-    const gamesLastSevenDays =
-      recent.gamesLastSevenDays ??
-      recent.matches.filter(
-        (match) =>
-          new Date(match.playedAt).getTime() >=
-          Date.now() - 7 * 24 * 60 * 60_000,
-      ).length;
-    const averageDamage =
-      recent.averageDamageToChampions ??
-      (recent.matches.length
-        ? recent.matches.reduce(
-            (sum, match) => sum + match.damageToChampions,
-            0,
-          ) / recent.matches.length
-        : undefined);
-    const editorialSummary = recent.editorialSummary?.length
-      ? recent.editorialSummary
-      : [
-          recent.matches.length && (positionGroups.get('BOTTOM') ?? 0)
-            ? `${positionGroups.get('BOTTOM')} de las últimas ${recent.matches.length} partidas fueron como ADC.`
-            : undefined,
-          profileChampions[0]
-            ? `${profileChampions[0].championName} es el campeón más jugado de la muestra (${profileChampions[0].games} partidas).`
-            : undefined,
-          recent.averageCsPerMinute === undefined
-            ? undefined
-            : `Promedio de ${String(recent.averageCsPerMinute).replace('.', ',')} CS/min en las últimas partidas.`,
-        ].filter((value): value is string => Boolean(value));
-    visible('[data-player-profile-empty]', !hasMatches);
-    text('[data-profile-riot-id]', profile.riotId);
-    text(
-      '[data-profile-sample]',
-      `${recent.sampleSize} ${recent.sampleSize === 1 ? 'partida' : 'partidas'} · muestra disponible`,
-    );
-    text(
-      '[data-profile-rank]',
-      ranked.available
-        ? `${ranked.tier ?? ''}${ranked.leaguePoints === undefined ? '' : ` · ${ranked.leaguePoints} LP`}`.trim()
-        : 'Sin clasificación',
-    );
-    text(
-      '[data-profile-record]',
-      ranked.wins === undefined || ranked.losses === undefined
-        ? 'Sin dato'
-        : `${ranked.wins}V · ${ranked.losses}D`,
-    );
-    text(
-      '[data-profile-winrate]',
-      ranked.winRate === undefined ? 'Sin dato' : `${ranked.winRate}%`,
-    );
-    text('[data-profile-role]', positionLabel(primaryPosition));
-    text(
-      '[data-profile-kda]',
-      recent.averageKda?.toFixed(2).replace('.', ',') ?? '—',
-    );
-    text(
-      '[data-profile-csm]',
-      recent.averageCsPerMinute === undefined
-        ? '—'
-        : String(recent.averageCsPerMinute).replace('.', ','),
-    );
-    text(
-      '[data-profile-damage]',
-      averageDamage === undefined
-        ? '—'
-        : (number(Math.round(averageDamage)) ?? '—'),
-    );
-    text(
-      '[data-profile-week]',
-      `${gamesLastSevenDays} ${gamesLastSevenDays === 1 ? 'partida' : 'partidas'}`,
-    );
-    text(
-      '[data-profile-last]',
-      (recent.lastPlayedAt ?? recent.matches[0]?.playedAt)
-        ? (relativeTime(recent.lastPlayedAt ?? recent.matches[0]?.playedAt) ??
-            '—')
-        : 'Sin actividad',
-    );
-
-    const editorial = root?.querySelector('[data-profile-editorial]');
-    editorial?.replaceChildren(
-      ...editorialSummary.map((summary) => {
-        const item = document.createElement('li');
-        item.textContent = summary;
-        return item;
-      }),
-    );
-    const championList = root?.querySelector('[data-profile-champions]');
-    championList?.replaceChildren(
-      ...profileChampions.slice(0, 5).map((champion) => {
-        const item = document.createElement('li');
-        if (champion.championImageUrl) {
-          const image = document.createElement('img');
-          image.src = champion.championImageUrl;
-          image.alt = '';
-          image.width = 44;
-          image.height = 44;
-          image.loading = 'lazy';
-          image.decoding = 'async';
-          item.append(image);
-        }
-        const identity = document.createElement('div');
-        const name = document.createElement('strong');
-        name.textContent = champion.championName;
-        const record = document.createElement('span');
-        record.textContent = `${champion.games} partidas · ${champion.wins}V · ${champion.losses}D`;
-        identity.append(name, record);
-        const metrics = document.createElement('p');
-        metrics.textContent = `${champion.winRate}% WR · ${champion.averageKda.toFixed(2).replace('.', ',')} KDA · ${String(champion.averageCsPerMinute).replace('.', ',')} CS/min`;
-        item.append(identity, metrics);
-        return item;
-      }),
-    );
-    const positionList = root?.querySelector('[data-profile-positions]');
-    positionList?.replaceChildren(
-      ...profilePositions.map((position) => {
-        const item = document.createElement('li');
-        const label = document.createElement('span');
-        label.textContent = positionLabel(position.position);
-        const bar = document.createElement('i');
-        bar.style.width = `${position.percentage}%`;
-        const value = document.createElement('strong');
-        value.textContent = `${position.games} · ${position.percentage}%`;
-        item.append(label, bar, value);
-        return item;
-      }),
-    );
-    text(
-      '[data-profile-positions-note]',
-      hasMatches
-        ? `Distribución calculada sobre ${recent.sampleSize} partidas recientes`
-        : 'Sin muestra suficiente',
-    );
+    const { ranked } = riotData;
+    const hasRecord = ranked.available && ranked.wins !== undefined && ranked.losses !== undefined;
+    visible('[data-season-record]', hasRecord);
+    if (!hasRecord) return;
+    const parts = [`${ranked.wins}V · ${ranked.losses}D`];
+    if (ranked.winRate !== undefined) parts.push(`${ranked.winRate}% WR`);
+    text('[data-season-record-line]', parts.join(' · '));
   };
 
   const renderRelatedGameplays = () => {
@@ -872,7 +698,7 @@ import { resolvedMatchVideoContent } from '../../lib/resolved-match-video-conten
       visible('[data-last-competitive]', Boolean(lastCopy));
     }
 
-    renderPlayerProfile();
+    renderSeasonRecord();
     renderMatches();
   };
 

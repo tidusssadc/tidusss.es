@@ -3249,80 +3249,6 @@
   outline-offset: 3px;
 }
 
-.player-profile {
-  display: grid;
-  gap: clamp(1.5rem, 3vw, 2.25rem);
-}
-.player-profile-identity {
-  display: grid;
-  grid-template-columns: minmax(13rem, 0.7fr) minmax(0, 1.3fr);
-  gap: 2rem;
-  align-items: end;
-}
-.player-profile-identity > div > span,
-.player-profile-summary > div > span {
-  color: #68758a;
-  font-size: 0.56rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-.player-profile-identity > div > strong {
-  display: block;
-  margin-top: 0.45rem;
-  color: #f0f3f7;
-  font-size: clamp(1.5rem, 3vw, 2.25rem);
-  letter-spacing: -0.04em;
-}
-.player-profile-identity > div > small {
-  display: block;
-  margin-top: 0.45rem;
-  color: #8793a6;
-}
-.player-profile-identity dl,
-.player-profile-summary dl {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.75rem;
-}
-.player-profile dl > div {
-  border-left: 1px solid rgb(255 255 255 / 8%);
-  padding-left: 0.85rem;
-}
-.player-profile dt {
-  color: #59667a;
-  font-size: 0.54rem;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-}
-.player-profile dd {
-  margin-top: 0.45rem;
-  color: #dce2eb;
-  font-size: 0.76rem;
-  font-variant-numeric: tabular-nums;
-}
-.player-profile-summary {
-  display: grid;
-  grid-template-columns: minmax(16rem, 0.9fr) minmax(0, 1.1fr);
-  gap: 2rem;
-  border-block: 1px solid rgb(255 255 255 / 6%);
-  padding-block: 1.35rem;
-}
-.player-profile-summary ul {
-  display: grid;
-  gap: 0.45rem;
-  margin-top: 0.8rem;
-  color: #a9b3c2;
-  font-size: 0.72rem;
-  line-height: 1.55;
-}
-.player-profile-summary li::before {
-  margin-right: 0.55rem;
-  color: #d6b56b;
-  content: '—';
-}
-.player-profile-summary dl {
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-}
 .profile-subhead {
   display: flex;
   align-items: baseline;
@@ -3337,158 +3263,259 @@
   color: #59667a;
   font-size: 0.56rem;
 }
-.recent-champions ol {
+.season-record {
+  margin-top: 0.75rem;
+}
+.season-record span {
+  color: #8793a5;
+  font-size: 0.72rem;
+}
+/* --- 02 · Rendimiento — tipografía grande, sin caja por métrica (encargo §17) --- */
+.performance-profile .performance-loading {
+  margin-top: 1.25rem;
+}
+.stat-row {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 0.65rem;
-  margin-top: 1rem;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 1.1rem;
+  margin-top: 1.5rem;
 }
-.recent-champions li {
+.stat-tile {
   min-width: 0;
-  border: 1px solid rgb(255 255 255 / 6%);
-  padding: 0.8rem;
+  border-left: 1px solid rgb(255 255 255 / 8%);
+  padding-left: 0.85rem;
 }
-.recent-champions li > img {
-  background: #0d121d;
-}
-.recent-champions li > div {
-  margin-top: 0.65rem;
-}
-.recent-champions strong {
+.stat-tile strong {
   display: block;
-  color: #dce2eb;
-  font-size: 0.74rem;
+  color: #f0f3f7;
+  font-size: clamp(1.1rem, 2.4vw, 1.55rem);
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
 }
-.recent-champions span,
-.recent-champions p {
+.stat-tile span {
+  display: block;
+  margin-top: 0.35rem;
+  color: #59667a;
+  font-size: 0.54rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.stat-row-meta {
+  margin-top: 1rem;
+  color: #7e8a9d;
+  font-size: 0.68rem;
+}
+/* 5/10/20/muestra completa: una fila compacta, nunca tres dashboards (§18) */
+.window-compare {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
+  gap: 0.85rem;
+  margin-top: 1.5rem;
+  border-top: 1px solid rgb(255 255 255 / 6%);
+  padding-top: 1.25rem;
+}
+.window-compare-item {
+  min-width: 0;
+}
+.window-compare-label {
+  display: block;
+  color: #59667a;
+  font-size: 0.52rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.window-compare-item strong {
+  display: block;
+  margin-top: 0.4rem;
+  color: #dce2eb;
+  font-size: 1.05rem;
+  font-variant-numeric: tabular-nums;
+}
+.window-compare-meta {
   display: block;
   margin-top: 0.3rem;
   color: #647186;
-  font-size: 0.55rem;
-  line-height: 1.5;
+  font-size: 0.56rem;
 }
-.profile-positions ul {
+/* --- 03 · Champion Pool — foco visual del sprint (encargo §7/§17) --- */
+.champion-pool {
+  border-color: rgb(214 181 107 / 12%);
+}
+.pool-hero {
   display: grid;
-  gap: 0.55rem;
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+  gap: 1rem;
+  margin-top: 1.25rem;
+}
+.pool-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-width: 0;
+  border: 1px solid rgb(255 255 255 / 7%);
+  padding: 1rem;
+  background: rgb(255 255 255 / 1.5%);
+  transition:
+    border-color 220ms ease,
+    background-color 220ms ease;
+}
+@media (hover: hover) {
+  .pool-card:hover {
+    border-color: rgb(214 181 107 / 22%);
+    background: rgb(255 255 255 / 2.5%);
+  }
+}
+/* El primero es siempre el más jugado (orden ya viene por partidas desc
+   desde `computeChampionBreakdown`) — nunca Lucian por defecto, sea quien
+   sea el dato real. */
+.pool-hero li.pool-card:first-child:not(:only-child) {
+  grid-column: span 2;
+}
+.pool-card-art {
+  flex-shrink: 0;
+  border-radius: 6px;
+  background: #0d121d;
+}
+.pool-card-body {
+  min-width: 0;
+}
+.pool-card-body > strong {
+  display: block;
+  color: #f0f3f7;
+  font-size: 1rem;
+  letter-spacing: -0.01em;
+}
+.pool-card-record {
+  display: block;
+  margin-top: 0.3rem;
+  color: #7e8a9d;
+  font-size: 0.62rem;
+}
+.pool-card-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.6rem;
+  margin-top: 0.65rem;
+}
+.pool-card-stats strong {
+  display: block;
+  color: #dce2eb;
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+}
+.pool-card-stats span {
+  display: block;
+  margin-top: 0.2rem;
+  color: #59667a;
+  font-size: 0.5rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.pool-distribution {
+  display: flex;
+  gap: 2px;
+  height: 0.5rem;
+  margin-top: 0.75rem;
+  overflow: hidden;
+  border-radius: 3px;
+  background: rgb(255 255 255 / 4%);
+}
+.pool-distribution-segment {
+  display: block;
+  height: 100%;
+  background: #d6b56b;
+}
+.pool-distribution-segment:nth-child(4n + 2) {
+  background: rgb(214 181 107 / 72%);
+}
+.pool-distribution-segment:nth-child(4n + 3) {
+  background: rgb(214 181 107 / 52%);
+}
+.pool-distribution-segment:nth-child(4n + 4) {
+  background: rgb(214 181 107 / 34%);
+}
+.dpm-chart {
+  display: grid;
+  gap: 0.6rem;
   margin-top: 1rem;
 }
-.profile-positions li {
+.dpm-chart li {
   display: grid;
-  grid-template-columns: 5rem minmax(0, 1fr) 4rem;
-  gap: 0.8rem;
+  grid-template-columns: 6rem minmax(0, 1fr) 4.5rem;
+  gap: 0.75rem;
   align-items: center;
   color: #7e8a9d;
   font-size: 0.6rem;
 }
-.profile-positions i {
+.dpm-track {
   display: block;
-  max-width: 100%;
-  height: 1px;
-  background: #d6b56b;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: rgb(255 255 255 / 6%);
 }
-.profile-positions strong {
+.dpm-track i {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, rgb(214 181 107 / 55%), #d6b56b);
+}
+.dpm-chart strong {
   color: #9aa6b8;
   font-weight: 500;
   text-align: right;
-}
-/* --- Perfil competitivo avanzado (Match-V5, sin Timeline ni persistencia) --- */
-.performance-profile .performance-loading {
-  margin-top: 1.25rem;
-}
-.performance-windows {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1.25rem;
-  margin-top: 1.25rem;
-}
-.performance-windows article {
-  border: 1px solid rgb(255 255 255 / 8%);
-  padding: 1.1rem 1.25rem;
-}
-.performance-windows > article > span {
-  color: #68758a;
-  font-size: 0.56rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-.performance-windows > article > strong {
-  display: block;
-  margin-top: 0.45rem;
-  color: #dce2eb;
-  font-size: 0.82rem;
-}
-.performance-windows dl {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.65rem;
-  margin-top: 0.9rem;
-}
-.performance-windows dt {
-  color: #59667a;
-  font-size: 0.54rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-.performance-windows dd {
-  margin-top: 0.3rem;
-  color: #dce2eb;
-  font-size: 0.74rem;
   font-variant-numeric: tabular-nums;
 }
-.performance-trend {
+.pool-secondary {
   display: grid;
-  gap: 0.5rem;
-  margin-top: 1rem;
-}
-.performance-trend li {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
   gap: 0.6rem;
-  border-left: 2px solid #d6b56b;
-  padding-left: 0.75rem;
-  font-size: 0.65rem;
-}
-.performance-trend strong {
-  color: #dce2eb;
-}
-.performance-trend span {
-  color: #7e8a9d;
-}
-.performance-champions {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.65rem;
   margin-top: 1rem;
 }
-.performance-champions li {
+.pool-secondary-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
   min-width: 0;
-  border: 1px solid rgb(255 255 255 / 6%);
-  padding: 0.8rem;
+  border: 1px solid rgb(255 255 255 / 5%);
+  padding: 0.55rem 0.7rem;
 }
-.performance-champions li > img {
-  background: #0d121d;
+.pool-secondary-item .pool-card-art {
+  border-radius: 4px;
 }
-.performance-champions li > div {
-  margin-top: 0.65rem;
-}
-.performance-champions strong {
-  display: block;
-  color: #dce2eb;
+.pool-secondary-item .pool-card-body > strong {
   font-size: 0.72rem;
 }
-.performance-champions span,
-.performance-champions p {
+.pool-secondary-item .pool-card-record {
+  font-size: 0.58rem;
+}
+/* --- 04 · Patrones — resultados, nunca causalidad (encargo §11) --- */
+.patterns-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.75rem;
+  margin-top: 1.25rem;
+}
+.pattern-block h3 {
+  color: #dbe1ea;
+  font-size: 0.78rem;
+}
+.pattern-block > small {
   display: block;
   margin-top: 0.3rem;
-  color: #647186;
-  font-size: 0.54rem;
-  line-height: 1.5;
+  color: #59667a;
+  font-size: 0.56rem;
+}
+.activity-compact {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.75rem;
+  margin-top: 1rem;
 }
 .performance-bars {
   display: grid;
   gap: 0.55rem;
-  margin-top: 1rem;
+  margin-top: 0.75rem;
 }
 .performance-bars li {
   display: grid;
@@ -3512,12 +3539,6 @@
 .performance-bars-empty {
   color: #59667a;
   font-size: 0.62rem;
-}
-.performance-split-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1.75rem;
-  margin-top: 1.75rem;
 }
 .performance-relations {
   display: grid;
@@ -3907,17 +3928,6 @@
   .match-video-panel {
     grid-template-columns: 1fr;
   }
-  .player-profile-identity,
-  .player-profile-summary {
-    grid-template-columns: 1fr;
-  }
-  .player-profile-identity dl,
-  .player-profile-summary dl {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .recent-champions ol {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
   .profile-subhead {
     display: block;
   }
@@ -3925,10 +3935,36 @@
     display: block;
     margin-top: 0.35rem;
   }
-  .performance-windows,
-  .performance-champions,
-  .performance-split-grid {
+  /* 02 · Rendimiento en 375: 3 columnas (2 filas de 6 tiles) — números
+     grandes siguen siendo el foco, nunca 6 columnas apretadas (§21). */
+  .stat-row {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    row-gap: 1.1rem;
+  }
+  .window-compare {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  /* 03 · Champion Pool en 375: una columna, el más jugado ya no necesita
+     "span 2" porque ya ocupa el ancho completo. */
+  .pool-hero {
     grid-template-columns: 1fr;
+  }
+  .pool-hero li.pool-card:first-child:not(:only-child) {
+    grid-column: auto;
+  }
+  .pool-secondary {
+    grid-template-columns: 1fr;
+  }
+  .dpm-chart li {
+    grid-template-columns: 4.5rem minmax(0, 1fr) 3.5rem;
+    font-size: 0.56rem;
+  }
+  /* 04 · Patrones en 375: los 4 bloques y la actividad, apilados en el
+     orden ya marcado por el HTML (support → matchup → lado → duración). */
+  .patterns-grid,
+  .activity-compact {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
   }
   .performance-bars li {
     grid-template-columns: 5rem minmax(0, 1fr) 4.5rem;
@@ -3989,18 +4025,12 @@
   .match-teams {
     grid-template-columns: 1fr;
   }
-  .player-profile-identity,
-  .player-profile-summary {
-    grid-template-columns: 1fr;
-  }
-  .recent-champions ol {
+  .stat-row {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+    row-gap: 1.1rem;
   }
-  .performance-champions {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-  .performance-split-grid {
-    grid-template-columns: 1fr;
+  .pool-hero {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .related-gameplays [data-related-gameplays-list] {
     grid-template-columns: 1fr;

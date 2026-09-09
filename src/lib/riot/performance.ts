@@ -420,3 +420,65 @@ export const buildProfilePerformance = (allMatches: RecentMatch[]): ProfilePerfo
     duration: computeDuration(matches),
   };
 };
+
+// --- Champion Pool: ADC-first (Sprint "Champion Analytics") ---
+// Tidusss es ADC main, no OTP de un único campeón — Champion Pool debe
+// priorizar visualmente su roster ADC oficial (el mismo de la Tier List,
+// nunca una segunda lista mantenida a mano aquí) sin que una partida
+// off-role (jungla de emergencia, ARAM que colara por error, etc.)
+// deforme ese bloque. `adcRosterNames` son nombres tal cual los devuelve
+// Riot (`ChampionCatalogEntry.dataDragonKey`, ej. "Lucian", "Kaisa",
+// "MonkeyKing") — el mismo formato que `ChampionPerformance.championName`,
+// así que la comparación es una igualdad exacta, nunca un fuzzy match.
+
+export interface ChampionPoolSplit {
+  /** Campeones del roster ADC oficial presentes en la muestra — el foco de Champion Pool. */
+  adcChampions: ChampionPerformance[];
+  /** Partidas off-role reales (u otro campeón fuera del roster ADC) — se conservan como dato, nunca se ocultan, pero no protagonizan Champion Pool. */
+  offRoleChampions: ChampionPerformance[];
+}
+
+export const splitChampionsByAdcRoster = (
+  champions: readonly ChampionPerformance[],
+  adcRosterNames: readonly string[],
+): ChampionPoolSplit => {
+  const roster = new Set(adcRosterNames);
+  const adcChampions: ChampionPerformance[] = [];
+  const offRoleChampions: ChampionPerformance[] = [];
+  for (const champion of champions) {
+    (roster.has(champion.championName) ? adcChampions : offRoleChampions).push(champion);
+  }
+  return { adcChampions, offRoleChampions };
+};
+
+/** Un campeón con 1-2 partidas no debe presentar su WR como un insight — mismo umbral que sinergias/matchups (encargo §11). */
+export const MIN_PRIMARY_CHAMPION_SAMPLE = 3;
+
+export interface ChampionSampleTiers {
+  /** Muestra suficiente para que sus cifras signifiquen algo. */
+  primary: ChampionPerformance[];
+  /** Real, nunca oculto — pero nunca presentado con el mismo peso que `primary` (p. ej. un 100% WR en 1 partida). */
+  secondary: ChampionPerformance[];
+}
+
+export const tierChampionsBySampleSize = (
+  champions: readonly ChampionPerformance[],
+  threshold: number = MIN_PRIMARY_CHAMPION_SAMPLE,
+): ChampionSampleTiers => {
+  const primary: ChampionPerformance[] = [];
+  const secondary: ChampionPerformance[] = [];
+  for (const champion of champions) {
+    (champion.games >= threshold ? primary : secondary).push(champion);
+  }
+  return { primary, secondary };
+};
+
+/** Campeones con DPM real conocido, ordenados de mayor a menor — para la comparativa visual de DPM (encargo §9). Nunca una escala engañosa: el número real siempre acompaña a la barra. */
+export const topChampionsByDamagePerMinute = (
+  champions: readonly ChampionPerformance[],
+  limit = 6,
+): ChampionPerformance[] =>
+  champions
+    .filter((champion) => champion.averageDamagePerMinute !== undefined)
+    .sort((a, b) => (b.averageDamagePerMinute ?? 0) - (a.averageDamagePerMinute ?? 0))
+    .slice(0, limit);
