@@ -1,16 +1,17 @@
-import { getRiotConfig, type RiotEnvironment } from '../../config/riot';
+import { getRiotConfig, riotDefaults, type RiotEnvironment } from '../../config/riot';
 import { findKnownPlayerIdentity, knownPlayerIdentities } from '../../config/known-players';
-import { getRiotOverview, resolveSelfAccount } from './index';
-import { cached } from './cache';
+import { resolveSelfAccount } from './index';
+import { cached, peekCached } from './cache';
 import { createRiotClient, type RiotDiagnosticLogger } from './client';
 import { dataDragonUrls, getDataDragonVersion } from './datadragon';
 import { RiotApiError } from './errors';
-import { normalizeRanked } from './normalize';
+import { normalizeMatch, normalizeRanked } from './normalize';
 import { normalizeLiveGame, type LiveNormalizeContext } from './live-normalize';
 import type {
   RiotAccountDto,
   RiotCurrentGameInfoDto,
   RiotLeagueEntryDto,
+  RiotMatchDto,
 } from './types';
 import type {
   KnownPlayerIdentity,
@@ -159,35 +160,54 @@ const resolveRankedByPuuid = async (
 };
 
 /**
- * Forma reciente — SOLO para Tidusss, reutilizando `getRiotOverview` (ya
- * cacheado agresivamente para el propio dashboard) en vez de una llamada
- * nueva. Enriquecer así a los otros 9 participantes multiplicaría las
- * llamadas a match-v5 (varias por jugador) muy por encima de lo razonable
- * para una vista que ya se refresca sola cada 30-60s — decisión
- * documentada en el informe de entrega, no un olvido.
+ * Forma reciente de Tidusss — SOLO a partir de lo que YA esté cacheado en
+ * memoria bajo las MISMAS claves que usa `getRiotOverview`
+ * (`riot:matches:{puuid}`, `riot:match:{matchId}`; ver `index.ts`) —
+ * nunca dispara una descarga nueva desde "Partida en curso". Micro-sprint
+ * de coste Riot (§2/§3 del encargo): los hasta 30 match-details de
+ * Tidusss pertenecen al análisis reciente/`/api/riot/overview`, no al
+ * núcleo de una partida activa — antes, `resolveSelfRecentForm` llamaba a
+ * `getRiotOverview()` entera solo para leer sus últimas 5 partidas,
+ * arrastrando esa descarga completa (y un `summoner-v4` que Live ni
+ * siquiera necesita) a la ruta crítica de cada partida nueva en caché
+ * fría. Ahora:
+ * - si `/api/riot/overview` (o una visita previa a Live) ya calentó esa
+ *   caché: gratis, instantáneo, mismo dataset reutilizado (nunca
+ *   duplicado, encargo §4);
+ * - si no: se omite sin más — la partida sigue apareciendo completa, y el
+ *   siguiente sondeo de Live (45s) probablemente ya la encuentre caliente.
+ * Es sincróno a propósito: leer memoria no necesita `await`, así que ya
+ * no forma parte de ningún `Promise.all` que pueda "esperar" por ella.
  */
-const resolveSelfRecentForm = async (
-  environment: RiotEnvironment,
-  diagnostics?: RiotDiagnosticLogger,
-): Promise<LiveParticipantRecentForm | undefined> => {
-  try {
-    const overview = await getRiotOverview(environment, diagnostics);
-    const sample = overview.recent.matches.slice(0, 5);
-    if (sample.length === 0) return undefined;
-    const wins = sample.filter((match) => match.win).length;
-    const kdaValues = sample.map((match) => match.kda);
-    return {
-      sampleSize: sample.length,
-      wins,
-      losses: sample.length - wins,
-      winRate: Math.round((wins / sample.length) * 100),
-      averageKda: Number(
-        (kdaValues.reduce((sum, value) => sum + value, 0) / kdaValues.length).toFixed(2),
-      ),
-    };
-  } catch {
-    return undefined;
-  }
+const resolveSelfRecentFormFromCache = (
+  puuid: string,
+  championUrl: (name: string) => string,
+  itemUrl: (id: number) => string,
+  summonerSpellUrl: (name: string) => string,
+): LiveParticipantRecentForm | undefined => {
+  const matchIds = peekCached<string[]>(`riot:matches:${puuid}`);
+  if (!matchIds?.length) return undefined;
+  const sample = matchIds
+    .flatMap((matchId) => {
+      const raw = peekCached<RiotMatchDto>(`riot:match:${matchId}`);
+      if (!raw) return [];
+      const normalized = normalizeMatch(raw, puuid, championUrl, itemUrl, summonerSpellUrl);
+      return normalized ? [normalized] : [];
+    })
+    .filter((match) => match.queueId === riotDefaults.soloQueueId && !match.remake)
+    .slice(0, 5);
+  if (sample.length === 0) return undefined;
+  const wins = sample.filter((match) => match.win).length;
+  const kdaValues = sample.map((match) => match.kda);
+  return {
+    sampleSize: sample.length,
+    wins,
+    losses: sample.length - wins,
+    winRate: Math.round((wins / sample.length) * 100),
+    averageKda: Number(
+      (kdaValues.reduce((sum, value) => sum + value, 0) / kdaValues.length).toFixed(2),
+    ),
+  };
 };
 
 const identityFor =
@@ -288,7 +308,7 @@ export const getRiotLiveGame = async (
   // (equipos, campeones, hechizos, runas, baneos) sigue apareciendo igual
   // — nunca bloquea la vista (§18, orden de importancia 1-2 siempre
   // disponibles aunque 3-6 fallen parcial o totalmente).
-  const [dataDragonVersion, riotIdEntries, rankedEntries, selfRecentForm] = await Promise.all([
+  const [dataDragonVersion, riotIdEntries, rankedEntries] = await Promise.all([
     getDataDragonVersion(),
     Promise.allSettled(
       otherParticipantPuuids.map(async (puuid) => [puuid, await resolveRiotIdByPuuid(client, regionalBase, puuid)] as const),
@@ -296,7 +316,6 @@ export const getRiotLiveGame = async (
     Promise.allSettled(
       participantPuuids.map(async (puuid) => [puuid, await resolveRankedByPuuid(client, platformBase, puuid)] as const),
     ),
-    resolveSelfRecentForm(environment, diagnostics),
   ]);
 
   const riotIdByPuuid = new Map(
@@ -315,6 +334,14 @@ export const getRiotLiveGame = async (
     getKeystoneById(dataDragonVersion),
   ]);
   const urls = dataDragonUrls(dataDragonVersion);
+  // Síncrono y solo a partir de caché ya caliente — ver
+  // `resolveSelfRecentFormFromCache`. Nunca bloquea ni dispara red.
+  const selfRecentForm = resolveSelfRecentFormFromCache(
+    selfPuuid,
+    urls.champion,
+    urls.item,
+    urls.summonerSpell,
+  );
 
   const ctx: LiveNormalizeContext = {
     selfPuuid,

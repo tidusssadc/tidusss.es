@@ -45,6 +45,20 @@ export const cached = async <T>(
   }
 };
 
+/**
+ * Lee la caché de memoria SIN disparar el `loader` en un miss — a
+ * diferencia de `cached()`, nunca hace una llamada de red nueva. Pensada
+ * para enriquecimiento "si ya está caliente, genial; si no, se omite" en
+ * una ruta que no puede permitirse esperar una descarga completa (p. ej.
+ * la forma reciente de Tidusss dentro de "Partida en curso" — ver
+ * `live.ts`, `resolveSelfRecentFormFromCache`). Deliberadamente ignora
+ * `staleUntil`: un partido ya jugado no cambia con el tiempo, así que un
+ * valor "caducado" aquí sigue siendo un dato real y útil, nunca inventado
+ * — solo `cached()` necesita esa distinción para decidir si refrescar.
+ */
+export const peekCached = <T>(key: string): T | undefined =>
+  (memoryCache.get(key) as CacheEntry<T> | undefined)?.value;
+
 export const clearRiotMemoryCache = () => {
   memoryCache.clear();
   inFlight.clear();

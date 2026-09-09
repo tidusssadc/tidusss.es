@@ -1,8 +1,9 @@
 import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { getRiotLiveGame } from '../../../src/lib/riot/live.ts';
-import { clearRiotMemoryCache } from '../../../src/lib/riot/cache.ts';
+import { cached, clearRiotMemoryCache } from '../../../src/lib/riot/cache.ts';
 import type { RiotEnvironment } from '../../../src/config/riot.ts';
+import type { RiotMatchDto } from '../../../src/lib/riot/types.ts';
 
 /**
  * `getRiotLiveGame` orquesta red real (Riot + Data Dragon) — estos tests
@@ -134,6 +135,30 @@ const runesReforgedRoute: MockRoute = {
   ],
 };
 
+/** Partida Solo/Duo mínima válida para `normalizeMatch` — usada para precalentar `riot:match:{id}` en los tests de caché de forma reciente. */
+const matchFixture = (matchId: string, win: boolean): RiotMatchDto => ({
+  metadata: { matchId },
+  info: {
+    gameCreation: Date.now(),
+    gameDuration: 1500,
+    queueId: 420,
+    participants: [
+      {
+        puuid: SELF_PUUID,
+        championName: 'Lucian',
+        win,
+        kills: win ? 8 : 2,
+        deaths: win ? 2 : 6,
+        assists: 4,
+        teamId: 100,
+      },
+    ],
+    teams: [{ teamId: 100, win }],
+  },
+});
+
+const HOUR = 60 * 60_000;
+
 beforeEach(() => {
   clearRiotMemoryCache();
 });
@@ -173,6 +198,71 @@ test('in_game: 10 participantes se normalizan en 2 equipos, con Tidusss marcado'
     const enemy = result.game.participants.find((p) => !p.isSelf);
     assert.equal(enemy?.championName, 'Lucian');
     assert.equal(enemy?.ranked?.tier, 'GOLD');
+  } finally {
+    mock.restore();
+  }
+});
+
+// --- Micro-sprint "coste Riot / ruta crítica": la forma reciente de
+// Tidusss nunca dispara descargas históricas nuevas desde Live. ---
+
+test('cold: en caché fría, Live NO dispara ninguna llamada a match-v5 (ni matchlist ni match-detail) — recentForm simplemente queda ausente', async () => {
+  const mock = installFetchMock([
+    accountRoute,
+    inGameRoute(),
+    ddragonVersionRoute,
+    championJsonRoute,
+    accountByPuuidRoute,
+    rankedRoute,
+    // Deliberadamente SIN mockear /match/v5/ — si algo lo llamara, caería
+    // en el 500 "unmocked url" del router y el test fallaría al aparecer
+    // esa URL en `mock.calls`.
+  ]);
+  try {
+    const result = await getRiotLiveGame(ENV);
+    assert.equal(result.status, 'in_game');
+    if (result.status !== 'in_game') return;
+    const self = result.game.participants.find((p) => p.isSelf);
+    assert.equal(self?.recentForm, undefined, 'sin caché previa, recentForm debe quedar ausente, nunca bloquear con una descarga nueva');
+    const matchCalls = mock.calls.filter((url) => url.includes('/match/v5/'));
+    assert.deepEqual(matchCalls, [], 'ninguna llamada a match-v5 debería producirse desde Live en frío');
+    const summonerCalls = mock.calls.filter((url) => url.includes('/summoner/v4/'));
+    assert.deepEqual(summonerCalls, [], 'Live no necesita summoner-v4 en absoluto (ese era un efecto colateral del viejo getRiotOverview())');
+  } finally {
+    mock.restore();
+  }
+});
+
+test('warm: si /api/riot/overview (o una visita previa) ya calentó riot:matches/riot:match, Live reutiliza ese dataset sin ninguna llamada nueva a match-v5', async () => {
+  await cached(`riot:matches:${SELF_PUUID}`, 5 * 60_000, HOUR, async () => [
+    'EUW1_1',
+    'EUW1_2',
+    'EUW1_3',
+  ]);
+  await cached(`riot:match:EUW1_1`, 24 * HOUR, 7 * 24 * HOUR, async () => matchFixture('EUW1_1', true));
+  await cached(`riot:match:EUW1_2`, 24 * HOUR, 7 * 24 * HOUR, async () => matchFixture('EUW1_2', true));
+  await cached(`riot:match:EUW1_3`, 24 * HOUR, 7 * 24 * HOUR, async () => matchFixture('EUW1_3', false));
+
+  const mock = installFetchMock([
+    accountRoute,
+    inGameRoute(),
+    ddragonVersionRoute,
+    championJsonRoute,
+    accountByPuuidRoute,
+    rankedRoute,
+    // Sin rutas de match-v5: si Live intentara pedir algo nuevo, el 500
+    // "unmocked url" lo delataría en `mock.calls`.
+  ]);
+  try {
+    const result = await getRiotLiveGame(ENV);
+    assert.equal(result.status, 'in_game');
+    if (result.status !== 'in_game') return;
+    const self = result.game.participants.find((p) => p.isSelf);
+    assert.equal(self?.recentForm?.sampleSize, 3);
+    assert.equal(self?.recentForm?.wins, 2);
+    assert.equal(self?.recentForm?.losses, 1);
+    const matchCalls = mock.calls.filter((url) => url.includes('/match/v5/'));
+    assert.deepEqual(matchCalls, [], 'el dataset ya estaba caliente — no debe dispararse ninguna llamada nueva a match-v5');
   } finally {
     mock.restore();
   }
