@@ -98,6 +98,20 @@ const orderedBuilds = [...primaryBuilds, ...situationalBuilds];
 const patchFor = (patchId: string) =>
   leagueLaboratoryPatches.find((patch) => patch.id === patchId);
 
+/**
+ * Contenido editorial parcial y real (build y/o runas) sin perfil
+ * completo — el caso de Jhin (parche 26.17): tier de la Tier List, build
+ * de referencia, dos configuraciones de runas y vídeos ya existentes, sin
+ * fortalezas/debilidades/matchups/power spikes inventados. Distinto de
+ * `hasProfile` (perfil editorial completo, hoy solo Lucian) — se usa para
+ * no mostrar el aviso "Todavía sin análisis editorial" cuando en realidad
+ * ya hay contenido real que enseñar, y para no ocultar ese contenido
+ * detrás del mismo gate que las secciones que sí exigen perfil completo
+ * (matchups, sinergias, consejos rápidos, conceptos, historial editorial).
+ */
+const hasPartialContent =
+  orderedBuilds.length > 0 || (knowledge?.runePages.length ?? 0) > 0;
+
 // Matchups agrupados por dificultad real — nunca dos listas mantenidas a
 // mano, siempre derivadas de `matchup.difficulty`.
 const matchups = knowledge?.matchups ?? [];
@@ -198,33 +212,35 @@ const lastEditorialDate = [...editorialHistory]
 const primaryQuestion = PREGUNTA_LUCIAN_SUGGESTIONS[0];
 
 // Índice lateral: solo enlaza a secciones que de verdad tienen contenido —
-// un índice que apunta a estados vacíos resta profundidad en vez de sumarla.
-const tocEntries = hasProfile
-  ? [
-      { id: 'resumen', label: 'Resumen', show: true },
-      { id: 'build', label: 'Build', show: orderedBuilds.length > 0 },
-      { id: 'runas', label: 'Runas', show: (knowledge?.runePages.length ?? 0) > 0 },
-      { id: 'partidas', label: 'Partidas', show: true },
-      { id: 'videos', label: 'Vídeos', show: videosForPage.length > 0 },
-      { id: 'matchups', label: 'Matchups', show: matchups.length > 0 },
-      { id: 'sinergias', label: 'Sinergias', show: synergies.length > 0 },
-      {
-        id: 'consejos-rapidos',
-        label: 'Consejos rápidos',
-        show: quickTips.length > 0,
-      },
-      {
-        id: 'concepts',
-        label: 'Conceptos',
-        show: (knowledge?.concepts.length ?? 0) > 0,
-      },
-      {
-        id: 'historial-editorial',
-        label: 'Historial editorial',
-        show: editorialHistory.length > 0,
-      },
-    ].filter((entry) => entry.show)
-  : [];
+// un índice que apunta a estados vacíos resta profundidad en vez de
+// sumarla. "Resumen" y las secciones que exigen perfil editorial completo
+// (matchups/sinergias/consejos rápidos/conceptos/historial) solo aparecen
+// con `hasProfile`; build/runas/partidas/vídeos pueden mostrarse con
+// contenido parcial real (caso Jhin), sin depender de `hasProfile`.
+const tocEntries = [
+  { id: 'resumen', label: 'Resumen', show: hasProfile },
+  { id: 'build', label: 'Build', show: orderedBuilds.length > 0 },
+  { id: 'runas', label: 'Runas', show: (knowledge?.runePages.length ?? 0) > 0 },
+  { id: 'partidas', label: 'Partidas', show: true },
+  { id: 'videos', label: 'Vídeos', show: videosForPage.length > 0 },
+  { id: 'matchups', label: 'Matchups', show: hasProfile && matchups.length > 0 },
+  { id: 'sinergias', label: 'Sinergias', show: hasProfile && synergies.length > 0 },
+  {
+    id: 'consejos-rapidos',
+    label: 'Consejos rápidos',
+    show: hasProfile && quickTips.length > 0,
+  },
+  {
+    id: 'concepts',
+    label: 'Conceptos',
+    show: hasProfile && (knowledge?.concepts.length ?? 0) > 0,
+  },
+  {
+    id: 'historial-editorial',
+    label: 'Historial editorial',
+    show: hasProfile && editorialHistory.length > 0,
+  },
+].filter((entry) => entry.show);
 
 // El título/descripción mencionan el parche y los objetos reales solo
 // cuando existe build publicada — leídos siempre de los datos reales, nunca
@@ -241,13 +257,19 @@ const pageTitle =
     ? `${catalogEntry.name} ADC: Build y Runas del Parche ${primaryBuildPatch.label} — Guía de Tidusss`
     : hasProfile
       ? `${catalogEntry.name} ADC: Guía, Build y Runas — ADCs de Tidusss`
-      : `${catalogEntry.name} — ${catalogEntry.title} · tidusss.es`;
+      : primaryBuild && primaryBuildPatch
+        // Contenido parcial real (caso Jhin) sin perfil completo: nunca
+        // "Guía" — solo lo que de verdad existe (build de referencia).
+        ? `${catalogEntry.name} ADC: Build de referencia del Parche ${primaryBuildPatch.label} · tidusss.es`
+        : `${catalogEntry.name} — ${catalogEntry.title} · tidusss.es`;
 const pageDescription =
   hasProfile && primaryBuild && primaryBuildPatch
     ? `Guía de ${catalogEntry.name} ADC de Tidusss, Master ADC en EUW: build del parche ${primaryBuildPatch.label}${coreItemNames.length > 0 ? ` (${coreItemNames.join(', ')})` : ''}${primaryRuneName ? `, runa principal ${primaryRuneName}` : ''} y el criterio real detrás de cada decisión.`
     : hasProfile
       ? `Guía de ${catalogEntry.name} ADC por Tidusss, Master ADC en EUW: build, runas, matchups y el criterio real detrás de cada decisión — no solo estadísticas.`
-      : `Ficha de ${catalogEntry.name} (${catalogEntry.title}) en el Laboratorio. Su perfil editorial todavía se está preparando.`;
+      : primaryBuild && primaryBuildPatch
+        ? `Build de referencia de ${catalogEntry.name} ADC para el parche ${primaryBuildPatch.label}${coreItemNames.length > 0 ? ` (${coreItemNames.join(', ')})` : ''}, validada por Tidusss — todavía sin el análisis editorial completo que sí tiene la guía de Lucian.`
+        : `Ficha de ${catalogEntry.name} (${catalogEntry.title}) en tidusss.es. Su perfil editorial todavía se está preparando.`;
 
 // Datos estructurados (Article) solo cuando hay contenido editorial real que
 // describir — no tiene sentido marcar como "artículo" una ficha que todavía
@@ -310,7 +332,7 @@ const structuredData = hasProfile
           primaryBuildPatch && (
             <div class="champion-guide-revision">
               <span class="champion-guide-revision-label">
-                Guía · Última revisión
+                {hasProfile ? 'Guía · Última revisión' : 'Build · Última revisión'}
               </span>
               <LaboratoryMetadata
                 patch={primaryBuildPatch}
@@ -355,7 +377,7 @@ const structuredData = hasProfile
         />
 
         <div class="champion-guide-sections">
-          {!hasProfile && (
+          {!hasProfile && !hasPartialContent && (
             <div class="champion-knowledge-section champion-knowledge-empty-combined">
               <h3>Todavía sin análisis editorial</h3>
               <EmptyLaboratoryState
@@ -366,8 +388,14 @@ const structuredData = hasProfile
               />
             </div>
           )}
-          {hasProfile && (
-          <>
+
+          {
+            /* Build y Runas ya NO dependen de `hasProfile`: pueden mostrar
+               contenido parcial real (caso Jhin — build de referencia y
+               runas sin perfil editorial completo) — cada sección se
+               oculta por sí sola vía `hasContent` cuando no hay nada que
+               enseñar, igual que el resto de secciones de esta página. */
+          }
           <ChampionKnowledgeSection
             id="build"
             title="Build"
@@ -403,8 +431,6 @@ const structuredData = hasProfile
               }
             </div>
           </ChampionKnowledgeSection>
-          </>
-          )}
 
           <div
             id="partidas"
@@ -416,10 +442,10 @@ const structuredData = hasProfile
           </div>
 
           {
-            /* Fuera del `hasProfile`: Jhin/Ashe/Sivir/Twitch no tienen
-               perfil curado en `adcLabChampions`, pero sí pueden tener
-               vídeos reales conectados — igual criterio que Partidas,
-               justo arriba. */
+            /* Fuera del `hasProfile`: Ashe/Sivir/Twitch (y Jhin, aunque
+               este ya tiene build/runas) no tienen perfil editorial
+               completo, pero sí pueden tener vídeos reales conectados —
+               igual criterio que Partidas, justo arriba. */
           }
           <ChampionKnowledgeSection
             id="videos"

@@ -46,6 +46,15 @@ test('Jinx: no tiene build propia, pero responde con su entrada real de la Tier 
   assert.ok(!answer.sources.some((source) => source.documentId.includes('lucian')));
 });
 
+test('Jhin: la build de referencia (parche 26.17) ya existe como documento real — Pregunta puede citarla sin que nadie haya forzado una excepción para él', () => {
+  const answer = assembleAnswer(local.retrieve({ text: '¿Cuál es la build de Jhin?', limit: 10 }));
+  assert.equal(answer.status, 'sufficient');
+  assert.match(answer.answer ?? '', /Filo Infinito/);
+  assert.ok(answer.sources.some((source) => source.documentId.includes('jhin-26-17')));
+  // Nunca contenido de Lucian filtrado como si fuera de Jhin.
+  assert.ok(!answer.sources.some((source) => source.documentId.includes('lucian')));
+});
+
 test('el Mundial: fuera de alcance, se rechaza sin intentar responder', () => {
   const answer = assembleAnswer(local.retrieve({ text: '¿Quién ganó el Mundial?' }));
   assert.equal(answer.status, 'out-of-scope');

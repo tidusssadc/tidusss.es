@@ -15,6 +15,7 @@ import {
 } from '../../src/domain/content-graph/invariants.ts';
 import {
   adcLabChampions,
+  jhin,
   kaisa,
   lucian,
 } from '../../src/data/league-laboratory/champions.ts';
@@ -33,12 +34,12 @@ import { leagueLaboratoryConcepts } from '../../src/data/league-laboratory/conce
 
 // --- Las entidades build reales se registran ---
 
-test('las dos builds reales de Lucian se registran como entidades del grafo', () => {
+test('todas las builds reales (2 de Lucian + 1 de Jhin) se registran como entidades del grafo', () => {
   const buildEntities = leagueLaboratoryEntities.filter(
     (entity) => entity.kind === 'build',
   );
   assert.equal(buildEntities.length, leagueLaboratoryBuilds.length);
-  assert.equal(buildEntities.length, 2);
+  assert.equal(buildEntities.length, 3);
 });
 
 test('los ids de las entidades build son estables, únicos y coinciden con el dominio de origen', () => {
@@ -62,13 +63,21 @@ test('build no tiene concepto de borrador/placeholder: todas sus entidades está
   }
 });
 
-test('las entidades build apuntan a la sección real de la guía del campeón, nunca a una ruta inventada', () => {
+test('las entidades build apuntan a la sección real de la guía de SU PROPIO campeón, nunca a una ruta inventada ni a la de otro', () => {
   const buildEntities = leagueLaboratoryEntities.filter(
     (entity) => entity.kind === 'build',
   );
+  const hrefForBuild = (buildId: string) => {
+    const build = leagueLaboratoryBuilds.find((candidate) => candidate.id === buildId);
+    const slug = build?.championId === lucian.id ? 'lucian' : build?.championId === jhin.id ? 'jhin' : undefined;
+    return slug ? `/campeones/${slug}#build-heading` : undefined;
+  };
   for (const entity of buildEntities) {
-    assert.equal(entity.href, '/campeones/lucian#build-heading');
+    assert.equal(entity.href, hrefForBuild(entity.id));
   }
+  // Lucian y Jhin están efectivamente representados, no solo "algún" href.
+  assert.ok(buildEntities.some((entity) => entity.href === '/campeones/lucian#build-heading'));
+  assert.ok(buildEntities.some((entity) => entity.href === '/campeones/jhin#build-heading'));
 });
 
 // --- matchup: activado, pero sin contenido real todavía ---
@@ -116,17 +125,18 @@ test('ninguna relación va de un campeón hacia una de sus builds: solo se activ
   assert.deepEqual(reverseRelations, []);
 });
 
-// --- Lucian no recibe contenido perteneciente a otro campeón, y viceversa ---
+// --- Ningún campeón recibe contenido de build perteneciente a otro (ni
+// Lucian de la de Jhin, ni Jhin de la de Lucian, ni ningún tercero) ---
 
-test('ningún campeón curado distinto de Lucian recibe una relación "documents" desde una entidad build', () => {
-  const otherCuratedChampions = adcLabChampions.filter(
-    (champion) => champion.id !== lucian.id,
+test('ningún campeón curado sin build propia (Kai\'Sa, Jinx, Ezreal) recibe una relación "documents" desde una entidad build', () => {
+  const championsWithoutBuild = adcLabChampions.filter(
+    (champion) => !leagueLaboratoryBuilds.some((build) => build.championId === champion.id),
   );
   assert.ok(
-    otherCuratedChampions.length > 0,
-    'debe existir al menos otro campeón curado además de Lucian para que esta prueba sea significativa',
+    championsWithoutBuild.length > 0,
+    'debe existir al menos un campeón curado sin build propia para que esta prueba sea significativa',
   );
-  for (const champion of otherCuratedChampions) {
+  for (const champion of championsWithoutBuild) {
     const leaked = leagueLaboratoryRelations.some(
       (relation) =>
         relation.from.startsWith('build:') &&
@@ -137,14 +147,20 @@ test('ningún campeón curado distinto de Lucian recibe una relación "documents
   }
 });
 
-test('todas las relaciones "documents" de build apuntan exactamente a champion:lucian', () => {
+test('cada relación "documents" de build apunta exactamente al championId real de esa build (Lucian o Jhin), nunca a otro campeón', () => {
   const buildDocumentsRelations = leagueLaboratoryRelations.filter(
     (relation) => relation.from.startsWith('build:') && relation.kind === 'documents',
   );
   assert.ok(buildDocumentsRelations.length > 0);
   for (const relation of buildDocumentsRelations) {
-    assert.equal(relation.to, lucian.id);
+    const build = leagueLaboratoryBuilds.find((candidate) => candidate.id === relation.from);
+    assert.ok(build, `${relation.from} no corresponde a ninguna build real`);
+    assert.equal(relation.to, build!.championId);
   }
+  // Lucian y Jhin están ambos representados, no solo uno de los dos.
+  const targets = new Set(buildDocumentsRelations.map((relation) => relation.to));
+  assert.ok(targets.has(lucian.id));
+  assert.ok(targets.has(jhin.id));
 });
 
 // --- Conexiones end-to-end sin duplicados ---
@@ -160,10 +176,16 @@ test('getContentConnections desde una build real resuelve a su campeón, sin dup
   assert.ok(connections.some((connection) => connection.target.id === lucian.id));
 });
 
-test('getContentEntitiesByKind("build") sobre el grafo real devuelve exactamente las builds de Lucian', () => {
+test('getContentEntitiesByKind("build") sobre el grafo real devuelve exactamente las builds de Lucian y de Jhin', () => {
   const buildEntities = getContentEntitiesByKind('build');
-  assert.equal(buildEntities.length, 2);
-  assert.ok(buildEntities.every((entity) => entity.href?.startsWith('/campeones/lucian')));
+  assert.equal(buildEntities.length, 3);
+  assert.ok(
+    buildEntities.every(
+      (entity) =>
+        entity.href?.startsWith('/campeones/lucian') ||
+        entity.href?.startsWith('/campeones/jhin'),
+    ),
+  );
 });
 
 // --- El grafo completo sigue sin violar ninguna invariante tras la Fase B ---
@@ -182,22 +204,38 @@ test('el grafo real (contentGraph) sigue sin violar ninguna invariante tras acti
 
 // --- rune-page ---
 
-test('la página de runas real de Lucian se registra como entidad del grafo, con id único y estable', () => {
+test('las 3 páginas de runas reales (Lucian + las 2 de Jhin) se registran como entidades del grafo, con ids únicos y estables', () => {
   const runePageEntities = leagueLaboratoryEntities.filter(
     (entity) => entity.kind === 'rune-page',
   );
   assert.equal(runePageEntities.length, leagueLaboratoryRunePages.length);
-  assert.equal(runePageEntities.length, 1);
+  assert.equal(runePageEntities.length, 3);
   assert.deepEqual(findDuplicateEntityIds(runePageEntities), []);
-  assert.equal(runePageEntities[0]?.id, 'rune-page:lucian-26-14');
+  const ids = new Set(runePageEntities.map((entity) => entity.id));
+  assert.ok(ids.has('rune-page:lucian-26-14'));
+  assert.ok(ids.has('rune-page:jhin-26-17-a'));
+  assert.ok(ids.has('rune-page:jhin-26-17-b'));
 });
 
-test('la entidad rune-page apunta a la sección real de runas de la guía de Lucian', () => {
-  const [runePageEntity] = leagueLaboratoryEntities.filter(
-    (entity) => entity.kind === 'rune-page',
+test('la entidad rune-page de Lucian apunta a la sección real de runas de su guía', () => {
+  const lucianRunePageEntity = leagueLaboratoryEntities.find(
+    (entity) => entity.kind === 'rune-page' && entity.id === 'rune-page:lucian-26-14',
   );
-  assert.equal(runePageEntity?.href, '/campeones/lucian#runas-heading');
-  assert.equal(runePageEntity?.status, 'available');
+  assert.equal(lucianRunePageEntity?.href, '/campeones/lucian#runas-heading');
+  assert.equal(lucianRunePageEntity?.status, 'available');
+});
+
+test('las dos entidades rune-page de Jhin apuntan a la sección real de runas de su ficha', () => {
+  const jhinRunePageEntities = leagueLaboratoryEntities.filter(
+    (entity) =>
+      entity.kind === 'rune-page' &&
+      (entity.id === 'rune-page:jhin-26-17-a' || entity.id === 'rune-page:jhin-26-17-b'),
+  );
+  assert.equal(jhinRunePageEntities.length, 2);
+  for (const entity of jhinRunePageEntities) {
+    assert.equal(entity.href, '/campeones/jhin#runas-heading');
+    assert.equal(entity.status, 'available');
+  }
 });
 
 // --- synergy ---

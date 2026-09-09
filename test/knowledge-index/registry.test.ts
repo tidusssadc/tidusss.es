@@ -10,7 +10,7 @@ import {
   validateKnowledgeIndex,
 } from '../../src/domain/knowledge-index/invariants.ts';
 import { serializeKnowledgeIndex } from '../../src/domain/knowledge-index/serialize.ts';
-import { adcLabChampions, kaisa, lucian } from '../../src/data/league-laboratory/champions.ts';
+import { adcLabChampions, jhin, kaisa, lucian } from '../../src/data/league-laboratory/champions.ts';
 import { officialAdcTierList } from '../../src/data/league-laboratory/official-adc-tier-list.ts';
 
 // --- IDs únicos y deterministas ---
@@ -118,14 +118,22 @@ test('Kai\'Sa (otro campeón curado) no recibe ningún documento de identidad, e
   assert.equal(leaked, false);
 });
 
-test('todos los documentos de build/rune-page cuyo relatedEntityIds incluye a un campeón, solo incluyen a Lucian', () => {
+test('todos los documentos de build/rune-page cuyo relatedEntityIds incluye a un campeón, solo incluyen a Lucian o a Jhin (nunca a un tercero)', () => {
   const buildAndRuneDocuments = knowledgeDocuments.filter(
     (document) => document.type.startsWith('build-') || document.type.startsWith('rune-'),
   );
   assert.ok(buildAndRuneDocuments.length > 0);
   for (const document of buildAndRuneDocuments) {
-    assert.deepEqual([...document.relatedEntityIds], [lucian.id]);
+    assert.equal(document.relatedEntityIds.length, 1);
+    assert.ok(
+      document.relatedEntityIds[0] === lucian.id || document.relatedEntityIds[0] === jhin.id,
+      `documento ${document.id} referencia un campeón inesperado: ${document.relatedEntityIds[0]}`,
+    );
   }
+  // Ambos están efectivamente representados, no solo uno de los dos.
+  const referenced = new Set(buildAndRuneDocuments.map((document) => document.relatedEntityIds[0]));
+  assert.ok(referenced.has(lucian.id));
+  assert.ok(referenced.has(jhin.id));
 });
 
 // --- Separación de parches ---

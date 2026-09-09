@@ -129,5 +129,23 @@ export const ezreal: LabChampion = {
   playstyleTags: ['poke', 'movilidad'],
 };
 
-/** Los campeones ADC curados — los mismos 4 de siempre, ahora sin duplicar datos del catálogo. */
-export const adcLabChampions: LabChampion[] = [lucian, kaisa, jinx, ezreal];
+/**
+ * Jhin: primer contenido real más allá de los 4 de siempre — una build y
+ * dos configuraciones de runas de referencia para el parche 26.17
+ * (`builds.ts`/`rune-pages.ts`), validadas por Tidusss. Deliberadamente
+ * SIN `profile`: no existe todavía un perfil editorial completo (resumen,
+ * fortalezas, debilidades, power spikes...) — eso sigue siendo exclusivo
+ * de Lucian. `resolveChampionEditorialStatus` lo resuelve como `draft`,
+ * nunca `reviewed`. `playstyleTags` queda vacío: ningún tag de estilo de
+ * juego ha sido confirmado todavía, y no se inventa uno para rellenar el
+ * campo.
+ */
+export const jhin: LabChampion = {
+  id: 'champion:jhin',
+  roles: ['BOTTOM'],
+  isSignatureChampion: false,
+  playstyleTags: [],
+};
+
+/** Los campeones ADC curados — Lucian, Kai'Sa, Jinx, Ezreal, y ahora Jhin (build/runas de referencia, sin perfil completo). */
+export const adcLabChampions: LabChampion[] = [lucian, kaisa, jinx, ezreal, jhin];

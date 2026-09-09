@@ -1,5 +1,5 @@
 import type { Build, BuildItemChoice } from '../../domain/league-laboratory';
-import { patch2614 } from './patches';
+import { patch2614, patch2617 } from './patches';
 
 /**
  * Builds editoriales — un bloque explica siempre el "por qué", nunca solo
@@ -147,7 +147,56 @@ export const lucianPersonalBuild26_14: Build = {
   },
 };
 
+/**
+ * Jhin — build de referencia, parche 26.17. A diferencia de las de Lucian
+ * arriba, esto NO procede del criterio propio de Tidusss explicado en
+ * detalle: es una ruta de referencia externa que Tidusss ha validado como
+ * real, sin haber aportado todavía su razonamiento estratégico completo
+ * (por qué cada objeto, cuándo desviarse, etc.) — por eso `editorialTake`
+ * describe el ESTADO del dato (qué se sabe y qué no), nunca una opinión
+ * inventada. Solo Filo Infinito ha podido confirmarse de forma inequívoca
+ * como objeto de esta ruta; el resto de la progresión (objetos iniciales,
+ * alternativas de compra temprana, objetos situacionales) sigue pendiente
+ * de confirmación — se deja como array vacío en vez de rellenarse con una
+ * suposición.
+ */
+const jhinCoreItems26_17: BuildItemChoice[] = [
+  {
+    name: 'Filo Infinito',
+    itemId: 3031,
+    reasoning:
+      'Objeto central, confirmado de forma inequívoca en la ruta de referencia de Jhin validada por Tidusss para el parche 26.17.',
+  },
+];
+
+export const jhinReferenceBuild26_17: Build = {
+  id: 'build:jhin-26-17-reference',
+  title: 'Build de referencia — Jhin ADC (parche 26.17)',
+  championId: 'champion:jhin',
+  role: 'BOTTOM',
+  patchId: patch2617.id,
+  variant: 'primary',
+  startingItems: [],
+  coreItems: jhinCoreItems26_17,
+  situationalItems: [],
+  // Prioridad confirmada (Q > W > E, R siempre que está disponible) — el
+  // detalle completo por nivel vive en `skillOrderReasoning`, dato textual
+  // confirmado, no interpretado.
+  skillOrder: ['Q', 'W', 'E'],
+  skillOrderReasoning:
+    'Prioridad de habilidades: Q > W > E, maximizando la definitiva (R) siempre que está disponible. Orden completo confirmado por nivel — Q: 1, 3, 5, 7, 9 · W: 2, 8, 10, 11, 13 · E: 4, 14, 15, 16, 18 · R: 6, 12, 17.',
+  editorialTake: {
+    verdict:
+      'Build de referencia de Jhin para el parche 26.17, validada por Tidusss.',
+    reasoning:
+      'Todavía sin el análisis editorial completo que sí tiene la guía de Lucian: solo se ha confirmado Filo Infinito como objeto central de esta ruta. El resto de la progresión (objetos iniciales, alternativas de compra temprana y objetos situacionales) sigue pendiente de confirmación — no se ha completado con ninguna suposición.',
+    confidence: 'low',
+    lastReviewedPatch: patch2617.id,
+  },
+};
+
 export const leagueLaboratoryBuilds: Build[] = [
   lucianSolidBuild26_14,
   lucianPersonalBuild26_14,
+  jhinReferenceBuild26_17,
 ];

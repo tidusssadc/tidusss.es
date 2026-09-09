@@ -26,8 +26,8 @@ test('getCatalogCoverage: los totales reales suman el tamaño del catálogo', ()
     coverage.total,
   );
   assert.equal(coverage.reviewed, 1); // Solo Lucian tiene profile
-  assert.equal(coverage.draft, 3); // Kai'Sa, Jinx, Ezreal
-  assert.equal(coverage.pending, championCatalog.length - 4);
+  assert.equal(coverage.draft, 4); // Kai'Sa, Jinx, Ezreal, Jhin (build/runas de referencia, sin profile)
+  assert.equal(coverage.pending, championCatalog.length - 5);
 });
 
 test('getCatalogCoverage con un registro vacío no falla', () => {

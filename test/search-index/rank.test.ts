@@ -116,6 +116,39 @@ test('sobre el índice real, "spacing" encuentra el concepto real de Academia', 
   assert.ok(matches.some((match) => match.entry.category === 'academia'));
 });
 
+test('sobre el índice real, "jhin" encuentra a Jhin legítimamente — pertenece al roster ADC, sin ningún hack específico', () => {
+  const index = buildSearchIndex();
+  const matches = searchEntries(index, 'jhin');
+  assert.ok(matches.some((match) => match.entry.category === 'campeon' && match.entry.title === 'Jhin'));
+});
+
+test('sobre el índice real, "build jhin" encuentra la build real de Jhin (parche 26.17)', () => {
+  const index = buildSearchIndex();
+  const matches = searchEntries(index, 'build jhin');
+  assert.ok(
+    matches.some(
+      (match) => match.entry.category === 'build' && match.entry.title.toLowerCase().includes('jhin'),
+    ),
+  );
+});
+
+test('sobre el índice real, "pies veloces jhin" y "toque de muerte ignea jhin" encuentran, cada una, SU PROPIA configuración de runas de Jhin (no la otra)', () => {
+  const index = buildSearchIndex();
+  const isJhinRunes = (entry: { category: string; href: string }) =>
+    entry.category === 'build' && entry.href === '/campeones/jhin#runas-heading';
+  const fleetFootwork = searchEntries(index, 'pies veloces jhin');
+  const pressTheAttack = searchEntries(index, 'toque de muerte ignea jhin');
+  const fleetMatch = fleetFootwork.find((match) => isJhinRunes(match.entry));
+  const pressMatch = pressTheAttack.find((match) => isJhinRunes(match.entry));
+  assert.ok(fleetMatch, 'ninguna entrada de runas de Jhin coincide con "pies veloces jhin"');
+  assert.ok(pressMatch, 'ninguna entrada de runas de Jhin coincide con "toque de muerte ignea jhin"');
+  assert.ok(fleetMatch!.entry.keywords.includes('Pies Veloces'));
+  assert.ok(pressMatch!.entry.keywords.includes('Toque de Muerte Ígnea'));
+  // No es la misma entrada devuelta para ambas búsquedas: cada keystone
+  // resuelve a su propia configuración, no a un "empate" indistinguible.
+  assert.notEqual(fleetMatch!.entry.description, pressMatch!.entry.description);
+});
+
 test('sobre el índice real, una consulta sin sentido no devuelve nada (nunca una coincidencia inventada)', () => {
   const index = buildSearchIndex();
   const matches = searchEntries(index, 'xyzxyzxyz-no-existe-en-ningun-documento');
