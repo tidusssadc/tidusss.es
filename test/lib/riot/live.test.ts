@@ -90,7 +90,7 @@ const tenParticipants = () => [
   })),
 ];
 
-const inGameRoute = (participants = tenParticipants()): MockRoute => ({
+const inGameRoute = (participants: Record<string, unknown>[] = tenParticipants()): MockRoute => ({
   match: (url) => url.includes('/spectator/v5/active-games/'),
   status: 200,
   body: {
@@ -121,6 +121,17 @@ const unrankedRoute: MockRoute = {
   match: (url) => url.includes('/league/v4/entries/by-puuid/'),
   status: 200,
   body: [],
+};
+const runesReforgedRoute: MockRoute = {
+  match: (url) => url.includes('/data/en_US/runesReforged.json'),
+  status: 200,
+  body: [
+    {
+      id: 8000,
+      name: 'Precisión',
+      slots: [{ runes: [{ id: 8005, name: 'Presencia de Ánimo', icon: 'perk-images/Styles/Precision/PresenceOfMind/PresenceOfMind.png' }] }],
+    },
+  ],
 };
 
 beforeEach(() => {
@@ -162,6 +173,76 @@ test('in_game: 10 participantes se normalizan en 2 equipos, con Tidusss marcado'
     const enemy = result.game.participants.find((p) => !p.isSelf);
     assert.equal(enemy?.championName, 'Lucian');
     assert.equal(enemy?.ranked?.tier, 'GOLD');
+  } finally {
+    mock.restore();
+  }
+});
+
+test('el Riot ID de Tidusss se toma del account-v1 ya resuelto (by-riot-id): nunca dispara account-v1-by-puuid para sí mismo', async () => {
+  const mock = installFetchMock([
+    accountRoute,
+    inGameRoute(),
+    ddragonVersionRoute,
+    championJsonRoute,
+    accountByPuuidRoute,
+    rankedRoute,
+  ]);
+  try {
+    const result = await getRiotLiveGame(ENV);
+    assert.equal(result.status, 'in_game');
+    if (result.status !== 'in_game') return;
+    const self = result.game.participants.find((p) => p.isSelf);
+    assert.equal(self?.riotId, 'Tidusss#FFX');
+    assert.equal(self?.riotIdResolved, true);
+    const byPuuidCallsForSelf = mock.calls.filter(
+      (url) => url.includes('/accounts/by-puuid/') && url.includes(SELF_PUUID),
+    );
+    assert.equal(byPuuidCallsForSelf.length, 0, 'no debe pedirse el Riot ID de Tidusss dos veces');
+  } finally {
+    mock.restore();
+  }
+});
+
+test('la keystone exacta se resuelve de extremo a extremo cuando runesReforged.json está disponible', async () => {
+  const mock = installFetchMock([
+    accountRoute,
+    inGameRoute([
+      { puuid: SELF_PUUID, championId: 236, teamId: 100, spell1Id: 4, spell2Id: 7, profileIconId: 1, perks: { perkIds: [8005], perkStyle: 8000, perkSubStyle: 8100 } },
+    ]),
+    ddragonVersionRoute,
+    championJsonRoute,
+    accountByPuuidRoute,
+    rankedRoute,
+    runesReforgedRoute,
+  ]);
+  try {
+    const result = await getRiotLiveGame(ENV);
+    assert.equal(result.status, 'in_game');
+    if (result.status !== 'in_game') return;
+    const self = result.game.participants.find((p) => p.isSelf);
+    assert.equal(self?.keystone?.id, 8005);
+    assert.equal(self?.keystone?.name, 'Presencia de Ánimo');
+    assert.ok(self?.keystone?.imageUrl?.includes('PresenceOfMind'));
+  } finally {
+    mock.restore();
+  }
+});
+
+test('sin runesReforged.json disponible, la keystone se degrada (id + nombre genérico) sin romper la partida', async () => {
+  const mock = installFetchMock([
+    accountRoute,
+    inGameRoute(),
+    ddragonVersionRoute,
+    championJsonRoute,
+    accountByPuuidRoute,
+    rankedRoute,
+    // Deliberadamente SIN runesReforgedRoute.
+  ]);
+  try {
+    const result = await getRiotLiveGame(ENV);
+    assert.equal(result.status, 'in_game');
+    if (result.status !== 'in_game') return;
+    assert.equal(result.game.participants.length, 10);
   } finally {
     mock.restore();
   }

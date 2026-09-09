@@ -50,6 +50,20 @@ export interface LiveSummonerSpell {
   imageUrl?: string;
 }
 
+/**
+ * La runa keystone exacta (no solo el árbol) — spectator-v5 SÍ la da:
+ * `perks.perkIds[0]` es el id de la keystone elegida (mismo campo que ya
+ * declaraba `RiotCurrentGameParticipantDto`, sin usar hasta ahora).
+ * Ausente solo si Riot no trae `perkIds` o el id no resuelve contra
+ * `runesReforged.json` de Data Dragon — nunca inferida por campeón/build
+ * (encargo §5, "no inferir keystone").
+ */
+export interface LiveKeystone {
+  id: number;
+  name: string;
+  imageUrl?: string;
+}
+
 /** Ausente = todavía no se ha intentado enriquecer o el enriquecimiento falló — nunca "sin clasificar" inventado. */
 export interface LiveParticipantRanked {
   available: boolean;
@@ -90,6 +104,7 @@ export interface LiveParticipant {
   summonerSpells: readonly LiveSummonerSpell[];
   primaryRuneTree?: LiveRuneTree;
   secondaryRuneTree?: LiveRuneTree;
+  keystone?: LiveKeystone;
   profileIconId?: number;
   profileIconUrl?: string;
   /** true solo para la cuenta configurada de Tidusss (comparación por PUUID). */
@@ -112,6 +127,21 @@ export interface LiveGameBan {
   pickTurn: number;
 }
 
+/**
+ * Resumen honesto del rango del lobby — NUNCA una media (los tiers no son
+ * una escala numérica continua con una conversión oficial de Riot entre
+ * ellos, así que "promediar" LP entre Master y Diamond 1 sería un número
+ * inventado). Se limita a lo que sí es defendible: el tier que más se
+ * repite (moda) y cuántos de los 10 participantes tienen rango disponible
+ * — la propia UI decide no mostrar nada si la cobertura es baja (encargo
+ * §14).
+ */
+export interface LiveLobbyRankSummary {
+  participantsWithRank: number;
+  totalParticipants: number;
+  predominantTier?: string;
+}
+
 export interface LiveGame {
   gameId: number;
   gameMode: string;
@@ -127,6 +157,7 @@ export interface LiveGame {
   participants: readonly LiveParticipant[];
   teams: readonly LiveGameTeam[];
   bannedChampions: readonly LiveGameBan[];
+  lobbyRank: LiveLobbyRankSummary;
   source: LiveGameSource;
 }
 

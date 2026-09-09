@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { normalizeLiveGame, normalizeLiveParticipant } from '../../../src/lib/riot/live-normalize.ts';
+import { normalizeLiveGame, normalizeLiveParticipant, summarizeLobbyRank } from '../../../src/lib/riot/live-normalize.ts';
+import type { LiveParticipant } from '../../../src/lib/riot/live-types.ts';
 import type { RiotCurrentGameInfoDto, RiotCurrentGameParticipantDto } from '../../../src/lib/riot/types.ts';
 import type { LiveNormalizeContext } from '../../../src/lib/riot/live-normalize.ts';
 import type { KnownPlayerIdentity } from '../../../src/lib/riot/live-types.ts';
@@ -27,6 +28,7 @@ const baseCtx = (overrides: Partial<LiveNormalizeContext> = {}): LiveNormalizeCo
   championUrl: (name) => `https://ddragon.example/champion/${name}.png`,
   summonerSpellUrl: (name) => `https://ddragon.example/spell/${name}.png`,
   profileIconUrl: (id) => `https://ddragon.example/profileicon/${id}.png`,
+  keystoneById: new Map(),
   riotIdByPuuid: new Map(),
   rankedByPuuid: new Map(),
   identityFor: () => undefined,
@@ -199,13 +201,44 @@ test('los hechizos de invocador reales se resuelven a nombre + icono conocidos',
   assert.equal(result?.summonerSpells[1]?.name, 'Smite');
 });
 
-test('el árbol principal/secundario de runas se resuelve por perkStyle/perkSubStyle (nunca la keystone exacta, no hay mapa para eso)', () => {
+test('el árbol principal/secundario de runas se resuelve por perkStyle/perkSubStyle', () => {
   const result = normalizeLiveParticipant(
     participant({ perks: { perkIds: [8005], perkStyle: 8000, perkSubStyle: 8200 } }),
     baseCtx(),
   );
   assert.equal(result?.primaryRuneTree?.name, 'Precisión');
   assert.equal(result?.secondaryRuneTree?.name, 'Brujería');
+});
+
+// --- Keystone exacta (spectator-v5 sí la da: perks.perkIds[0]) ---
+
+test('la keystone exacta se resuelve por perkIds[0] contra el mapa de runesReforged, cuando el id resuelve', () => {
+  const keystoneById = new Map([[8128, { name: 'Dark Harvest', imageUrl: 'https://ddragon.example/perk/8128.png' }]]);
+  const result = normalizeLiveParticipant(
+    participant({ perks: { perkIds: [8128, 8126], perkStyle: 8100, perkSubStyle: 8000 } }),
+    baseCtx({ keystoneById }),
+  );
+  assert.equal(result?.keystone?.id, 8128);
+  assert.equal(result?.keystone?.name, 'Dark Harvest');
+  assert.equal(result?.keystone?.imageUrl, 'https://ddragon.example/perk/8128.png');
+});
+
+test('un id de keystone que no resuelve contra el mapa deja el nombre genérico, nunca inventado por campeón/build', () => {
+  const result = normalizeLiveParticipant(
+    participant({ perks: { perkIds: [999999], perkStyle: 8100, perkSubStyle: 8000 } }),
+    baseCtx({ keystoneById: new Map() }),
+  );
+  assert.equal(result?.keystone?.id, 999999);
+  assert.equal(result?.keystone?.name, 'Runa 999999');
+  assert.equal(result?.keystone?.imageUrl, undefined);
+});
+
+test('sin perkIds (Riot no lo trae), la keystone queda ausente — nunca inferida', () => {
+  const result = normalizeLiveParticipant(
+    participant({ perks: { perkStyle: 8100, perkSubStyle: 8000 } }),
+    baseCtx(),
+  );
+  assert.equal(result?.keystone, undefined);
 });
 
 // --- Baneos ---
@@ -222,4 +255,52 @@ test('los baneos reales se normalizan y resuelven contra el mismo mapa de campeo
 test('un participante de spectator-v5 sin PUUID (dato inválido) se descarta, nunca se inventa un id', () => {
   const result = normalizeLiveParticipant(participant({ puuid: undefined }), baseCtx());
   assert.equal(result, null);
+});
+
+// --- summarizeLobbyRank: nunca una media, solo el tier que más se repite ---
+
+const rankedParticipant = (tier?: string): LiveParticipant => ({
+  puuid: `p-${Math.random()}`,
+  riotId: 'X#EUW',
+  riotIdResolved: true,
+  championId: 1,
+  teamId: 100,
+  summonerSpells: [],
+  isSelf: false,
+  ranked: tier ? { available: true, tier } : { available: false },
+});
+
+test('summarizeLobbyRank elige el tier que más se repite (moda), nunca una media de LP', () => {
+  const summary = summarizeLobbyRank([
+    rankedParticipant('MASTER'),
+    rankedParticipant('MASTER'),
+    rankedParticipant('DIAMOND'),
+  ]);
+  assert.equal(summary.predominantTier, 'MASTER');
+  assert.equal(summary.participantsWithRank, 3);
+  assert.equal(summary.totalParticipants, 3);
+});
+
+test('summarizeLobbyRank cuenta correctamente cuántos participantes tienen rango disponible frente al total', () => {
+  const summary = summarizeLobbyRank([
+    rankedParticipant('MASTER'),
+    rankedParticipant(undefined),
+    rankedParticipant(undefined),
+  ]);
+  assert.equal(summary.participantsWithRank, 1);
+  assert.equal(summary.totalParticipants, 3);
+  assert.equal(summary.predominantTier, 'MASTER');
+});
+
+test('summarizeLobbyRank sin ningún participante con rango disponible deja predominantTier ausente, nunca inventado', () => {
+  const summary = summarizeLobbyRank([rankedParticipant(undefined), rankedParticipant(undefined)]);
+  assert.equal(summary.participantsWithRank, 0);
+  assert.equal(summary.predominantTier, undefined);
+});
+
+test('normalizeLiveGame adjunta lobbyRank calculado sobre los participantes reales de la partida', () => {
+  const raw = buildGame(tenParticipants());
+  const game = normalizeLiveGame(raw, baseCtx());
+  assert.ok(game?.lobbyRank);
+  assert.equal(game!.lobbyRank.totalParticipants, 10);
 });

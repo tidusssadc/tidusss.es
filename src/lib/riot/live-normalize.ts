@@ -9,6 +9,8 @@ import type {
   LiveGame,
   LiveGameBan,
   LiveGameTeam,
+  LiveKeystone,
+  LiveLobbyRankSummary,
   LiveParticipant,
   LiveParticipantRanked,
   LiveParticipantRecentForm,
@@ -53,16 +55,28 @@ const resolveSummonerSpells = (
     ];
   });
 
-/**
- * Igual que el resto del sitio (`normalize.ts`): solo se resuelve el
- * ÁRBOL de runas (`perkStyle`/`perkSubStyle`), nunca la runa concreta
- * (keystone) — Data Dragon no da un mapa id→icono para eso sin cargar
- * `runesReforged.json` completo, y esta fase no lo introduce.
- */
 const resolveRuneTree = (styleId: number | undefined): LiveRuneTree | undefined => {
   if (!styleId) return undefined;
   const style = runeStyles[styleId];
   return { styleId, name: style?.name ?? `Rama ${styleId}`, imageUrl: style?.imageUrl };
+};
+
+/**
+ * La keystone exacta — spectator-v5 SÍ la trae en `perks.perkIds[0]` (el
+ * resto del array son las demás runas/shards, que esta fase no necesita
+ * mostrar). `keystoneById` viene de `runesReforged.json` de Data Dragon
+ * (mismo patrón que `championNameById` con `champion.json`: gratis, sin
+ * clave, sin límite de Riot). Ausente si Riot no trae `perkIds` o el id no
+ * resuelve — nunca se infiere por campeón/build.
+ */
+const resolveKeystone = (
+  perkIds: readonly number[] | undefined,
+  keystoneById: ReadonlyMap<number, { name: string; imageUrl: string }>,
+): LiveKeystone | undefined => {
+  const id = perkIds?.[0];
+  if (id === undefined) return undefined;
+  const keystone = keystoneById.get(id);
+  return keystone ? { id, name: keystone.name, imageUrl: keystone.imageUrl } : { id, name: `Runa ${id}` };
 };
 
 export interface LiveNormalizeContext {
@@ -71,6 +85,8 @@ export interface LiveNormalizeContext {
   championUrl: (name: string) => string;
   summonerSpellUrl: (name: string) => string;
   profileIconUrl: (id: number) => string;
+  /** Runa exacta (no solo árbol) por id — ver `resolveKeystone`. */
+  keystoneById: ReadonlyMap<number, { name: string; imageUrl: string }>;
   /** "GameName#TAG" por puuid — ausente si account-v1 no lo pudo resolver para ese participante. */
   riotIdByPuuid: ReadonlyMap<string, string>;
   rankedByPuuid: ReadonlyMap<string, LiveParticipantRanked>;
@@ -109,6 +125,7 @@ export const normalizeLiveParticipant = (
     ),
     primaryRuneTree: resolveRuneTree(raw.perks?.perkStyle),
     secondaryRuneTree: resolveRuneTree(raw.perks?.perkSubStyle),
+    keystone: resolveKeystone(raw.perks?.perkIds, ctx.keystoneById),
     profileIconId: raw.profileIconId,
     profileIconUrl:
       raw.profileIconId === undefined ? undefined : ctx.profileIconUrl(raw.profileIconId),
@@ -136,6 +153,36 @@ const normalizeBan = (
     championImageUrl,
     teamId: raw.teamId,
     pickTurn: raw.pickTurn ?? 0,
+  };
+};
+
+/**
+ * Nunca una media: los tiers no son una escala numérica con una
+ * conversión oficial entre ellos (Master 430 LP y Diamond 1 80 LP no se
+ * pueden "promediar" a un número real). Lo único defendible es el tier
+ * que más se repite (moda) y cuántos participantes tienen rango
+ * disponible — la UI decide no mostrar nada si la cobertura es baja
+ * (encargo §14).
+ */
+export const summarizeLobbyRank = (
+  participants: readonly LiveParticipant[],
+): LiveLobbyRankSummary => {
+  const ranked = participants.filter(
+    (participant) => participant.ranked?.available && participant.ranked.tier,
+  );
+  const counts = new Map<string, number>();
+  ranked.forEach((participant) => {
+    const tier = participant.ranked!.tier!;
+    counts.set(tier, (counts.get(tier) ?? 0) + 1);
+  });
+  const sorted = [...counts.entries()].sort(
+    (a, b) => b[1] - a[1] || a[0].localeCompare(b[0]),
+  );
+  const predominantTier = sorted[0]?.[0];
+  return {
+    participantsWithRank: ranked.length,
+    totalParticipants: participants.length,
+    predominantTier,
   };
 };
 
@@ -183,6 +230,7 @@ export const normalizeLiveGame = (
       const normalized = normalizeBan(ban, ctx.championNameById, ctx.championUrl);
       return normalized ? [normalized] : [];
     }),
+    lobbyRank: summarizeLobbyRank(participants),
     source,
   };
 };

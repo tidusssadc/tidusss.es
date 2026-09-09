@@ -8,6 +8,11 @@
  * "SIN PARTIDA" es literalmente el dashboard de siempre, sin banner nuevo
  * (encargo, §1) — un lector de pantalla sí recibe el cambio de estado vía
  * la región `aria-live` invisible de abajo (§25).
+ *
+ * V2 (Sprint 1 · Live Game 2.0): misma arquitectura y mismo endpoint —
+ * este sprint es presentación e información nueva DERIVADA de datos ya
+ * disponibles (keystone real, rango predominante del lobby, tarjeta de
+ * identidad conocida), nunca una llamada Riot adicional.
  */
 ---
 
@@ -28,6 +33,8 @@
       <span data-live-game-queue></span>
       <span data-live-game-timer aria-live="off"></span>
       <span data-live-game-map></span>
+      <span data-live-game-side></span>
+      <span data-live-game-lobby-rank></span>
     </div>
   </header>
   <div class="live-game-teams">
@@ -46,7 +53,8 @@
 </section>
 
 <script>
-  import type { LiveGameResult, LiveParticipant } from '../../lib/riot/live-types';
+  import type { LiveGame, LiveGameResult, LiveParticipant } from '../../lib/riot/live-types';
+  import { rankAssetFor } from '../../config/rank-assets';
 
   const root = document.querySelector<HTMLElement>('[data-live-game-module]');
   const announcer = document.querySelector<HTMLElement>('[data-live-game-announcer]');
@@ -66,11 +74,12 @@
       return `${minutes}:${String(rest).padStart(2, '0')}`;
     };
 
+    const isApexTier = (tier?: string) => Boolean(tier && ['MASTER', 'GRANDMASTER', 'CHALLENGER'].includes(tier));
+
     const rankLabel = (ranked: LiveParticipant['ranked']) => {
       if (!ranked || !ranked.available) return 'Sin clasificación';
-      const apex = new Set(['MASTER', 'GRANDMASTER', 'CHALLENGER']);
       const tier = ranked.tier ?? '';
-      const base = apex.has(tier) ? tier : [tier, ranked.rank].filter(Boolean).join(' ');
+      const base = isApexTier(tier) ? tier : [tier, ranked.rank].filter(Boolean).join(' ');
       return ranked.leaguePoints === undefined ? base : `${base} · ${ranked.leaguePoints} LP`;
     };
 
@@ -85,55 +94,90 @@
       return node;
     };
 
+    const icon = (
+      className: string,
+      src: string,
+      label: string,
+      size: number,
+    ): HTMLImageElement => {
+      const img = el('img', className) as HTMLImageElement;
+      img.src = src;
+      img.alt = label;
+      img.title = label;
+      img.width = size;
+      img.height = size;
+      img.loading = 'lazy';
+      img.decoding = 'async';
+      return img;
+    };
+
+    /**
+     * PRO / STREAMER / PRO · STREAMER como UN solo estado, nunca dos
+     * badges sueltos cuando ambos son ciertos (encargo §8/§10: "no meter
+     * números con igual peso"). El link solo aparece si `streamUrl` está
+     * verificada — nunca se genera una URL por nickname, y nunca se marca
+     * "LIVE" (STREAMER ≠ streaming ahora, encargo §9).
+     */
     const renderBadges = (participant: LiveParticipant): HTMLElement | null => {
       const identity = participant.identity;
       if (!identity || (!identity.isPro && !identity.isStreamer)) return null;
       const wrap = el('span', 'live-game-badges');
-      if (identity.isPro) {
-        const badge = el(
-          'span',
-          'live-game-badge live-game-badge--pro',
-          identity.team ? `PRO · ${identity.team}` : 'PRO',
-        );
-        badge.setAttribute('title', identity.team ? `Jugador profesional de ${identity.team}` : 'Jugador profesional');
+      const both = identity.isPro && identity.isStreamer;
+      const variant = both ? 'both' : identity.isPro ? 'pro' : 'streamer';
+      const label = both
+        ? 'PRO · STREAMER'
+        : identity.isPro
+          ? identity.team
+            ? `PRO · ${identity.team}`
+            : 'PRO'
+          : 'STREAMER';
+      const title = both
+        ? `Jugador profesional${identity.team ? ` de ${identity.team}` : ''} y streamer verificado`
+        : identity.isPro
+          ? identity.team
+            ? `Jugador profesional de ${identity.team}`
+            : 'Jugador profesional'
+          : 'Streamer verificado';
+      const badge = el('span', `live-game-badge live-game-badge--${variant}`, label);
+      badge.title = title;
+      if (identity.isStreamer && identity.streamUrl) {
+        const link = el('a', 'live-game-badge-link');
+        link.href = identity.streamUrl;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.setAttribute('aria-label', `Ver el canal de ${identity.displayName} (se abre en una pestaña nueva)`);
+        link.append(badge);
+        wrap.append(link);
+      } else {
         wrap.append(badge);
       }
-      if (identity.isStreamer) {
-        const badge = el('span', 'live-game-badge live-game-badge--streamer', 'STREAMER');
-        badge.setAttribute('title', 'Streamer verificado');
-        if (identity.streamUrl) {
-          const link = el('a', undefined);
-          link.href = identity.streamUrl;
-          link.target = '_blank';
-          link.rel = 'noopener noreferrer';
-          link.append(badge);
-          wrap.append(link);
-        } else {
-          wrap.append(badge);
-        }
-      }
       return wrap;
+    };
+
+    /** Nombre canónico / equipo / rol de una identidad conocida — solo cuando hay algo real que mostrar, nunca un dato inventado. */
+    const identityCaption = (participant: LiveParticipant): string | undefined => {
+      const identity = participant.identity;
+      if (!identity || (!identity.isPro && !identity.isStreamer)) return undefined;
+      const parts = [identity.displayName, identity.team, identity.role].filter(
+        (value): value is string => Boolean(value),
+      );
+      return parts.length ? parts.join(' · ') : undefined;
     };
 
     const renderParticipant = (participant: LiveParticipant): HTMLLIElement => {
       const item = el('li', 'live-game-participant');
       item.toggleAttribute('data-self', participant.isSelf);
       if (participant.isSelf) {
-        const youBadge = el('span', 'live-game-you-badge', 'TIDUSSS');
-        youBadge.setAttribute('aria-hidden', 'true');
+        const youBadge = el('span', 'live-game-you-badge', 'TU CUENTA');
         item.append(youBadge);
+        item.setAttribute('aria-label', `${participant.riotId} — tu cuenta`);
       }
 
       const championWrap = el('span', 'live-game-participant-champion');
       if (participant.championImageUrl) {
-        const img = el('img');
-        img.src = participant.championImageUrl;
-        img.alt = participant.championName ?? '';
-        img.width = 40;
-        img.height = 40;
-        img.loading = 'lazy';
-        img.decoding = 'async';
-        championWrap.append(img);
+        championWrap.append(
+          icon('', participant.championImageUrl, participant.championName ?? 'Campeón', 44),
+        );
       } else {
         const placeholder = el('span', 'live-game-champion-placeholder', '?');
         placeholder.setAttribute('aria-hidden', 'true');
@@ -153,9 +197,15 @@
       if (badges) nameRow.append(badges);
       info.append(nameRow);
 
+      const caption = identityCaption(participant);
+      if (caption) info.append(el('p', 'live-game-identity-caption', caption));
+
       const statLine = el('p', 'live-game-participant-stats');
-      const rankSpan = el('span', undefined, rankLabel(participant.ranked));
-      statLine.append(rankSpan);
+      const rankAsset = rankAssetFor(participant.ranked?.tier);
+      if (participant.ranked?.available && rankAsset) {
+        statLine.append(icon('live-game-rank-emblem', rankAsset.src, participant.ranked.tier ?? '', 18));
+      }
+      statLine.append(el('span', undefined, rankLabel(participant.ranked)));
       if (participant.ranked?.available && participant.ranked.winRate !== undefined) {
         statLine.append(
           el(
@@ -180,36 +230,60 @@
       const kit = el('div', 'live-game-participant-kit');
       participant.summonerSpells.forEach((spell) => {
         if (!spell.imageUrl) return;
-        const img = el('img', 'live-game-kit-icon');
-        img.src = spell.imageUrl;
-        img.alt = spell.name;
-        img.width = 22;
-        img.height = 22;
-        img.loading = 'lazy';
-        img.decoding = 'async';
-        kit.append(img);
+        kit.append(icon('live-game-kit-icon', spell.imageUrl, spell.name, 22));
       });
-      if (participant.primaryRuneTree?.imageUrl) {
-        const img = el('img', 'live-game-kit-icon');
-        img.src = participant.primaryRuneTree.imageUrl;
-        img.alt = participant.primaryRuneTree.name;
-        img.width = 22;
-        img.height = 22;
-        img.loading = 'lazy';
-        img.decoding = 'async';
-        kit.append(img);
+      if (participant.keystone?.imageUrl) {
+        kit.append(
+          icon(
+            'live-game-kit-icon live-game-kit-icon--keystone',
+            participant.keystone.imageUrl,
+            participant.keystone.name,
+            22,
+          ),
+        );
+      } else if (participant.primaryRuneTree?.imageUrl) {
+        kit.append(
+          icon('live-game-kit-icon', participant.primaryRuneTree.imageUrl, participant.primaryRuneTree.name, 22),
+        );
       }
       item.append(kit);
 
       return item;
     };
 
-    const renderGame = (result: Extract<LiveGameResult, { status: 'in_game' }>) => {
-      const { game } = result;
+    const renderHeader = (game: LiveGame) => {
       const queueNode = root.querySelector('[data-live-game-queue]');
       if (queueNode) queueNode.textContent = game.queueLabel;
       const mapNode = root.querySelector('[data-live-game-map]');
       if (mapNode) mapNode.textContent = game.mapName ?? '';
+
+      const self = game.participants.find((participant) => participant.isSelf);
+      const sideNode = root.querySelector('[data-live-game-side]');
+      if (sideNode)
+        sideNode.textContent = self
+          ? self.teamId === 100
+            ? 'Tú: equipo azul'
+            : self.teamId === 200
+              ? 'Tú: equipo rojo'
+              : ''
+          : '';
+
+      // Nunca una media de LP — solo el tier que más se repite, y solo si
+      // al menos la mitad de los 10 tiene rango disponible (encargo §14):
+      // sin cobertura suficiente, el propio span se queda vacío.
+      const lobbyRankNode = root.querySelector('[data-live-game-lobby-rank]');
+      if (lobbyRankNode) {
+        const { predominantTier, participantsWithRank, totalParticipants } = game.lobbyRank;
+        lobbyRankNode.textContent =
+          predominantTier && participantsWithRank * 2 >= totalParticipants
+            ? `Rango predominante: ${predominantTier} (${participantsWithRank}/${totalParticipants})`
+            : '';
+      }
+    };
+
+    const renderGame = (result: Extract<LiveGameResult, { status: 'in_game' }>) => {
+      const { game } = result;
+      renderHeader(game);
 
       for (const team of game.teams) {
         const label = root.querySelector(`[data-team-label="${team.teamId}"]`);
@@ -218,6 +292,8 @@
         if (list) list.replaceChildren(...team.participants.map(renderParticipant));
       }
 
+      // El timer avanza en el cliente desde el valor recibido — nunca se
+      // vuelve a llamar al endpoint para el segundo a segundo (encargo §20).
       const timerNode = root.querySelector<HTMLElement>('[data-live-game-timer]');
       if (timerNode) {
         const start = game.gameStartedAt ? new Date(game.gameStartedAt).getTime() : undefined;

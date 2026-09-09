@@ -23,6 +23,13 @@ const MINUTE = 60_000;
 const HOUR = 60 * MINUTE;
 const encode = encodeURIComponent;
 
+/** Forma mínima de `runesReforged.json` (Data Dragon) que este módulo necesita — no es una respuesta de Riot API, solo del CDN estático. */
+interface RuneStyleDto {
+  slots?: Array<{
+    runes?: Array<{ id?: number; name?: string; icon?: string }>;
+  }>;
+}
+
 /**
  * `champion.json` de Data Dragon (mismo CDN oficial que ya usa el resto
  * del sitio) es la única fuente que mapea el `championId` NUMÉRICO que da
@@ -56,6 +63,45 @@ const getChampionNameById = async (
   for (const [name, entry] of Object.entries(result.value)) {
     const numericId = entry.key ? Number(entry.key) : undefined;
     if (numericId !== undefined && Number.isFinite(numericId)) map.set(numericId, name);
+  }
+  return map;
+};
+
+/**
+ * `runesReforged.json` de Data Dragon (mismo CDN oficial, sin clave y sin
+ * límite de Riot que `champion.json`) — la única fuente que mapea el id
+ * de una runa exacta (keystone incluida) a su nombre/icono. Aplana los 5
+ * árboles × sus slots en un único `Map<id, {name, imageUrl}>`: para
+ * resolver una keystone concreta no importa a qué árbol pertenece, solo
+ * su id (que ya viene en `perks.perkIds[0]` de spectator-v5). Cache larga:
+ * igual que el catálogo de campeones, esto no cambia entre partidas.
+ */
+const getKeystoneById = async (
+  version: string,
+): Promise<ReadonlyMap<number, { name: string; imageUrl: string }>> => {
+  const result = await cached(
+    `riot:live:runes-reforged:${version}`,
+    6 * HOUR,
+    24 * HOUR,
+    async () => {
+      const response = await fetch(
+        `https://ddragon.leagueoflegends.com/cdn/${version}/data/en_US/runesReforged.json`,
+      );
+      if (!response.ok) return [] as RuneStyleDto[];
+      return (await response.json()) as RuneStyleDto[];
+    },
+  );
+  const map = new Map<number, { name: string; imageUrl: string }>();
+  for (const style of result.value) {
+    for (const slot of style.slots ?? []) {
+      for (const rune of slot.runes ?? []) {
+        if (rune.id === undefined || !rune.name || !rune.icon) continue;
+        map.set(rune.id, {
+          name: rune.name,
+          imageUrl: `https://ddragon.leagueoflegends.com/cdn/img/${rune.icon}`,
+        });
+      }
+    }
   }
   return map;
 };
@@ -170,11 +216,13 @@ export const getRiotLiveGame = async (
   const platformBase = `https://${config.platformRoute}.api.riotgames.com`;
 
   let selfPuuid: string;
+  let selfRiotId: string;
   try {
     const account = await resolveSelfAccount(client, regionalBase, config);
     if (!account.value.puuid)
       return { status: 'unavailable', reason: 'RIOT_INVALID_RESPONSE', updatedAt };
     selfPuuid = account.value.puuid;
+    selfRiotId = `${account.value.gameName || config.gameName}#${account.value.tagLine || config.tagLine}`;
   } catch (error) {
     if (error instanceof RiotApiError && error.code === 'RIOT_RATE_LIMITED')
       return { status: 'rate_limited', retryAfterSeconds: error.retryAfterSeconds, updatedAt };
@@ -230,6 +278,11 @@ export const getRiotLiveGame = async (
   const participantPuuids = (raw.participants ?? [])
     .map((participant) => participant.puuid)
     .filter((puuid): puuid is string => Boolean(puuid));
+  // El Riot ID de Tidusss ya se conoce (viene de `resolveSelfAccount`, arriba)
+  // — pedirlo otra vez vía account-v1-by-puuid solo para él sería una
+  // llamada Riot desperdiciada en cada partida nueva (§B/§17 del encargo:
+  // minimizar llamadas). Los otros 9 sí lo necesitan.
+  const otherParticipantPuuids = participantPuuids.filter((puuid) => puuid !== selfPuuid);
 
   // Todo lo de aquí abajo es enriquecimiento: si falla, la partida base
   // (equipos, campeones, hechizos, runas, baneos) sigue apareciendo igual
@@ -238,7 +291,7 @@ export const getRiotLiveGame = async (
   const [dataDragonVersion, riotIdEntries, rankedEntries, selfRecentForm] = await Promise.all([
     getDataDragonVersion(),
     Promise.allSettled(
-      participantPuuids.map(async (puuid) => [puuid, await resolveRiotIdByPuuid(client, regionalBase, puuid)] as const),
+      otherParticipantPuuids.map(async (puuid) => [puuid, await resolveRiotIdByPuuid(client, regionalBase, puuid)] as const),
     ),
     Promise.allSettled(
       participantPuuids.map(async (puuid) => [puuid, await resolveRankedByPuuid(client, platformBase, puuid)] as const),
@@ -251,12 +304,16 @@ export const getRiotLiveGame = async (
       result.status === 'fulfilled' && result.value[1] ? [[result.value[0], result.value[1]] as const] : [],
     ),
   );
+  riotIdByPuuid.set(selfPuuid, selfRiotId);
   const rankedByPuuid = new Map(
     rankedEntries.flatMap((result) =>
       result.status === 'fulfilled' && result.value[1] ? [[result.value[0], result.value[1]] as const] : [],
     ),
   );
-  const championNameById = await getChampionNameById(dataDragonVersion);
+  const [championNameById, keystoneById] = await Promise.all([
+    getChampionNameById(dataDragonVersion),
+    getKeystoneById(dataDragonVersion),
+  ]);
   const urls = dataDragonUrls(dataDragonVersion);
 
   const ctx: LiveNormalizeContext = {
@@ -265,6 +322,7 @@ export const getRiotLiveGame = async (
     championUrl: urls.champion,
     summonerSpellUrl: urls.summonerSpell,
     profileIconUrl: urls.profileIcon,
+    keystoneById,
     riotIdByPuuid,
     rankedByPuuid,
     identityFor: identityFor(knownPlayerIdentities),

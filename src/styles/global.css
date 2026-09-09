@@ -11196,10 +11196,21 @@ a.tool-card:focus-visible {
   border: 1px solid rgb(255 255 255 / 7%);
   border-radius: 0.6rem;
   background: rgb(255 255 255 / 2%);
+  transition: border-color 0.18s ease, background-color 0.18s ease;
 }
 .live-game-participant[data-self] {
   border-color: rgb(214 181 107 / 45%);
   background: rgb(214 181 107 / 8%);
+}
+.live-game-participant:hover,
+.live-game-participant:focus-within {
+  border-color: rgb(255 255 255 / 16%);
+  background: rgb(255 255 255 / 4%);
+}
+.live-game-participant[data-self]:hover,
+.live-game-participant[data-self]:focus-within {
+  border-color: rgb(214 181 107 / 60%);
+  background: rgb(214 181 107 / 11%);
 }
 .live-game-you-badge {
   position: absolute;
@@ -11239,11 +11250,12 @@ a.tool-card:focus-visible {
 }
 .live-game-participant-name-row {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   gap: 0.4rem;
+  min-width: 0;
 }
 .live-game-participant-name {
+  min-width: 3.5rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -11252,6 +11264,7 @@ a.tool-card:focus-visible {
   color: #e2e8f0;
 }
 .live-game-badges {
+  flex-shrink: 0;
   display: inline-flex;
   gap: 0.3rem;
 }
@@ -11271,9 +11284,30 @@ a.tool-card:focus-visible {
   border: 1px solid rgb(158 122 255 / 45%);
   color: #b9a3ff;
 }
+.live-game-badge--both {
+  border: 1px solid rgb(214 181 107 / 55%);
+  color: #f1d9a3;
+}
+.live-game-badge-link {
+  display: inline-flex;
+  text-decoration: none;
+}
+.live-game-badge-link:focus-visible .live-game-badge {
+  outline: 2px solid #d6b56b;
+  outline-offset: 2px;
+}
+.live-game-identity-caption {
+  margin-top: 0.15rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.66rem;
+  color: #8793a6;
+}
 .live-game-participant-stats {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 0.5rem;
   margin-top: 0.15rem;
   font-size: 0.7rem;
@@ -11281,6 +11315,11 @@ a.tool-card:focus-visible {
 }
 .live-game-recent-form {
   color: #7fbcff;
+}
+.live-game-rank-emblem {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
 }
 .live-game-participant-kit {
   flex-shrink: 0;
@@ -11292,6 +11331,9 @@ a.tool-card:focus-visible {
   height: 22px;
   border-radius: 0.3rem;
   border: 1px solid rgb(255 255 255 / 10%);
+}
+.live-game-kit-icon--keystone {
+  border-color: rgb(214 181 107 / 45%);
 }
 
 @media (max-width: 767px) {
