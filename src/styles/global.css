@@ -2117,8 +2117,13 @@
   background: #060913;
   color: #fff;
 }
+/* 80rem dejaba ~80px muertos a cada lado en 1440 (encargo Page Design
+   Rework §2) — un producto data-rich puede usar más ancho que una
+   página editorial. 88rem sigue dejando un margen real en 1440, nunca
+   toca el borde. Solo `/competitivo` (`.live-container` no se reutiliza
+   en ninguna otra página, confirmado). */
 .live-container {
-  width: min(100% - 2.5rem, 80rem);
+  width: min(100% - 2.5rem, 88rem);
   margin-inline: auto;
 }
 /* Intro compacta a propósito (encargo Visual Pass §4): el primer
@@ -2459,227 +2464,303 @@
   display: block;
   margin-top: 1.2rem;
 }
+/* --- Match row (Page Design Rework §5-§13): una fila densa, no una card
+   completa. Nivel 1 de profundidad — solo lo que se escanea en <2s. --- */
 .live-match-list {
-  margin-top: 2rem;
-}
-.live-match-list li {
+  margin-top: 1.25rem;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
-  align-items: center;
-  gap: 1rem;
-  min-height: 4.3rem;
-  border-top: 1px solid rgb(255 255 255 / 6%);
 }
 .live-match-list .compact-empty {
   display: block;
   min-height: 0;
+  padding: 1.25rem 0;
 }
-.live-match-list strong,
-.live-match-list span {
-  display: block;
-}
-.live-match-list div span {
-  margin-top: 0.25rem;
-  color: #647186;
-  font-size: 0.65rem;
-}
-.live-match-list > li > strong {
-  font-variant-numeric: tabular-nums;
-}
-.live-match-list .is-win,
-.live-match-list .is-loss {
-  border-radius: 99px;
-  padding: 0.25rem 0.5rem;
-  font-size: 0.55rem;
-  text-transform: uppercase;
-}
-.live-match-list .is-win {
-  color: #72acc5;
-  background: rgb(114 172 197 / 7%);
-}
-.live-match-list .is-loss {
-  color: #c48b94;
-  background: rgb(196 139 148 / 7%);
-}
-.live-match-list {
-  display: grid;
-  gap: 0.8rem;
-}
-.live-match-list .match-card {
-  display: block;
-  min-height: 0;
-  overflow: hidden;
-  border: 1px solid rgb(255 255 255 / 8%);
-  background: rgb(255 255 255 / 0.8%);
+.match-row-item {
+  border-top: 1px solid rgb(255 255 255 / 6%);
   opacity: 0;
-  transform: translate3d(0, 8px, 0);
+  transform: translate3d(0, 6px, 0);
   transition:
-    opacity 520ms cubic-bezier(0.22, 1, 0.36, 1),
-    transform 520ms cubic-bezier(0.22, 1, 0.36, 1),
-    border-color 220ms ease,
-    background-color 220ms ease,
-    box-shadow 220ms ease;
-  transition-delay: calc(var(--match-index, 0) * 55ms);
+    opacity 420ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 420ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: calc(var(--match-index, 0) * 40ms);
 }
-.live-match-list .match-card.is-ready {
+.match-row-item:last-child {
+  border-bottom: 1px solid rgb(255 255 255 / 6%);
+}
+.match-row-item.is-ready {
   opacity: 1;
   transform: translate3d(0, 0, 0);
 }
-@media (hover: hover) {
-  .live-match-list .match-card:hover {
-    border-color: rgb(214 181 107 / 18%);
-    background: rgb(255 255 255 / 1.5%);
-    box-shadow: 0 14px 34px rgb(0 0 0 / 16%);
-    transform: translate3d(0, -2px, 0);
-  }
-}
-.match-card > article {
+.match-row-item > article {
   position: relative;
-  isolation: isolate;
-  overflow: hidden;
-  padding: clamp(1.25rem, 2.5vw, 2rem);
-}
-.match-card > article::before {
-  position: absolute;
-  z-index: 2;
-  inset: 0 auto 0 0;
-  width: 2px;
-  background: #72acc5;
-  content: '';
-  opacity: 0.72;
-  transition:
-    width 220ms ease,
-    opacity 220ms ease;
-}
-.match-card.is-defeat > article::before {
-  background: #c48b94;
 }
 @media (hover: hover) {
-  .match-card:hover > article::before {
-    width: 3px;
-    opacity: 1;
+  .match-row-item:hover {
+    background: rgb(255 255 255 / 1.5%);
   }
 }
-.match-card-backdrop {
-  position: absolute;
-  z-index: -1;
-  top: 50%;
-  right: 2%;
-  width: clamp(9rem, 15vw, 13rem);
-  height: auto;
-  opacity: 0.055;
-  filter: grayscale(0.55) saturate(0.7) contrast(1.12);
-  mask-image: linear-gradient(to left, black 28%, transparent 92%);
-  object-fit: contain;
-  pointer-events: none;
-  transform: translateY(-57%) scale(1.1);
-}
-.match-card-primary {
-  display: grid;
-  grid-template-columns:
-    minmax(7rem, 0.65fr) minmax(12rem, 1.15fr)
-    minmax(28rem, 1.75fr) auto;
-  align-items: center;
-  gap: clamp(1.25rem, 3vw, 3rem);
-}
-.match-card-status {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  align-items: center;
-  gap: 0.55rem;
-}
-.match-card-status i {
-  width: 0.3rem;
-  height: 1.8rem;
-  background: #72acc5;
-}
-.is-defeat .match-card-status i {
-  background: #c48b94;
-}
-.match-card-status strong {
-  font-size: 0.75rem;
-  font-weight: 800;
-  letter-spacing: 0.14em;
-}
-.is-victory .match-card-status strong {
-  color: #8ec1d6;
-}
-.is-defeat .match-card-status strong {
-  color: #d0a0a7;
-}
-.match-card-status span {
-  grid-column: 2;
-  color: #59667a;
-  font-size: 0.62rem;
-}
-.match-champion {
+.match-row {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 1.1rem;
+  min-height: 4.5rem;
+  padding: 0.7rem 0.9rem;
 }
-.match-champion img {
+/* Dos grupos internos (identidad / métricas) en vez de una fila plana de
+   11 hijos directos — en desktop se ven como una sola fila (mismo gap,
+   alineados), pero en mobile cada grupo pasa a ocupar su propia línea
+   con `flex-basis:100%` (encargo Page Design Rework §29, "bloque
+   compacto de 2-3 filas", ver media query 767px) sin depender de que el
+   contenido se rompa "solo" en el sitio correcto. */
+.match-row-top {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  flex: 0 1 20rem;
+  min-width: 0;
+}
+.match-row-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 1.5rem;
   flex: 0 0 auto;
+}
+.match-row-hit {
+  position: absolute;
+  inset: 0;
+  cursor: pointer;
+}
+.match-row-hit:focus-visible {
+  outline: 2px solid #d6b56b;
+  outline-offset: -2px;
+}
+.match-row-accent {
+  flex: 0 0 auto;
+  align-self: stretch;
+  width: 3px;
+  background: #72acc5;
+  opacity: 0.75;
+}
+.is-defeat .match-row-accent {
+  background: #c48b94;
+}
+.match-row-champion {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
   border: 1px solid rgb(255 255 255 / 10%);
   background: #0d121d;
   object-fit: cover;
 }
-.match-champion span,
-.match-lp span,
-.match-assets > span {
+.match-row-identity {
+  flex: 0 1 8rem;
+  min-width: 0;
+}
+.match-row-identity strong {
   display: block;
-  color: #536075;
-  font-size: 0.55rem;
+  overflow: hidden;
+  font-size: 0.82rem;
+  letter-spacing: -0.01em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.match-row-identity small {
+  display: block;
+  margin-top: 0.15rem;
+  color: #647186;
+  font-size: 0.56rem;
+  text-transform: capitalize;
+}
+.match-row-result {
+  flex: 0 0 auto;
+  min-width: 4.6rem;
+}
+.match-row-result strong {
+  display: block;
+  font-size: 0.66rem;
+  font-weight: 800;
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
-.match-champion strong {
+.is-victory .match-row-result strong {
+  color: #8ec1d6;
+}
+.is-defeat .match-row-result strong {
+  color: #d0a0a7;
+}
+.match-row-result span {
   display: block;
-  margin-top: 0.3rem;
-  font-size: 1.25rem;
-  letter-spacing: -0.03em;
+  margin-top: 0.2rem;
+  color: #59667a;
+  font-size: 0.56rem;
 }
-.match-champion small {
-  display: block;
-  margin-top: 0.25rem;
-  color: #68758a;
-  font-size: 0.62rem;
-  text-transform: capitalize;
+.match-row-kda {
+  flex: 0 0 auto;
+  min-width: 6.75rem;
 }
-.match-card-stats {
-  display: flex;
-  align-items: center;
-  gap: clamp(1.2rem, 3vw, 2.5rem);
-}
-.match-performance {
-  min-width: 0;
-}
-.match-kda {
-  min-width: 7.5rem;
-}
-.match-kda strong {
+.match-row-kda strong {
   display: block;
   color: #eef2f8;
-  font-size: clamp(1.7rem, 3vw, 2.35rem);
-  font-weight: 620;
+  font-size: 1.05rem;
+  font-weight: 640;
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.055em;
-  line-height: 0.95;
+  letter-spacing: -0.02em;
   white-space: nowrap;
 }
-.match-kda span {
-  display: inline-flex;
-  margin-top: 0.55rem;
-  border-left: 1px solid rgb(214 181 107 / 40%);
-  padding-left: 0.5rem;
+.match-row-kda span {
+  display: block;
+  margin-top: 0.2rem;
   color: #d6b56b;
-  font-size: 0.58rem;
+  font-size: 0.56rem;
+  letter-spacing: 0.03em;
+}
+.match-row-metric {
+  flex: 0 0 auto;
+  min-width: 3.4rem;
+  text-align: center;
+}
+.match-row-metric strong {
+  display: block;
+  color: #cbd5e1;
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+}
+.match-row-metric span {
+  display: block;
+  margin-top: 0.15rem;
+  color: #4f5c70;
+  font-size: 0.5rem;
   letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.match-row-duration {
+  flex: 0 0 auto;
+  min-width: 3.6rem;
+  text-align: center;
+}
+.match-row-duration strong {
+  display: block;
+  color: #9aa6b8;
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+}
+.match-row-duration time {
+  display: block;
+  margin-top: 0.15rem;
+  color: #4f5c70;
+  font-size: 0.54rem;
+}
+.match-row-lp {
+  flex: 0 0 auto;
+  min-width: 3.6rem;
+  text-align: right;
+}
+.match-row-lp strong {
+  display: block;
+  color: #69768c;
+  font-size: 0.82rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+[data-lp-positive] .match-row-lp strong {
+  color: #8ec1d6;
+}
+[data-lp-negative] .match-row-lp strong {
+  color: #d0a0a7;
+}
+[data-lp-pending] .match-row-lp strong {
+  color: #4f5c70;
+  font-size: 0.52rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.match-row-items {
+  display: flex;
+  flex: 1 1 auto;
+  gap: 2px;
+  min-width: 0;
+  overflow: hidden;
+}
+.match-row-items i {
+  display: block;
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  background: #0d121d;
+  border: 1px solid rgb(255 255 255 / 6%);
+}
+.match-row-items i[data-empty] {
+  opacity: 0.22;
+}
+.match-row-items img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.match-row-video {
+  flex: 0 0 auto;
+  width: 1.1rem;
+  height: 1.1rem;
+  color: #d6b56b;
+}
+.match-row-video[hidden] {
+  display: none;
+}
+.match-row-video svg {
+  width: 100%;
+  height: 100%;
+}
+.match-row-video path {
+  fill: currentColor;
+}
+.match-row-chevron {
+  flex: 0 0 auto;
+  width: 0.4rem;
+  height: 0.4rem;
+  border-right: 1px solid #4f5c70;
+  border-bottom: 1px solid #4f5c70;
+  transform: rotate(45deg);
+  transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.match-row:has([data-match-expand][aria-expanded='true']) .match-row-chevron {
+  transform: rotate(225deg);
+}
+/* --- Detalle expandido: "tu partida" (Nivel 2) --- */
+.match-your-build {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid rgb(255 255 255 / 6%);
+}
+.match-your-build-stats {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 1rem;
+}
+.match-your-build-stats dt {
+  color: #4f5c70;
+  font-size: 0.52rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.match-your-build-stats dd {
+  margin-top: 0.35rem;
+  color: #cbd5e1;
+  font-size: 0.85rem;
+  font-weight: 620;
+  font-variant-numeric: tabular-nums;
+}
+.match-your-build-assets {
+  display: flex;
+  gap: 2rem;
+  margin-top: 1.25rem;
 }
 .match-badges {
   display: flex;
   flex-wrap: wrap;
   gap: 0.35rem;
-  margin-top: 0.75rem;
+  margin-bottom: 1rem;
 }
 .match-badges[hidden] {
   display: none;
@@ -2693,80 +2774,12 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
-.match-video-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  margin-top: 0.7rem;
-  color: #9daabd;
-  font-size: 0.52rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-.match-video-badge[hidden] {
-  display: none;
-}
-.match-video-badge svg {
-  width: 0.9rem;
-  height: 0.9rem;
-  border: 1px solid rgb(214 181 107 / 28%);
-  color: #d6b56b;
-}
-.match-video-badge path {
-  fill: currentColor;
-}
-.match-card-stats dl {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(4rem, auto));
-  gap: 0.8rem clamp(0.9rem, 1.6vw, 1.4rem);
-}
-.match-card-stats dt {
-  color: #4f5c70;
-  font-size: 0.52rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-.match-card-stats dd {
-  margin-top: 0.35rem;
-  color: #cbd5e1;
-  font-size: 0.74rem;
-  font-weight: 620;
-  font-variant-numeric: tabular-nums;
-}
-.match-lp {
-  min-width: 5rem;
-  text-align: right;
-}
-.match-lp strong {
+.match-assets > span {
   display: block;
-  margin-top: 0.45rem;
-  color: #69768c;
-  font-size: 1.32rem;
-  font-weight: 720;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.035em;
-}
-[data-lp-positive] .match-lp strong {
-  color: #8ec1d6;
-}
-[data-lp-negative] .match-lp strong {
-  color: #d0a0a7;
-}
-[data-lp-pending] .match-lp strong {
-  color: #7583a0;
-  font-size: 0.68rem;
-  font-weight: 500;
-  letter-spacing: 0.06em;
+  color: #536075;
+  font-size: 0.55rem;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-}
-.match-card-secondary {
-  display: grid;
-  grid-template-columns: minmax(15rem, 1fr) auto auto 1fr auto;
-  align-items: end;
-  gap: clamp(1rem, 2vw, 2rem);
-  margin-top: 1.6rem;
-  padding-top: 1.25rem;
-  border-top: 1px solid rgb(255 255 255 / 6%);
 }
 .match-assets > div {
   display: flex;
@@ -2890,61 +2903,6 @@
 [data-match-runes][data-tooltip-visible] .rune-tooltip {
   opacity: 1;
   visibility: visible;
-}
-.match-context {
-  align-self: center;
-  color: #6a778b;
-  font-size: 0.65rem;
-  text-align: right;
-}
-.match-context p {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 0.35rem;
-}
-.match-context p > * + *::before {
-  margin-right: 0.35rem;
-  color: #3f4b5e;
-  content: '·';
-}
-.match-expand-button {
-  min-height: 44px;
-  border: 1px solid rgb(255 255 255 / 10%);
-  padding: 0 1rem;
-  color: #cbd5e1;
-  background: rgb(255 255 255 / 1%);
-  font-size: 0.58rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  transition:
-    transform 180ms cubic-bezier(0.22, 1, 0.36, 1),
-    border-color 180ms ease,
-    color 180ms ease,
-    background-color 180ms ease;
-}
-.match-expand-button i {
-  display: inline-block;
-  width: 0.4rem;
-  height: 0.4rem;
-  margin-left: 0.55rem;
-  border-right: 1px solid currentColor;
-  border-bottom: 1px solid currentColor;
-  transform: rotate(45deg) translateY(-2px);
-  transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-.match-expand-button[aria-expanded='true'] i {
-  transform: rotate(225deg) translate(-1px, -1px);
-}
-.match-expand-button:hover {
-  border-color: #d6b56b;
-  color: #d6b56b;
-  background: rgb(214 181 107 / 3%);
-  transform: translateY(-1px);
-}
-.match-expand-button:focus-visible {
-  outline: 2px solid #d6b56b;
-  outline-offset: 3px;
 }
 .match-expanded {
   display: grid;
@@ -3800,10 +3758,10 @@
   display: grid;
   grid-template-columns: minmax(8rem, 0.7fr) minmax(16rem, 1.6fr) 5rem;
   gap: 2rem;
-  min-height: 9rem;
+  min-height: 4.5rem;
   align-items: center;
-  border: 1px solid rgb(255 255 255 / 8%);
-  padding: clamp(1.25rem, 2.5vw, 2rem);
+  border-top: 1px solid rgb(255 255 255 / 6%);
+  padding: 0.7rem 0.9rem;
 }
 .live-match-list .match-card-skeleton i {
   width: 100%;
@@ -3967,66 +3925,64 @@
   .today-foot p + p {
     margin-top: 1rem;
   }
-  .live-match-list li {
-    grid-template-columns: minmax(0, 1fr) auto;
-    padding: 0.7rem 0;
+  /* Match row en 375: bloque compacto de 2 filas reales (encargo Page
+     Design Rework §29-30) — nunca la fila de desktop encogida. Objetivo
+     orientativo 120-180px con buena legibilidad. */
+  .match-row {
+    flex-wrap: wrap;
+    row-gap: 0.55rem;
+    min-height: 0;
+    padding: 0.8rem 0.75rem;
   }
-  .live-match-list > li > span {
-    grid-column: 2;
+  .match-row-top {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    flex: 1 1 100%;
   }
-  .match-card > article {
-    padding: 1.2rem;
+  .match-row-champion {
+    width: 38px;
+    height: 38px;
+  }
+  .match-row-identity {
+    flex: 1 1 auto;
+  }
+  .match-row-result {
+    flex: 0 0 auto;
+    text-align: right;
+  }
+  .match-row-meta {
+    display: flex;
+    align-items: baseline;
+    gap: 1.1rem;
+    flex: 1 1 100%;
+    padding-left: calc(38px + 0.7rem);
+  }
+  .match-row-kda {
+    min-width: 0;
+  }
+  .match-row-metric,
+  .match-row-duration {
+    text-align: left;
+  }
+  .match-row-lp {
+    margin-left: auto;
+    text-align: right;
+  }
+  /* Objetos: solo iconos reconocibles o nada — nunca microscópicos
+     (encargo §31). A 375 no hay sitio real para 7 iconos legibles junto
+     al resto de la fila, así que quedan solo en el detalle expandido. */
+  .match-row-items {
+    display: none;
+  }
+  .match-your-build-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    row-gap: 0.85rem;
   }
   .live-match-list .match-card-skeleton {
     grid-template-columns: 1fr;
     gap: 1rem;
-    min-height: 12rem;
-  }
-  .match-card-primary {
-    grid-template-columns: 1fr auto;
-    gap: 1.25rem 1rem;
-  }
-  .match-card-status {
-    grid-column: 1;
-  }
-  .match-lp {
-    grid-column: 2;
-    grid-row: 1;
-  }
-  .match-champion,
-  .match-card-stats {
-    grid-column: 1 / -1;
-  }
-  .match-card-stats {
-    display: block;
-  }
-  .match-card-stats dl {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
-    margin-top: 1.2rem;
-  }
-  .match-card-secondary {
-    grid-template-columns: 1fr 1fr;
-    align-items: start;
-  }
-  .match-items {
-    grid-column: 1 / -1;
-    overflow: hidden;
-  }
-  .match-items > div {
-    flex-wrap: wrap;
-  }
-  .match-context {
-    text-align: left;
-  }
-  .match-context p {
-    justify-content: flex-start;
-  }
-  .match-card-backdrop {
-    display: none;
-  }
-  .match-expand-button {
-    align-self: end;
+    min-height: 6rem;
   }
   .match-teams {
     grid-template-columns: 1fr;
@@ -4122,23 +4078,13 @@
   .live-intro h1 {
     max-width: 72%;
   }
-  .match-card-primary {
-    grid-template-columns: 0.7fr 1.1fr 1.3fr auto;
-    gap: 1rem;
+  .match-row {
+    flex-wrap: wrap;
+    row-gap: 0.5rem;
   }
-  .match-card-stats {
-    display: block;
-  }
-  .match-card-stats dl {
-    grid-template-columns: repeat(2, auto);
-    margin-top: 0.8rem;
-  }
-  .match-card-secondary {
-    grid-template-columns: minmax(14rem, 1fr) auto auto;
-  }
-  .match-context,
-  .match-expand-button {
-    grid-row: 2;
+  .match-row-meta {
+    flex-basis: 100%;
+    padding-left: calc(44px + 0.7rem);
   }
   .match-teams {
     grid-template-columns: 1fr;
@@ -4179,14 +4125,13 @@
   [data-teaser-live] [data-teaser-twitch]::before {
     animation: none;
   }
-  .live-match-list .match-card {
+  .match-row-item {
     opacity: 1;
     transform: none;
     transition: none;
   }
   .match-assets i,
-  .match-expand-button,
-  .match-expand-button i,
+  .match-row-chevron,
   .match-expanded,
   .match-expanded-inner {
     transition: none;

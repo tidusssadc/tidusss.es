@@ -57,26 +57,21 @@ const fillIcons = (root: ParentNode, selector: string, icons: MatchIcon[]) => {
   });
 };
 
-const fillItems = (root: ParentNode, selector: string, urls: string[]) => {
+/**
+ * Objetos en la fila colapsada — puramente decorativos (el contenedor ya
+ * lleva `aria-hidden`, encargo Page Design Rework §7/§10): sin
+ * tabindex/tooltip propios, para no dejar "paradas fantasma" de teclado
+ * dentro de un bloque oculto a lectores de pantalla. El detalle real de
+ * la partida vive en el botón único de expandir.
+ */
+const fillCompactItems = (root: ParentNode, selector: string, urls: string[]) => {
   root.querySelectorAll<HTMLElement>(selector).forEach((slot, index) => {
     const image = query<HTMLImageElement>(slot, 'img');
     const url = urls[index];
     slot.toggleAttribute('data-empty', !url);
     if (!image) return;
     image.hidden = !url;
-    if (url) {
-      image.src = url;
-      image.alt = `Objeto ${index + 1}`;
-      slot.tabIndex = 0;
-      slot.setAttribute('role', 'img');
-      slot.setAttribute('aria-label', `Objeto ${index + 1}`);
-      slot.dataset.tooltip = `Objeto ${index + 1}`;
-    } else {
-      slot.removeAttribute('tabindex');
-      slot.removeAttribute('role');
-      slot.removeAttribute('aria-label');
-      slot.removeAttribute('data-tooltip');
-    }
+    if (url) image.src = url;
   });
 };
 
@@ -212,8 +207,8 @@ const wireExpansion = (card: HTMLElement, matchId: string) => {
     const open = button.getAttribute('aria-expanded') === 'true';
     button.setAttribute('aria-expanded', String(!open));
     button.querySelector('span')!.textContent = open
-      ? 'Ver partida'
-      : 'Cerrar partida';
+      ? 'Ver detalle de la partida'
+      : 'Cerrar detalle de la partida';
     expanded.toggleAttribute('data-open', !open);
     expanded.setAttribute('aria-hidden', String(open));
     expanded.inert = open;
@@ -251,8 +246,6 @@ const renderCard = (
     championImage.src = match.championImageUrl ?? '';
     championImage.alt = match.championName;
   }
-  const backdrop = query<HTMLImageElement>(card, '[data-match-backdrop]');
-  if (backdrop) backdrop.src = match.championImageUrl ?? '';
   setText(
     card,
     '[data-match-score]',
@@ -294,14 +287,13 @@ const renderCard = (
     'data-lp-negative',
     match.lpDelta !== undefined && match.lpDelta < 0,
   );
-  setText(card, '[data-match-mode]', match.queueLabel);
   setText(card, '[data-match-context-duration]', match.durationLabel);
   const time = query<HTMLTimeElement>(card, '[data-match-time]');
   if (time) {
     time.dateTime = match.playedAt;
     time.textContent = options.relativeTime(match.playedAt) ?? '';
   }
-  fillItems(card, '[data-item-slot]', match.itemImageUrls);
+  fillCompactItems(card, '[data-item-slot]', match.itemImageUrls);
   fillRunes(card, match.runes, match.matchId);
   fillIcons(card, '[data-summoner-slot]', match.summonerSpells);
   const badges = query<HTMLElement>(card, '[data-match-badges]');

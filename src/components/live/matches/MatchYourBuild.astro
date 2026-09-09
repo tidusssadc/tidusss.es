@@ -1,0 +1,26 @@
+---
+import RunesRow from './RunesRow.astro';
+import SummonersRow from './SummonersRow.astro';
+---
+
+<!--
+  Nivel 2 de profundidad (encargo Page Design Rework §21): el detalle real
+  de TU partida — stats secundarias, runas, hechizos — que antes vivía
+  siempre visible en la fila colapsada y ahora solo aparece al expandir.
+  Mismos datos que ya existían en Match normal, nunca duplicados con la
+  fila compacta (que ya muestra KDA/CS por minuto).
+-->
+<div class="match-your-build">
+  <div class="match-badges" data-match-badges hidden aria-label="Distinciones de la partida"></div>
+  <dl class="match-your-build-stats">
+    <div><dt>CS</dt><dd data-match-cs></dd></div>
+    <div><dt>Participación</dt><dd data-match-participation></dd></div>
+    <div><dt>Daño</dt><dd data-match-damage></dd></div>
+    <div><dt>Oro</dt><dd data-match-gold></dd></div>
+    <div><dt>Visión</dt><dd data-match-vision></dd></div>
+  </dl>
+  <div class="match-your-build-assets">
+    <RunesRow />
+    <SummonersRow />
+  </div>
+</div>

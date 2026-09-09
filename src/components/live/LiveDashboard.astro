@@ -324,7 +324,11 @@ import { resolvedMatchVideoContent } from '../../lib/resolved-match-video-conten
         [...videos, ...matchVideos].map((video) => [video.id, video]),
       ).values(),
     ];
-    renderMatchCards(list, riotData?.recent.matches.slice(0, 5) ?? [], {
+    // `recent.matches` ya viene limitado a `riotDefaults.recentSoloSample`
+    // (10) desde `analyzeRecentSoloQueue` — mostrar las 10 no añade
+    // ninguna llamada a Riot nueva, ya están en el cliente (encargo Page
+    // Design Rework §17).
+    renderMatchCards(list, riotData?.recent.matches.slice(0, 10) ?? [], {
       formatNumber: (value) => number(value) ?? String(value),
       relativeTime,
       reducedMotion,

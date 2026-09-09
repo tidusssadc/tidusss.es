@@ -1,65 +1,84 @@
 ---
-import ChampionBadge from './ChampionBadge.astro';
-import ItemsRow from './ItemsRow.astro';
 import MatchExpanded from './MatchExpanded.astro';
-import MatchBadges from './MatchBadges.astro';
-import MatchStats from './MatchStats.astro';
-import MatchStatus from './MatchStatus.astro';
 import MatchTimelinePanel from './MatchTimelinePanel.astro';
-import MatchVideoBadge from './MatchVideoBadge.astro';
 import MatchVideoPanel from './MatchVideoPanel.astro';
-import RunesRow from './RunesRow.astro';
-import SummonersRow from './SummonersRow.astro';
+import MatchYourBuild from './MatchYourBuild.astro';
 ---
 
+<!--
+  Match row — no una card completa (encargo Page Design Rework §7). Nivel 1
+  de profundidad: solo lo que se escanea en <2s (resultado/campeón/KDA/CS/
+  duración/fecha/LP real/objetos). Todo lo demás (stats secundarias reales,
+  runas, hechizos) vive en el detalle expandido (Nivel 2) — nunca duplicado
+  en las dos capas.
+-->
 <template data-match-card-template>
-  <li class="match-card" data-match-card>
+  <li class="match-row-item" data-match-card>
     <article>
-      <img
-        class="match-card-backdrop"
-        data-match-backdrop
-        width="72"
-        height="72"
-        alt=""
-        aria-hidden="true"
-        loading="lazy"
-        decoding="async"
-      />
-      <div class="match-card-primary">
-        <MatchStatus />
-        <ChampionBadge />
-        <div class="match-performance">
-          <MatchStats />
-          <MatchBadges />
-          <MatchVideoBadge />
+      <div class="match-row">
+        <span class="match-row-accent" aria-hidden="true"></span>
+        <div class="match-row-top">
+          <img
+            class="match-row-champion"
+            data-match-champion-image
+            width="48"
+            height="48"
+            alt=""
+            loading="lazy"
+            decoding="async"
+          />
+          <div class="match-row-identity">
+            <strong data-match-champion></strong>
+            <small data-match-position></small>
+          </div>
+          <div class="match-row-result">
+            <strong data-match-status></strong>
+            <span data-match-relative></span>
+          </div>
         </div>
-        <div class="match-lp">
-          <span>Variación</span>
-          <strong data-match-lp>Pendiente</strong>
-        </div>
-      </div>
-      <div class="match-card-secondary">
-        <ItemsRow />
-        <RunesRow />
-        <SummonersRow />
-        <div class="match-context">
-          <p>
-            <span data-match-mode></span>
+        <div class="match-row-meta">
+          <div class="match-row-kda">
+            <strong data-match-score></strong>
+            <span data-match-kda></span>
+          </div>
+          <div class="match-row-metric">
+            <strong data-match-csm></strong>
+            <span>CS/min</span>
+          </div>
+          <div class="match-row-duration">
+            <strong data-match-context-duration></strong>
             <time data-match-time></time>
-            <span data-match-context-duration></span>
-          </p>
+          </div>
+          <div class="match-row-lp">
+            <strong data-match-lp>Pendiente</strong>
+          </div>
         </div>
+        <div class="match-row-items" data-match-items-compact aria-hidden="true">
+          {
+            Array.from({ length: 7 }, (_, index) => (
+              <i data-item-slot={index}>
+                <img width="18" height="18" alt="" loading="lazy" decoding="async" />
+              </i>
+            ))
+          }
+        </div>
+        <span class="match-row-video" data-match-video-badge hidden aria-hidden="true">
+          <svg viewBox="0 0 16 16" aria-hidden="true">
+            <path d="m6.2 4.8 4.2 3.2-4.2 3.2V4.8Z"></path>
+          </svg>
+        </span>
+        <i class="match-row-chevron" aria-hidden="true"></i>
         <button
           type="button"
-          class="match-expand-button"
+          class="match-row-hit"
           data-match-expand
           aria-expanded="false"
         >
-          <span>Ver partida</span>
-          <i aria-hidden="true"></i>
+          <span class="sr-only">Ver detalle de la partida</span>
         </button>
       </div>
       <MatchExpanded>
+        <MatchYourBuild />
         <MatchVideoPanel />
         <MatchTimelinePanel />
       </MatchExpanded>
