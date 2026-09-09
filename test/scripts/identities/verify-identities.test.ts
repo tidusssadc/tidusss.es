@@ -4,6 +4,7 @@ import { mkdtemp, readFile as readFileFs, rm, writeFile } from 'node:fs/promises
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
+  createRealAccountResolver,
   parseArgs,
   run,
   serializeRegistry,
@@ -132,4 +133,66 @@ test('run(): un candidato que Riot no resuelve no bloquea a los demás — el re
     assert.match(written, /puuid-Real/);
     assert.doesNotMatch(written, /Fantasma/);
   });
+});
+
+// --- createRealAccountResolver: reintento respetando Retry-After en un 429 real ---
+// Descubierto de verdad al importar el primer dataset (§16): sin este
+// reintento, un lote de 100+ candidatos resueltos secuencialmente puede
+// tropezar con el rate limit de una API key de desarrollo. Se mockea
+// `fetch` (nunca red real) para probar el reintento sin depender de Riot.
+
+test('createRealAccountResolver reintenta un 429 respetando Retry-After y termina resolviendo la cuenta', async () => {
+  const originalFetch = globalThis.fetch;
+  const originalEnv = { ...process.env };
+  let calls = 0;
+  globalThis.fetch = (async () => {
+    calls += 1;
+    if (calls === 1) {
+      return {
+        ok: false,
+        status: 429,
+        // 0.05s: solo para que el test ejercite el reintento sin esperar
+        // segundos reales — el valor real de Riot es siempre entero.
+        headers: { get: (name: string) => (name === 'Retry-After' ? '0.05' : null) },
+        json: async () => ({}),
+      };
+    }
+    return {
+      ok: true,
+      status: 200,
+      headers: { get: () => null },
+      json: async () => ({ puuid: 'puuid-real', gameName: 'Jugador', tagLine: 'EUW' }),
+    };
+  }) as unknown as typeof fetch;
+  process.env.RIOT_API_KEY = 'RGAPI-test-key-1234567890';
+  process.env.RIOT_REGIONAL_ROUTE = 'europe';
+  try {
+    const resolver = createRealAccountResolver();
+    const account = await resolver('Jugador', 'EUW');
+    assert.equal(account.puuid, 'puuid-real');
+    assert.equal(calls, 2, 'debe haber reintentado exactamente una vez tras el 429');
+  } finally {
+    globalThis.fetch = originalFetch;
+    process.env = originalEnv;
+  }
+});
+
+test('createRealAccountResolver deja de reintentar y propaga el error tras el máximo de intentos', async () => {
+  const originalFetch = globalThis.fetch;
+  const originalEnv = { ...process.env };
+  globalThis.fetch = (async () => ({
+    ok: false,
+    status: 429,
+    headers: { get: (name: string) => (name === 'Retry-After' ? '0.05' : null) },
+    json: async () => ({}),
+  })) as unknown as typeof fetch;
+  process.env.RIOT_API_KEY = 'RGAPI-test-key-1234567890';
+  process.env.RIOT_REGIONAL_ROUTE = 'europe';
+  try {
+    const resolver = createRealAccountResolver();
+    await assert.rejects(resolver('Jugador', 'EUW'));
+  } finally {
+    globalThis.fetch = originalFetch;
+    process.env = originalEnv;
+  }
 });

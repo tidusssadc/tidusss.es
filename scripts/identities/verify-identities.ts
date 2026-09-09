@@ -14,6 +14,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { createRiotClient } from '../../src/lib/riot/client.ts';
 import { getRiotConfig } from '../../src/config/riot.ts';
+import { RiotApiError } from '../../src/lib/riot/errors.ts';
 import { knownPlayerIdentities as existingRegistry } from '../../src/config/known-players.generated.ts';
 import { parseCandidates } from './validate.ts';
 import { verifyBatch } from './resolve.ts';
@@ -70,6 +71,18 @@ export const writeRegistry = async (
   await writeFile(outputPath, serializeRegistry(registry), 'utf8');
 };
 
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// Un lote real (100+ candidatos) resolviendo secuencialmente puede llegar a
+// tropezar con el rate limit de una API key de desarrollo (verificado en la
+// práctica: sin ningún ritmo, ~28 de 107 candidatos volvían
+// RIOT_RATE_LIMITED). Esto es tooling de importación en lote, no el runtime
+// del sitio — un pequeño respiro entre cuentas y un reintento respetando
+// `Retry-After` son exactamente lo que hace falta aquí, y en ningún otro
+// sitio del proyecto (el resto de `client.ts` sigue igual).
+const PACE_MS = 120;
+const MAX_RATE_LIMIT_RETRIES = 3;
+
 /** Único punto que toca red de verdad — Riot Account-V1, misma configuración (.env) que el resto del proyecto. */
 export const createRealAccountResolver = (): AccountResolver => {
   const config = getRiotConfig(process.env);
@@ -81,17 +94,30 @@ export const createRealAccountResolver = (): AccountResolver => {
   const client = createRiotClient({ apiKey: config.apiKey });
   const regionalBase = `https://${config.regionalRoute}.api.riotgames.com`;
   return async (gameName, tagLine) => {
-    const dto = await client.get<RiotAccountDto>(
-      `${regionalBase}/riot/account/v1/accounts/by-riot-id/${encodeURIComponent(gameName)}/${encodeURIComponent(tagLine)}`,
-      {
-        phase: 'account',
-        endpoint: 'ACCOUNT-V1 /riot/account/v1/accounts/by-riot-id/{gameName}/{tagLine}',
-      },
-    );
-    if (!dto.puuid || !dto.gameName || !dto.tagLine) {
-      throw new Error('RIOT_INVALID_RESPONSE: la cuenta no trae puuid/gameName/tagLine');
+    await sleep(PACE_MS);
+    let attempt = 0;
+    for (;;) {
+      try {
+        const dto = await client.get<RiotAccountDto>(
+          `${regionalBase}/riot/account/v1/accounts/by-riot-id/${encodeURIComponent(gameName)}/${encodeURIComponent(tagLine)}`,
+          {
+            phase: 'account',
+            endpoint: 'ACCOUNT-V1 /riot/account/v1/accounts/by-riot-id/{gameName}/{tagLine}',
+          },
+        );
+        if (!dto.puuid || !dto.gameName || !dto.tagLine) {
+          throw new Error('RIOT_INVALID_RESPONSE: la cuenta no trae puuid/gameName/tagLine');
+        }
+        return { puuid: dto.puuid, gameName: dto.gameName, tagLine: dto.tagLine };
+      } catch (error) {
+        const isRateLimited = error instanceof RiotApiError && error.code === 'RIOT_RATE_LIMITED';
+        if (!isRateLimited || attempt >= MAX_RATE_LIMIT_RETRIES) throw error;
+        attempt += 1;
+        const waitSeconds = error.retryAfterSeconds ?? 2 * attempt;
+        console.warn(`  (rate limit, reintento ${attempt}/${MAX_RATE_LIMIT_RETRIES} en ${waitSeconds}s para "${gameName}#${tagLine}")`);
+        await sleep(waitSeconds * 1000);
+      }
     }
-    return { puuid: dto.puuid, gameName: dto.gameName, tagLine: dto.tagLine };
   };
 };
 

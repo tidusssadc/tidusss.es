@@ -3,15 +3,83 @@ import assert from 'node:assert/strict';
 import { findKnownPlayerIdentity, knownPlayerIdentities } from '../../src/config/known-players.ts';
 import type { KnownPlayerIdentity } from '../../src/lib/riot/live-types.ts';
 
-// --- Dataset real: vacío hoy a propósito (ninguna identidad verificada
-// todavía) — ver el comentario de `known-players.ts` para cómo se añaden. ---
+// --- Dataset real: primer batch importado (Sprint 2, Competitivo V2) vía
+// `npm run identities:verify` — cada PUUID de aquí es real, resuelto contra
+// Riot Account-V1 en el propio importador (nunca copiado de LoLPros/DeepLoL
+// sin revalidar). Estos tests operan sobre los datos YA importados como
+// fixture local — nunca llaman a Riot (§23 del encargo). No fijan cifras
+// exactas (el dataset se puede volver a regenerar) — solo invariantes de
+// integridad que SIEMPRE deben cumplirse. ---
 
-test('el registro real de identidades conocidas está vacío hoy, sin cuentas inventadas', () => {
-  assert.deepEqual(knownPlayerIdentities, []);
+test('el registro real tiene un primer batch importado, con un mínimo razonable de identidades', () => {
+  assert.ok(
+    knownPlayerIdentities.length >= 50,
+    `se esperaban al menos 50 identidades reales, hay ${knownPlayerIdentities.length}`,
+  );
 });
 
-test('sobre el registro real (vacío), ninguna búsqueda resuelve nada — nunca un falso positivo', () => {
-  assert.equal(findKnownPlayerIdentity('cualquier-puuid', 'Cualquiera#EUW'), undefined);
+test('toda identidad real tiene displayName y al menos un PUUID o Riot ID verificado — nunca una entrada vacía', () => {
+  for (const identity of knownPlayerIdentities) {
+    assert.ok(identity.displayName.trim().length > 0, 'displayName vacío');
+    assert.ok(
+      (identity.puuids?.length ?? 0) > 0 || (identity.riotIds?.length ?? 0) > 0,
+      `"${identity.displayName}" no tiene ningún PUUID ni Riot ID`,
+    );
+    assert.ok(
+      identity.isPro || identity.isStreamer,
+      `"${identity.displayName}" no es PRO ni STREAMER — no debería estar en el registro`,
+    );
+  }
+});
+
+test('ningún PUUID real se repite entre dos identidades distintas del registro', () => {
+  const ownerByPuuid = new Map<string, string>();
+  for (const identity of knownPlayerIdentities) {
+    for (const puuid of identity.puuids ?? []) {
+      const owner = ownerByPuuid.get(puuid);
+      assert.ok(
+        !owner || owner === identity.displayName,
+        `PUUID ${puuid} aparece tanto en "${owner}" como en "${identity.displayName}"`,
+      );
+      ownerByPuuid.set(puuid, identity.displayName);
+    }
+  }
+});
+
+test('cada identidad real con varios PUUIDs (multicuenta) resuelve correctamente por CUALQUIERA de ellos — nunca una identidad separada por cuenta', () => {
+  const multiAccount = knownPlayerIdentities.filter((identity) => (identity.puuids?.length ?? 0) > 1);
+  assert.ok(multiAccount.length > 0, 'se esperaba al menos una identidad real con varias cuentas');
+  for (const identity of multiAccount) {
+    for (const puuid of identity.puuids ?? []) {
+      const resolved = findKnownPlayerIdentity(puuid, undefined, knownPlayerIdentities);
+      assert.equal(resolved?.displayName, identity.displayName);
+    }
+  }
+});
+
+test('cada identidad real resuelve por Riot ID exacto (insensible a mayúsculas), igual que por PUUID', () => {
+  const sample = knownPlayerIdentities.slice(0, 15);
+  for (const identity of sample) {
+    for (const riotId of identity.riotIds ?? []) {
+      assert.equal(
+        findKnownPlayerIdentity(undefined, riotId.toUpperCase(), knownPlayerIdentities)?.displayName,
+        identity.displayName,
+      );
+    }
+  }
+});
+
+test('existen identidades reales PRO, STREAMER y PRO+STREAMER en el dataset importado', () => {
+  assert.ok(knownPlayerIdentities.some((i) => i.isPro && !i.isStreamer), 'falta algún PRO puro');
+  assert.ok(knownPlayerIdentities.some((i) => i.isStreamer && !i.isPro), 'falta algún STREAMER puro');
+  assert.ok(knownPlayerIdentities.some((i) => i.isPro && i.isStreamer), 'falta algún PRO + STREAMER');
+});
+
+test('un PUUID/Riot ID que no está en el registro real no resuelve nada — nunca un falso positivo', () => {
+  assert.equal(
+    findKnownPlayerIdentity('puuid-que-no-existe-en-el-registro', 'Cualquiera Inventado#XXXX'),
+    undefined,
+  );
 });
 
 // --- Matching sintético: PUUID exacto primero, Riot ID exacto como

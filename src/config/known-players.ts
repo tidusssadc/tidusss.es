@@ -8,10 +8,13 @@ import { knownPlayerIdentities } from './known-players.generated';
  * principio que `config/video-content-links.ts` (`source: 'verified-manual'`)
  * y `config/match-video-links.ts` para el resto del sitio.
  *
- * Los datos en sí viven en `known-players.generated.ts` (vacío hoy a
- * propósito) y se regeneran con `scripts/identities/verify-identities.ts`
- * — ese script resuelve cada PUUID contra Riot Account-V1, nunca confía en
- * un PUUID de una fuente externa (ver `scripts/identities/README.md`).
+ * Los datos en sí viven en `known-players.generated.ts` (primer batch real
+ * importado en el Sprint 2 de Competitivo V2: profesionales EUW —
+ * candidatos descubiertos vía LoLPros/DeepLoL, PUUID siempre revalidado
+ * contra Riot— y streamers EUW de elo alto con Twitch verificado) y se
+ * regenera con `scripts/identities/verify-identities.ts` — ese script
+ * resuelve cada PUUID contra Riot Account-V1, nunca confía en un PUUID de
+ * una fuente externa (ver `scripts/identities/README.md`).
  * Este archivo solo re-exporta los datos y da la lógica de matching.
  */
 export { knownPlayerIdentities };
