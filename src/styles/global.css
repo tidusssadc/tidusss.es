@@ -2121,10 +2121,13 @@
   width: min(100% - 2.5rem, 80rem);
   margin-inline: auto;
 }
+/* Intro compacta a propósito (encargo Visual Pass §4): el primer
+   viewport tiene que llegar al rango/LP reales de "01 Ahora", no
+   agotarse en un titular institucional. */
 .live-intro {
   position: relative;
   overflow: hidden;
-  padding: clamp(2.75rem, 6vw, 5.25rem) 0 clamp(2rem, 4vw, 3.25rem);
+  padding: clamp(1.75rem, 3vw, 2.5rem) 0 clamp(1.35rem, 2vw, 1.75rem);
   border-bottom: 1px solid rgb(255 255 255 / 7%);
 }
 .live-intro .live-container {
@@ -2132,29 +2135,29 @@
   isolation: isolate;
 }
 .live-intro h1 {
-  max-width: min(56rem, 68%);
-  margin-top: 1.25rem;
-  font-size: clamp(2.55rem, 6.5vw, 5.5rem);
+  max-width: min(42rem, 68%);
+  margin-top: 0.6rem;
+  font-size: clamp(1.5rem, 2.6vw, 2.1rem);
   font-weight: 760;
-  line-height: 0.92;
-  letter-spacing: -0.065em;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
 }
 .live-intro > div > p:last-of-type {
-  max-width: 35rem;
-  margin-top: 1.5rem;
+  max-width: 32rem;
+  margin-top: 0.65rem;
   color: #78859a;
-  font-size: clamp(1rem, 2vw, 1.2rem);
+  font-size: clamp(0.78rem, 1.1vw, 0.88rem);
 }
 .live-hero-signature {
   position: absolute;
   z-index: -1;
-  right: clamp(-3.5rem, -2vw, -1rem);
-  top: -1rem;
-  width: clamp(20rem, 32vw, 28rem);
+  right: clamp(-3rem, -1.5vw, -0.5rem);
+  top: -2.5rem;
+  width: clamp(11rem, 15vw, 15rem);
   height: auto;
-  opacity: 0.46;
+  opacity: 0.3;
   filter: saturate(0.68) contrast(0.92) brightness(0.82);
-  mask-image: linear-gradient(to left, #000 50%, transparent 96%);
+  mask-image: linear-gradient(to left, #000 40%, transparent 96%);
   pointer-events: none;
   animation: live-signature-in 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
@@ -2235,7 +2238,7 @@
   align-items: end;
   justify-content: space-between;
   gap: 2rem;
-  margin-top: 3rem;
+  margin-top: 2rem;
   padding-bottom: 1.5rem;
   border-bottom: 1px solid rgb(255 255 255 / 7%);
 }
@@ -2269,7 +2272,7 @@
   display: flex;
   gap: 0.7rem;
   align-items: center;
-  margin-top: 2rem;
+  margin-top: 1.35rem;
   color: #7f8ca0;
   font-size: 0.7rem;
 }
@@ -3178,7 +3181,8 @@
   display: block;
   margin-top: 0.35rem;
   color: #f0f3f7;
-  font-size: clamp(1rem, 2.2vw, 1.3rem);
+  font-size: clamp(1.15rem, 2.6vw, 1.55rem);
+  letter-spacing: -0.01em;
   font-variant-numeric: tabular-nums;
 }
 .timeline-stat small {
@@ -3236,7 +3240,7 @@
 }
 .timeline-chart-axis {
   fill: #59667a;
-  font-size: 8px;
+  font-size: 10px;
 }
 .timeline-chart-grid {
   stroke: rgb(255 255 255 / 6%);
@@ -3253,11 +3257,11 @@
 }
 .timeline-chart-legend-self {
   fill: #d6b56b;
-  font-size: 8px;
+  font-size: 10px;
 }
 .timeline-chart-legend-rival {
   fill: #8793a6;
-  font-size: 8px;
+  font-size: 10px;
 }
 .timeline-chart-empty {
   margin-top: 0.85rem;
@@ -3480,10 +3484,35 @@
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
+/* La pieza visual principal del pool: mismo dato, más peso — arte más
+   grande, tipografía mayor, un fondo cálido apenas perceptible (nunca un
+   glow) que la distingue del resto sin gritar (encargo Visual Pass §9/§10). */
+.pool-card--feature {
+  grid-row: span 2;
+  border-color: rgb(214 181 107 / 18%);
+  background: linear-gradient(155deg, rgb(214 181 107 / 6%), rgb(255 255 255 / 1.5%) 60%);
+  padding: 1.35rem;
+}
+.pool-card--feature .pool-card-art {
+  border-radius: 8px;
+}
+.pool-card--feature .pool-card-body > strong {
+  font-size: 1.4rem;
+  letter-spacing: -0.02em;
+}
+.pool-card--feature .pool-card-record {
+  margin-top: 0.4rem;
+  font-size: 0.68rem;
+}
+.pool-card--feature .pool-card-stats strong {
+  font-size: 0.92rem;
+}
+/* Distribución con presencia real — es la lectura más rápida de "quién
+   es Tidusss como ADC", no una línea decorativa de 8px. */
 .pool-distribution {
   display: flex;
-  gap: 2px;
-  height: 0.5rem;
+  gap: 3px;
+  height: 0.85rem;
   margin-top: 0.75rem;
   overflow: hidden;
   border-radius: 3px;
@@ -3493,6 +3522,15 @@
   display: block;
   height: 100%;
   background: #d6b56b;
+  transition: opacity 180ms ease;
+}
+@media (hover: hover) {
+  .pool-distribution:hover .pool-distribution-segment {
+    opacity: 0.45;
+  }
+  .pool-distribution:hover .pool-distribution-segment:hover {
+    opacity: 1;
+  }
 }
 .pool-distribution-segment:nth-child(4n + 2) {
   background: rgb(214 181 107 / 72%);
@@ -3503,34 +3541,50 @@
 .pool-distribution-segment:nth-child(4n + 4) {
   background: rgb(214 181 107 / 34%);
 }
+/* DPM: claramente secundario frente a las hero cards — sin borde, sin
+   fondo, solo tipografía más pequeña y el icono real del campeón. */
 .dpm-chart {
   display: grid;
-  gap: 0.6rem;
+  gap: 0.55rem;
   margin-top: 1rem;
 }
 .dpm-chart li {
   display: grid;
-  grid-template-columns: 6rem minmax(0, 1fr) 4.5rem;
-  gap: 0.75rem;
+  grid-template-columns: 6.5rem minmax(0, 1fr) 4rem;
+  gap: 0.65rem;
   align-items: center;
   color: #7e8a9d;
-  font-size: 0.6rem;
+  font-size: 0.58rem;
+}
+.dpm-label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.dpm-icon {
+  flex-shrink: 0;
+  border-radius: 3px;
+  background: #0d121d;
 }
 .dpm-track {
   display: block;
-  height: 6px;
+  height: 4px;
   overflow: hidden;
-  border-radius: 3px;
-  background: rgb(255 255 255 / 6%);
+  border-radius: 2px;
+  background: rgb(255 255 255 / 5%);
 }
 .dpm-track i {
   display: block;
   height: 100%;
-  border-radius: 3px;
-  background: linear-gradient(90deg, rgb(214 181 107 / 55%), #d6b56b);
+  border-radius: 2px;
+  background: rgb(214 181 107 / 55%);
 }
 .dpm-chart strong {
-  color: #9aa6b8;
+  color: #8793a6;
   font-weight: 500;
   text-align: right;
   font-variant-numeric: tabular-nums;
@@ -3559,32 +3613,38 @@
   font-size: 0.58rem;
 }
 /* --- 04 · Patrones — resultados, nunca causalidad (encargo §11) --- */
+/* Patrones no compite con Champion Pool: cabeceras más discretas, menos
+   aire entre bloques — "insights de la muestra", no un segundo Champion
+   Pool (encargo Visual Pass §14). */
 .patterns-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1.75rem;
-  margin-top: 1.25rem;
+  gap: 1.1rem 1.75rem;
+  margin-top: 1rem;
 }
 .pattern-block h3 {
-  color: #dbe1ea;
-  font-size: 0.78rem;
+  color: #9aa6b8;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
 }
 .pattern-block > small {
   display: block;
-  margin-top: 0.3rem;
+  margin-top: 0.25rem;
   color: #59667a;
-  font-size: 0.56rem;
+  font-size: 0.55rem;
 }
 .activity-compact {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1.75rem;
-  margin-top: 1rem;
+  gap: 1.1rem 1.75rem;
+  margin-top: 0.75rem;
 }
 .performance-bars {
   display: grid;
-  gap: 0.55rem;
-  margin-top: 0.75rem;
+  gap: 0.45rem;
+  margin-top: 0.6rem;
 }
 .performance-bars li {
   display: grid;
@@ -3611,16 +3671,16 @@
 }
 .performance-relations {
   display: grid;
-  gap: 0.5rem;
-  margin-top: 0.75rem;
+  gap: 0.32rem;
+  margin-top: 0.55rem;
 }
 .performance-relations li {
   display: flex;
   align-items: center;
-  gap: 0.65rem;
+  gap: 0.55rem;
   border: 1px solid rgb(255 255 255 / 6%);
-  padding: 0.55rem 0.75rem;
-  font-size: 0.64rem;
+  padding: 0.34rem 0.6rem;
+  font-size: 0.61rem;
   color: #dce2eb;
 }
 .performance-relations img {
@@ -3894,9 +3954,6 @@
     flex-wrap: wrap;
     row-gap: 0.6rem;
   }
-  .timeline-moment {
-    font-size: 0.62rem;
-  }
   .today-rank p {
     margin-top: 1.5rem;
   }
@@ -4011,6 +4068,20 @@
   .pool-hero li.pool-card:first-child:not(:only-child) {
     grid-column: auto;
   }
+  /* Con una sola columna, "span 2" filas dejaría una fila vacía debajo
+     del campeón principal — nunca se convierte en una card de 600px,
+     pero tampoco dejamos un hueco (encargo Visual Pass §31). */
+  .pool-card--feature {
+    grid-row: auto;
+    padding: 1.1rem;
+  }
+  .pool-card--feature .pool-card-art {
+    width: 64px;
+    height: 64px;
+  }
+  .pool-card--feature .pool-card-body > strong {
+    font-size: 1.15rem;
+  }
   .pool-secondary {
     grid-template-columns: 1fr;
   }
@@ -4050,11 +4121,6 @@
 @media (min-width: 768px) and (max-width: 1023px) {
   .live-intro h1 {
     max-width: 72%;
-  }
-  .live-hero-signature {
-    right: -5rem;
-    width: 28rem;
-    opacity: 0.32;
   }
   .match-card-primary {
     grid-template-columns: 0.7fr 1.1fr 1.3fr auto;

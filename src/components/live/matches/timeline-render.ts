@@ -45,12 +45,17 @@ const closeOpenPanel = () => {
 
 // --- Gráfico de evolución: SVG puro, sin librería, oro y CS comparten
 // visualización con un selector (encargo §12/§13, "no diez charts"). ---
+//
+// El `viewBox` se genera con el ancho REAL del contenedor en cada
+// render (nunca uno fijo) — con `viewBox` fijo y `width:100%`, el
+// navegador reescala también el texto interno del SVG (ejes/leyenda),
+// así que a 375px ese texto acababa en ~4px reales, ilegible (encargo
+// Visual Pass §32, "no textos de 10px"). Con el viewBox = ancho real,
+// la escala es siempre 1:1 y el texto se lee al tamaño que se declara.
 
-const CHART_WIDTH = 560;
 const CHART_HEIGHT = 168;
-const PAD = { top: 10, right: 12, bottom: 22, left: 40 };
-const plotWidth = CHART_WIDTH - PAD.left - PAD.right;
-const plotHeight = CHART_HEIGHT - PAD.top - PAD.bottom;
+const PAD = { top: 10, right: 12, bottom: 22, left: 42 };
+const FALLBACK_CHART_WIDTH = 400;
 
 const niceMax = (value: number) => {
   if (value <= 0) return 1;
@@ -64,6 +69,8 @@ const pathFor = (
   points: TimelineCurvePoint[],
   durationMs: number,
   maxValue: number,
+  plotWidth: number,
+  plotHeight: number,
 ) =>
   points
     .map((point, index) => {
@@ -80,23 +87,34 @@ const buildChartSvg = (
   durationMs: number,
   metricLabel: string,
   formatValue: (value: number) => string,
+  chartWidth: number,
 ): string | undefined => {
   if (self.length < 2 || durationMs <= 0) return undefined;
+  const plotWidth = chartWidth - PAD.left - PAD.right;
+  const plotHeight = CHART_HEIGHT - PAD.top - PAD.bottom;
   const allValues = [...self, ...(rival ?? [])].map((point) => point.value);
   const maxValue = niceMax(Math.max(...allValues, 1));
-  const selfPath = pathFor(self, durationMs, maxValue);
+  const selfPath = pathFor(self, durationMs, maxValue, plotWidth, plotHeight);
   const rivalPath =
-    rival && rival.length >= 2 ? pathFor(rival, durationMs, maxValue) : undefined;
+    rival && rival.length >= 2
+      ? pathFor(rival, durationMs, maxValue, plotWidth, plotHeight)
+      : undefined;
 
   const yTicks = [0, 0.5, 1].map((fraction) => {
     const value = maxValue * fraction;
     const y = PAD.top + plotHeight - fraction * plotHeight;
     return `<text x="${PAD.left - 6}" y="${(y + 3).toFixed(1)}" text-anchor="end" class="timeline-chart-axis">${formatValue(value)}</text>
-      <line x1="${PAD.left}" y1="${y.toFixed(1)}" x2="${CHART_WIDTH - PAD.right}" y2="${y.toFixed(1)}" class="timeline-chart-grid" />`;
+      <line x1="${PAD.left}" y1="${y.toFixed(1)}" x2="${chartWidth - PAD.right}" y2="${y.toFixed(1)}" class="timeline-chart-grid" />`;
   });
 
-  const minuteStep =
-    durationMs > 30 * 60_000 ? 10 : durationMs > 15 * 60_000 ? 5 : 2;
+  // Menos marcas de tiempo cuando el gráfico es estrecho (mobile) para
+  // que nunca se superpongan (encargo §32, "no labels superpuestos").
+  const targetTickGapPx = chartWidth < 340 ? 70 : 55;
+  const rawStepMinutes = Math.max(
+    1,
+    Math.ceil((durationMs / 60_000 / (plotWidth / targetTickGapPx)) / 1) || 1,
+  );
+  const minuteStep = [1, 2, 5, 10, 15, 20].find((step) => step >= rawStepMinutes) ?? 20;
   const xTicks: string[] = [];
   for (
     let minute = 0;
@@ -116,7 +134,7 @@ const buildChartSvg = (
       </g>`
     : '';
 
-  return `<svg viewBox="0 0 ${CHART_WIDTH} ${CHART_HEIGHT}" role="img" aria-label="Evolución de ${metricLabel} a lo largo de la partida${rivalLabel ? `, comparado con ${rivalLabel}` : ''}" class="timeline-chart-svg">
+  return `<svg viewBox="0 0 ${chartWidth} ${CHART_HEIGHT}" role="img" aria-label="Evolución de ${metricLabel} a lo largo de la partida${rivalLabel ? `, comparado con ${rivalLabel}` : ''}" class="timeline-chart-svg">
     ${yTicks.join('\n')}
     ${xTicks.join('\n')}
     ${rivalPath ? `<path d="${rivalPath}" class="timeline-chart-line-rival" fill="none" />` : ''}
@@ -256,6 +274,7 @@ const renderTimeline = (
         metric === 'gold' && value >= 1000
           ? `${(value / 1000).toFixed(1)}k`
           : String(Math.round(value)),
+      chartHost.clientWidth || FALLBACK_CHART_WIDTH,
     );
     chartHost.hidden = !svg;
     chartEmpty.hidden = Boolean(svg);

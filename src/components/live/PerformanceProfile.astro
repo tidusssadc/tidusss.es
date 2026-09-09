@@ -295,14 +295,23 @@ const adcRosterNames = getAdcRoster(registry).map((entry) => entry.catalogEntry.
 
     // --- 03 · Champion Pool — el foco visual de este sprint. ---
 
-    const championCard = (champion: ChampionPerformance, variant: 'hero' | 'secondary'): HTMLLIElement => {
+    const championCard = (
+      champion: ChampionPerformance,
+      variant: 'hero' | 'secondary',
+      isFeature = false,
+    ): HTMLLIElement => {
       const item = el('li', variant === 'hero' ? 'pool-card' : 'pool-secondary-item');
+      // El campeón más jugado real (nunca hardcodeado) actúa como pieza
+      // visual principal del Champion Pool — arte más grande, misma
+      // información, más peso compositivo (encargo Visual Pass §10).
+      item.classList.toggle('pool-card--feature', isFeature);
       if (champion.championImageUrl) {
         const image = el('img', 'pool-card-art');
         image.src = champion.championImageUrl;
         image.alt = champion.championName;
-        image.width = variant === 'hero' ? 56 : 32;
-        image.height = variant === 'hero' ? 56 : 32;
+        const size = isFeature ? 84 : variant === 'hero' ? 56 : 32;
+        image.width = size;
+        image.height = size;
         image.loading = 'lazy';
         image.decoding = 'async';
         item.append(image);
@@ -353,7 +362,9 @@ const adcRosterNames = getAdcRoster(registry).map((entry) => entry.catalogEntry.
       const hero = poolRoot.querySelector('[data-pool-hero]');
       if (hero) {
         if (primary.length) {
-          hero.replaceChildren(...primary.map((champion) => championCard(champion, 'hero')));
+          hero.replaceChildren(
+            ...primary.map((champion, index) => championCard(champion, 'hero', index === 0)),
+          );
         } else {
           const empty = el('li', 'performance-bars-empty');
           empty.textContent = 'Ningún ADC con 3 o más partidas todavía en esta muestra.';
@@ -389,8 +400,20 @@ const adcRosterNames = getAdcRoster(registry).map((entry) => entry.catalogEntry.
         dpmList.replaceChildren(
           ...dpmChampions.map((champion) => {
             const item = el('li');
-            const label = el('span');
-            label.textContent = champion.championName;
+            const label = el('span', 'dpm-label');
+            if (champion.championImageUrl) {
+              const icon = el('img', 'dpm-icon');
+              icon.src = champion.championImageUrl;
+              icon.alt = '';
+              icon.width = 18;
+              icon.height = 18;
+              icon.loading = 'lazy';
+              icon.decoding = 'async';
+              label.append(icon);
+            }
+            const name = document.createElement('span');
+            name.textContent = champion.championName;
+            label.append(name);
             const track = el('span', 'dpm-track');
             const bar = el('i');
             bar.style.width = `${maxDpm ? Math.round(((champion.averageDamagePerMinute ?? 0) / maxDpm) * 100) : 0}%`;
