@@ -25,7 +25,7 @@ export const knownPlayerIdentities: readonly KnownPlayerIdentity[] = [
     "role": "Jungla",
     "streamUrl": "https://www.twitch.tv/agurin",
     "source": "lolpros.gg + deeplol.gg (verificacion manual)",
-    "lastVerifiedAt": "2026-09-09T15:20:48.885Z"
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
   },
   {
     "displayName": "Send0o",
@@ -1347,17 +1347,19 @@ export const knownPlayerIdentities: readonly KnownPlayerIdentity[] = [
     "displayName": "AlvaroStorm",
     "puuids": [
       "NzQo7IF_uMuFHoe3EqfULol8rpkGvJsDgUeBIlKRU_RD1b_E08HTrO9tA7vuBaj4LG8f1J8bKSzrjQ",
-      "RLZ9z0AiMNS0yDxtfR4p3s7sxvE-7Gn1pEk9Vjfiug1YUauTP8ORUk5DYACgHq5dQScZyMmgXGxd7A"
+      "RLZ9z0AiMNS0yDxtfR4p3s7sxvE-7Gn1pEk9Vjfiug1YUauTP8ORUk5DYACgHq5dQScZyMmgXGxd7A",
+      "m0x4njYJWDy4tMe9gvju9FyFRuBJQC0NK7wLMSfD4EnGMulpw4OBYrEVkJ3bxk6awU9u0L-QNrcYAw"
     ],
     "riotIds": [
       "TORMENTITAS#EUW",
-      "EstoyCansadoJefe#3419"
+      "EstoyCansadoJefe#3419",
+      "StormÁlvaro#EUW"
     ],
     "isPro": false,
     "isStreamer": true,
     "streamUrl": "https://www.twitch.tv/alvarostorm",
     "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
-    "lastVerifiedAt": "2026-09-09T15:20:48.885Z"
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
   },
   {
     "displayName": "Caedrel",
@@ -1446,5 +1448,1079 @@ export const knownPlayerIdentities: readonly KnownPlayerIdentity[] = [
     "streamUrl": "https://www.twitch.tv/yikesu0",
     "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
     "lastVerifiedAt": "2026-09-09T15:20:48.885Z"
+  },
+  {
+    "displayName": "ADHDKled",
+    "puuids": [
+      "wSFz7boWiOD_24yO1Clxxtyy50BUJLgYuMdaA2E6ZREKh-5XLBnb_frEv5PmMPkTduVPr3EDiJKHQg"
+    ],
+    "riotIds": [
+      "Kled Main#Kled"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/adhdkled",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "Arktheos",
+    "puuids": [
+      "1xuFemHd41jIi5aWbDBQuVNVNUqP_S9x8Ba3bowqucDPB0foL-9HdfyMZiQg8FnW_xn3XrRw835Obg"
+    ],
+    "riotIds": [
+      "FULLCLEAR DELUXE#PUSH"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/arktheos",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "Aiiru",
+    "puuids": [
+      "0xc7PyY5aXzLaO8-y0wFFhui-VnaHwQaOx8LaynHjxAxDahtqREM797AiRaC4kIRLCIFUGHzdkniXg",
+      "kRyae29XW7cSvkUwD56HWDfKclqbx4kD4sFxVydHoe0a1_bLtFVRIm2NNWdFm3EFrKY55aYIQpZ_ag"
+    ],
+    "riotIds": [
+      "Passenger Cat#Aiiru",
+      "Enchanter#Aiiru"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/aiiru_",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "Anwen",
+    "puuids": [
+      "EcvZEDAFzE4hQfB71jG7PQIewlrOhf75uLDdd8bcKpnAapkDoJowf5ZFacXXyvjmrEKlDraeAEoaNQ"
+    ],
+    "riotIds": [
+      "SOE Anwen#lee"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/anwenlol",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "Anonymous2752",
+    "puuids": [
+      "HOlxJI9z_xflC3n-mM1_rG7WCAkSI1NQncM3ikloaatM3uMayh_jDrYAOBg4DTHxvOg0fV6jybE8pw",
+      "yc_Oj6rKzDxAnxU3AZ10hk4rZUNyXZQ4u4XNL4qtlqhqOey3wguyAf6NnwMx2tYr6sce3FTHqlHwYw"
+    ],
+    "riotIds": [
+      "Anonymous275#7272",
+      "Anonymous275#7777"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/anonymous2752",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "Alan234",
+    "puuids": [
+      "H1c3HuLRS6EBpppUHxbzoojtXqpMxmZINBoszcis6H467fu2xluf8VRavEdx3MT0SAv2LeH4R8IQTA"
+    ],
+    "riotIds": [
+      "Alan234#EUW"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/alanteemo",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "Aolifulol",
+    "puuids": [
+      "mPB25D0CsiHe1i8y_lf-UBnUYUsFxafHfD-ffMuUgthuVuuD-zmxHDVz4ED5BafR_3mhl7yYoWnesQ",
+      "lzNYp6JcvrDQKnGEZqhaDP5UcjYbewnz82queMDlrvNFi8soHuY14TVHYy6B-XUPslxNG2yb1-Uvhw"
+    ],
+    "riotIds": [
+      "Aolifulol#Manz",
+      "Aolifulol2#2706"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/aolifulol",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "Anehte",
+    "puuids": [
+      "H0pU1f_TX_7dnEmXyY4g7cGpGRobpXTxGOcTMdb2REMSJJM1Kx7I7U-uMFdWL0DGqgsRsK6ucO6beA"
+    ],
+    "riotIds": [
+      "Anehte#EUW"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/anehte",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "AlphaTwinsTheo",
+    "puuids": [
+      "1Qbd7UYm8NcBVeLus3Fn1TpMIQ_HVsGXFT2qyRNl2U9BW3asOhCnrKqsYYWMOxUIfPT3UTrbgVWi_g"
+    ],
+    "riotIds": [
+      "AlphaTwinsTheo#TWIN4"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/alphatwinslol",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "anything_77",
+    "puuids": [
+      "DWu5QSgKx9QZk8mvC7Od0cmaQBE0JB19efBvQZ40q92VVp-rYRrlxpwiL-DY8uU1CUntGkVMYh6NoA"
+    ],
+    "riotIds": [
+      "Naked Hero#KR7"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/anything_77",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "Adon",
+    "puuids": [
+      "o_n1TmizvvJaGcSahM7edB1WiSgwu-hAk0z8KlQrDVboljDxfbHUQdkFbjqVtRq2OZL_E2qqtJhjuA",
+      "i2BnaA5C_BDXmQ0VA8FSulJm3FqS04Tne9nhgnxLvdp-tqsygdaFxMjLp3Uav4YyWgeiIkrebw970w"
+    ],
+    "riotIds": [
+      "Adon Rengar#1337",
+      "ADON CR7#0707"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/lol_adon",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "Arktoso",
+    "puuids": [
+      "l97vbCWv8uGoRbIRLLeCeNS6WvzfKpm4_aqQoWrdnEiD-p5pMUMRKdrFdNQVPEbwDtrxbyuBKWU55Q",
+      "KgdzIGDwELbQLVfJYxu_MOs5C6h7Rc09Y9hx8g0o5tC5Kntzy3rXl4tPSrjKLlLUwkMiCctZqFoySw"
+    ],
+    "riotIds": [
+      "Sheep#8400",
+      "Arktoso#8400"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/arktoso",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "ANTILIPSI",
+    "puuids": [
+      "Q3TtmT5Z3fCMUD_sAFKoymb9anitkmqoGeKCl3-yQwjqk6lbEutZiyZl8mxlcSsTZTzCRKFUfNPV_A"
+    ],
+    "riotIds": [
+      "Monster  Energy#FAFA"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/antilipsi",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "Aldopapa",
+    "puuids": [
+      "ijFlCqVc9GTqVszS2QhPFw0gr28zhb9wu6ED0CMejrCrdzWNQumzeLo7gUQ5D_CnvkW1JqhgttsQTA"
+    ],
+    "riotIds": [
+      "Zoo port#LOL"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/aldopapa_",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "Andoriax",
+    "puuids": [
+      "VwpwXhF_8ft3GUcmsD1yxbuvughI4GfAAe798l8kPt8hKU5nPbBugC4WuhOn3HX3eQD7d_-zMwIngw"
+    ],
+    "riotIds": [
+      "anakin skywalker#ando"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/andoriax",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "AESTETIK",
+    "puuids": [
+      "9EOe24bSMvm4HBrkAiGR0Fp-rtGKjhjLwb02rM2bMhOiTlV3xEYVJL3xECR4yA5SXj0A2PPd7zxEJw"
+    ],
+    "riotIds": [
+      "Dizzy Lizzy#EUW"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/imsaroz",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "Alois",
+    "puuids": [
+      "mv1Dc9vfokhFE5uivGZEXR2rvZAD92Wik5tS0wz2yeS-N9vqOeGAl-s0YLbYlK1Q_CLZWAgbjh9vsg",
+      "HqQ-zdVAOKs6IXer71D723boUir-nupNszVDV3PRxowsgg4fJ0Kf6Rnvgh4p-zBR0xJnzywQJ9m0Iw",
+      "P-ntR8_nuSbOu7MzltqMwaLXkqwIy0FU7JgUGysEvLG1d9FfOZNcPg0TogsagCy4-MKc4GuoSOIGPg"
+    ],
+    "riotIds": [
+      "AloisNL#EUW",
+      "PiglordEmperor#piggy",
+      "AloisNL#NALUL"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/alois_nl",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "Alnuaimi",
+    "puuids": [
+      "4EXqrwWUHWl0tLy7ug337Nr3S02kcXSA71KBaDTEuH7wWq4REXUSrf1B3Bv2Lrir2hFriD-nqa0fkg",
+      "nSPedj4t37y-QK7UNbMIx-brnAoaokIPxOQU9FAqA2RQ42U5jDaoWBDcL65tEAa0HQUMl1_qlauJKg"
+    ],
+    "riotIds": [
+      "N 3#7763",
+      "Alnuaimi#Zed"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/alnuaimi",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "Aksewan",
+    "puuids": [
+      "phb1yeLENZ7mjoTxC5D80Ij8JHGr_hPxkJM8whsiZfMI-dvCpwdtWglupvwZMeKVdWjllWGDWuggOw"
+    ],
+    "riotIds": [
+      "Y Ak Ak#CNNE"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/aksewanlol",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "AniviaDOG",
+    "puuids": [
+      "LG_AAitU1KEgXa0jb-CMzINocgCfbeoeWl2X-iOitWzvedFG7p-M3Wy99ewkW_cMxQktjSVhR67arw",
+      "XeE5KIOY6I5eCSXdZRznxaAJ3f6k4w-afb4oHrCLhvPUlGDf7i4AsyatmMYXTjHyI69IdphutmBxrw"
+    ],
+    "riotIds": [
+      "ANIVIASUPPORT#DOG",
+      "X9Jungler#EUW"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/aniviadog",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "Aral",
+    "puuids": [
+      "RfjrM_vgNW3LKjCoFpo5hY-M9ZDonCG3c5oAMtF7TYVhFqzl1pkgdhnqUxWuw0nSyNOGL5LpOKzjrQ",
+      "Me09C-VQa_-olWwn5z6CN5Xq3sSOFndMmGnzrerzuL3x8u19NVLGHYN0O5jSAOcxrqR5NWPm1gikDQ",
+      "WAScSB8Fx6Ig1Sw_xBTflRavxAoTlF49xQOvMNZugdwqTlZfEmT3B4IAJjNsGy_789Oclww-1DXEsQ"
+    ],
+    "riotIds": [
+      "hate my life#2005",
+      "eskisi gibi#2005",
+      "有感觉吗#0811"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/l9aral",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "Alexafo",
+    "puuids": [
+      "uJLIlX1gieG9k_KpPBS8baa0BoZcXrL0qVOIdAIAJN3YBVkw1uDhxDOt9i4IJAk51xfg8A4ArYN1Nw"
+    ],
+    "riotIds": [
+      "ΛŁΣX#ZIZON"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/alexafo",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "adishow11",
+    "puuids": [
+      "lfbvLr7XAtiRo5qCMhwuspA_VcfXbWmv-NmZJQDbAEoaZ51udx4e_xY89Y0Dcf8PN_GtOifQnx3WkA"
+    ],
+    "riotIds": [
+      "adiShow#CNCR"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/adishow11",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "akostas47",
+    "puuids": [
+      "7tjRAIkLkjkKwlSWvhUyd9h1VraYV3y10QY_7SQatNYZqHjTnydbT1yf1_9UyAc8HBSWfhBfuNDljw"
+    ],
+    "riotIds": [
+      "2 4 7#ak47"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/akostas47",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "Akantris",
+    "puuids": [
+      "8LQiKeT4FJ2tl8yI9yeUACdf4tPvGUNf8Rm3Bq3h6nDjs9Ludu5j1Z0T9ku1gbzjps8heiKk_hQiew",
+      "4lVSbxAtGJuarLrTYxzg4YurMEPKttpHU3NoIsYiQmwuWHIhNSWUZ3fnAIIPTu--SRipwPa0YQSsgA"
+    ],
+    "riotIds": [
+      "Fulfill Destiny#EUW",
+      "cop my steez#45930"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/akantris_",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "Artanis",
+    "puuids": [
+      "rhZZKbYkidP5V4oHydqduXWb-jO-zbgSs0D-YbFkxwb0g5JGX3mhNDw6wdMwJomm4E7Dh3QRZGWiDw"
+    ],
+    "riotIds": [
+      "Artanis#EUW2"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/Artanislol",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "ADC IS FRONTLINE",
+    "puuids": [
+      "dL-9AzoHjVmcmSxvSlkkDjkkwDvL13wQT0nPhZJvn0ERT4USFdPmjy2CeDZMH03OGjal9ZFHaNZDDw"
+    ],
+    "riotIds": [
+      "ADC IS FRONTLINE#SVW"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/adcisfrontline",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "adidiaslive",
+    "puuids": [
+      "m2GP-qFjapBovNpeiGxunN_3mlEuylFTpqjO6MjwM55Sp6CUCKYkK1kUHhCEr6Yqwh3U3xOvDC129A"
+    ],
+    "riotIds": [
+      "Zero To adidias#EUW"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/adidiaslive",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "anewnoob2",
+    "puuids": [
+      "9pJHh1M2irQBEn-xP8mKGF61EyvgND-J1zr0qhmEERJeVwUiGMurS5oFsgpkmCD9gfYdMLeJxBUXeA"
+    ],
+    "riotIds": [
+      "anewnoob2#EUW"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/anewnoob2",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "Afisher",
+    "puuids": [
+      "NdBaR8v3KQIzqCqkZWVwJ-7I3YB0qjOwDfD8edYBC8MfdeanLWt4vauMnQ1ckj_0d_kePwM8ICi0MQ"
+    ],
+    "riotIds": [
+      "Grand Regent#天02"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/afisher_",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "ADC_Lotus",
+    "puuids": [
+      "hBOg7PfmeR-mqtENAjjsrcAGL1rcXeUrk50SvyXMPKqMyTYv6_w5xLbNAcqYYDoEHRjD6JJvyESN4g",
+      "EgorDkG8westijx3BNjaGkGXftZlHZDZbLoQWM1QO9THW0Oe2ImSH_6gJe9JuoJqJgJeUJJZzUGXkg"
+    ],
+    "riotIds": [
+      "Sylveon#Lotus",
+      "Frieren#eep"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/adc_lotus",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "Amiral",
+    "puuids": [
+      "EGHRJY2TDwdhWo8oDK-68mN59_lUmHJpbDCWv8S1C-iw2e3Yxxa8d1JEg__xQ-vO2WcksI9EBfozHg",
+      "ZdUoH8BrzWpmq-gCMl4YSF3KhA314fBORj5sw91Y95BzJR-svkjKERjsZJVpCy-fI6hctT5AQqVrpQ"
+    ],
+    "riotIds": [
+      "Amiral#EUVV",
+      "Amiral#92EUW"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/amiral_lol",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "Aitlade",
+    "puuids": [
+      "AYRTq8rfI0HDwnIES-jUrEqnxauO3xPK0YV4KhNsmwFtU1_kp02aq5Jp1lgzGrmdqkqvwAd4JR_ceA",
+      "W9arq7cqwqHqxtHQo4tuEZDAwyJuCel66dIF9OqPmsceXmdQqXt5SnIs6lZ5xZVbFKuuHMrXdtWScA"
+    ],
+    "riotIds": [
+      "Aitlade#ELK",
+      "TSC Aitlade#Roxas"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/aitlade",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "Ansa",
+    "puuids": [
+      "QWEWH8sk69DEjxcrA7WbY-3SCr7HAes4_4CtWRQFNvya71webppqzIvpy5ZEyIDANr0mXGJcxle6iw"
+    ],
+    "riotIds": [
+      "Ansa#00000"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/Bucks_Sama",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "Aris",
+    "puuids": [
+      "_eIaOJUMJ6JGCVG8wU08Z8KG6KHH31FR1e095c0_UIQ8t2dn_Th_yRaEfDl8Ju7bgAGo7UxCWuIMxg"
+    ],
+    "riotIds": [
+      "Alexandre Hakim#2007"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/aris9510",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "ArKantiK",
+    "puuids": [
+      "w36ulp8XVn_r3gzyzB6h1Kp-WWniKziTbdNlOPFcrZBAiV0N1ZqRGpXE2m1zl-ODp7Pr6rk0eYU9SA"
+    ],
+    "riotIds": [
+      "EMOJI ESPION#SEEYA"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/arkantik_lol",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "ArrozyDesgracias",
+    "puuids": [
+      "Ny1Vd4Ml5e0_-MTmDo4Nz3YJ_TC4n5oufw2HIueGNgUteoj91rtLhRP2c8Y14pXPd-_d07k_zv9yig"
+    ],
+    "riotIds": [
+      "Nocillaxx#EUW"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/arrozydesgracias",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "Arcano",
+    "puuids": [
+      "F1M_TrnjD0UVZQOVgZP5jFeusBX7u_Gy5DqWt809ZKc9YianFYPuUaTz03T9fa6F4Yy6S3AWeVxcVw"
+    ],
+    "riotIds": [
+      "Arcano#Klara"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/arcanoxyz",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "Aloonea",
+    "puuids": [
+      "g318XCC5dCXPgkzZYxwhdsrJr2BLPf7Cjavw-EKQiNsEdveV70nlwWtu7I82SJuIE0hGW00agVyQ8w"
+    ],
+    "riotIds": [
+      "Aloonea#YUA"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/aloonea",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "AegonxLol",
+    "puuids": [
+      "LWdZ8o6doTiia8E97YwbJtwzVM5gB1IRInMwwp4V2iQZDx4n8mxZmF7bEP8mMMOM4Fl5TdldlvRNNQ"
+    ],
+    "riotIds": [
+      "Chains#HAKI"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/aegonxlol",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "ADERTYH",
+    "puuids": [
+      "rbvAAZh15hknyDD47JhDKO15JA9u3EQCcnu59O6w2o5CjW5vM9t4Az7bpIC0GWzMp2Qerb_oR0YSxQ"
+    ],
+    "riotIds": [
+      "King#UFC"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/adertyh",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "Archacutor",
+    "puuids": [
+      "1G6hb5RQBregoF8yEvHeJ0XgxT2YaYST_eLQgs_-s8o77ySBkzSnO9A-p3x4liim5YjJmacVcI0fYA",
+      "1t_QMXg3ywaDac7ieFlbpbIoOrvo_Wj5ktOeWBc7liu3L8RCIgxy7fKg0YDsojqo8O0HUl5IX2tWhg"
+    ],
+    "riotIds": [
+      "Archacutor#BAROU",
+      "EL REY BOJJI#ARCHA"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/archacutor",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "Actioner",
+    "puuids": [
+      "qjE1e0z3OICSPJdTe_-GlqjF34ClDw5ZcXzfS53HjHUL44twvP1j9ZqzMSk1GYNN2-4oc-JSSOc9Aw"
+    ],
+    "riotIds": [
+      "Actioner#Alex"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/actioner",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "adc_clover",
+    "puuids": [
+      "8BagpAArcHuNjw9_kus0n-7lf8hR5LgyDFzli6PvTYQLnRHAj6EtvNRRYreQpBpdPDWpQdOdXyU3NA"
+    ],
+    "riotIds": [
+      "Clover#4242"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/adc_clover",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "Arthapsic",
+    "puuids": [
+      "yaZVUw0KJeQR_WBaESH6KOLblZZVrJxrpKGUSQ10DZlmIYs7tDpTo8IJSrwFwqPXXtSSl0NbBCiomA"
+    ],
+    "riotIds": [
+      "Arthapsic#EUW"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/arthapsic",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "Allerendys",
+    "puuids": [
+      "oS_no2lPMWztI6xn0997pQOL51XIfoOtzTgmsdjmX8-JflxrZDtmFfuZwh62pVF8dycPvyEdgXOToA"
+    ],
+    "riotIds": [
+      "Allerendys#140"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/allerendys",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "Apatheia",
+    "puuids": [
+      "mahkJibd8g3cl2_ewYJ89Y4W4a7ciChAwr007BUF17v_kgoUqxnSu7neaUmY8fOfqR6_VJyuHTZyPw",
+      "LXdR811nNReMMPRJUGJ7wCI95_hTZsvr9Oi-EE028DLkgwm-dF83pUMJGlF4AclhomaL760DcaZgFA"
+    ],
+    "riotIds": [
+      "33 ANS PUCEAU#CHOIX",
+      "hollow skies#uema"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/apa_lol",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "AEQ",
+    "puuids": [
+      "cSBHGPuMRmNkCexgQ9WCsckcApW2HTkPXVqsP_CZzu8SwDFJ5d8sEzy1W4iUnr0_MfPNHIZj89J6HQ"
+    ],
+    "riotIds": [
+      "AEQ#EUW"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/laeql",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "Aqualix",
+    "puuids": [
+      "g0mlA-ETn603Pu8JngHtF_qNvsJHKD7BWzsWJep7O1rxI3P0tG6hPWcp373qiynMn81P75i9zekh8Q"
+    ],
+    "riotIds": [
+      "Aqualix#EUW"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/aqualixlol",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "Alaricey",
+    "puuids": [
+      "VljZHR_s89K19FxyzxzdLzJ1KALyHTvgcuXHGL8PontZYpWOHld6wENDHPtI_wTgdQVebKnuGJWJ2w",
+      "FsxyGN7bW8BxR7prDbigN-8oAIR3L5VpXBIQcHoBoqWe0yQ_u_copgB3qQPMeYmjfOc9nHJOLD7NrA"
+    ],
+    "riotIds": [
+      "140 6#2027",
+      "Alaricey#EUW"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/alaricey",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "Abu Mosah",
+    "puuids": [
+      "w3HykHruG8vrrmXII8SrMUpllx9Nkdb7yYEAv-mPS0M-1NnL72JIsLBcEhPwM6CRUGZinsdT1bfw2Q"
+    ],
+    "riotIds": [
+      "Abu Mosah#EUW"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/abu_mosah",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "AdawgCarry",
+    "puuids": [
+      "r5MBOrEZ6nsL1zMJWJTXL44Kiyn6p9cmsUxxYkbaakMrIobikUfS1Wb4_3k5FhqKFAFQxFGyK1pMJQ"
+    ],
+    "riotIds": [
+      "surt godteri#mmm"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/adawgcarry",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "ASHURA",
+    "puuids": [
+      "QmKbr1wjtuq98UidKor73TdSzHygikn59kjxlC8VH_YAwB1HbJdhfOQlKsiSFCtCGNL9QT9fts_Dhw"
+    ],
+    "riotIds": [
+      "ASHURA#L9no"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/ashuragg",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "Ashitaka",
+    "puuids": [
+      "5gJMYjHnMMD5hLR_itoWe-stok32Ng7l_DVQWM-HOOy9YF43p8kzmT3z79IDlbo-7yqzYP6MVV_bGg"
+    ],
+    "riotIds": [
+      "ChillUntillS17#Hate"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/ashitakaka",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "Akanania",
+    "puuids": [
+      "SUbAZOUNtxa7nTM_WGGCdrHPC1RsqcxqoLn1UEEgbTA_N4AU7NQKk-1wUpDKL2BeX9keTfZLIT3fzA"
+    ],
+    "riotIds": [
+      "Akanania#1213"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/akanania",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "Alvke",
+    "puuids": [
+      "NxbonsB7H-5MK3bNFMCLZg1AVFQRz3VjrJA6EQyy9xR3vWYUeiOPY6Mfdm672LYsqfAnV7k4V9rXAA"
+    ],
+    "riotIds": [
+      "Alvke#EUW"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/alvke",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "Arkfly",
+    "puuids": [
+      "WeeBsZ8rvLWeXNTfVvZgMdd0BQylWiqWhztc96E13p4qF3AKYpcweNVbebOhZW6ZDtS0sALEelTpYQ"
+    ],
+    "riotIds": [
+      "Arkfly#Lamb"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/arkfly_",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "Acsi",
+    "puuids": [
+      "odpRAbLk7MI4CbHizNcSPV9ip0sPF8MCf6S0l7WVZJP6oAnNJ4xRTO654Oo_d8GFs2wv5e9zSVpuuQ"
+    ],
+    "riotIds": [
+      "manuel rajongó#420"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/acsilol",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "Artishpalk",
+    "puuids": [
+      "tPhdlnaLnvJ7AFo6zMt_G0QuPL4TR6UuGkkeX2lX1wgDAslCCvjkSxc7CMJNS9sO7o2uDJvm1GbOWQ"
+    ],
+    "riotIds": [
+      "Artishpalk#EUW"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/artishpalk",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "AkumaAshi",
+    "puuids": [
+      "UFSbHgqWcsfwDcHSdKptAQZdJxvbxm3FfZ6t-yAgWpKLNuHQS8bcb7hOClGGCgbDAThPc3U2MAC-QA",
+      "BqmhV64lRtYqaWWCfJvgheNKfxtzQb0wnci5FCk_ODMgfPkgzEHV9wkwmbwce-iyMSN6U7-6smuUFw",
+      "0lgF8e32JksuGEjvoNV_1mqp1drqGy1jIm8jakWNT5XcMdfKKA3JquUDvSrTsgwft33gEcSiccIVnw"
+    ],
+    "riotIds": [
+      "Akuma 悪魔#ADC",
+      "Cloporte Brossé#SoloQ",
+      "Gap The Cait#EUW"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/akumaashi",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "AlienReu",
+    "puuids": [
+      "L4h6rVsUE7mvgU20tyhE8LuL2cqhA38_QDRyo2gh3EU76vdwaMuwm7catANJaGvntlI1T7efL4-jhQ"
+    ],
+    "riotIds": [
+      "Reu#Aqua"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/alienreu",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "Allykitti",
+    "puuids": [
+      "k5QGOLQOrJPjf6nEI4RqKPjaHeg7FPJRwCutL144HbCyfL_SYdf_DmxgPnOD86WuUKFMyF7GrikpOQ"
+    ],
+    "riotIds": [
+      "Ally#kitti"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/allykitti",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "Ander Cortés",
+    "puuids": [
+      "APXELxbOayheam-fCqcuWgOeuyAloFFx9ajUHHuneN9T22PVdLspeDDcDgevsjHlDvc3eQUTl44gGQ"
+    ],
+    "riotIds": [
+      "ANDERTAKER#EUW"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/tvander",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "Anguish",
+    "puuids": [
+      "eymh1Ge9plcnWDf5pPD-usLqR7i5hiaik8BHaODSlbqR3yizzlqmeCdBP7-OP3-pTF7pc7CJY1ZUFA",
+      "pb0kdce6Kf0UpgCHhtLLOXonYB7UwXS8D0Jg_d3xhKAndX1xZEg_Ho2InzFVqfEjk6kbBFcr0uH-Bg"
+    ],
+    "riotIds": [
+      "GØDSHΔRD DESCΞNT#333",
+      "TIER SSSS十十十十BPM#333"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/anguish333",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "Akashii",
+    "puuids": [
+      "O8aMdqK1679dDdbDCkRCBwTl8mTpTBwlciWrmnsN8o69Ng6TEPagCG_povR__o7cNISYrnK-pd5gMg"
+    ],
+    "riotIds": [
+      "Pistol Shrimp#1001"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/akashi10tv",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "AitchAre",
+    "puuids": [
+      "nvb71BTtCBMciRRe_riW0R7jh1sYk7mz2YFBfzNckVV3RNtnrKeklyWZpcaL1f4jP8AJdQPgYGnOsQ",
+      "AGp7Ea7fVhjOvmyqovTvdll2iMq9j4jQhPPqLPPzPmL0qQD44DZLbl9Dx_jbK9JN-gbGK92cyxYEag"
+    ],
+    "riotIds": [
+      "AitchAre#6767",
+      "Artix von#12345"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/lol_aitchare",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "Andrej",
+    "puuids": [
+      "hdOVxNid0UPaQKZa2tFK20suc9Cb5W0RkYzcHdCJUVHJmLf1wNH0fu8vluflbDUCU9F9ae2FxIXx6Q",
+      "SMaq2vtTg2Nv1GPgyXFFfsULkiv2ynOxFhDEw3k5LWDFFNy1abKdpTikvvOfSM1QpoM50ut1tlbOJw",
+      "Xqgz71zC6XkiKg5cgWrQ4jcpVimYcH9ckK6xnBWGuXds7UPQojiIl0iVH9L9UH3Sp1fki49oe_V9vg"
+    ],
+    "riotIds": [
+      "BOSSBABY1#GAGA",
+      "HOMELESS CRHEAD#EUW",
+      "vuja#javu"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/bald_blue_man",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "Antic Hookin",
+    "puuids": [
+      "Bcd-9aVt9-q6ZAkuvmslOFU9onoXd0yk1eDGZyTarsYm528a2BJ74SOH7wuQAhIE1DeUYaPdibY_CQ"
+    ],
+    "riotIds": [
+      "Hookin#HOOK"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/hookinaintez",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "Angel Of Kou",
+    "puuids": [
+      "5_IDB4PGFh7FrYrYH41GN2Ylh9Tomka0puJB55gBcOlK7NubdJpvAlOVQiFum4yVDfwWH8j8skbuAQ"
+    ],
+    "riotIds": [
+      "Angel Of Køu#KOU"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/angelofkou",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "alimentacionchino",
+    "puuids": [
+      "yy4H51Ug9LtjxHFmmKOYZ1vEZ_3F65O_2__fnxYJ2Nbflj94iEOApW6eDlMbj7nbxXCxgW7E1FnjUQ",
+      "QX4E3GuE-9olbj9le-SXJKiQPGZuWv_vXygslz6X8sJFST9ewHz3dbf-UCcLOE4yT8S1hej0ghzgbQ"
+    ],
+    "riotIds": [
+      "ttv alimentacion#kar",
+      "BingChiLingg#EUW"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/alimentacionchino",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "ammiira_",
+    "puuids": [
+      "arZUjsiL3S4HmJuaFtKnnjkBEaQuccEf931G9ScWNziFiPFlX74TjJeROOb8WBYbdaC8N5g1c_sKkg"
+    ],
+    "riotIds": [
+      "Ammiira#harr"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/ammiira_",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "Apheliom",
+    "puuids": [
+      "o6cah3YzSOe0jnci1_FMltp59ph2XWuvG4ClvOHwOhMAXhY-BmHK5UvGfaeOmEJAIyTzngHAx6olcQ"
+    ],
+    "riotIds": [
+      "AphelioLOL#ADC"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/apheliom13",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
+  },
+  {
+    "displayName": "Altairlol",
+    "puuids": [
+      "lZL5y36s3KDZ_QTIo3k_2lI3eaX2TVyVsyZvRZaCXdeN5s5DmXkqZJOJxXtl1xlVKRfUMWMyB7EKjA",
+      "swdUHUoi6pNHuia47Xhn7MdDjXflYYpxe4Clh0dn4ROj4GqyyCJ7GKKFyuNoNKxZbKju7P5Wi3prOQ"
+    ],
+    "riotIds": [
+      "Star Gazing#Onoki",
+      "Altair#TooL9"
+    ],
+    "isPro": false,
+    "isStreamer": true,
+    "streamUrl": "https://www.twitch.tv/altairlol",
+    "source": "deeplol.gg (busqueda de streamer, cuenta EUW de elo alto verificada)",
+    "lastVerifiedAt": "2026-09-09T18:23:58.067Z"
   }
 ];

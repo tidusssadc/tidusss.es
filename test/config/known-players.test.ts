@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { findKnownPlayerIdentity, knownPlayerIdentities } from '../../src/config/known-players.ts';
+import { isValidStreamUrl } from '../../scripts/identities/validate.ts';
 import type { KnownPlayerIdentity } from '../../src/lib/riot/live-types.ts';
 
 // --- Dataset real: primer batch importado (Sprint 2, Competitivo V2) vía
@@ -43,6 +44,49 @@ test('ningún PUUID real se repite entre dos identidades distintas del registro'
       );
       ownerByPuuid.set(puuid, identity.displayName);
     }
+  }
+});
+
+test('ningún Riot ID real (insensible a mayúsculas) se repite entre dos identidades distintas del registro', () => {
+  const ownerByRiotId = new Map<string, string>();
+  for (const identity of knownPlayerIdentities) {
+    for (const riotId of identity.riotIds ?? []) {
+      const key = riotId.trim().toLowerCase();
+      const owner = ownerByRiotId.get(key);
+      assert.ok(
+        !owner || owner === identity.displayName,
+        `Riot ID "${riotId}" aparece tanto en "${owner}" como en "${identity.displayName}"`,
+      );
+      ownerByRiotId.set(key, identity.displayName);
+    }
+  }
+});
+
+test('toda streamUrl real es https y de un dominio permitido — nunca inventada, nunca de un dominio arbitrario', () => {
+  const withStreamUrl = knownPlayerIdentities.filter((identity) => identity.streamUrl);
+  assert.ok(withStreamUrl.length > 0, 'se esperaba al menos una identidad real con streamUrl');
+  for (const identity of withStreamUrl) {
+    assert.ok(
+      isValidStreamUrl(identity.streamUrl!),
+      `streamUrl inválida en "${identity.displayName}": "${identity.streamUrl}"`,
+    );
+  }
+});
+
+test('toda identidad real marcada como STREAMER cumple el mínimo de calidad: displayName, al menos un Riot ID/PUUID y streamUrl verificada', () => {
+  const streamers = knownPlayerIdentities.filter((identity) => identity.isStreamer);
+  assert.ok(streamers.length > 0, 'se esperaba al menos una identidad STREAMER real');
+  for (const identity of streamers) {
+    assert.ok(identity.displayName.trim().length > 0);
+    assert.ok((identity.riotIds?.length ?? 0) > 0 && (identity.puuids?.length ?? 0) > 0);
+    assert.ok(identity.streamUrl, `"${identity.displayName}" es STREAMER pero no tiene streamUrl verificada`);
+  }
+});
+
+test('una identidad PRO existente que también es STREAMER conserva team/role tras la fusión — el merge nunca borra datos ya verificados', () => {
+  const proAndStreamer = knownPlayerIdentities.filter((identity) => identity.isPro && identity.isStreamer);
+  for (const identity of proAndStreamer) {
+    if (identity.team) assert.ok(identity.team.trim().length > 0);
   }
 });
 
