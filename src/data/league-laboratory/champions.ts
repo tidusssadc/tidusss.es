@@ -115,11 +115,29 @@ export const kaisa: LabChampion = {
   playstyleTags: ['escalado', 'evolución de habilidades'],
 };
 
+/**
+ * Jinx ya tenía entrada mínima (roles/tags) y su S en la Tier List oficial
+ * ADC 26.17 — ahora suma build y runa de referencia para ese mismo parche
+ * (`builds.ts`/`rune-pages.ts`), mismo tratamiento que Jhin: contenido
+ * validado por Tidusss a partir de una referencia externa, no su análisis
+ * estratégico propio explicado en detalle. Deliberadamente SIN `profile`:
+ * añadir una build no equivale a guía completa — `resolveChampionEditorialStatus`
+ * la sigue resolviendo como `draft`.
+ */
 export const jinx: LabChampion = {
   id: 'champion:jinx',
   roles: ['BOTTOM'],
   isSignatureChampion: false,
   playstyleTags: ['daño sostenido', 'rango'],
+  editorialHistory: [
+    {
+      date: '2026-09-09',
+      patchId: 'patch:26-17',
+      title: 'Se publica una build de referencia de Jinx para el parche 26.17',
+      summary:
+        'Se añade una build de referencia (starter, decisión de primer objeto, runa principal) validada por Tidusss a partir de una referencia externa — sin perfil editorial completo todavía.',
+    },
+  ],
 };
 
 export const ezreal: LabChampion = {

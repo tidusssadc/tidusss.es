@@ -3,13 +3,14 @@ import assert from 'node:assert/strict';
 import {
   jhinRunesA26_17,
   jhinRunesB26_17,
+  jinxRunes26_17,
   leagueLaboratoryRunePages,
   lucianRunes26_14,
 } from '../../src/data/league-laboratory/rune-pages.ts';
 import { patch2614, patch2617 } from '../../src/data/league-laboratory/patches.ts';
 
-test('hay exactamente 3 páginas de runas registradas: la de Lucian (26.14) y las 2 de Jhin (26.17)', () => {
-  assert.equal(leagueLaboratoryRunePages.length, 3);
+test('hay exactamente 4 páginas de runas registradas: la de Lucian (26.14), las 2 de Jhin y la de Jinx (26.17)', () => {
+  assert.equal(leagueLaboratoryRunePages.length, 4);
   assert.equal(lucianRunes26_14.patchId, patch2614.id);
 });
 
@@ -71,4 +72,32 @@ test('el editorialTake de cada configuración de Jhin declara que son alternativ
     assert.match(page.editorialTake.reasoning, /alternativa/);
     assert.match(page.editorialTake.reasoning, /sin un criterio de selección publicado/);
   }
+});
+
+// --- Jinx — una única configuración de runas de referencia, parche 26.17 ---
+
+test('existe exactamente una configuración de runas de Jinx, para el parche 26.17', () => {
+  const jinxRunePages = leagueLaboratoryRunePages.filter(
+    (page) => page.championId === 'champion:jinx',
+  );
+  assert.equal(jinxRunePages.length, 1);
+  assert.equal(jinxRunePages[0]?.patchId, patch2617.id);
+  assert.equal(jinxRunePages[0]?.id, jinxRunes26_17.id);
+});
+
+test('la runa principal de Jinx es Tempo Letal', () => {
+  assert.equal(jinxRunes26_17.primaryRunes.length, 1);
+  assert.equal(jinxRunes26_17.primaryRunes[0]?.name, 'Tempo Letal');
+});
+
+test('las runas menores de Jinx no se han rellenado por suposición: rama secundaria, fragmentos y árboles ausentes', () => {
+  assert.deepEqual(jinxRunes26_17.secondaryRunes, []);
+  assert.deepEqual(jinxRunes26_17.statShards, []);
+  assert.equal(jinxRunes26_17.primaryTreeId, undefined);
+  assert.equal(jinxRunes26_17.secondaryTreeId, undefined);
+});
+
+test('el editorialTake de la runa de Jinx tiene confianza baja y documenta qué queda pendiente', () => {
+  assert.equal(jinxRunes26_17.editorialTake.confidence, 'low');
+  assert.match(jinxRunes26_17.editorialTake.reasoning, /pendientes de análisis/);
 });

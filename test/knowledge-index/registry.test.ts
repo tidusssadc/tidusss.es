@@ -10,7 +10,7 @@ import {
   validateKnowledgeIndex,
 } from '../../src/domain/knowledge-index/invariants.ts';
 import { serializeKnowledgeIndex } from '../../src/domain/knowledge-index/serialize.ts';
-import { adcLabChampions, jhin, kaisa, lucian } from '../../src/data/league-laboratory/champions.ts';
+import { adcLabChampions, jhin, jinx, kaisa, lucian } from '../../src/data/league-laboratory/champions.ts';
 import { officialAdcTierList } from '../../src/data/league-laboratory/official-adc-tier-list.ts';
 
 // --- IDs únicos y deterministas ---
@@ -118,7 +118,7 @@ test('Kai\'Sa (otro campeón curado) no recibe ningún documento de identidad, e
   assert.equal(leaked, false);
 });
 
-test('todos los documentos de build/rune-page cuyo relatedEntityIds incluye a un campeón, solo incluyen a Lucian o a Jhin (nunca a un tercero)', () => {
+test('todos los documentos de build/rune-page cuyo relatedEntityIds incluye a un campeón, solo incluyen a Lucian, Jhin o Jinx (nunca a un tercero)', () => {
   const buildAndRuneDocuments = knowledgeDocuments.filter(
     (document) => document.type.startsWith('build-') || document.type.startsWith('rune-'),
   );
@@ -126,14 +126,17 @@ test('todos los documentos de build/rune-page cuyo relatedEntityIds incluye a un
   for (const document of buildAndRuneDocuments) {
     assert.equal(document.relatedEntityIds.length, 1);
     assert.ok(
-      document.relatedEntityIds[0] === lucian.id || document.relatedEntityIds[0] === jhin.id,
+      document.relatedEntityIds[0] === lucian.id ||
+        document.relatedEntityIds[0] === jhin.id ||
+        document.relatedEntityIds[0] === jinx.id,
       `documento ${document.id} referencia un campeón inesperado: ${document.relatedEntityIds[0]}`,
     );
   }
-  // Ambos están efectivamente representados, no solo uno de los dos.
+  // Los tres están efectivamente representados, no solo alguno de ellos.
   const referenced = new Set(buildAndRuneDocuments.map((document) => document.relatedEntityIds[0]));
   assert.ok(referenced.has(lucian.id));
   assert.ok(referenced.has(jhin.id));
+  assert.ok(referenced.has(jinx.id));
 });
 
 // --- Separación de parches ---

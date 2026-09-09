@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   jhinReferenceBuild26_17,
+  jinxReferenceBuild26_17,
   leagueLaboratoryBuilds,
   lucianPersonalBuild26_14,
   lucianSolidBuild26_14,
@@ -140,4 +141,75 @@ test('la build de Jhin nunca inventa una guía completa: su editorialTake descri
     jhinReferenceBuild26_17.editorialTake.reasoning,
     /pendiente de confirmación/,
   );
+});
+
+// --- Jinx — build de referencia, parche 26.17 (decisión de primer objeto,
+// runa principal, sin perfil editorial completo) ---
+
+test('existe exactamente una build de Jinx, para el parche 26.17', () => {
+  const jinxBuilds = leagueLaboratoryBuilds.filter(
+    (build) => build.championId === 'champion:jinx',
+  );
+  assert.equal(jinxBuilds.length, 1);
+  assert.equal(jinxBuilds[0]?.patchId, patch2617.id);
+  assert.equal(jinxBuilds[0]?.id, jinxReferenceBuild26_17.id);
+});
+
+test('el starter de Jinx es Arco de Doran', () => {
+  assert.equal(jinxReferenceBuild26_17.startingItems.length, 1);
+  assert.equal(jinxReferenceBuild26_17.startingItems[0]?.name, 'Arco de Doran');
+  assert.equal(jinxReferenceBuild26_17.startingItems[0]?.itemId, 1086);
+});
+
+test('el primer objeto de referencia de Jinx es Flechas de los Yun Tal, con Verdugo de krakens como alternativa deprioritaria', () => {
+  const firstItem = jinxReferenceBuild26_17.coreItems[0];
+  assert.equal(firstItem?.name, 'Flechas de los Yun Tal');
+  assert.equal(firstItem?.itemId, 3032);
+  assert.match(firstItem?.reasoning ?? '', /BF/);
+  assert.equal(firstItem?.alternatives?.length, 1);
+  assert.equal(firstItem?.alternatives?.[0]?.name, 'Verdugo de krakens');
+  assert.equal(firstItem?.alternatives?.[0]?.itemId, 6672);
+  assert.ok((firstItem?.alternatives?.[0]?.whenToPreferInstead.length ?? 0) > 0);
+});
+
+test('Huracán de Runaan aparece confirmado como pieza de la progresión de Jinx, nunca como primer objeto', () => {
+  const runaan = jinxReferenceBuild26_17.coreItems.find((item) => item.name === 'Huracán de Runaan');
+  assert.ok(runaan);
+  assert.equal(runaan?.itemId, 3085);
+  assert.notEqual(runaan?.timing, 'Primer objeto');
+});
+
+test('la build de Jinx no inventa objeto final, orden de habilidades ni botas — ninguno se confirmó en la referencia', () => {
+  assert.deepEqual(jinxReferenceBuild26_17.situationalItems, []);
+  assert.equal(jinxReferenceBuild26_17.skillOrder, undefined);
+  assert.equal(jinxReferenceBuild26_17.boots, undefined);
+  assert.equal(jinxReferenceBuild26_17.coreItems.length, 2, 'solo Yun Tal y Runaan están confirmados, ningún objeto final más');
+});
+
+test('el editorialTake de Jinx menciona el ban de referencia (Tristana) sin convertirlo en una afirmación estadística', () => {
+  assert.match(jinxReferenceBuild26_17.editorialTake.reasoning, /Tristana/);
+  assert.doesNotMatch(jinxReferenceBuild26_17.editorialTake.reasoning, /peor matchup/i);
+  assert.doesNotMatch(jinxReferenceBuild26_17.editorialTake.reasoning, /estadístic/i);
+});
+
+test('el contenido de Jinx nunca atribuye la build públicamente a una fuente externa (nunca "Bibou")', () => {
+  const build = jinxReferenceBuild26_17;
+  const text = JSON.stringify(build).toLowerCase();
+  assert.doesNotMatch(text, /bibou/);
+});
+
+test('el contenido de Jinx nunca afirma una identidad personal falsa de Tidusss ("Tidusss juega/recomienda")', () => {
+  const text = JSON.stringify(jinxReferenceBuild26_17);
+  assert.doesNotMatch(text, /Tidusss (juega|recomienda)/i);
+});
+
+test('la build de Jinx nunca inventa una guía completa: confianza media, nunca alta, y documenta qué queda pendiente', () => {
+  assert.equal(jinxReferenceBuild26_17.editorialTake.confidence, 'medium');
+  assert.match(jinxReferenceBuild26_17.editorialTake.reasoning, /no pudo confirmarse/);
+});
+
+test('championId de la build de Jinx corresponde a un campeón real del catálogo (Jinx)', () => {
+  const jinxEntry = championCatalog.find((entry) => entry.id === 'champion:jinx');
+  assert.ok(jinxEntry);
+  assert.equal(jinxReferenceBuild26_17.championId, jinxEntry!.id);
 });

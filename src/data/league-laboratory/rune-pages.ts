@@ -86,8 +86,35 @@ export const jhinRunesB26_17: RunePage = {
   },
 };
 
+/**
+ * Jinx, parche 26.17 — mismo criterio que Jhin: solo la runa principal
+ * (keystone) está confirmada de forma inequívoca en la referencia. La
+ * imagen aportada muestra páginas de runas completas, pero ninguna runa
+ * menor puede identificarse con seguridad a partir de ella — se dejan
+ * pendientes en vez de completarse por conocimiento general (encargo §6).
+ */
+export const jinxRunes26_17: RunePage = {
+  id: 'rune-page:jinx-26-17',
+  title: 'Runas — Jinx ADC, referencia: Tempo Letal (parche 26.17)',
+  championId: 'champion:jinx',
+  role: 'BOTTOM',
+  patchId: patch2617.id,
+  primaryRunes: [{ name: 'Tempo Letal' }],
+  secondaryRunes: [],
+  statShards: [],
+  editorialTake: {
+    verdict:
+      'Runa principal de referencia para Jinx en el parche 26.17: Tempo Letal.',
+    reasoning:
+      'Configuración validada por Tidusss a partir de una referencia externa — el árbol secundario y los fragmentos de estadística no pudieron identificarse de forma inequívoca a partir de la imagen aportada, así que quedan pendientes de análisis en vez de completarse con una suposición.',
+    confidence: 'low',
+    lastReviewedPatch: patch2617.id,
+  },
+};
+
 export const leagueLaboratoryRunePages: RunePage[] = [
   lucianRunes26_14,
   jhinRunesA26_17,
   jhinRunesB26_17,
+  jinxRunes26_17,
 ];

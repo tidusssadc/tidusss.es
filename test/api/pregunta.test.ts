@@ -153,14 +153,14 @@ test('Draven: información insuficiente, nunca un matchup inventado', async () =
   }
 });
 
-test('Jinx: no tiene build propia, pero responde con su entrada real de la Tier List — nunca contenido de Lucian mezclado', async () => {
+test('Jinx: ya tiene build de referencia real (parche 26.17) — responde con ella, nunca con contenido de Lucian mezclado', async () => {
   const payload = await asJson(await onRequest({ request: post({ question: '¿Cuál es la build de Jinx?' }) }));
   assert.equal(payload.ok, true);
   if (payload.ok) {
     assert.equal(payload.data.status, 'sufficient');
-    assert.equal(payload.data.sources.length, 1);
-    assert.equal(payload.data.sources[0]?.url, '/tier-list');
-    assert.equal(payload.data.sources[0]?.type, 'Tier List');
+    assert.ok(payload.data.sources.length > 0);
+    assert.ok(payload.data.sources.some((source) => source.type === 'Build'));
+    assert.ok(!payload.data.sources.some((source) => source.url.includes('lucian')));
   }
 });
 

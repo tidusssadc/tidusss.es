@@ -1,4 +1,4 @@
-import type { Build, BuildItemChoice } from '../../domain/league-laboratory';
+import type { Build, BuildItemAlternative, BuildItemChoice } from '../../domain/league-laboratory';
 import { patch2614, patch2617 } from './patches';
 
 /**
@@ -195,8 +195,81 @@ export const jhinReferenceBuild26_17: Build = {
   },
 };
 
+/**
+ * Jinx — build de referencia, parche 26.17. Mismo tratamiento que la de
+ * Jhin arriba: una ruta de referencia externa validada por Tidusss, no su
+ * propio análisis estratégico completo — `editorialTake` es honesto sobre
+ * qué se sabe y qué no. A diferencia de Jhin, aquí sí hay una decisión de
+ * build real que explicar (primer objeto condicionado al back), no solo
+ * un objeto suelto.
+ *
+ * Solo se incluye lo textualmente inequívoco de la referencia: starter,
+ * runa principal, la disyuntiva de primer objeto (Flechas de los Yun Tal
+ * vs. Verdugo de krakens) con su condición real, y Huracán de Runaan como
+ * pieza confirmada de la progresión. La referencia también menciona un
+ * "final de build clásico" con varias opciones en la imagen aportada, pero
+ * ningún objeto final concreto se pudo identificar de forma inequívoca a
+ * partir de esa imagen — se deja fuera en vez de adivinar (§7/§10 del
+ * encargo). Tampoco se confirma orden de habilidades ni botas: ninguno de
+ * los dos aparece en la referencia, así que quedan sin definir.
+ */
+const jinxFirstItemAlternatives26_17: BuildItemAlternative[] = [
+  {
+    name: 'Verdugo de krakens',
+    itemId: 6672,
+    whenToPreferInstead:
+      'Esta referencia lo considera la opción menos prioritaria de las tres alternativas de primer objeto que plantea — no aporta una condición concreta para preferirlo sobre Flechas de los Yun Tal, solo lo valora peor en conjunto.',
+  },
+];
+
+const jinxCoreItems26_17: BuildItemChoice[] = [
+  {
+    name: 'Flechas de los Yun Tal',
+    itemId: 3032,
+    timing: 'Primer objeto',
+    reasoning:
+      'La mejor de las alternativas de primer objeto según esta referencia, especialmente cuando el back permite completar Espada Hiriente (BF Sword) antes: en ese escenario se prioriza claramente sobre el resto.',
+    alternatives: jinxFirstItemAlternatives26_17,
+  },
+  {
+    name: 'Huracán de Runaan',
+    itemId: 3085,
+    timing: 'Progresión',
+    reasoning:
+      'Pieza importante de la progresión con este parche: la referencia señala tanto un buff reciente del objeto como su sinergia con el kit de Jinx como motivos para valorarlo más que antes.',
+  },
+];
+
+export const jinxReferenceBuild26_17: Build = {
+  id: 'build:jinx-26-17-reference',
+  title: 'Build de referencia — Jinx ADC (parche 26.17)',
+  championId: 'champion:jinx',
+  role: 'BOTTOM',
+  patchId: patch2617.id,
+  variant: 'primary',
+  startingItems: [
+    {
+      name: 'Arco de Doran',
+      itemId: 1086,
+      reasoning:
+        'Starter habitual con esta referencia — se compra en prácticamente todas las partidas.',
+    },
+  ],
+  coreItems: jinxCoreItems26_17,
+  situationalItems: [],
+  editorialTake: {
+    verdict:
+      'Build de referencia de Jinx para el parche 26.17: Flechas de los Yun Tal como primer objeto preferido (sobre todo con back de Espada Hiriente), con Huracán de Runaan como pieza importante de la progresión.',
+    reasoning:
+      'Esta referencia considera a Jinx un ADC extremadamente fuerte este parche, con muy pocas líneas realmente injugables y aproximadamente entre los 2-3 mejores ADC — especialmente peligrosa cuando consigue activar su primer reinicio de definitiva en una pelea. Ban de referencia con esta ruta: Tristana. Como con la build de Jhin, esto es una ruta externa validada por Tidusss, no su análisis estratégico propio explicado en detalle — el objeto final de build (la imagen muestra varias opciones) no pudo confirmarse de forma inequívoca y se deja pendiente, igual que el orden de habilidades y las botas, que no aparecen en la referencia.',
+    confidence: 'medium',
+    lastReviewedPatch: patch2617.id,
+  },
+};
+
 export const leagueLaboratoryBuilds: Build[] = [
   lucianSolidBuild26_14,
   lucianPersonalBuild26_14,
   jhinReferenceBuild26_17,
+  jinxReferenceBuild26_17,
 ];

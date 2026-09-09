@@ -86,28 +86,29 @@ test('Draven: se reconoce como campeón real del catálogo pero no existe ningú
   assert.deepEqual(result.documents, []);
 });
 
-test('Jinx: no tiene build propia, pero sí una entrada real en la Tier List — se recupera esa, nunca contenido de Lucian mezclado ni una build inventada', () => {
-  const result = local.retrieve({ text: '¿Cuál es la build de Jinx?' });
+test('Jinx: ya tiene build de referencia real (parche 26.17) — se recupera junto a su entrada de Tier List, nunca contenido de Lucian mezclado', () => {
+  const result = local.retrieve({ text: '¿Cuál es la build de Jinx?', limit: 10 });
   assert.equal(result.insufficientInformation, false);
   assert.equal(result.filtersApplied.championId, 'champion:jinx');
-  assert.deepEqual(
-    result.documents.map((d) => d.document.id),
-    ['knowledge:tier-list:official-adc:entry:champion:jinx'],
-  );
+  const ids = result.documents.map((d) => d.document.id);
+  assert.ok(ids.some((id) => id.includes('jinx-26-17')), 'debe recuperar la build real de Jinx');
   assert.ok(
     result.documents.every((d) => !d.document.id.includes('lucian')),
     'no debe mezclar contenido de Lucian',
   );
   assert.ok(
-    result.documents.every((d) => d.document.type !== 'build-item'),
-    'Jinx no tiene ninguna build real: nunca se debe inventar una',
+    result.documents.every((d) => d.document.relatedEntityIds.includes('champion:jinx')),
+    'todo documento recuperado para esta consulta debe estar relacionado con Jinx, nunca con otro campeón',
   );
 });
 
 // --- Guardrails (Fase 6) ---
 
-test('guardrail: ningún resultado real proviene jamás de un campeón draft (Kai\'Sa, Jinx, Ezreal)', () => {
-  const draftChampionIds = new Set(['champion:kaisa', 'champion:jinx', 'champion:ezreal']);
+test('guardrail: ningún resultado real proviene jamás de un campeón draft sin contenido real (Kai\'Sa, Ezreal)', () => {
+  // Jinx sale de este set desde que tiene build/runas reales (parche
+  // 26.17) — sigue siendo `draft` (sin perfil completo), pero YA tiene
+  // contenido real que debe poder recuperarse, igual que Jhin.
+  const draftChampionIds = new Set(['champion:kaisa', 'champion:ezreal']);
   for (const query of ['Lucian', 'campeón', 'build', 'runas', 'ADC']) {
     const result = local.retrieve({ text: query, limit: 60 });
     for (const retrieved of result.documents) {
