@@ -3055,6 +3055,25 @@
   color: #59667a;
   font-size: 0.56rem;
 }
+.expanded-participant-name {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+}
+/* Encuentros PRO/STREAMER (Night Shift 2026-09-09, Fase E) — solo aparece cuando Riot ya trajo un PUUID exacto que coincide con el Identity Registry curado. Especificidad `.match-teams li span` (más alta que una sola clase) obliga a calificar el selector aquí, si no el color base del roster gana. */
+.match-teams li span.encounter-badge {
+  flex: 0 0 auto;
+  padding: 0.1rem 0.4rem;
+  border: 1px solid rgb(214 181 107 / 35%);
+  border-radius: 999px;
+  color: #d6b56b;
+  font-size: 0.52rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
 .expanded-items {
   display: flex;
   gap: 0.15rem;

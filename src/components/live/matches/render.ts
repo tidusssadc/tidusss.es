@@ -120,6 +120,27 @@ const fillRunes = (card: HTMLElement, icons: MatchIcon[], matchId: string) => {
     });
 };
 
+/**
+ * Encuentros PRO/STREAMER (Night Shift 2026-09-09, Fase E) — solo si Riot
+ * ya trajo un PUUID exacto que coincide con el Identity Registry curado
+ * (`participant.identity`, resuelto server-side en `normalizeMatch`).
+ * Nunca inferida aquí por nombre/campeón; "PRO"/"STREAMER" viene tal cual
+ * de un dato ya verificado, nunca de una comparación local.
+ */
+const identityBadge = (identity: MatchParticipant['identity']) => {
+  if (!identity) return undefined;
+  const badge = document.createElement('span');
+  badge.className = 'encounter-badge';
+  badge.textContent = identity.isPro && identity.isStreamer
+    ? 'PRO / STREAMER'
+    : identity.isPro
+      ? 'PRO'
+      : 'STREAMER';
+  const details = [identity.displayName, identity.team, identity.role].filter(Boolean);
+  badge.title = details.join(' · ');
+  return badge;
+};
+
 const participantRow = (
   participant: MatchParticipant,
   formatNumber: (value: number) => string,
@@ -133,11 +154,16 @@ const participantRow = (
   champion.src = participant.championImageUrl ?? '';
   champion.alt = participant.championName;
   const identity = document.createElement('div');
+  const nameRow = document.createElement('div');
+  nameRow.className = 'expanded-participant-name';
   const name = document.createElement('strong');
   name.textContent = participant.displayName;
+  nameRow.append(name);
+  const badge = identityBadge(participant.identity);
+  if (badge) nameRow.append(badge);
   const championName = document.createElement('span');
   championName.textContent = participant.championName;
-  identity.append(name, championName);
+  identity.append(nameRow, championName);
   const kda = document.createElement('strong');
   kda.textContent = `${participant.kills} / ${participant.deaths} / ${participant.assists}`;
   const metrics = document.createElement('span');

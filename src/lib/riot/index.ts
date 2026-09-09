@@ -3,6 +3,7 @@ import {
   riotDefaults,
   type RiotEnvironment,
 } from '../../config/riot';
+import { findKnownPlayerIdentity, knownPlayerIdentities } from '../../config/known-players';
 import { analyzeRecentSoloQueue, analyzeTodaySoloQueue } from './analytics';
 import { cached } from './cache';
 import { createRiotClient, type RiotDiagnosticLogger } from './client';
@@ -155,6 +156,12 @@ export const getRiotOverview = async (
       urls.champion,
       urls.item,
       urls.summonerSpell,
+      // Encuentros PRO/STREAMER (Fase E) — mismo Identity Registry curado
+      // y el mismo matcher exacto-por-PUUID que ya usa "Partida en curso"
+      // (`live.ts`), sin llamada Riot adicional: opera sobre el match que
+      // ya se acaba de traer/cachear.
+      (participantPuuid) =>
+        findKnownPlayerIdentity(participantPuuid, undefined, knownPlayerIdentities),
     );
     return match ? [match] : [];
   });
