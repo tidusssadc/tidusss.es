@@ -130,7 +130,10 @@ const buildEntries = (): SearchEntry[] =>
     const catalogEntry = catalogById.get(build.championId);
     const name = catalogEntry?.name ?? build.championId;
     return {
-      id: `build:${build.id}`,
+      // `build.id` (BuildId) ya lleva el prefijo `build:` — no se vuelve a
+      // anteponer aquí (mismo bug de prefijo duplicado que se corrigió en
+      // `championEntries()`: producía `build:build:<slug>`).
+      id: build.id,
       category: 'build',
       title: `Build: ${build.title} (${name})`,
       description: build.editorialTake.verdict,
@@ -149,7 +152,10 @@ const runePageEntries = (): SearchEntry[] =>
       (choice) => choice.name,
     );
     return {
-      id: `rune-page:${runePage.id}`,
+      // `runePage.id` (RunePageId) ya lleva el prefijo `rune-page:` — no se
+      // vuelve a anteponer aquí (mismo bug de prefijo duplicado que se
+      // corrigió en `championEntries()`: producía `rune-page:rune-page:<slug>`).
+      id: runePage.id,
       category: 'build',
       title: `Runas de ${name}`,
       description: runePage.editorialTake.verdict,
@@ -166,7 +172,10 @@ const synergyEntries = (): SearchEntry[] =>
     const ownerId = synergy.championIds[0];
     const ownerSlug = ownerId ? catalogById.get(ownerId)?.slug : undefined;
     return {
-      id: `synergy:${synergy.id}`,
+      // `synergy.id` (SynergyId) ya lleva el prefijo `synergy:` — no se
+      // vuelve a anteponer aquí (mismo bug de prefijo duplicado que se
+      // corrigió en `championEntries()`: producía `synergy:synergy:<slug>`).
+      id: synergy.id,
       category: 'build',
       title: `Sinergia: ${names.join(' + ')}`,
       description: synergy.editorialTake.verdict,
@@ -179,7 +188,10 @@ const synergyEntries = (): SearchEntry[] =>
 /** Un resultado por concepto de la Academia — ya tiene ficha propia con ancla real en /academia, se aplique o no hoy a un campeón curado. */
 const academiaEntries = (): SearchEntry[] =>
   leagueLaboratoryConcepts.map((concept) => ({
-    id: `concept:${concept.id}`,
+    // `concept.id` (ConceptId) ya lleva el prefijo `concept:` — no se vuelve
+    // a anteponer aquí (mismo bug de prefijo duplicado que se corrigió en
+    // `championEntries()`: producía `concept:concept:<slug>`).
+    id: concept.id,
     category: 'academia',
     title: concept.title,
     description: concept.summary,

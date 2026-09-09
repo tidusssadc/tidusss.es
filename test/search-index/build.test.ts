@@ -120,6 +120,23 @@ test('ningún SearchEntry de campeón tiene el prefijo "champion:" duplicado', (
   }
 });
 
+// El bug de `champion:${entry.id}` sobre un id ya cualificado no era
+// exclusivo de los campeones: `buildEntries()`, `runePageEntries()`,
+// `synergyEntries()` y `academiaEntries()` reanteponían su propio prefijo
+// sobre ids que ya lo llevaban (BuildId `build:…`, RunePageId
+// `rune-page:…`, SynergyId `synergy:…`, ConceptId `concept:…`), produciendo
+// `build:build:…`, `rune-page:rune-page:…`, etc. Esta prueba cubre TODO el
+// índice, no solo una categoría.
+test('ningún SearchEntry tiene un prefijo de id duplicado (build:build:, rune-page:rune-page:, …)', () => {
+  for (const entry of index) {
+    assert.doesNotMatch(
+      entry.id,
+      /^([\w-]+):\1:/,
+      `id con prefijo duplicado: ${entry.id}`,
+    );
+  }
+});
+
 test('Lucian y Jinx siguen resolviendo con el id correcto (champion:lucian / champion:jinx)', () => {
   const championEntries = index.filter((entry) => entry.category === 'campeon');
   const byId = new Map(championEntries.map((entry) => [entry.id, entry]));
