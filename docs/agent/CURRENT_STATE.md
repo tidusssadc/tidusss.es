@@ -4,7 +4,7 @@
 > cerrado, qué está en progreso, qué está bloqueado, cuál es el HEAD esperado, qué falta de
 > infraestructura, qué NO tocar.
 >
-> **Last verified commit:** `10575c4` (rama `night-shift/2026-09-09`)
+> **Last verified commit:** `06987c0` (rama `night-shift/2026-09-09`)
 > **Last verified date:** 2026-09-10
 > **`main`:** `c6c29d9` — la Night Shift de 2026-09-09 **no está mergeada**.
 >
@@ -113,6 +113,7 @@ Cloudflare Pages con integración Git a `github.com/tidusssadc/tidusss.es`. Buil
 
 | Commit | Qué |
 |---|---|
+| `06987c0` | sistema de docs para agentes (`CLAUDE.md`, `docs/agent/`, `tasks/`, plantillas PR/issue) — sin cambio de producto |
 | `10575c4` | setup D1 producción + scheduler (docs + workflow, inertes) |
 | `3fcd626` | hardening: camino ligero Riot para el cron (§18 — antes arrastraba `getRiotOverview` entero) + idempotencia (`UNIQUE` + `INSERT OR IGNORE`) |
 | `e6a25e7` | fix overflow de grid en Match History; skip resolver PUUID sin D1 |
