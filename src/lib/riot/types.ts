@@ -274,9 +274,15 @@ export interface TodaySoloQueue {
   losses: number;
   winRate?: number;
   averageKda?: number;
+  /** Promedios DERIVADOS de las partidas de hoy ya normalizadas (mismo cálculo per-minute que el resto del perfil) — nunca una estimación, `undefined` si hoy no hay partidas. Añadidos para que "Sesión de hoy" de /competitivo sea un módulo completo sin una llamada Riot nueva. */
+  averageCsPerMinute?: number;
+  averageDamagePerMinute?: number;
+  averageKillParticipation?: number;
   mostPlayedChampion?: ChampionPerformance;
   streak?: { result: 'win' | 'loss'; games: number };
   lastPlayedAt?: string;
+  /** ISO 8601 de la PRIMERA partida clasificatoria de hoy — ancla honesta de "inicio de sesión" (día local Europe/Madrid). `undefined` si hoy no hay partidas. */
+  firstPlayedAt?: string;
   activity: 'recent' | 'inactive' | 'no-games';
   lpDelta?: number;
   lpDeltaEstimated: true;

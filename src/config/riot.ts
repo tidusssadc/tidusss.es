@@ -21,7 +21,13 @@ export const riotDefaults = {
   // `index.ts`), así que solo paga esta llamada quien encuentra la caché
   // vacía o expirada, nunca cada visitante.
   recentMatchIds: 30,
-  recentSoloSample: 10,
+  // 20: el Historial de /competitivo muestra 10 y revela hasta estas 20 con
+  // "cargar anteriores" — TODAS ya vienen en el payload de `/api/riot/overview`
+  // (se descargan las 30 de `recentMatchIds` pase lo que pase), así que subir
+  // este corte de 10 a 20 NO añade ni una sola llamada Riot: solo deja de
+  // descartar partidas que ya están normalizadas en memoria. Coste real: el
+  // array `recent.matches` del JSON aproximadamente dobla de tamaño.
+  recentSoloSample: 20,
 } as const;
 
 export const getRiotConfig = (env: RiotEnvironment) => ({
