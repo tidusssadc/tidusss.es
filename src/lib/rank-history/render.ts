@@ -3,9 +3,9 @@ import { formatRankLabel } from './format';
 import { madridDate, relativeTime } from '../time';
 import type { RankEvolutionSummary } from './evolution';
 
-/** Dimensiones del sparkline — compartidas entre el cálculo de puntos y el `viewBox` del SVG en el componente. */
-export const RANK_CHART_WIDTH = 280;
-export const RANK_CHART_HEIGHT = 64;
+/** Dimensiones del gráfico — compartidas entre el cálculo de puntos y el `viewBox` del SVG en el componente. V4: más alto para que la evolución de LP sea un módulo que apetezca mirar, no un sparkline de 64px. */
+export const RANK_CHART_WIDTH = 320;
+export const RANK_CHART_HEIGHT = 104;
 
 export type RankEvolutionViewState = 'hidden' | 'empty' | 'single' | 'chart';
 

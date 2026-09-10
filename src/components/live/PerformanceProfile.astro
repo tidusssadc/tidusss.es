@@ -9,13 +9,8 @@ import {
 } from '../../data/league-laboratory';
 
 /**
- * El roster ADC oficial de Tidusss (el mismo de la Tier List, "Champion
- * Pool" nunca mantiene una segunda lista a mano) se resuelve aquí, en
- * build time — server-side, gratis — y se pasa al cliente como una simple
- * lista de nombres (`dataDragonKey`, el mismo formato que usa
- * `ChampionPerformance.championName`, ambos vienen de Data Dragon). Así el
- * script del cliente no necesita importar el dominio de `league-laboratory`
- * completo solo para filtrar 25 nombres.
+ * El roster ADC oficial de Tidusss (el mismo de la Tier List) se resuelve
+ * aquí, en build time, y se pasa al cliente como una lista de nombres.
  */
 const registry = buildLabRegistry({
   catalog: championCatalog,
@@ -27,142 +22,126 @@ const adcRosterNames = getAdcRoster(registry).map((entry) => entry.catalogEntry.
 ---
 
 <!--
-  "Rendimiento" + "Champion Pool" + "Patrones" — Sprint Champion Analytics
-  de Competitivo V2. Un solo componente, un solo fetch a `/api/riot/overview`
-  (mismo dataset ya cacheado que el resto de Competitivo; un fetch más del
-  cliente no dispara ninguna llamada Riot nueva — ver `performance.ts`).
-  Todo lo que se pinta es DIRECTA/DERIVADA de Match-V5, nunca una
-  estimación ni un score propio.
+  V4: "Forma por campeón" (5) + "Rendimiento reciente" (7) en un grid
+  asimétrico, no dos secciones apiladas. La antigua sección "04 · Patrones"
+  se disuelve: support / ADC rival / lado / duración pasan a ser un bloque
+  "Contexto" COMPACTO dentro de Rendimiento (contexto de las últimas N, no un
+  slab propio). La actividad por día/franja se retira de la vista principal
+  (dato de "documentación", poco valor para consultar cada día).
+
+  Un solo fetch a `/api/riot/overview` — mismo dataset ya cacheado, 0
+  llamadas Riot nuevas.
 -->
-<section
-  class="live-module live-module--wide performance-profile"
-  aria-labelledby="performance-profile-title"
-  data-performance-profile
-  data-riot={integrationEndpoints.riot}
-  data-adc-roster={JSON.stringify(adcRosterNames)}
->
-  <header class="live-module-head">
-    <div>
-      <span>02 / Rendimiento</span>
-      <h2 id="performance-profile-title">Forma reciente</h2>
-    </div>
-    <small data-performance-sample>Actividad reciente</small>
-  </header>
-
-  <div
-    class="live-loading live-loading--row performance-loading"
-    data-performance-loading
-    aria-label="Actualizando rendimiento"
+<div class="control-grid control-grid--mid" data-performance-profile data-riot={integrationEndpoints.riot} data-adc-roster={JSON.stringify(adcRosterNames)}>
+  <section
+    class="live-module champion-form"
+    aria-labelledby="champion-form-title"
+    data-champion-pool
+    hidden
   >
-    <i></i><i></i><i></i>
-  </div>
+    <header class="live-module-head">
+      <div>
+        <span>Forma por campeón</span>
+        <h2 id="champion-form-title">Con qué está jugando</h2>
+      </div>
+      <small data-pool-sample></small>
+    </header>
 
-  <div data-performance-body hidden>
-    <div class="stat-row" data-window-stats></div>
-    <p class="stat-row-meta" data-window-meta></p>
+    <ol class="pool-hero" data-pool-hero></ol>
 
-    <div class="window-compare" data-window-compare></div>
-  </div>
-
-  <div class="compact-empty" data-performance-empty hidden>
-    <strong>La muestra reciente todavía no contiene partidas de Solo/Duo.</strong>
-    <span>Este bloque se completará en cuanto Riot devuelva actividad clasificatoria.</span>
-  </div>
-
-  <div class="live-empty" data-performance-error hidden>
-    <strong>Riot no responde ahora mismo.</strong>
-    <p>El resto de Competitivo sigue funcionando — este bloque se actualizará solo.</p>
-  </div>
-</section>
-
-<section
-  class="live-module live-module--wide champion-pool"
-  aria-labelledby="champion-pool-title"
-  data-champion-pool
-  hidden
->
-  <header class="live-module-head">
-    <div>
-      <span>03 / Campeones</span>
-      <h2 id="champion-pool-title">Champion Pool</h2>
-    </div>
-    <small data-pool-sample></small>
-  </header>
-
-  <ol class="pool-hero" data-pool-hero></ol>
-
-  <div class="profile-subhead">
-    <h3>Distribución</h3>
-    <small data-pool-distribution-note></small>
-  </div>
-  <div class="pool-distribution" data-pool-distribution></div>
-
-  <div data-pool-dpm-block hidden>
     <div class="profile-subhead">
-      <h3>Daño por minuto</h3>
-      <small>Solo campeones con muestra suficiente (3+ partidas)</small>
+      <h3>Reparto</h3>
+      <small data-pool-distribution-note></small>
     </div>
-    <ul class="dpm-chart" data-pool-dpm></ul>
-  </div>
+    <div class="pool-distribution" data-pool-distribution></div>
 
-  <div data-pool-secondary-block hidden>
-    <div class="profile-subhead">
-      <h3>Muestra pequeña</h3>
-      <small>1-2 partidas — todavía no representativo</small>
+    <div data-pool-dpm-block hidden>
+      <div class="profile-subhead">
+        <h3>Daño por minuto</h3>
+        <small>Solo campeones con 3+ partidas</small>
+      </div>
+      <ul class="dpm-chart" data-pool-dpm></ul>
     </div>
-    <ul class="pool-secondary" data-pool-secondary></ul>
-  </div>
 
-  <div data-pool-off-role-block hidden>
-    <div class="profile-subhead">
-      <h3>Fuera del rol ADC</h3>
-      <small>Partidas reales fuera del roster ADC — no protagonizan Champion Pool</small>
+    <div data-pool-secondary-block hidden>
+      <div class="profile-subhead">
+        <h3>Muestra pequeña</h3>
+        <small>1-2 partidas — todavía no representativo</small>
+      </div>
+      <ul class="pool-secondary" data-pool-secondary></ul>
     </div>
-    <ul class="pool-secondary" data-pool-off-role></ul>
-  </div>
-</section>
 
-<section
-  class="live-module live-module--wide patterns-module"
-  aria-labelledby="patterns-title"
-  data-patterns
-  hidden
->
-  <header class="live-module-head">
-    <div><span>04 / Patrones</span><h2 id="patterns-title">Patrones</h2></div>
-  </header>
+    <div data-pool-off-role-block hidden>
+      <div class="profile-subhead">
+        <h3>Fuera del rol ADC</h3>
+        <small>Partidas reales fuera del roster ADC</small>
+      </div>
+      <ul class="pool-secondary" data-pool-off-role></ul>
+    </div>
+  </section>
 
-  <div class="patterns-grid">
-    <div class="pattern-block">
-      <h3>Con support</h3>
-      <small data-performance-synergy-note></small>
-      <ul class="performance-relations" data-performance-synergy></ul>
-    </div>
-    <div class="pattern-block">
-      <h3>Vs. ADC rival</h3>
-      <small data-performance-matchups-note></small>
-      <ul class="performance-relations" data-performance-matchups></ul>
-    </div>
-    <div class="pattern-block">
-      <h3>Lado del mapa</h3>
-      <ul class="performance-bars" data-performance-side></ul>
-    </div>
-    <div class="pattern-block">
-      <h3>Duración</h3>
-      <p class="performance-duration-summary" data-performance-duration-summary></p>
-      <ul class="performance-bars" data-performance-duration></ul>
-    </div>
-  </div>
+  <section
+    class="live-module recent-performance"
+    aria-labelledby="recent-performance-title"
+    data-performance-block
+  >
+    <header class="live-module-head">
+      <div>
+        <span>Rendimiento reciente</span>
+        <h2 id="recent-performance-title">¿Voy mejor o peor?</h2>
+      </div>
+      <small data-performance-sample>Actividad reciente</small>
+    </header>
 
-  <div class="profile-subhead">
-    <h3>Actividad</h3>
-    <small>Europe/Madrid</small>
-  </div>
-  <div class="activity-compact">
-    <ul class="performance-bars" data-performance-weekday></ul>
-    <ul class="performance-bars" data-performance-hourband></ul>
-  </div>
-</section>
+    <div
+      class="live-loading live-loading--row performance-loading"
+      data-performance-loading
+      aria-label="Actualizando rendimiento"
+    >
+      <i></i><i></i><i></i>
+    </div>
+
+    <div data-performance-body hidden>
+      <ul class="trend-grid" data-trend-grid></ul>
+      <p class="stat-row-meta" data-window-meta></p>
+
+      <div class="perf-context" data-perf-context hidden>
+        <div class="profile-subhead">
+          <h3>Contexto de las últimas partidas</h3>
+          <small>Resultados con 3+ partidas — no implica causalidad.</small>
+        </div>
+        <div class="perf-context-grid">
+          <div class="perf-context-cell">
+            <h4>Con support</h4>
+            <ul class="perf-context-list" data-context-synergy></ul>
+          </div>
+          <div class="perf-context-cell">
+            <h4>Vs. ADC rival</h4>
+            <ul class="perf-context-list" data-context-matchups></ul>
+          </div>
+          <div class="perf-context-cell">
+            <h4>Lado del mapa</h4>
+            <ul class="perf-context-list" data-context-side></ul>
+          </div>
+          <div class="perf-context-cell">
+            <h4>Duración</h4>
+            <p class="perf-context-duration" data-context-duration></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="compact-empty" data-performance-empty hidden>
+      <strong>La muestra reciente todavía no contiene partidas de Solo/Duo.</strong>
+      <span>Este bloque se completará en cuanto Riot devuelva actividad clasificatoria.</span>
+    </div>
+
+    <div class="compact-empty" data-performance-error hidden>
+      <strong>Riot no responde ahora mismo.</strong>
+      <span>El resto del Control Room sigue funcionando — se actualiza solo.</span>
+    </div>
+  </section>
+</div>
 
 <script>
   import { installCompetitiveQaIfRequested } from '../../lib/dev/competitive-qa';
@@ -173,11 +152,8 @@ const adcRosterNames = getAdcRoster(registry).map((entry) => entry.catalogEntry.
     topChampionsByDamagePerMinute,
   } from '../../lib/riot';
   import type {
-    ActivityBucket,
     AdcMatchupEntry,
     ChampionPerformance,
-    DurationBucketEntry,
-    PerformanceWindow,
     ProfilePerformance,
     SideSplitEntry,
     SupportSynergyEntry,
@@ -186,14 +162,14 @@ const adcRosterNames = getAdcRoster(registry).map((entry) => entry.catalogEntry.
 
   installCompetitiveQaIfRequested();
 
-  const performanceRoot = document.querySelector<HTMLElement>('[data-performance-profile]');
+  const gridRoot = document.querySelector<HTMLElement>('[data-performance-profile]');
+  const performanceRoot = document.querySelector<HTMLElement>('[data-performance-block]');
   const poolRoot = document.querySelector<HTMLElement>('[data-champion-pool]');
-  const patternsRoot = document.querySelector<HTMLElement>('[data-patterns]');
 
-  if (performanceRoot && poolRoot && patternsRoot) {
+  if (gridRoot && performanceRoot && poolRoot) {
     let adcRosterNames: string[] = [];
     try {
-      adcRosterNames = JSON.parse(performanceRoot.dataset.adcRoster ?? '[]');
+      adcRosterNames = JSON.parse(gridRoot.dataset.adcRoster ?? '[]');
     } catch {
       adcRosterNames = [];
     }
@@ -203,11 +179,8 @@ const adcRosterNames = getAdcRoster(registry).map((entry) => entry.catalogEntry.
     const decimal1 = (value?: number) =>
       value === undefined ? '—' : String(value).replace('.', ',');
     const percent = (value?: number) => (value === undefined ? '—' : `${value}%`);
-    const durationLabel = (seconds?: number) => {
-      if (seconds === undefined) return '—';
-      const minutes = Math.round(seconds / 60);
-      return `${minutes} min`;
-    };
+    const durationLabel = (seconds?: number) =>
+      seconds === undefined ? '—' : `${Math.round(seconds / 60)} min`;
     const text = (root: HTMLElement, selector: string, value: string) => {
       const node = root.querySelector<HTMLElement>(selector);
       if (node) node.textContent = value;
@@ -221,94 +194,89 @@ const adcRosterNames = getAdcRoster(registry).map((entry) => entry.catalogEntry.
       return node;
     };
 
-    // --- 02 · Rendimiento — tipografía grande + una comparativa compacta,
-    // nunca seis cajas idénticas (encargo §17). ---
+    // --- Rendimiento reciente como TENDENCIA (encargo §15): para cada
+    // métrica, los valores de 5 / 10 / 20 / muestra como un mini-sparkline
+    // + el valor actual + una flecha de dirección (solo descriptivo, sin
+    // "form score" inventado). ---
 
-    const STAT_TILES: Array<{ key: keyof PerformanceWindow; label: string; format: (v?: number) => string }> = [
-      { key: 'winRate', label: 'WR', format: percent },
+    interface TrendMetric {
+      key: 'winRate' | 'averageKda' | 'averageCsPerMinute' | 'averageDamagePerMinute';
+      label: string;
+      format: (value?: number) => string;
+    }
+    const TREND_METRICS: TrendMetric[] = [
+      { key: 'winRate', label: 'Win rate', format: percent },
       { key: 'averageKda', label: 'KDA', format: decimal },
-      { key: 'averageKillParticipation', label: 'KP', format: (v) => (v === undefined ? '—' : `${decimal1(v)}%`) },
-      { key: 'averageCsPerMinute', label: 'CS/MIN', format: decimal1 },
-      { key: 'averageGoldPerMinute', label: 'ORO/MIN', format: decimal1 },
-      { key: 'averageDamagePerMinute', label: 'DAÑO/MIN', format: decimal1 },
+      { key: 'averageCsPerMinute', label: 'CS/min', format: decimal1 },
+      { key: 'averageDamagePerMinute', label: 'Daño/min', format: (v) => (v === undefined ? '—' : String(Math.round(v))) },
     ];
 
-    const renderStatRow = (window: PerformanceWindow, windowLabel: string) => {
-      const container = performanceRoot.querySelector('[data-window-stats]');
-      if (!container) return;
-      container.replaceChildren(
-        ...STAT_TILES.map(({ key, label, format }, index) => {
-          const tile = el('div', 'stat-tile');
-          // WR y KDA lideran la lectura (Rediseño V3 §6): tratamiento
-          // tipográfico mayor. El resto (KP/CS/Oro/Daño por min) son el
-          // contexto, no seis cifras del mismo peso.
-          tile.classList.toggle('stat-tile--lead', index < 2);
-          const value = el('strong');
-          value.textContent = format(window[key] as number | undefined);
-          const caption = el('span');
-          caption.textContent = label;
-          tile.append(value, caption);
-          return tile;
-        }),
-      );
-      text(
-        performanceRoot,
-        '[data-window-meta]',
-        window.sampleSize
-          ? `${windowLabel} · ${window.sampleSize} partidas · ${window.wins}V ${window.losses}D · ${durationLabel(window.averageDurationSeconds)} de media`
-          : 'Sin partidas en la muestra',
-      );
+    const sparkline = (values: number[]): SVGSVGElement => {
+      const width = 96;
+      const height = 30;
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+      svg.setAttribute('class', 'trend-spark');
+      svg.setAttribute('preserveAspectRatio', 'none');
+      svg.setAttribute('aria-hidden', 'true');
+      if (values.length < 2) return svg;
+      const min = Math.min(...values);
+      const max = Math.max(...values);
+      const span = max - min || 1;
+      const points = values.map((value, index) => {
+        const x = (index / (values.length - 1)) * (width - 4) + 2;
+        const y = height - 3 - ((value - min) / span) * (height - 6);
+        return `${index === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`;
+      });
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', points.join(' '));
+      path.setAttribute('class', 'trend-spark-line');
+      svg.append(path);
+      return svg;
     };
 
-    /** 5/10/20/muestra completa en una sola fila compacta — nunca tres dashboards (encargo §18). */
-    interface ComparePoint {
-      label: string;
-      winRate?: number;
-      averageKda?: number;
-      averageDamagePerMinute?: number;
-    }
-
-    const renderWindowCompare = (trend: TrendPoint[], full: PerformanceWindow) => {
-      const container = performanceRoot.querySelector('[data-window-compare]');
+    const renderTrend = (
+      trend: TrendPoint[],
+      full: { winRate?: number; averageKda?: number; averageCsPerMinute?: number; averageDamagePerMinute?: number; sampleSize: number },
+    ) => {
+      const container = performanceRoot.querySelector('[data-trend-grid]');
       if (!container) return;
-      const points: ComparePoint[] = [
-        ...trend.map((point) => ({
-          label: `Últimas ${point.windowSize}`,
-          winRate: point.winRate,
-          averageKda: point.averageKda,
-          averageDamagePerMinute: point.averageDamagePerMinute,
-        })),
-        {
-          label: `Muestra (${full.sampleSize})`,
-          winRate: full.winRate,
-          averageKda: full.averageKda,
-          averageDamagePerMinute: full.averageDamagePerMinute,
-        },
-      ];
+      const ordered = [...trend].sort((a, b) => a.windowSize - b.windowSize);
       container.replaceChildren(
-        ...points.map((point) => {
-          const item = el('div', 'window-compare-item');
-          const label = el('span', 'window-compare-label');
-          label.textContent = point.label;
-          const wr = el('strong');
-          wr.textContent = percent(point.winRate);
-          const meta = el('span', 'window-compare-meta');
-          meta.textContent = `${decimal(point.averageKda)} KDA · ${decimal1(point.averageDamagePerMinute)} DPM`;
-          item.append(label, wr, meta);
+        ...TREND_METRICS.map((metric) => {
+          const series = [
+            ...ordered.map((point) => point[metric.key]),
+            full[metric.key],
+          ].filter((value): value is number => value !== undefined);
+          const item = el('li', 'trend-item');
+          const head = el('div', 'trend-item-head');
+          const value = el('strong');
+          const current = ordered[0]?.[metric.key] ?? full[metric.key];
+          value.textContent = metric.format(current);
+          const label = el('span', 'trend-item-label');
+          label.textContent = metric.label;
+          head.append(value, label);
+          item.append(head);
+          if (series.length >= 2) {
+            item.append(sparkline(series));
+            const delta = series[0]! - series[series.length - 1]!;
+            const dir = el('span', 'trend-item-dir');
+            const rising = delta > (metric.key === 'winRate' ? 1.5 : 0.05);
+            const falling = delta < -(metric.key === 'winRate' ? 1.5 : 0.05);
+            dir.textContent = rising ? '▲ sube' : falling ? '▼ baja' : '≈ estable';
+            dir.classList.toggle('is-up', rising);
+            dir.classList.toggle('is-down', falling);
+            item.append(dir);
+          }
+          const scale = el('span', 'trend-item-scale');
+          scale.textContent = `5 · 10 · 20 · ${full.sampleSize}`;
+          item.append(scale);
           return item;
         }),
       );
     };
 
-    // --- 03 · Champion Pool — el foco visual (Rediseño V3 §7). ---
-
-    /**
-     * Arte de carga del campeón (Data Dragon, misma CDN que los iconos que
-     * ya se cargan — 0 llamadas Riot nuevas, no cuenta contra el rate
-     * limit). Se deriva la clave del propio `championImageUrl`
-     * (`.../champion/{Key}.png`), nunca del nombre visible, que para
-     * algunos campeones difiere de la clave.
-     */
+    // --- Forma por campeón (antes "Champion Pool") ---
     const championLoadingArt = (iconUrl?: string): string | undefined => {
       if (!iconUrl) return undefined;
       const key = iconUrl.split('/').pop()?.replace(/\.png$/i, '');
@@ -323,8 +291,6 @@ const adcRosterNames = getAdcRoster(registry).map((entry) => entry.catalogEntry.
       isFeature = false,
     ): HTMLLIElement => {
       const item = el('li', variant === 'hero' ? 'pool-card' : 'pool-secondary-item');
-      // El campeón más jugado real (nunca hardcodeado) es la pieza visual
-      // principal: arte de carga a sangre, no un icono de 84px.
       item.classList.toggle('pool-card--feature', isFeature);
       const art = isFeature ? championLoadingArt(champion.championImageUrl) : undefined;
       if (art) {
@@ -378,11 +344,9 @@ const adcRosterNames = getAdcRoster(registry).map((entry) => entry.catalogEntry.
         stat(decimal1(champion.averageCsPerMinute), 'CSM'),
       );
       if (isFeature) {
-        // Feature: las stats van dentro del cuerpo, sobre el escrim del arte.
         body.append(stats);
         item.append(body);
       } else {
-        // Fila compacta: [icono] [nombre + record] [stats] como columnas del grid.
         item.append(body, stats);
       }
       return item;
@@ -394,7 +358,7 @@ const adcRosterNames = getAdcRoster(registry).map((entry) => entry.catalogEntry.
       poolRoot.hidden = !hasAny;
       if (!hasAny) return;
 
-      text(poolRoot, '[data-pool-sample]', `${sampleSize} ${sampleSize === 1 ? 'partida analizada' : 'partidas analizadas'}`);
+      text(poolRoot, '[data-pool-sample]', `${sampleSize} ${sampleSize === 1 ? 'partida' : 'partidas'}`);
 
       const { primary, secondary } = tierChampionsBySampleSize(adcChampions);
 
@@ -427,7 +391,7 @@ const adcRosterNames = getAdcRoster(registry).map((entry) => entry.catalogEntry.
       text(
         poolRoot,
         '[data-pool-distribution-note]',
-        top ? `${top.championName} es el más jugado: ${Math.round((top.games / totalGames) * 100)}% de la muestra` : '',
+        top ? `${top.championName}: ${Math.round((top.games / totalGames) * 100)}% de la muestra` : '',
       );
 
       const dpmBlock = poolRoot.querySelector<HTMLElement>('[data-pool-dpm-block]');
@@ -476,116 +440,90 @@ const adcRosterNames = getAdcRoster(registry).map((entry) => entry.catalogEntry.
       if (offRoleList) offRoleList.replaceChildren(...offRoleChampions.map((c) => championCard(c, 'secondary')));
     };
 
-    // --- 04 · Patrones — resultados, nunca causalidad. ---
-
-    const renderBar = (
-      container: Element | null,
-      items: Array<{ label: string; games: number; percentage?: number; winRate?: number }>,
-      emptyCopy: string,
-    ) => {
-      if (!container) return;
-      if (!items.length) {
-        const item = el('li', 'performance-bars-empty');
-        item.textContent = emptyCopy;
-        container.replaceChildren(item);
-        return;
+    // --- Contexto (antes "04 · Patrones"), compacto, dentro de Rendimiento ---
+    const contextRow = (label: string, value: string, imageUrl?: string) => {
+      const item = el('li');
+      if (imageUrl) {
+        const image = el('img');
+        image.src = imageUrl;
+        image.alt = '';
+        image.width = 20;
+        image.height = 20;
+        image.loading = 'lazy';
+        image.decoding = 'async';
+        item.append(image);
       }
-      container.replaceChildren(
-        ...items.map((entry) => {
-          const item = el('li');
-          const label = el('span');
-          label.textContent = entry.label;
-          const bar = el('i');
-          bar.style.width = `${entry.percentage ?? Math.min(100, entry.games * 10)}%`;
-          const value = el('strong');
-          value.textContent = entry.winRate === undefined ? `${entry.games}` : `${entry.games} · ${entry.winRate}% WR`;
-          item.append(label, bar, value);
-          return item;
-        }),
-      );
+      const name = el('span');
+      name.textContent = label;
+      const strong = el('strong');
+      strong.textContent = value;
+      item.append(name, strong);
+      return item;
+    };
+    const emptyRow = (copy: string) => {
+      const item = el('li', 'performance-bars-empty');
+      item.textContent = copy;
+      return item;
     };
 
-    const renderRelations = (
-      selector: string,
-      entries: Array<{ label: string; games: number; winRate?: number; imageUrl?: string }>,
-    ) => {
-      const list = patternsRoot.querySelector(selector);
-      if (!list) return;
-      if (!entries.length) {
-        const item = el('li', 'performance-bars-empty');
-        item.textContent = 'Todavía sin muestra suficiente (mínimo 3 partidas juntas).';
-        list.replaceChildren(item);
-        return;
-      }
-      list.replaceChildren(
-        ...entries.map((entry) => {
-          const item = el('li');
-          if (entry.imageUrl) {
-            const image = el('img');
-            image.src = entry.imageUrl;
-            image.alt = '';
-            image.width = 24;
-            image.height = 24;
-            image.loading = 'lazy';
-            image.decoding = 'async';
-            item.append(image);
-          }
-          const name = el('span');
-          name.textContent = entry.label;
-          const value = el('strong');
-          value.textContent = `${entry.games} · ${entry.winRate ?? 0}% WR`;
-          item.append(name, value);
-          return item;
-        }),
-      );
-    };
-
-    const renderPatterns = (performance: ProfilePerformance) => {
+    const renderContext = (performance: ProfilePerformance) => {
+      const context = performanceRoot.querySelector<HTMLElement>('[data-perf-context]');
+      if (!context) return;
       const hasAny =
         performance.supportSynergy.length > 0 ||
         performance.adcMatchups.length > 0 ||
         performance.sideSplit.length > 0 ||
-        performance.duration.buckets.length > 0 ||
-        performance.activityByWeekday.length > 0;
-      patternsRoot.hidden = !hasAny;
+        performance.duration.buckets.length > 0;
+      context.hidden = !hasAny;
       if (!hasAny) return;
 
-      text(patternsRoot, '[data-performance-synergy-note]', 'Resultados con 3+ partidas juntas — no implica causalidad.');
-      renderRelations(
-        '[data-performance-synergy]',
-        performance.supportSynergy.map((entry: SupportSynergyEntry) => ({ label: entry.supportName, games: entry.games, winRate: entry.winRate })),
-      );
-      text(patternsRoot, '[data-performance-matchups-note]', 'Historial de resultados, no teoría de matchup.');
-      renderRelations(
-        '[data-performance-matchups]',
-        performance.adcMatchups.map((entry: AdcMatchupEntry) => ({ label: `vs ${entry.enemyChampionName}`, games: entry.games, winRate: entry.winRate, imageUrl: entry.enemyChampionImageUrl })),
-      );
-      renderBar(
-        patternsRoot.querySelector('[data-performance-side]'),
-        performance.sideSplit.map((entry: SideSplitEntry) => ({ label: entry.side === 'blue' ? 'Azul' : 'Rojo', games: entry.games, percentage: Math.min(100, entry.games * 12), winRate: entry.winRate })),
-        'Sin muestra suficiente.',
-      );
-      renderBar(
-        patternsRoot.querySelector('[data-performance-duration]'),
-        performance.duration.buckets.map((bucket: DurationBucketEntry) => ({ label: bucket.label, games: bucket.games, percentage: Math.min(100, bucket.games * 12), winRate: bucket.winRate })),
-        'Sin partidas suficientes para desglosar por duración.',
-      );
+      const synergy = context.querySelector('[data-context-synergy]');
+      if (synergy)
+        synergy.replaceChildren(
+          ...(performance.supportSynergy.length
+            ? performance.supportSynergy
+                .slice(0, 3)
+                .map((entry: SupportSynergyEntry) =>
+                  contextRow(entry.supportName, `${entry.games} · ${entry.winRate ?? 0}% WR`),
+                )
+            : [emptyRow('Sin 3+ partidas con un mismo support.')]),
+        );
+
+      const matchups = context.querySelector('[data-context-matchups]');
+      if (matchups)
+        matchups.replaceChildren(
+          ...(performance.adcMatchups.length
+            ? performance.adcMatchups
+                .slice(0, 3)
+                .map((entry: AdcMatchupEntry) =>
+                  contextRow(
+                    `vs ${entry.enemyChampionName}`,
+                    `${entry.games} · ${entry.winRate ?? 0}% WR`,
+                    entry.enemyChampionImageUrl,
+                  ),
+                )
+            : [emptyRow('Sin 3+ partidas contra un mismo ADC.')]),
+        );
+
+      const side = context.querySelector('[data-context-side]');
+      if (side)
+        side.replaceChildren(
+          ...(performance.sideSplit.length
+            ? performance.sideSplit.map((entry: SideSplitEntry) =>
+                contextRow(
+                  entry.side === 'blue' ? 'Azul' : 'Rojo',
+                  `${entry.games} · ${entry.winRate ?? 0}% WR`,
+                ),
+              )
+            : [emptyRow('Sin muestra.')]),
+        );
+
       text(
-        patternsRoot,
-        '[data-performance-duration-summary]',
+        performanceRoot,
+        '[data-context-duration]',
         performance.duration.averageSeconds === undefined
           ? 'Sin muestra suficiente.'
-          : `Media: ${durationLabel(performance.duration.averageSeconds)} · Victorias: ${durationLabel(performance.duration.averageWinSeconds)} · Derrotas: ${durationLabel(performance.duration.averageLossSeconds)}`,
-      );
-      renderBar(
-        patternsRoot.querySelector('[data-performance-weekday]'),
-        performance.activityByWeekday.map((entry: ActivityBucket) => ({ label: entry.label, games: entry.games, percentage: Math.min(100, entry.games * 12), winRate: entry.winRate })),
-        'Sin actividad registrada.',
-      );
-      renderBar(
-        patternsRoot.querySelector('[data-performance-hourband]'),
-        performance.activityByHourBand.map((entry: ActivityBucket) => ({ label: entry.label, games: entry.games, percentage: Math.min(100, entry.games * 12), winRate: entry.winRate })),
-        'Sin actividad registrada.',
+          : `Media ${durationLabel(performance.duration.averageSeconds)} · Victorias ${durationLabel(performance.duration.averageWinSeconds)} · Derrotas ${durationLabel(performance.duration.averageLossSeconds)}`,
       );
     };
 
@@ -598,22 +536,30 @@ const adcRosterNames = getAdcRoster(registry).map((entry) => entry.catalogEntry.
       text(
         performanceRoot,
         '[data-performance-sample]',
-        `${performance.sampleSize} ${performance.sampleSize === 1 ? 'partida analizada' : 'partidas analizadas'}`,
+        `${performance.sampleSize} ${performance.sampleSize === 1 ? 'partida' : 'partidas'}`,
       );
       poolRoot.hidden = !hasSample;
-      patternsRoot.hidden = !hasSample;
       if (!hasSample) return;
 
-      const recentLabel = performance.windowRecent.sampleSize < 20 ? 'Muestra disponible' : 'Últimas 20';
-      renderStatRow(performance.windowRecent, recentLabel);
-      renderWindowCompare(performance.trend, performance.windowFull);
+      renderTrend(performance.trend, {
+        winRate: performance.windowFull.winRate,
+        averageKda: performance.windowFull.averageKda,
+        averageCsPerMinute: performance.windowFull.averageCsPerMinute,
+        averageDamagePerMinute: performance.windowFull.averageDamagePerMinute,
+        sampleSize: performance.windowFull.sampleSize,
+      });
+      text(
+        performanceRoot,
+        '[data-window-meta]',
+        `${performance.windowRecent.sampleSize} recientes · ${performance.windowRecent.wins}V ${performance.windowRecent.losses}D · ${durationLabel(performance.windowRecent.averageDurationSeconds)} de media`,
+      );
+      renderContext(performance);
       renderChampionPool(performance.champions, performance.sampleSize);
-      renderPatterns(performance);
     };
 
     const load = async () => {
       try {
-        const response = await fetch(performanceRoot.dataset.riot!);
+        const response = await fetch(gridRoot.dataset.riot!);
         const payload = (await response.json()) as RiotPublicResponse;
         if (!payload.ok) throw new Error(payload.error.code);
         render(payload.data.performance);
@@ -623,7 +569,6 @@ const adcRosterNames = getAdcRoster(registry).map((entry) => entry.catalogEntry.
         performanceRoot.querySelector<HTMLElement>('[data-performance-empty]')!.hidden = false;
         performanceRoot.querySelector<HTMLElement>('[data-performance-error]')!.hidden = false;
         poolRoot.hidden = true;
-        patternsRoot.hidden = true;
       }
     };
 
@@ -633,9 +578,6 @@ const adcRosterNames = getAdcRoster(registry).map((entry) => entry.catalogEntry.
       if (!document.hidden) void load();
     });
 
-    // Solo en `astro dev` (eliminado del bundle de producción): fuerza el
-    // render con datos sintéticos para QA visual sin tocar la red real —
-    // mismo patrón que `LiveGameModule.astro`.
     if (import.meta.env.DEV) {
       (window as unknown as { __performanceProfileDebugRender?: typeof render }).__performanceProfileDebugRender = render;
     }

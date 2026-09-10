@@ -204,6 +204,17 @@ test('con snapshot previo real → delta de LP correcto y sin cambio de divisió
   assert.equal(result?.tierChanged, false);
 });
 
+test('Master sin división vs Master con rank:"I" de Riot → NO cuenta como cambio de división', () => {
+  const result = deriveSessionLpDelta(
+    [{ observedAt: '2026-09-10T08:00:00.000Z', tier: 'MASTER', leaguePoints: 540 }],
+    '2026-09-10T12:00:00.000Z',
+    { observedAt: '2026-09-10T21:00:00.000Z', tier: 'MASTER', rank: 'I', leaguePoints: 554 },
+  );
+  assert.equal(result?.tierChanged, false);
+  assert.equal(result?.delta, 14);
+  assert.equal(result?.toLabel, 'MASTER');
+});
+
 test('cambio de división entre el snapshot de inicio y ahora → tierChanged true', () => {
   const result = deriveSessionLpDelta(
     [{ observedAt: '2026-09-10T08:00:00.000Z', tier: 'DIAMOND', rank: 'I', leaguePoints: 80 }],

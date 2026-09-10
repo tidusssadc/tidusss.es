@@ -157,8 +157,13 @@ export interface SessionLpDelta {
   toLabel: string;
 }
 
+/** Master+ no tiene división: Riot a veces devuelve `rank: "I"`, los snapshots guardan `undefined`. Se normaliza para no leer eso como un cambio de división. */
+const APEX_TIERS = new Set(['MASTER', 'GRANDMASTER', 'CHALLENGER']);
+const divisionOf = (point: RankPointLike): string | undefined =>
+  point.tier && APEX_TIERS.has(point.tier) ? undefined : point.rank;
+
 const rankLabel = (point: RankPointLike): string =>
-  [point.tier, point.rank].filter(Boolean).join(' ') || 'Sin clasificar';
+  [point.tier, divisionOf(point)].filter(Boolean).join(' ') || 'Sin clasificar';
 
 export const deriveSessionLpDelta = (
   points: readonly RankPointLike[],
@@ -180,7 +185,8 @@ export const deriveSessionLpDelta = (
     fromLeaguePoints: prior.leaguePoints,
     toLeaguePoints: current.leaguePoints,
     delta: current.leaguePoints - prior.leaguePoints,
-    tierChanged: prior.tier !== current.tier || prior.rank !== current.rank,
+    tierChanged:
+      prior.tier !== current.tier || divisionOf(prior) !== divisionOf(current),
     fromLabel: rankLabel(prior),
     toLabel: rankLabel(current),
   };

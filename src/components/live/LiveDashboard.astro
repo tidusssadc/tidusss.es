@@ -8,144 +8,156 @@ import RankEvolution from './RankEvolution.astro';
 import { resolvedMatchVideoContent } from '../../lib/resolved-match-video-content';
 ---
 
+<!--
+  /competitivo — V4 "SoloQ Control Room". El objetivo ya no es "una página
+  con estadísticas" sino el centro de mando diario de SoloQ de Tidusss:
+  responde de inmediato a "¿cómo voy ahora?", luego a "¿por qué?", luego a
+  "¿qué ha pasado en mis partidas?".
+
+  Composición (rompe la pila de 5 capítulos de V3):
+   1. COMMAND BAR sticky — HUD competitivo compacto: rango, LP, pico,
+      Δ de sesión, racha, última partida, estado LIVE, actualización.
+   2. Grid asimétrico: SESIÓN DE HOY (7) · EVOLUCIÓN LP (5).
+   3. FORMA POR CAMPEÓN (5) · RENDIMIENTO RECIENTE + contexto (7)  [PerformanceProfile].
+   4. HISTORIAL (12) — denso, con filtros client-side y "cargar anteriores".
+
+  Todo client-side (sitio estático). Cero llamadas Riot nuevas frente a V3:
+  el mismo `/api/riot/overview` ya trae 20 partidas y la sesión de hoy
+  derivada; `/api/riot/rank-history` ya lo pedía RankEvolution.
+-->
 <main
   class="live-page"
   data-live-root
   data-youtube={integrationEndpoints.youtube}
   data-riot={integrationEndpoints.riot}
+  data-riot-rank-history={integrationEndpoints.riotRankHistory}
   data-riot-matches-base={integrationEndpoints.riotMatchesBase}
   data-match-videos={JSON.stringify(resolvedMatchVideoContent)}
 >
-  <section class="live-intro">
+  <div class="command-bar-shell">
     <div class="live-container">
-      <p class="eyebrow">Tidusss · Competitivo</p>
-      <p class="live-intro-line">Rango, forma y Champion Pool reales de SoloQ — datos de la Riot API para <strong>Tidusss#FFX</strong>.</p>
-    </div>
-  </section>
-
-  <div class="live-container">
-    <LiveGameModule />
-  </div>
-
-  <div class="live-container live-stack">
-    <section
-      class="live-module live-module--wide status-module"
-      aria-labelledby="solo-title"
-      data-status-module
-    >
-      <header class="live-module-head">
-        <div>
-          <span>01 / Ahora</span><h2 id="solo-title">Estado competitivo</h2>
+      <div class="command-bar" data-command-bar>
+        <div class="cb-rank">
+          <img
+            class="cb-crest"
+            data-rank-crest
+            width="34"
+            height="34"
+            alt=""
+            aria-hidden="true"
+            decoding="async"
+            hidden
+          />
+          <strong data-rank class="cb-tier data-skeleton data-skeleton--line" aria-label="Actualizando rango">&nbsp;</strong>
+          <span data-lp class="cb-lp data-skeleton data-skeleton--line" aria-hidden="true">&nbsp;</span>
         </div>
-        <div class="status-module-meta">
+
+        <div class="cb-facts" data-cb-facts>
+          <span class="cb-fact" data-cb-peak hidden><b>pico</b> <span data-cb-peak-value></span></span>
+          <span class="cb-fact cb-fact--session" data-cb-session hidden><b>sesión</b> <span data-cb-session-value></span></span>
+          <span class="cb-fact" data-cb-streak hidden><span data-cb-streak-value></span></span>
+          <span class="cb-fact" data-cb-last hidden><b>última</b> <span data-cb-last-value></span></span>
+        </div>
+
+        <div class="cb-tail">
+          <span class="cb-account"><strong data-riot-id>Tidusss#FFX</strong><span>EUW · Solo/Duo</span></span>
+          <span class="cb-live" data-cb-live>
+            <i class="live-dot" aria-hidden="true"></i>
+            <span data-cb-live-label>fuera de partida</span>
+          </span>
           <small
             data-riot-updated
-            class="data-skeleton data-skeleton--meta"
+            class="cb-updated data-skeleton data-skeleton--meta"
             aria-label="Actualizando datos competitivos"
             aria-live="polite">&nbsp;</small
           >
-          <button type="button" class="status-refresh" data-profile-refresh>
-            Actualizar
+          <button type="button" class="cb-refresh" data-profile-refresh aria-label="Actualizar datos competitivos">
+            <span aria-hidden="true">↻</span>
           </button>
+          <p class="sr-only" data-profile-refresh-state aria-live="polite"></p>
         </div>
-      </header>
-      <p
-        class="status-refresh-state"
-        data-profile-refresh-state
-        aria-live="polite"
+      </div>
+    </div>
+  </div>
+
+  <div class="live-container live-stack">
+    <LiveGameModule />
+
+    <div class="control-grid control-grid--top">
+      <section
+        class="live-module session-module"
+        aria-labelledby="session-title"
+        data-session-module
       >
-      </p>
-
-      <div class="rank-identity">
-        <img
-          class="rank-identity-crest"
-          data-rank-crest
-          width="72"
-          height="72"
-          alt=""
-          aria-hidden="true"
-          decoding="async"
-          hidden
-        />
-        <span class="rank-identity-tier-wrap">
-          <strong
-            data-rank
-            class="rank-identity-tier data-skeleton"
-            aria-label="Actualizando rango">&nbsp;</strong
-          >
-          <span
-            data-lp
-            class="rank-identity-lp data-skeleton data-skeleton--line">&nbsp;</span
-          >
-        </span>
-        <span class="rank-identity-account">
-          <strong data-riot-id>Tidusss#FFX</strong>
-          <span>EUW · Solo/Duo</span>
-        </span>
-      </div>
-
-      <div class="status-body">
-        <div class="status-col status-col--evolution" data-status-evolution>
-          <p class="status-col-label">Evolución</p>
-          <RankEvolution />
-        </div>
-
-        <div class="status-col status-col--today" data-today-metrics hidden>
-          <p class="status-col-label">Hoy</p>
-          <div class="today-headline">
-            <strong data-today-record></strong>
-            <span data-activity class="data-skeleton data-skeleton--copy">&nbsp;</span>
+        <header class="live-module-head">
+          <div>
+            <span>Sesión de hoy</span>
+            <h2 id="session-title" data-session-heading>Sesión de hoy</h2>
           </div>
-          <ul class="today-figs">
-            <li><strong data-today-games></strong><span>Partidas</span></li>
-            <li><strong data-today-wr></strong><span>Win rate</span></li>
-            <li><strong data-today-kda></strong><span>KDA</span></li>
+          <small data-session-meta class="data-skeleton data-skeleton--meta">&nbsp;</small>
+        </header>
+
+        <div data-session-body hidden>
+          <div class="session-headline">
+            <strong data-session-record></strong>
+            <span data-session-since></span>
+          </div>
+          <ul class="session-figs">
+            <li><strong data-session-wr></strong><span>Win rate</span></li>
+            <li><strong data-session-kda></strong><span>KDA</span></li>
+            <li><strong data-session-csm></strong><span>CS/min</span></li>
+            <li><strong data-session-dpm></strong><span>Daño/min</span></li>
           </ul>
-          <p class="today-tags">
-            <span>Racha <strong data-today-streak></strong></span>
-            <span>Campeón <strong data-today-champion></strong></span>
+          <p class="session-tags">
+            <span data-session-streak-tag hidden>Racha <strong data-session-streak></strong></span>
+            <span data-session-champ-tag hidden>Más jugado <strong data-session-champ></strong></span>
           </p>
+          <ul class="insights" data-session-insights hidden></ul>
         </div>
 
-        <div class="status-col status-col--season">
-          <p class="status-col-label">Temporada</p>
-          <div class="season-record" data-season-record hidden>
-            <strong data-season-record-line></strong>
-          </div>
-          <p class="status-note">
-            <span>Variación de LP</span><strong data-lp-delta>Pendiente</strong>
-          </p>
-          <p class="status-note status-note--muted">
-            Se mostrará en cuanto haya una medición previa con la que compararla.
-          </p>
+        <div class="compact-empty" data-session-empty hidden>
+          <strong>Sin clasificatorias hoy.</strong>
+          <span>
+            No hay Solo/Duo registrada desde las 00:00 en Europe/Madrid.
+            <span data-session-last hidden></span>
+          </span>
         </div>
-      </div>
 
-      <div class="today-empty" data-today-empty hidden>
-        <strong>Sin clasificatorias hoy.</strong>
-        <p>
-          Todavía no hay actividad de Solo/Duo registrada desde las 00:00 en
-          Europe/Madrid.
-        </p>
-        <p data-last-competitive hidden></p>
-      </div>
-      <div class="live-empty" data-riot-error hidden>
-        <strong>Clasificación temporalmente no disponible.</strong>
-        <p>El resto del centro Live sigue funcionando.</p>
-      </div>
-    </section>
+        <div class="compact-empty" data-riot-error hidden>
+          <strong>Riot no responde ahora mismo.</strong>
+          <span>El resto del Control Room sigue funcionando — se reintenta solo.</span>
+        </div>
+      </section>
+
+      <RankEvolution />
+    </div>
 
     <PerformanceProfile />
 
     <section
-      class="live-module live-module--wide"
+      class="live-module live-module--wide history-module"
       aria-labelledby="matches-title"
+      data-history-module
     >
       <header class="live-module-head">
         <div>
-          <span>05 / Historial</span><h2 id="matches-title">Últimas partidas</h2>
-        </div><small>Solo/Duo ranked</small>
+          <span>Historial</span><h2 id="matches-title">Últimas partidas</h2>
+        </div>
+        <div class="history-filters" data-history-filters hidden>
+          <div class="history-filter-group" role="group" aria-label="Filtrar por resultado">
+            <button type="button" data-history-filter="all" aria-pressed="true">Todas</button>
+            <button type="button" data-history-filter="win" aria-pressed="false">Victorias</button>
+            <button type="button" data-history-filter="loss" aria-pressed="false">Derrotas</button>
+          </div>
+          <label class="history-champion-filter">
+            <span class="sr-only">Filtrar por campeón</span>
+            <select data-history-champion>
+              <option value="">Todos los campeones</option>
+            </select>
+          </label>
+        </div>
       </header>
+
       <ol class="live-match-list" data-live-matches aria-live="polite">
         <li
           class="live-loading live-loading--row match-card-skeleton"
@@ -156,6 +168,13 @@ import { resolvedMatchVideoContent } from '../../lib/resolved-match-video-conten
       </ol>
       <MatchCard />
       <MatchEmpty />
+
+      <div class="history-more" data-history-more hidden>
+        <p data-history-count aria-live="polite"></p>
+        <button type="button" class="history-load-more" data-history-load-more>
+          Cargar anteriores
+        </button>
+      </div>
     </section>
 
     <div class="related-gameplays live-module live-module--wide" data-related-gameplays hidden>
@@ -167,7 +186,6 @@ import { resolvedMatchVideoContent } from '../../lib/resolved-match-video-conten
       </div>
       <div data-related-gameplays-list></div>
     </div>
-
   </div>
 </main>
 
@@ -175,99 +193,29 @@ import { resolvedMatchVideoContent } from '../../lib/resolved-match-video-conten
   import { installCompetitiveQaIfRequested } from '../../lib/dev/competitive-qa';
   import { madridTime, relativeTime, updatedAgo } from '../../lib/time';
   import { rankAssetFor } from '../../config/rank-assets';
+  import { formatRankLabel } from '../../lib/rank-history/format';
   import { renderMatchCards } from './matches/render';
+  import {
+    buildDeterministicInsights,
+    deriveSessionLpDelta,
+  } from '../../lib/riot/insights';
   import type { RiotPublicResponse } from '../../lib/riot';
+  import type { RankHistoryPublicResponse } from '../../../functions/api/riot/rank-history';
+  import type { RankEvolutionPoint, RankEvolutionSummary } from '../../lib/rank-history';
   import type {
     YouTubeFeedResponse,
     YouTubeFeedResult,
     YouTubeVideo,
   } from '../../types/content';
 
-  // Modo de QA visual (rama design/competitive-v3): no-op salvo en un
-  // preview con `?qa=competitive-v3`. Se llama antes que cualquier fetch.
+  // Modo de QA visual (previews de rama): no-op salvo `?qa=competitive-v3`
+  // en un host que no sea producción. Se llama antes que cualquier fetch.
   installCompetitiveQaIfRequested();
 
   const root = document.querySelector<HTMLElement>('[data-live-root]');
   const reducedMotion = window.matchMedia(
     '(prefers-reduced-motion: reduce)',
   ).matches;
-  const entered = new WeakSet<Element>();
-  const pendingAnimations = new WeakMap<
-    HTMLElement,
-    { values: number[]; render: (values: number[]) => string }
-  >();
-  const easing = (progress: number) => 1 - Math.pow(1 - progress, 3);
-  let valueObserver: IntersectionObserver | undefined;
-
-  const animateNow = (
-    node: HTMLElement,
-    values: number[],
-    render: (values: number[]) => string,
-  ) => {
-    const previous = (node.dataset.numericValue ?? '')
-      .split(',')
-      .map(Number)
-      .filter(Number.isFinite);
-    const from =
-      previous.length === values.length ? previous : values.map(() => 0);
-    node.dataset.numericValue = values.join(',');
-    if (reducedMotion) {
-      node.textContent = render(values);
-      return;
-    }
-    const startedAt = performance.now();
-    const duration = 850;
-    const frame = (now: number) => {
-      const progress = Math.min(1, (now - startedAt) / duration);
-      const eased = easing(progress);
-      node.textContent = render(
-        values.map((value, index) => {
-          const start = from[index] ?? 0;
-          return start + (value - start) * eased;
-        }),
-      );
-      if (progress < 1) requestAnimationFrame(frame);
-    };
-    requestAnimationFrame(frame);
-    // Red de seguridad: en una pestaña en segundo plano `requestAnimationFrame`
-    // puede no llegar a ejecutarse nunca — sin esto, el valor real quedaría
-    // bloqueado en el esqueleto de carga aunque la API ya hubiera respondido.
-    setTimeout(() => {
-      node.textContent = render(values);
-    }, duration + 100);
-  };
-
-  const animateValues = (
-    selector: string,
-    values: number[],
-    render: (values: number[]) => string,
-  ) => {
-    const node = root?.querySelector<HTMLElement>(selector);
-    if (!node) return;
-    node.classList.remove('data-skeleton', 'data-skeleton--line');
-    if (entered.has(node) || reducedMotion) {
-      animateNow(node, values, render);
-      return;
-    }
-    pendingAnimations.set(node, { values, render });
-    valueObserver?.observe(node);
-  };
-
-  if (!reducedMotion) {
-    valueObserver = new IntersectionObserver(
-      (entries) =>
-        entries.forEach((entry) => {
-          if (!entry.isIntersecting) return;
-          const node = entry.target as HTMLElement;
-          entered.add(node);
-          valueObserver?.unobserve(node);
-          const pending = pendingAnimations.get(node);
-          if (pending) animateNow(node, pending.values, pending.render);
-          pendingAnimations.delete(node);
-        }),
-      { threshold: 0.2 },
-    );
-  }
 
   const text = (selector: string, value: string) => {
     const node = root?.querySelector<HTMLElement>(selector);
@@ -280,28 +228,35 @@ import { resolvedMatchVideoContent } from '../../lib/resolved-match-video-conten
     )
       node.animate(
         [
-          { opacity: 0.45, transform: 'translate3d(0, 3px, 0)' },
+          { opacity: 0.45, transform: 'translate3d(0, 2px, 0)' },
           { opacity: 1, transform: 'translate3d(0, 0, 0)' },
         ],
-        { duration: 260, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' },
+        { duration: 220, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' },
       );
   };
   const visible = (selector: string, show: boolean) => {
     const node = root?.querySelector<HTMLElement>(selector);
     if (node) node.hidden = !show;
   };
+  const unskeleton = (selector: string) =>
+    root
+      ?.querySelector(selector)
+      ?.classList.remove(
+        'data-skeleton',
+        'data-skeleton--line',
+        'data-skeleton--meta',
+        'data-skeleton--copy',
+      );
+  const decimal = (value?: number, digits = 2) =>
+    value === undefined ? '—' : value.toFixed(digits).replace('.', ',');
   const number = (value?: number) =>
     value === undefined
       ? undefined
       : new Intl.NumberFormat('es-ES').format(value);
+
   let riotData: Extract<RiotPublicResponse, { ok: true }>['data'] | undefined;
+  let rankPoints: RankEvolutionPoint[] = [];
   let videos: YouTubeFeedResult['videos'] = [];
-  // Vídeos de `matchVideoLinks` ya resueltos en build time (lib/resolved-
-  // match-video-content.ts) — la relación partida↔vídeo es permanente y no
-  // debe depender de que el vídeo siga entre los últimos 12 subidos del
-  // canal. Se parsean una sola vez; si el atributo faltara o viniera
-  // corrupto, se degrada a "sin vídeos de partida" en vez de romper el
-  // resto del dashboard.
   let matchVideos: YouTubeVideo[] = [];
   try {
     matchVideos = JSON.parse(root?.dataset.matchVideos ?? '[]');
@@ -309,75 +264,314 @@ import { resolvedMatchVideoContent } from '../../lib/resolved-match-video-conten
     matchVideos = [];
   }
   let fetching = false;
-  // Solo true mientras el fallo de Riot sea el motivo real por el que no
-  // hay partidas que mostrar — nunca se confunde con "sin clasificatorias
-  // recientes" (eso es data real: sampleSize === 0, no un fallo de red).
   let riotFailed = false;
 
-  const renderMatches = () => {
+  // --- Historial: filtros + "cargar anteriores", todo client-side sobre las
+  // partidas que ya están en el payload (hasta 20). ---
+  const HISTORY_PAGE = 10;
+  let historyResult: 'all' | 'win' | 'loss' = 'all';
+  let historyChampion = '';
+  let historyVisible = HISTORY_PAGE;
+  let lastNewestMatchId: string | undefined;
+
+  const filteredMatches = () => {
+    const all = riotData?.recent.matches ?? [];
+    return all.filter((match) => {
+      if (historyResult === 'win' && !match.win) return false;
+      if (historyResult === 'loss' && match.win) return false;
+      if (historyChampion && match.championName !== historyChampion) return false;
+      return true;
+    });
+  };
+
+  const renderHistory = () => {
     const list = root?.querySelector('[data-live-matches]');
     if (!list) return;
-    // Sin `riotData` (todavía no ha llegado o Riot ha fallado) se pasa un
-    // array vacío: `renderMatchCards` ya sabe pintar el estado vacío real
-    // (`MatchEmpty`) en vez de dejar el esqueleto de carga para siempre.
-    //
-    // El pool de vídeos para resolver `MatchVideoBadge`/`MatchVideoPanel` se
-    // amplía con `matchVideos` (resueltos en build time desde
-    // `matchVideoLinks`, ver lib/resolved-match-video-content.ts) para que
-    // una asociación verificada siga resolviendo aunque el vídeo ya no esté
-    // entre los últimos 12 del canal. Solo se mezcla aquí, para esta
-    // llamada — `videos` en sí no se toca, así que el resto del dashboard
-    // (vídeos relacionados, actividad reciente) sigue mostrando únicamente
-    // subidas reales y recientes del canal, sin vídeos de partida colándose.
     const matchVideoPool = [
       ...new Map(
         [...videos, ...matchVideos].map((video) => [video.id, video]),
       ).values(),
     ];
-    // `recent.matches` ya viene limitado a `riotDefaults.recentSoloSample`
-    // (10) desde `analyzeRecentSoloQueue` — mostrar las 10 no añade
-    // ninguna llamada a Riot nueva, ya están en el cliente (encargo Page
-    // Design Rework §17).
-    renderMatchCards(list, riotData?.recent.matches.slice(0, 10) ?? [], {
+    const all = filteredMatches();
+    const slice = all.slice(0, historyVisible);
+    renderMatchCards(list, slice, {
       formatNumber: (value) => number(value) ?? String(value),
       relativeTime,
       reducedMotion,
       videos: matchVideoPool,
       matchesBase: root?.dataset.riotMatchesBase ?? '/api/riot/matches',
-      // "No hay partidas" (sampleSize real 0) y "no se pudieron cargar"
-      // (Riot ha fallado) son cosas distintas — solo se sobrescribe el
-      // copy por defecto de MatchEmpty cuando es realmente un fallo.
       emptyState: riotFailed
         ? {
             label: 'Sin conexión con Riot',
             title: 'No se han podido cargar las partidas.',
-            detail: 'Riot no responde ahora mismo — vuelve a intentarlo en unos minutos.',
+            detail:
+              'Riot no responde ahora mismo — vuelve a intentarlo en unos minutos.',
           }
         : undefined,
     });
+
+    // Resalta la partida más reciente SOLO cuando es nueva respecto al
+    // último render (llegó una partida terminada mientras la página estaba
+    // abierta) — nunca en la primera carga. Client-side, sutil, y sin
+    // movimiento si el usuario lo ha pedido.
+    const newestId = riotData?.recent.matches[0]?.matchId;
+    if (
+      newestId &&
+      lastNewestMatchId &&
+      newestId !== lastNewestMatchId &&
+      historyResult === 'all' &&
+      !historyChampion
+    ) {
+      const firstCard = list.querySelector<HTMLElement>('[data-match-card]');
+      if (firstCard) {
+        firstCard.dataset.newest = 'true';
+        if (!reducedMotion)
+          window.setTimeout(() => firstCard.removeAttribute('data-newest'), 6000);
+      }
+    }
+    lastNewestMatchId = newestId;
+
+    const more = root?.querySelector<HTMLElement>('[data-history-more]');
+    if (more) {
+      const hasMore = all.length > slice.length;
+      more.hidden = all.length <= HISTORY_PAGE;
+      text(
+        '[data-history-count]',
+        all.length
+          ? `${slice.length} de ${all.length}${
+              riotData && all.length < riotData.recent.matches.length
+                ? ' (filtradas)'
+                : ''
+            }`
+          : '',
+      );
+      const button = more.querySelector<HTMLButtonElement>('[data-history-load-more]');
+      if (button) button.hidden = !hasMore;
+    }
   };
 
-  /**
-   * Registro de temporada (ranked.wins/losses/winRate) — antes vivía en el
-   * `PerformanceProfile`/`PlayerProfile` separado; ahora es una sola línea
-   * de contexto dentro de "01 · Ahora", justo debajo del rango — el mismo
-   * dato, sin una card entera solo para tres números (encargo §3/§17).
-   */
-  const renderSeasonRecord = () => {
+  const setupHistoryControls = () => {
+    const filters = root?.querySelector<HTMLElement>('[data-history-filters]');
+    if (!filters) return;
+    filters.querySelectorAll<HTMLButtonElement>('[data-history-filter]').forEach((button) => {
+      button.addEventListener('click', () => {
+        historyResult = (button.dataset.historyFilter ?? 'all') as typeof historyResult;
+        historyVisible = HISTORY_PAGE;
+        filters
+          .querySelectorAll<HTMLButtonElement>('[data-history-filter]')
+          .forEach((other) =>
+            other.setAttribute('aria-pressed', String(other === button)),
+          );
+        renderHistory();
+      });
+    });
+    const select = filters.querySelector<HTMLSelectElement>('[data-history-champion]');
+    select?.addEventListener('change', () => {
+      historyChampion = select.value;
+      historyVisible = HISTORY_PAGE;
+      renderHistory();
+    });
+    root
+      ?.querySelector<HTMLButtonElement>('[data-history-load-more]')
+      ?.addEventListener('click', () => {
+        historyVisible += HISTORY_PAGE;
+        renderHistory();
+      });
+  };
+
+  const syncChampionFilterOptions = () => {
+    const select = root?.querySelector<HTMLSelectElement>('[data-history-champion]');
+    if (!select || !riotData) return;
+    const names = [
+      ...new Set(riotData.recent.matches.map((match) => match.championName)),
+    ].sort();
+    const current = select.value;
+    select.replaceChildren(
+      Object.assign(document.createElement('option'), {
+        value: '',
+        textContent: 'Todos los campeones',
+      }),
+      ...names.map((name) =>
+        Object.assign(document.createElement('option'), {
+          value: name,
+          textContent: name,
+        }),
+      ),
+    );
+    if (names.includes(current)) select.value = current;
+    else historyChampion = '';
+  };
+
+  // --- Command bar ---
+  const renderCommandBar = () => {
     if (!riotData) return;
-    const { ranked } = riotData;
-    const hasRecord = ranked.available && ranked.wins !== undefined && ranked.losses !== undefined;
-    visible('[data-season-record]', hasRecord);
-    if (!hasRecord) return;
-    const parts = [`${ranked.wins}V · ${ranked.losses}D`];
-    if (ranked.winRate !== undefined) parts.push(`${ranked.winRate}% WR`);
-    text('[data-season-record-line]', parts.join(' · '));
+    const { profile, ranked, today } = riotData;
+    text('[data-riot-id]', profile.riotId);
+    unskeleton('[data-rank]');
+    unskeleton('[data-lp]');
+    root?.querySelector('[data-rank]')?.classList.remove('live-stat-fallback');
+    text('[data-rank]', ranked.tier ?? 'Sin clasificación');
+    if (ranked.leaguePoints === undefined) {
+      text('[data-lp]', '');
+      visible('[data-lp]', false);
+    } else {
+      visible('[data-lp]', true);
+      text('[data-lp]', `${ranked.leaguePoints} LP`);
+    }
+
+    const crest = root?.querySelector<HTMLImageElement>('[data-rank-crest]');
+    const rankAsset = rankAssetFor(ranked.tier);
+    if (crest) {
+      crest.hidden = !rankAsset;
+      if (rankAsset && crest.src !== new URL(rankAsset.src, location.href).href)
+        crest.src = rankAsset.src;
+    }
+
+    // Δ de sesión: solo si hay un snapshot real anterior a la primera ranked
+    // de hoy (`deriveSessionLpDelta`). Si no, "pendiente" — nunca se calcula.
+    const sessionDelta = deriveSessionLpDelta(
+      rankPoints,
+      today.firstPlayedAt,
+      ranked.leaguePoints === undefined
+        ? undefined
+        : { observedAt: riotData.updatedAt, tier: ranked.tier, rank: ranked.rank, leaguePoints: ranked.leaguePoints },
+    );
+    if (today.games === 0) {
+      visible('[data-cb-session]', false);
+    } else if (sessionDelta) {
+      visible('[data-cb-session]', true);
+      text(
+        '[data-cb-session-value]',
+        sessionDelta.tierChanged
+          ? `${sessionDelta.fromLabel} → ${sessionDelta.toLabel}`
+          : `${sessionDelta.delta >= 0 ? '+' : ''}${sessionDelta.delta} LP`,
+      );
+      root
+        ?.querySelector('[data-cb-session]')
+        ?.classList.toggle('cb-fact--pos', sessionDelta.delta > 0);
+      root
+        ?.querySelector('[data-cb-session]')
+        ?.classList.toggle('cb-fact--neg', sessionDelta.delta < 0);
+    } else {
+      visible('[data-cb-session]', true);
+      text('[data-cb-session-value]', 'pendiente de histórico');
+    }
+
+    if (today.streak && today.streak.games >= 2) {
+      visible('[data-cb-streak]', true);
+      const isWin = today.streak.result === 'win';
+      text(
+        '[data-cb-streak-value]',
+        `${isWin ? '▲' : '▼'} ${today.streak.games} ${isWin ? 'victorias' : 'derrotas'}`,
+      );
+      root
+        ?.querySelector('[data-cb-streak]')
+        ?.classList.toggle('cb-fact--pos', isWin);
+      root
+        ?.querySelector('[data-cb-streak]')
+        ?.classList.toggle('cb-fact--neg', !isWin);
+    } else {
+      visible('[data-cb-streak]', false);
+    }
+
+    const last = today.lastPlayedAt ?? riotData.recent.matches[0]?.playedAt;
+    if (last) {
+      visible('[data-cb-last]', true);
+      text('[data-cb-last-value]', relativeTime(last) ?? '');
+    } else {
+      visible('[data-cb-last]', false);
+    }
+  };
+
+  const renderRankHistoryFacts = (summary: RankEvolutionSummary) => {
+    if (!summary.available) {
+      visible('[data-cb-peak]', false);
+      return;
+    }
+    rankPoints = summary.points;
+    if (summary.peak) {
+      visible('[data-cb-peak]', true);
+      text('[data-cb-peak-value]', formatRankLabel(summary.peak.tier, summary.peak.rank));
+    }
+    // La barra de comando puede pintar el Δ de sesión ahora que hay puntos.
+    renderCommandBar();
+  };
+
+  // --- Sesión de hoy ---
+  const renderSession = () => {
+    if (!riotData) return;
+    const { today } = riotData;
+    unskeleton('[data-session-meta]');
+    const hasGames = today.games > 0;
+    visible('[data-session-body]', hasGames && !riotFailed);
+    visible('[data-session-empty]', !hasGames && !riotFailed);
+    visible('[data-riot-error]', riotFailed);
+    if (riotFailed) return;
+
+    if (!hasGames) {
+      text('[data-session-heading]', 'Sesión de hoy');
+      text('[data-session-meta]', 'Sin partidas');
+      const last = riotData.recent.matches[0]?.playedAt;
+      if (last) {
+        visible('[data-session-last]', true);
+        text(
+          '[data-session-last]',
+          `Última actividad: ${relativeTime(last) ?? ''} · ${madridTime(last) ?? ''}`,
+        );
+      }
+      return;
+    }
+
+    text('[data-session-heading]', 'Sesión de hoy');
+    text(
+      '[data-session-meta]',
+      today.lastPlayedAt
+        ? `Última hace ${relativeTime(today.lastPlayedAt)?.replace('hace ', '') ?? '—'}`
+        : `${today.games} partidas`,
+    );
+    text('[data-session-record]', `${today.wins}V · ${today.losses}D`);
+    text(
+      '[data-session-since]',
+      today.firstPlayedAt
+        ? `desde las ${madridTime(today.firstPlayedAt) ?? ''}`
+        : '',
+    );
+    text('[data-session-wr]', today.winRate === undefined ? '—' : `${today.winRate}%`);
+    text('[data-session-kda]', decimal(today.averageKda));
+    text('[data-session-csm]', decimal(today.averageCsPerMinute, 1));
+    text(
+      '[data-session-dpm]',
+      today.averageDamagePerMinute === undefined
+        ? '—'
+        : String(Math.round(today.averageDamagePerMinute)),
+    );
+
+    visible('[data-session-streak-tag]', Boolean(today.streak));
+    if (today.streak)
+      text(
+        '[data-session-streak]',
+        `${today.streak.games} ${today.streak.result === 'win' ? 'victorias' : 'derrotas'}`,
+      );
+    visible('[data-session-champ-tag]', Boolean(today.mostPlayedChampion));
+    if (today.mostPlayedChampion)
+      text('[data-session-champ]', today.mostPlayedChampion.championName);
+
+    const insights = buildDeterministicInsights(riotData, 4);
+    const list = root?.querySelector('[data-session-insights]');
+    if (list) {
+      list.replaceChildren(
+        ...insights.map((insight) => {
+          const item = document.createElement('li');
+          item.textContent = insight.text;
+          return item;
+        }),
+      );
+      (list as HTMLElement).hidden = insights.length === 0;
+    }
   };
 
   const renderRelatedGameplays = () => {
-    const section = root?.querySelector<HTMLElement>(
-      '[data-related-gameplays]',
-    );
+    const section = root?.querySelector<HTMLElement>('[data-related-gameplays]');
     const list = root?.querySelector('[data-related-gameplays-list]');
     if (!section || !list) return;
     const gameplays = videos.filter((video) => !video.isShort).slice(0, 3);
@@ -400,10 +594,7 @@ import { resolvedMatchVideoContent } from '../../lib/resolved-match-video-conten
         const title = document.createElement('strong');
         title.textContent = video.title;
         const meta = document.createElement('span');
-        meta.textContent = [
-          relativeTime(video.publishedAt),
-          video.durationLabel,
-        ]
+        meta.textContent = [relativeTime(video.publishedAt), video.durationLabel]
           .filter(Boolean)
           .join(' · ');
         copy.append(title, meta);
@@ -419,19 +610,13 @@ import { resolvedMatchVideoContent } from '../../lib/resolved-match-video-conten
       node.textContent = `${updatedAgo(node.dataset.updatedAt)}${suffix ? ` · ${suffix}` : ''}`;
     });
 
-  const markUpdated = (
-    selector: string,
-    timestamp: string,
-    suffix?: string,
-  ) => {
+  const markUpdated = (selector: string, timestamp: string) => {
     const node = root?.querySelector<HTMLElement>(selector);
     if (!node) return;
     node.classList.remove('data-skeleton', 'data-skeleton--meta');
     node.dataset.updatedAt = timestamp;
     node.toggleAttribute('data-updated-at', true);
-    if (suffix) node.dataset.updatedSuffix = suffix;
-    else delete node.dataset.updatedSuffix;
-    node.textContent = `${updatedAgo(timestamp)}${suffix ? ` · ${suffix}` : ''}`;
+    node.textContent = updatedAgo(timestamp);
   };
 
   const loadRiot = async () => {
@@ -440,94 +625,22 @@ import { resolvedMatchVideoContent } from '../../lib/resolved-match-video-conten
     if (!payload.ok) throw new Error(payload.error.code);
     riotData = payload.data;
     riotFailed = false;
-    const { profile, ranked, today, recent } = payload.data;
-    text('[data-riot-id]', profile.riotId);
-    text('[data-rank]', ranked.tier ?? 'Sin clasificación');
-    root
-      ?.querySelector('[data-rank]')
-      ?.classList.remove('data-skeleton', 'live-stat-fallback');
-    if (ranked.leaguePoints === undefined) {
-      root
-        ?.querySelector('[data-lp]')
-        ?.classList.remove('data-skeleton', 'data-skeleton--line');
-      text('[data-lp]', 'Sin LP disponibles');
-    } else
-      animateValues(
-        '[data-lp]',
-        [ranked.leaguePoints],
-        ([value]) => `${Math.round(value ?? 0)} LP`,
-      );
     markUpdated('[data-riot-updated]', payload.data.updatedAt);
-    root
-      ?.querySelector('[data-activity]')
-      ?.classList.remove('data-skeleton', 'data-skeleton--copy');
-    visible('[data-riot-error]', false);
-    visible('[data-today-metrics]', today.games > 0);
-    visible('[data-today-empty]', today.games === 0);
-    // El emblema de rango es ahora una insignia pequeña y nítida en la
-    // franja de identidad — información ("qué rango"), no un fondo
-    // decorativo. Se muestra siempre que haya un asset para el tier real.
-    const crest = root?.querySelector<HTMLImageElement>('[data-rank-crest]');
-    const rankAsset = rankAssetFor(ranked.tier);
-    if (crest) {
-      crest.hidden = !rankAsset;
-      if (
-        rankAsset &&
-        crest.src !== new URL(rankAsset.src, location.href).href
-      )
-        crest.src = rankAsset.src;
-    }
+    renderCommandBar();
+    renderSession();
+    syncChampionFilterOptions();
+    visible('[data-history-filters]', riotData.recent.matches.length > 0);
+    renderHistory();
+  };
 
-    if (today.games > 0) {
-      text(
-        '[data-activity]',
-        today.lastPlayedAt
-          ? `Última partida ${relativeTime(today.lastPlayedAt) ?? ''}`.trim()
-          : 'Actividad registrada hoy',
-      );
-      animateValues('[data-today-games]', [today.games], ([value]) =>
-        String(Math.round(value ?? 0)),
-      );
-      animateValues(
-        '[data-today-record]',
-        [today.wins, today.losses],
-        ([wins, losses]) =>
-          `${Math.round(wins ?? 0)}V · ${Math.round(losses ?? 0)}D`,
-      );
-      if (today.winRate === undefined) text('[data-today-wr]', 'Sin dato');
-      else
-        animateValues(
-          '[data-today-wr]',
-          [today.winRate],
-          ([value]) => `${Math.round(value ?? 0)}%`,
-        );
-      if (today.averageKda === undefined) text('[data-today-kda]', 'Sin dato');
-      else
-        animateValues('[data-today-kda]', [today.averageKda], ([value]) =>
-          (value ?? 0).toFixed(2).replace('.', ','),
-        );
-      text(
-        '[data-today-champion]',
-        today.mostPlayedChampion?.championName ?? 'Sin dato',
-      );
-      text(
-        '[data-today-streak]',
-        today.streak
-          ? `${today.streak.games} ${today.streak.result === 'win' ? 'victorias' : 'derrotas'}`
-          : 'Sin racha',
-      );
-    } else {
-      text('[data-activity]', 'Sin clasificatorias hoy');
-      const last = recent.matches[0]?.playedAt;
-      const lastCopy = last
-        ? `Última actividad competitiva: ${relativeTime(last) ?? ''} · ${madridTime(last) ?? ''}`
-        : '';
-      text('[data-last-competitive]', lastCopy);
-      visible('[data-last-competitive]', Boolean(lastCopy));
+  const loadRankHistory = async () => {
+    try {
+      const response = await fetch(root!.dataset.riotRankHistory!);
+      const payload = (await response.json()) as RankHistoryPublicResponse;
+      if (payload.ok) renderRankHistoryFacts(payload.data);
+    } catch {
+      /* la barra de comando simplemente no muestra pico/Δ de sesión */
     }
-
-    renderSeasonRecord();
-    renderMatches();
   };
 
   const loadFeed = async () => {
@@ -535,44 +648,38 @@ import { resolvedMatchVideoContent } from '../../lib/resolved-match-video-conten
     const payload = (await response.json()) as YouTubeFeedResponse;
     if (!payload.ok) throw new Error(payload.error.code);
     videos = payload.data.videos;
-    renderMatches();
+    renderHistory();
     renderRelatedGameplays();
+  };
+
+  const applyRiotFailure = () => {
+    riotFailed = true;
+    const rankNode = root?.querySelector('[data-rank]');
+    rankNode?.classList.remove('data-skeleton', 'data-skeleton--line');
+    rankNode?.classList.add('live-stat-fallback');
+    unskeleton('[data-lp]');
+    unskeleton('[data-riot-updated]');
+    text('[data-rank]', 'Riot no disponible');
+    text('[data-lp]', '');
+    visible('[data-lp]', false);
+    visible('[data-cb-peak]', false);
+    visible('[data-cb-session]', false);
+    visible('[data-cb-streak]', false);
+    visible('[data-cb-last]', false);
+    visible('[data-rank-crest]', false);
+    text('[data-riot-updated]', 'Reintentando…');
+    renderSession();
+    renderHistory();
   };
 
   const refresh = async (manual = false) => {
     if (fetching || (!manual && document.hidden)) return;
     fetching = true;
-    const button = root?.querySelector<HTMLButtonElement>(
-      '[data-profile-refresh]',
-    );
+    const button = root?.querySelector<HTMLButtonElement>('[data-profile-refresh]');
     if (button) button.disabled = true;
     if (manual) text('[data-profile-refresh-state]', 'Actualizando…');
-    const results = await Promise.allSettled([loadRiot(), loadFeed()]);
-    if (results[0].status === 'rejected') {
-      riotFailed = true;
-      visible('[data-rank-crest]', false);
-      // Un único mensaje compacto (aquí, en el propio rango) en vez del
-      // mismo fallo repetido en 3-4 frases distintas de esta sección: el
-      // bloque separado `.live-empty` (`[data-riot-error]`) ya no se
-      // muestra — quedaría diciendo exactamente lo mismo.
-      const rankNode = root?.querySelector('[data-rank]');
-      rankNode?.classList.remove('data-skeleton');
-      rankNode?.classList.add('live-stat-fallback');
-      root
-        ?.querySelector('[data-lp]')
-        ?.classList.remove('data-skeleton', 'data-skeleton--line');
-      root
-        ?.querySelector('[data-activity]')
-        ?.classList.remove('data-skeleton', 'data-skeleton--copy');
-      text('[data-rank]', 'Riot no disponible');
-      text('[data-lp]', '');
-      text('[data-activity]', 'Reintentaremos automáticamente en unos minutos.');
-      root
-        ?.querySelector('[data-riot-updated]')
-        ?.classList.remove('data-skeleton', 'data-skeleton--meta');
-      text('[data-riot-updated]', 'Reintentando la conexión con Riot');
-      renderMatches();
-    }
+    const results = await Promise.allSettled([loadRiot(), loadFeed(), loadRankHistory()]);
+    if (results[0].status === 'rejected') applyRiotFailure();
     if (manual)
       text(
         '[data-profile-refresh-state]',
@@ -584,6 +691,7 @@ import { resolvedMatchVideoContent } from '../../lib/resolved-match-video-conten
     fetching = false;
   };
 
+  setupHistoryControls();
   refresh();
   window.setInterval(() => refresh(), 120_000);
   window.setInterval(updateRelativeLabels, 30_000);
@@ -593,6 +701,18 @@ import { resolvedMatchVideoContent } from '../../lib/resolved-match-video-conten
   root
     ?.querySelector('[data-profile-refresh]')
     ?.addEventListener('click', () => refresh(true));
+
+  // Barra de comando "condensada" cuando queda pegada al hacer scroll — no
+  // pierde el contexto de rango/sesión mientras miras el Historial (§20). El
+  // shell es `position: sticky; top: 4.5rem`: en cuanto su `top` real llega a
+  // ~72px es que está pegado.
+  const commandBar = root?.querySelector<HTMLElement>('[data-command-bar]');
+  if (commandBar) {
+    const syncCondensed = () =>
+      commandBar.toggleAttribute('data-condensed', window.scrollY > 64);
+    window.addEventListener('scroll', syncCondensed, { passive: true });
+    syncCondensed();
+  }
 
   root?.toggleAttribute('data-motion-ready', true);
   const modules = root?.querySelectorAll<HTMLElement>('.live-module');

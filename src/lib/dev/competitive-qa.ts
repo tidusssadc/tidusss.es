@@ -206,7 +206,9 @@ const buildMatch = (i: number): RecentMatch => {
   };
 };
 
-const matchesFixture = (): RecentMatch[] => Array.from({ length: 10 }, (_v, i) => buildMatch(i));
+// 20: V4 expone hasta 20 partidas en `recent.matches` para que el Historial
+// pruebe "cargar anteriores" (10 visibles → 20) y los filtros client-side.
+const matchesFixture = (): RecentMatch[] => Array.from({ length: 20 }, (_v, i) => buildMatch(i));
 
 const champPerf = (name: string, games: number, winRate: number, kda: number, dpm: number, csm: number) => ({
   championName: name,
@@ -344,18 +346,22 @@ const overviewResponse = (today0: boolean): RiotPublicResponse => {
       today: today0
         ? { games: 0, wins: 0, losses: 0, activity: 'no-games', lpDeltaEstimated: true, matches: [] }
         : {
-            games: 4,
+            games: 5,
             wins: 3,
-            losses: 1,
-            winRate: 75,
+            losses: 2,
+            winRate: 60,
             averageKda: 3.6,
+            averageCsPerMinute: 8.4,
+            averageDamagePerMinute: 812,
+            averageKillParticipation: 63,
             mostPlayedChampion: pool[0],
             streak: { result: 'win', games: 3 },
             lastPlayedAt: matches[0]!.playedAt,
+            firstPlayedAt: matches[4]!.playedAt,
             activity: 'recent',
-            lpDelta: 34,
+            lpDelta: undefined,
             lpDeltaEstimated: true,
-            matches: matches.slice(0, 4),
+            matches: matches.slice(0, 5),
           },
       performance: performanceFixture(),
       updatedAt: iso(45_000),
@@ -377,7 +383,10 @@ const rankHistoryResponse = (mode: string): RankHistoryPublicResponse => {
       { tier: 'MASTER', leaguePoints: 96 },
       { tier: 'MASTER', leaguePoints: 154 },
       { tier: 'MASTER', leaguePoints: 402 },
-      { tier: 'MASTER', leaguePoints: 554 },
+      // Última observación real: por debajo del LP "en vivo" del overview
+      // (554) — el snapshot va por detrás de la partida recién terminada, así
+      // que "Δ de sesión" en la command bar sale de +14 LP real, no inventado.
+      { tier: 'MASTER', leaguePoints: 540 },
     ];
     const points = seq.map((p, idx) => ({ ...p, observedAt: iso((seq.length - idx) * 3 * 86400e3) }));
     return {

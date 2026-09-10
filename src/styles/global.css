@@ -2131,31 +2131,232 @@
     width: min(100% - 4rem, 98rem);
   }
 }
-/* Intro reducida a una sola línea de contexto (Rediseño V3): el primer
-   viewport tiene que llegar a "01 Ahora" cuanto antes — la marca ya está
-   en el Navbar, no hace falta un titular institucional que ocupe 160px. */
-.live-intro {
-  padding: clamp(1rem, 2.4vw, 1.6rem) 0 clamp(0.85rem, 1.6vw, 1.25rem);
+/* =========================================================================
+   V4 · COMMAND BAR — HUD competitivo sticky. NO un hero de marketing: sin
+   MASTER gigante, sin card. Una franja compacta que responde de un vistazo
+   a "¿cómo voy?" y no se pierde al hacer scroll (encargo §4/§20).
+   ========================================================================= */
+.command-bar-shell {
+  position: sticky;
+  top: 4.5rem; /* justo bajo el Navbar fijo (h-18) */
+  z-index: 30;
+  margin-bottom: 0.75rem;
+  padding: 0.55rem 0;
+  background: rgb(6 9 19 / 88%);
   border-bottom: 1px solid rgb(255 255 255 / 7%);
+  backdrop-filter: blur(14px);
 }
-.live-intro-line {
-  max-width: 44rem;
-  margin-top: 0.5rem;
-  color: #7f8ca0;
-  font-size: clamp(0.75rem, 1vw, 0.84rem);
-  line-height: 1.55;
+.command-bar {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.8rem, 2vw, 1.75rem);
+  min-height: 2.6rem;
+  font-size: 0.78rem;
 }
-.live-intro-line strong {
-  color: #cbd5e1;
+.command-bar[data-condensed] {
+  min-height: 2.2rem;
 }
-/* Pila vertical simple — el grid de 2 columnas anterior era código muerto
-   (el 100% de los hijos era `--wide`). Cada bloque decide su propia
-   composición interna; entre bloques solo hay ritmo. */
+.cb-rank {
+  display: flex;
+  align-items: baseline;
+  gap: 0.55rem;
+  flex: 0 0 auto;
+}
+.cb-crest {
+  width: clamp(1.6rem, 3vw, 2.05rem);
+  height: auto;
+  align-self: center;
+  filter: saturate(0.9);
+}
+.cb-crest[hidden] {
+  display: none;
+}
+.cb-tier {
+  color: #f4f6fa;
+  font-size: clamp(0.92rem, 2vw, 1.12rem);
+  font-weight: 680;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+}
+.cb-tier.live-stat-fallback {
+  font-size: 0.82rem;
+  font-weight: 500;
+  text-transform: none;
+  color: #9aa5b8;
+}
+.cb-lp {
+  color: #d6b56b;
+  font-size: clamp(0.82rem, 1.8vw, 1rem);
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.cb-lp[hidden] {
+  display: none;
+}
+.cb-facts {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.55rem, 1.6vw, 1.25rem);
+  flex: 1 1 auto;
+  min-width: 0;
+  /* Si los facts no caben en una línea, hacen scroll horizontal DENTRO de
+     la barra — nunca fuerzan a la barra a crecer de alto ni empujan la cola
+     de la derecha (rango + LP + estado siguen fijos). */
+  overflow-x: auto;
+  scrollbar-width: none;
+  color: #8f9cb0;
+  font-size: 0.72rem;
+}
+.cb-facts::-webkit-scrollbar {
+  display: none;
+}
+/* La cuenta (Riot ID) es contexto útil pero prescindible cuando el ancho
+   aprieta — desaparece antes que el rango/LP/estado. Selector con dos clases
+   para ganar al `.cb-account { display: flex }` base sin depender del orden. */
+@media (max-width: 1180px) {
+  .command-bar .cb-account {
+    display: none;
+  }
+}
+.cb-fact {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  white-space: nowrap;
+}
+.cb-fact[hidden] {
+  display: none;
+}
+.cb-fact b {
+  color: #5f6c81;
+  font-weight: 700;
+  font-size: 0.56rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.cb-fact span {
+  color: #cdd6e2;
+  font-variant-numeric: tabular-nums;
+}
+.cb-fact--pos span {
+  color: #8ec1d6;
+}
+.cb-fact--neg span {
+  color: #d0a0a7;
+}
+/* Condensada al quedar pegada: la barra encoge un poco pero MANTIENE los
+   facts (el contexto de sesión/racha es justo lo que no se quiere perder al
+   hacer scroll, §20) — solo cae la última si no cabe. */
+.command-bar[data-condensed] {
+  font-size: 0.74rem;
+}
+.command-bar[data-condensed] .cb-account {
+  display: none;
+}
+.cb-tail {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.5rem, 1.5vw, 1.1rem);
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+.cb-account {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+  color: #5f6c81;
+  font-size: 0.56rem;
+  text-align: right;
+}
+.cb-account strong {
+  color: #cdd6e2;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+.cb-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #7b8798;
+  font-size: 0.62rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.live-page[data-in-game] .cb-live {
+  color: #f1d9a3;
+}
+.live-page[data-in-game] .cb-live .live-dot {
+  background: #d6b56b;
+  box-shadow: 0 0 8px rgb(214 181 107 / 65%);
+  animation: live-dot-pulse 1.8s ease-in-out infinite;
+}
+.cb-updated {
+  color: #58657a;
+  font-size: 0.58rem;
+  white-space: nowrap;
+}
+.cb-refresh {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.7rem;
+  height: 1.7rem;
+  border: 1px solid rgb(255 255 255 / 12%);
+  color: #9aa6b8;
+  font-size: 0.9rem;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
+}
+.cb-refresh:hover {
+  border-color: rgb(214 181 107 / 35%);
+  color: #d6b56b;
+}
+.cb-refresh:active {
+  transform: rotate(180deg);
+}
+.cb-refresh:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* Pila vertical — cada fila decide su composición; entre filas solo ritmo. */
 .live-stack {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  padding-top: 0.75rem;
+}
+
+/* =========================================================================
+   V4 · CONTROL GRID — grid asimétrico de desktop (encargo §24). Rompe la
+   pila de 5 capítulos: sesión + evolución arriba, forma por campeón +
+   rendimiento en medio, historial a ancho completo abajo.
+   ========================================================================= */
+.control-grid {
+  display: grid;
+  gap: 0.75rem;
+  align-items: start;
+}
+@media (min-width: 1024px) {
+  .control-grid--top {
+    grid-template-columns: 7fr 5fr;
+  }
+  .control-grid--mid {
+    grid-template-columns: 5fr 7fr;
+  }
+}
+/* Sin histórico de rango (sin binding D1) el módulo de evolución se
+   auto-oculta — la sesión ocupa el ancho, sin hueco. */
+.control-grid--top:has([data-rank-evolution][hidden]) {
+  grid-template-columns: 1fr;
+}
+.control-grid > .live-module {
+  height: 100%;
+  margin: 0;
 }
 .live-module {
   min-width: 0;
@@ -2224,277 +2425,256 @@
   font-size: 0.62rem;
 }
 /* =========================================================================
-   01 · AHORA — recomposición V3.
-   Antes: pila vertical de ~7 tiras (rango gigante 96px → season → evolución
-   → 4 tiles → 3 pies), 726px de alto. Ahora: una franja de identidad + un
-   cuerpo de 3 columnas paralelas (Evolución / Hoy / Temporada). Mismos
-   datos, sin una sola cifra menos — solo dejan de estar apiladas.
+   V4 · SESIÓN DE HOY — módulo de primera clase (encargo §5). "Mi sesión":
+   record, WR/KDA/CS·min/daño·min de hoy (DERIVADOS, 0 llamadas Riot), racha,
+   campeón del día e insights deterministas. Sesión = día local Europe/Madrid.
    ========================================================================= */
-
-/* --- Franja de identidad: cresta + tier + LP + cuenta, en una línea --- */
-.rank-identity {
-  display: flex;
-  align-items: center;
-  gap: clamp(0.85rem, 2vw, 1.5rem);
-  flex-wrap: wrap;
-  margin-top: 1.5rem;
-  padding-bottom: 1.35rem;
-  border-bottom: 1px solid rgb(255 255 255 / 7%);
+.session-module .live-module-head {
+  margin-bottom: 0.4rem;
 }
-.rank-identity-crest {
-  flex: 0 0 auto;
-  width: clamp(3rem, 7vw, 4rem);
-  height: auto;
-  /* nítida y a tamaño real — es información ("qué rango"), no un fondo */
-  filter: saturate(0.9);
-}
-.rank-identity-crest[hidden] {
-  display: none;
-}
-.rank-identity-tier-wrap {
+.session-headline {
   display: flex;
   align-items: baseline;
   gap: 0.7rem;
-  min-width: 0;
+  margin-top: 0.9rem;
 }
-.rank-identity-tier {
-  color: #f4f6fa;
-  font-size: clamp(1.7rem, 3.4vw, 2.4rem);
-  font-weight: 660;
-  line-height: 1;
-  letter-spacing: -0.03em;
-  text-transform: uppercase;
-}
-.rank-identity-tier.live-stat-fallback {
-  font-size: 1.05rem;
-  font-weight: 500;
-  letter-spacing: -0.01em;
-  text-transform: none;
-  color: #9aa5b8;
-}
-.rank-identity-lp {
-  color: #d6b56b;
-  font-size: clamp(1rem, 2vw, 1.35rem);
-  font-weight: 700;
+.session-headline strong {
+  color: #eef2f8;
+  font-size: clamp(1.7rem, 3.6vw, 2.3rem);
+  font-weight: 650;
   font-variant-numeric: tabular-nums;
-  white-space: nowrap;
+  letter-spacing: -0.03em;
 }
-.rank-identity-account {
-  display: flex;
-  align-items: baseline;
-  gap: 0.55rem;
-  margin-left: auto;
-  color: #7f8ca0;
+.session-headline span {
+  color: #6f7c90;
   font-size: 0.72rem;
 }
-.rank-identity-account strong {
-  color: #dce4f0;
+.session-figs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.9rem 1.4rem;
+  margin-top: 1.1rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid rgb(255 255 255 / 6%);
 }
-.rank-identity-account span::before {
-  content: '·';
-  margin-right: 0.55rem;
-  color: #3a4457;
-}
-.rank-identity .data-skeleton {
-  min-width: 8rem;
-  min-height: 1.4rem;
-  border-radius: 2px;
-}
-
-/* --- Cuerpo: 3 columnas paralelas, no una pila --- */
-.status-body {
-  display: flex;
-  gap: clamp(1.25rem, 3vw, 2.75rem);
-  /* No se estira sin límite en monitores anchos — las 3 columnas se
-     mantienen densas, alineadas a la izquierda bajo la franja de rango. */
-  max-width: 74rem;
-  margin-top: 1.35rem;
-}
-.status-col {
-  flex: 1 1 0;
-  min-width: 0;
-}
-/* La columna de evolución solo existe si el componente tiene algo que
-   mostrar; sin binding D1 se auto-oculta (`[data-rank-evolution][hidden]`)
-   y las otras dos columnas se reparten el ancho solas. */
-.status-col--evolution:has([data-rank-evolution][hidden]) {
-  display: none;
-}
-.status-col + .status-col {
-  border-left: 1px solid rgb(255 255 255 / 6%);
-  padding-left: clamp(1.25rem, 3vw, 2.75rem);
-}
-.status-col-label {
-  color: #6b7789;
-  font-size: 0.56rem;
-  font-weight: 750;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-
-/* Hoy */
-.today-headline {
-  margin-top: 0.85rem;
-}
-.today-headline strong {
-  display: block;
-  color: #eef2f8;
-  font-size: clamp(1.35rem, 3vw, 1.8rem);
-  font-weight: 640;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.02em;
-}
-.today-headline span {
-  display: block;
-  margin-top: 0.3rem;
-  color: #8793a5;
-  font-size: 0.68rem;
-}
-.today-figs {
-  display: flex;
-  gap: 1.4rem;
-  margin-top: 1rem;
-}
-.today-figs strong {
+.session-figs strong {
   display: block;
   color: #dce2eb;
-  font-size: 0.98rem;
+  font-size: 1.05rem;
   font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
 }
-.today-figs span {
+.session-figs span {
   display: block;
-  margin-top: 0.25rem;
+  margin-top: 0.2rem;
   color: #5f6c81;
-  font-size: 0.54rem;
+  font-size: 0.52rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
-.today-tags {
+.session-tags {
   margin-top: 1rem;
   color: #6f7c90;
   font-size: 0.66rem;
   line-height: 1.7;
 }
-.today-tags span + span::before {
-  content: '·';
-  margin: 0 0.5rem;
-  color: #3a4457;
+.session-tags span {
+  margin-right: 1rem;
 }
-.today-tags strong {
+.session-tags span[hidden] {
+  display: none;
+}
+.session-tags strong {
   color: #cdd6e2;
 }
 
-/* Temporada */
-.season-record {
-  margin-top: 0.85rem;
+/* Insights deterministas — hechos, uno por línea, sin causalidad ni score. */
+.insights {
+  display: grid;
+  gap: 0.3rem;
+  margin-top: 1.1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgb(255 255 255 / 6%);
 }
-.season-record[hidden] {
+.insights[hidden] {
   display: none;
 }
-.season-record strong {
-  display: block;
-  color: #dce2eb;
-  font-size: 0.92rem;
-  font-variant-numeric: tabular-nums;
-}
-.status-note {
-  margin-top: 0.85rem;
-  color: #7583a0;
+.insights li {
+  position: relative;
+  padding-left: 0.95rem;
+  color: #aab6c6;
   font-size: 0.66rem;
-}
-.status-note span {
-  color: #5f6c81;
-  font-size: 0.54rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-.status-note strong {
-  margin-left: 0.5rem;
-  color: #9aa6b8;
-  font-weight: 600;
-}
-.status-note--muted {
-  margin-top: 0.35rem;
-  color: #55627a;
-  font-size: 0.6rem;
   line-height: 1.5;
 }
+.insights li::before {
+  position: absolute;
+  left: 0;
+  color: #d6b56b;
+  content: '›';
+}
 
-/* --- Evolución de rango (Night Shift Fase D) — ahora vive en la columna
-   izquierda de "01 Ahora", no como una tira bordeada aparte. --- */
-.rank-evolution {
-  margin-top: 0.7rem;
+/* =========================================================================
+   V4 · EVOLUCIÓN LP — módulo propio junto a la sesión (encargo §6). Ahora
+   que D1 está aprovisionada, la evolución de LP debe apetecer mirarla.
+   ========================================================================= */
+.evo-module[hidden] {
+  display: none;
+}
+.rank-evolution-empty {
+  margin-top: 1rem;
 }
 .rank-evolution-empty strong {
   display: block;
   color: #cdd6e2;
-  font-size: 0.78rem;
+  font-size: 0.8rem;
 }
 .rank-evolution-empty span {
   display: block;
-  margin-top: 0.3rem;
+  margin-top: 0.35rem;
   color: #5f6c81;
-  font-size: 0.66rem;
+  font-size: 0.68rem;
   line-height: 1.5;
 }
-.rank-evolution-head {
+.rank-evolution-figures {
   display: flex;
   align-items: baseline;
-  gap: 0.5rem;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 0.9rem;
 }
-.rank-evolution-head strong {
+.rank-evolution-figures > div:first-child {
+  display: flex;
+  align-items: baseline;
+  gap: 0.55rem;
+}
+.rank-evolution-figures [data-rank-evolution-current] {
   color: #eef2f8;
-  font-size: 0.95rem;
+  font-size: 1.1rem;
+  font-weight: 640;
   letter-spacing: -0.01em;
   text-transform: uppercase;
 }
-.rank-evolution-head span {
+.rank-evolution-figures [data-rank-evolution-lp] {
   color: #d6b56b;
-  font-size: 0.74rem;
-  font-weight: 700;
+  font-size: 0.82rem;
+  font-weight: 750;
   font-variant-numeric: tabular-nums;
+}
+.rank-evolution-peak {
+  text-align: right;
+}
+.rank-evolution-peak[hidden] {
+  display: none;
+}
+.rank-evolution-peak span {
+  display: block;
+  color: #5f6c81;
+  font-size: 0.5rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.rank-evolution-peak strong {
+  color: #c8d0dc;
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+}
+.rank-evolution-chart-wrap {
+  position: relative;
+  margin-top: 0.9rem;
+}
+.rank-evolution-chart-wrap[hidden] {
+  display: none;
 }
 .rank-evolution-chart {
   display: block;
   width: 100%;
-  max-width: 220px;
-  height: auto;
-  margin-top: 0.7rem;
+  height: clamp(72px, 12vw, 104px);
+  overflow: visible;
 }
-.rank-evolution-chart path {
+.rank-evolution-area {
+  fill: url(#evo-fill);
+  stroke: none;
+}
+.rank-evolution-line {
   fill: none;
   stroke: #d6b56b;
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+.rank-evolution-dot {
+  fill: #0c1019;
+  stroke: #d6b56b;
+  stroke-width: 1.5;
+}
+.rank-evolution-dot.is-peak {
+  fill: #d6b56b;
+}
+.rank-evolution-cursor {
+  stroke: rgb(255 255 255 / 28%);
+  stroke-width: 1;
+  stroke-dasharray: 2 2;
+  display: none;
+}
+.rank-evolution-cursor.is-on {
+  display: block;
+}
+.rank-evolution-tooltip {
+  position: absolute;
+  top: -0.35rem;
+  transform: translate(-50%, -100%);
+  padding: 0.35rem 0.55rem;
+  border: 1px solid rgb(255 255 255 / 12%);
+  background: rgb(9 12 20 / 96%);
+  pointer-events: none;
+  white-space: nowrap;
+}
+.rank-evolution-tooltip[hidden] {
+  display: none;
+}
+.rank-evolution-tooltip strong {
+  display: block;
+  color: #eef2f8;
+  font-size: 0.66rem;
+  font-variant-numeric: tabular-nums;
+}
+.rank-evolution-tooltip span {
+  display: block;
+  margin-top: 0.1rem;
+  color: #6f7c90;
+  font-size: 0.56rem;
 }
 .rank-evolution-meta {
-  margin-top: 0.4rem;
+  margin-top: 0.5rem;
   color: #7d8a9d;
   font-size: 0.64rem;
 }
 .rank-evolution-transition {
   color: #9fb3d6;
 }
-.today-empty,
+.rank-evolution-transition[hidden] {
+  display: none;
+}
 .compact-empty {
-  margin-top: 1.5rem;
-  padding: 1.25rem 0;
+  margin-top: 1rem;
+  padding: 1rem 0 0.25rem;
   border-top: 1px solid rgb(255 255 255 / 7%);
 }
-.today-empty strong,
+.compact-empty[hidden] {
+  display: none;
+}
 .compact-empty strong {
   display: block;
   color: #dce4f0;
-  font-size: 0.9rem;
+  font-size: 0.86rem;
 }
-.today-empty p,
 .compact-empty span {
   display: block;
   max-width: 38rem;
-  margin-top: 0.45rem;
+  margin-top: 0.4rem;
   color: #69768c;
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   line-height: 1.55;
 }
 .data-skeleton {
@@ -2543,6 +2723,118 @@
   display: block;
   margin-top: 1.2rem;
 }
+/* =========================================================================
+   V4 · HISTORIAL — el corazón del producto (encargo §9). Herramienta para
+   usar en stream: fila densa, filtros client-side, "cargar anteriores".
+   ========================================================================= */
+.history-module .live-module-head {
+  flex-wrap: wrap;
+  row-gap: 0.75rem;
+}
+.history-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+.history-filters[hidden] {
+  display: none;
+}
+.history-filter-group {
+  display: inline-flex;
+  border: 1px solid rgb(255 255 255 / 10%);
+}
+.history-filter-group button {
+  padding: 0.3rem 0.7rem;
+  color: #7e8a9d;
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    color 140ms ease,
+    background-color 140ms ease;
+}
+.history-filter-group button + button {
+  border-left: 1px solid rgb(255 255 255 / 10%);
+}
+.history-filter-group button:hover {
+  color: #cdd6e2;
+}
+.history-filter-group button[aria-pressed='true'] {
+  color: #0c1019;
+  background: #d6b56b;
+}
+.history-champion-filter select {
+  padding: 0.32rem 0.6rem;
+  border: 1px solid rgb(255 255 255 / 10%);
+  background: #0c111c;
+  color: #cdd6e2;
+  font-size: 0.62rem;
+}
+.history-champion-filter select:focus-visible {
+  outline: 2px solid #d6b56b;
+  outline-offset: -2px;
+}
+.history-more {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid rgb(255 255 255 / 6%);
+}
+.history-more[hidden] {
+  display: none;
+}
+.history-more p {
+  color: #5f6c81;
+  font-size: 0.6rem;
+  font-variant-numeric: tabular-nums;
+}
+.history-load-more {
+  padding: 0.4rem 1rem;
+  border: 1px solid rgb(214 181 107 / 30%);
+  color: #d6b56b;
+  font-size: 0.62rem;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    border-color 140ms ease,
+    background-color 140ms ease;
+}
+.history-load-more:hover {
+  border-color: rgb(214 181 107 / 55%);
+  background: rgb(214 181 107 / 8%);
+}
+.history-load-more[hidden] {
+  display: none;
+}
+/* La partida más reciente cuando llega una nueva con la página abierta —
+   marca sutil y temporal (encargo §8), respeta prefers-reduced-motion. */
+.match-row-item[data-newest] {
+  background: rgb(214 181 107 / 6%);
+  box-shadow: inset 3px 0 0 #d6b56b;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .match-row-item[data-newest] {
+    animation: match-newest-fade 6s ease forwards;
+  }
+  @keyframes match-newest-fade {
+    0%,
+    55% {
+      background: rgb(214 181 107 / 9%);
+    }
+    100% {
+      background: rgb(214 181 107 / 0%);
+    }
+  }
+}
+
 /* --- Match row (Page Design Rework §5-§13): una fila densa, no una card
    completa. Nivel 1 de profundidad — solo lo que se escanea en <2s. --- */
 .live-match-list {
@@ -2552,6 +2844,8 @@
 .live-match-list .compact-empty {
   display: block;
   min-height: 0;
+  margin-top: 0;
+  border-top: 0;
   padding: 1.25rem 0;
 }
 .match-row-item {
@@ -3437,90 +3731,151 @@
   color: #59667a;
   font-size: 0.56rem;
 }
-/* --- 02 · Rendimiento — jerarquía (WR/KDA lideran) + ritmo, no seis
-   cifras del mismo peso (Rediseño V3 §6). --- */
-.performance-profile .performance-loading {
+/* =========================================================================
+   V4 · RENDIMIENTO RECIENTE — como TENDENCIA, no como 4 cajas (encargo §15).
+   Para cada métrica: valor actual + mini-sparkline de 5/10/20/muestra +
+   dirección (sube / baja / estable). Solo descriptivo, sin "form score".
+   ========================================================================= */
+.recent-performance .performance-loading {
   margin-top: 1.25rem;
 }
-.stat-row {
+.trend-grid {
   display: grid;
-  grid-template-columns: 1.15fr 1.15fr repeat(4, minmax(0, 1fr));
-  gap: 0 clamp(1rem, 2.2vw, 1.75rem);
-  align-items: end;
-  margin-top: 1.25rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem 1.5rem;
+  margin-top: 1rem;
 }
-.stat-tile {
-  min-width: 0;
+.trend-item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 0.35rem 0.7rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid rgb(255 255 255 / 6%);
 }
-.stat-tile + .stat-tile {
-  border-left: 1px solid rgb(255 255 255 / 8%);
-  padding-left: clamp(0.85rem, 1.8vw, 1.5rem);
+.trend-item-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
 }
-.stat-tile strong {
-  display: block;
-  color: #dfe4ec;
-  font-size: 1rem;
-  letter-spacing: -0.02em;
-  font-variant-numeric: tabular-nums;
-}
-.stat-tile--lead strong {
-  color: #f4f6fa;
-  font-size: clamp(1.5rem, 3.2vw, 2.1rem);
+.trend-item-head strong {
+  color: #f1f4f9;
+  font-size: 1.3rem;
   font-weight: 640;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
 }
-.stat-tile span {
-  display: block;
-  margin-top: 0.3rem;
+.trend-item-label {
   color: #626f84;
   font-size: 0.56rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
-.stat-tile--lead span {
-  color: #8793a5;
-  font-size: 0.6rem;
+.trend-spark {
+  grid-row: 1 / span 2;
+  grid-column: 2;
+  width: 5rem;
+  height: 1.8rem;
+}
+.trend-spark-line {
+  fill: none;
+  stroke: #d6b56b;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+.trend-item-dir {
+  color: #7e8a9d;
+  font-size: 0.58rem;
+  font-weight: 600;
+}
+.trend-item-dir.is-up {
+  color: #8ec1d6;
+}
+.trend-item-dir.is-down {
+  color: #d0a0a7;
+}
+.trend-item-scale {
+  grid-column: 1;
+  color: #4f5c70;
+  font-size: 0.5rem;
+  letter-spacing: 0.05em;
 }
 .stat-row-meta {
-  margin-top: 0.9rem;
+  margin-top: 0.85rem;
   color: #7e8a9d;
-  font-size: 0.66rem;
+  font-size: 0.64rem;
 }
-/* 5/10/20/muestra completa: una tira compacta de tendencia, nunca tres
-   dashboards (§18). */
-.window-compare {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(6rem, 1fr));
-  gap: 0.75rem;
+
+/* Contexto (antes "04 · Patrones"): support / ADC rival / lado / duración,
+   COMPACTO, dentro de Rendimiento — nunca un slab propio (encargo §16). */
+.perf-context {
   margin-top: 1.1rem;
+  padding-top: 1rem;
   border-top: 1px solid rgb(255 255 255 / 6%);
-  padding-top: 0.95rem;
 }
-.window-compare-item {
-  min-width: 0;
+.perf-context[hidden] {
+  display: none;
 }
-.window-compare-label {
-  display: block;
-  color: #59667a;
-  font-size: 0.5rem;
-  letter-spacing: 0.07em;
+.perf-context-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem 1.75rem;
+  margin-top: 0.5rem;
+}
+.perf-context-cell h4 {
+  color: #93a0b2;
+  font-size: 0.56rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
-.window-compare-item strong {
-  display: block;
-  margin-top: 0.35rem;
+.perf-context-list {
+  display: grid;
+  margin-top: 0.3rem;
+}
+.perf-context-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.28rem 0;
+  border-top: 1px solid rgb(255 255 255 / 5%);
   color: #dce2eb;
-  font-size: 0.98rem;
+  font-size: 0.6rem;
+}
+.perf-context-list li:first-child {
+  border-top: 0;
+}
+.perf-context-list img {
+  border-radius: 3px;
+  background: #0d121d;
+}
+.perf-context-list span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.perf-context-list strong {
+  color: #9aa6b8;
+  font-weight: 500;
+  font-size: 0.58rem;
   font-variant-numeric: tabular-nums;
 }
-.window-compare-meta {
-  display: block;
-  margin-top: 0.25rem;
-  color: #647186;
-  font-size: 0.54rem;
+.perf-context-duration {
+  margin-top: 0.35rem;
+  color: #7e8a9d;
+  font-size: 0.58rem;
+  line-height: 1.6;
 }
-/* --- 03 · Champion Pool — el foco visual (Rediseño V3 §7): el campeón
-   más jugado ocupa una columna con su arte real; el resto, filas
-   compactas al lado. --- */
+
+/* --- FORMA POR CAMPEÓN (antes "Champion Pool"): el campeón más jugado
+   ocupa una columna con su arte real; el resto, filas compactas. --- */
+.champion-form {
+  border-color: rgb(214 181 107 / 12%);
+}
 .champion-pool {
   border-color: rgb(214 181 107 / 12%);
 }
@@ -3756,105 +4111,14 @@
 .pool-secondary-item .pool-card-record {
   font-size: 0.58rem;
 }
-/* --- 04 · Patrones — información SECUNDARIA (Rediseño V3 §8): filas y
-   mini-tablas, nunca una card por dato, nunca un segundo Champion Pool.
-   Módulo más discreto: sin lift en hover, cabecera y aire reducidos. --- */
-.patterns-module {
-  border-color: rgb(255 255 255 / 6%);
-}
-.patterns-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem 2rem;
-  margin-top: 0.85rem;
-}
-.pattern-block h3 {
-  color: #93a0b2;
-  font-size: 0.58rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-.pattern-block > small {
-  display: block;
-  margin-top: 0.2rem;
-  color: #59667a;
-  font-size: 0.53rem;
-}
-.activity-compact {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem 2rem;
-  margin-top: 0.6rem;
-}
-.performance-bars {
-  display: grid;
-  gap: 0.3rem;
-  margin-top: 0.5rem;
-}
-.performance-bars li {
-  display: grid;
-  grid-template-columns: 5.5rem minmax(0, 1fr) 5rem;
-  gap: 0.7rem;
-  align-items: center;
-  color: #7e8a9d;
-  font-size: 0.58rem;
-}
-.performance-bars i {
-  display: block;
-  max-width: 100%;
-  height: 2px;
-  background: rgb(214 181 107 / 65%);
-}
-.performance-bars strong {
-  color: #9aa6b8;
-  font-weight: 500;
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-}
+/* Estado vacío de una lista de contexto (usado por "Forma por campeón" y el
+   bloque de Contexto de Rendimiento). El resto de "04 · Patrones" de V3
+   (grid de bloques, barras de actividad por día/franja) se retiró: esa
+   actividad es dato de "documentación", no de consulta diaria (encargo §16). */
 .performance-bars-empty {
   color: #59667a;
-  font-size: 0.6rem;
-}
-/* Relaciones (con support / vs ADC): filas planas con separador fino, no
-   una caja bordeada por entrada. */
-.performance-relations {
-  display: grid;
-  margin-top: 0.45rem;
-}
-.performance-relations li {
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
-  padding: 0.32rem 0;
-  border-top: 1px solid rgb(255 255 255 / 6%);
-  font-size: 0.6rem;
-  color: #dce2eb;
-}
-.performance-relations li:first-child {
-  border-top: 0;
-}
-.performance-relations img {
-  border-radius: 3px;
-  background: #0d121d;
-}
-.performance-relations span {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-.performance-relations strong {
-  color: #9aa6b8;
-  font-weight: 500;
   font-size: 0.58rem;
-  font-variant-numeric: tabular-nums;
-}
-.performance-duration-summary {
-  margin-top: 0.6rem;
-  color: #7e8a9d;
-  font-size: 0.6rem;
+  padding: 0.2rem 0;
 }
 .related-gameplays [data-related-gameplays-list] {
   display: grid;
@@ -3965,44 +4229,6 @@
   width: 100%;
   min-width: 0;
 }
-/* "01 Ahora" — actualización manual como acción discreta junto a la hora
-   de la última actualización, no una sección propia para un solo botón
-   (encargo Sprint 3 §33: cerrar /competitivo con intención). */
-.status-module-meta {
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
-}
-.status-refresh {
-  min-height: 30px;
-  border: 1px solid rgb(214 181 107 / 35%);
-  padding: 0 0.85rem;
-  color: #d6b56b;
-  font-size: 0.62rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  transition:
-    border-color 180ms ease,
-    background-color 180ms ease;
-}
-.status-refresh:hover:not(:disabled) {
-  border-color: #d6b56b;
-  background: rgb(214 181 107 / 8%);
-}
-.status-refresh:focus-visible {
-  outline: 2px solid #d6b56b;
-  outline-offset: 3px;
-}
-.status-refresh:disabled {
-  cursor: wait;
-  opacity: 0.6;
-}
-.status-refresh-state {
-  margin-top: 0.6rem;
-  color: #68758a;
-  font-size: 0.62rem;
-}
 .live-teaser {
   border-bottom: 1px solid rgb(255 255 255 / 7%);
   background: #070b14;
@@ -4076,35 +4302,43 @@
     width: min(100% - 2rem, 80rem);
   }
   .live-module {
-    margin-top: 0.75rem;
+    margin-top: 0;
   }
-  .status-module .live-module-head {
+  /* Command bar en mobile: rango+LP en una línea, la cola (cuenta / live /
+     hora / ↻) envuelve debajo; los "facts" (pico / sesión / racha / última)
+     hacen scroll horizontal antes que romper el alto (encargo §25: rango +
+     LP primero, sin overflow de página). */
+  .command-bar {
     flex-wrap: wrap;
-    row-gap: 0.75rem;
+    row-gap: 0.5rem;
   }
-  .status-module-meta {
+  .cb-facts {
+    order: 3;
     flex-basis: 100%;
-    justify-content: space-between;
+    overflow-x: auto;
+    scrollbar-width: none;
   }
-  /* 01 Ahora en mobile: la franja de identidad envuelve (cuenta a su
-     propia línea), y las 3 columnas del cuerpo se apilan en el orden de
-     prioridad marcado por el HTML (evolución → hoy → temporada). */
-  .rank-identity-account {
-    margin-left: 0;
-    flex-basis: 100%;
+  .cb-facts::-webkit-scrollbar {
+    display: none;
   }
-  .status-body {
-    flex-direction: column;
-    gap: 1.35rem;
+  .cb-tail {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    row-gap: 0.4rem;
   }
-  .status-col + .status-col {
-    border-left: 0;
-    padding-left: 0;
-    padding-top: 1.35rem;
-    border-top: 1px solid rgb(255 255 255 / 6%);
+  /* El grid asimétrico se apila: sesión → evolución → forma → rendimiento. */
+  .control-grid {
+    grid-template-columns: 1fr;
   }
-  .today-figs {
-    gap: 1.8rem;
+  .session-figs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .trend-grid,
+  .perf-context-grid {
+    grid-template-columns: 1fr;
+  }
+  .history-filters {
+    width: 100%;
   }
   .timeline-summary {
     gap: 0.75rem;
@@ -4207,16 +4441,11 @@
     display: block;
     margin-top: 0.35rem;
   }
-  /* 02 · Rendimiento en 375: 3 columnas (2 filas de 6 tiles) — números
-     grandes siguen siendo el foco, nunca 6 columnas apretadas (§21). */
-  .stat-row {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    row-gap: 1.1rem;
+  /* Rendimiento reciente en 375: las 4 métricas de tendencia apiladas. */
+  .trend-item-head strong {
+    font-size: 1.15rem;
   }
-  .window-compare {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  /* 03 · Champion Pool en 375: una columna, el más jugado ya no necesita
+  /* Forma por campeón en 375: una columna, el más jugado ya no necesita
      "span 2" porque ya ocupa el ancho completo. */
   .pool-hero {
     grid-template-columns: 1fr;
@@ -4245,17 +4474,6 @@
     grid-template-columns: 4.5rem minmax(0, 1fr) 3.5rem;
     font-size: 0.56rem;
   }
-  /* 04 · Patrones en 375: los 4 bloques y la actividad, apilados en el
-     orden ya marcado por el HTML (support → matchup → lado → duración). */
-  .patterns-grid,
-  .activity-compact {
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
-  }
-  .performance-bars li {
-    grid-template-columns: 5rem minmax(0, 1fr) 4.5rem;
-    font-size: 0.56rem;
-  }
   .related-gameplays [data-related-gameplays-list] {
     grid-template-columns: 1fr;
   }
@@ -4275,26 +4493,10 @@
   }
 }
 @media (min-width: 768px) and (max-width: 1023px) {
-  /* Tablet: la columna de evolución baja a su propia fila (ancho completo,
-     sparkline con más sitio); Hoy y Temporada comparten la fila de arriba. */
-  .status-body {
-    flex-wrap: wrap;
-  }
-  .status-col--evolution {
-    flex-basis: 100%;
-    order: 3;
-    border-top: 1px solid rgb(255 255 255 / 6%);
-    padding-top: 1.25rem;
-    margin-top: 0.25rem;
-  }
-  .status-col--today {
-    order: 1;
-  }
-  .status-col--season {
-    order: 2;
-  }
-  .rank-evolution-chart {
-    max-width: 360px;
+  /* Tablet: el grid asimétrico se apila (sesión encima de evolución, forma
+     encima de rendimiento) — una columna estrecha partiría los números. */
+  .control-grid {
+    grid-template-columns: 1fr;
   }
   .match-row {
     flex-wrap: wrap;
@@ -4306,13 +4508,6 @@
   }
   .match-teams {
     grid-template-columns: 1fr;
-  }
-  .stat-row {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    row-gap: 1.1rem;
-  }
-  .pool-hero {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .related-gameplays [data-related-gameplays-list] {
     grid-template-columns: 1fr;
@@ -11416,25 +11611,31 @@ a.tool-card:focus-visible {
   background: rgb(214 181 107 / 4%);
   box-shadow: inset 0 0 0 1px rgb(214 181 107 / 8%);
 }
-/* --- Cambio de estado con partida en curso (Rediseño V3 §5): el módulo
-   de "Partida en curso" es el protagonista; "01 · Ahora" se reduce a la
-   franja de identidad (rango/LP siguen a la vista) — el resto (Hoy /
-   Temporada / Evolución) vuelve cuando termina la partida. --- */
+/* --- Con partida en curso, la página se transforma (encargo §18): el
+   módulo de "Partida en curso" es el protagonista y el resto del Control
+   Room recede (nunca se oculta — el rango/LP/sesión siguen ahí, y basta
+   pasar el ratón o el foco para recuperarlo del todo). --- */
 .live-page[data-in-game] .live-game-module {
   border-color: rgb(214 181 107 / 46%);
   background: rgb(214 181 107 / 6%);
 }
-.live-page[data-in-game] .status-body,
-.live-page[data-in-game] .status-module .today-empty {
-  display: none;
+.live-page[data-in-game] .control-grid,
+.live-page[data-in-game] .history-module {
+  opacity: 0.5;
+  transition: opacity 240ms ease;
 }
-.live-page[data-in-game] .rank-identity {
-  margin-top: 1.15rem;
-  padding-bottom: 0;
-  border-bottom: 0;
+.live-page[data-in-game] .control-grid:hover,
+.live-page[data-in-game] .control-grid:focus-within,
+.live-page[data-in-game] .history-module:hover,
+.live-page[data-in-game] .history-module:focus-within {
+  opacity: 1;
 }
-.live-page[data-in-game] .status-module {
-  background: transparent;
+@media (prefers-reduced-motion: reduce) {
+  .live-page[data-in-game] .control-grid,
+  .live-page[data-in-game] .history-module {
+    opacity: 0.72;
+    transition: none;
+  }
 }
 .live-game-header {
   display: flex;

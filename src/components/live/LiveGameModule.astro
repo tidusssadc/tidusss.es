@@ -314,13 +314,16 @@
       root.hidden = false;
     };
 
-    // Rediseño V3 §5: cuando hay partida en curso, la página cambia de
-    // estado — `[data-in-game]` en la raíz deja que el CSS dé protagonismo
-    // a este módulo y haga receder "01 · Ahora".
+    // V4 §18: cuando hay partida en curso la página se transforma —
+    // `[data-in-game]` en la raíz da protagonismo a este módulo y hace
+    // receder el resto del Control Room. La command bar refleja el estado.
     const liveRoot = document.querySelector<HTMLElement>('[data-live-root]');
+    const cbLiveLabel = document.querySelector<HTMLElement>('[data-cb-live-label]');
 
     const applyResult = (result: LiveGameResult) => {
-      liveRoot?.toggleAttribute('data-in-game', result.status === 'in_game');
+      const inGame = result.status === 'in_game';
+      liveRoot?.toggleAttribute('data-in-game', inGame);
+      if (cbLiveLabel) cbLiveLabel.textContent = inGame ? 'en partida' : 'fuera de partida';
       if (result.status === lastStatus) {
         if (result.status === 'in_game') renderGame(result);
         return;
