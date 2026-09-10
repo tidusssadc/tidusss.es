@@ -2,15 +2,79 @@ import type { RiotEnvironment } from '../../../src/config/riot';
 import {
   getRiotOverview,
   publicRiotError,
+  resolveSelfAccountPuuid,
   RiotApiError,
   type RiotDiagnosticEvent,
   type RiotPublicResponse,
 } from '../../../src/lib/riot';
+import { riotDefaults } from '../../../src/config/riot';
+import {
+  D1RankSnapshotRepository,
+  recordObservationIfDue,
+  type D1Database,
+} from '../../../src/lib/rank-history';
+
+interface Env extends RiotEnvironment {
+  /** Binding D1 opcional — ver migrations/0001_rank_snapshots.sql. Sin él, el histórico se degrada honestamente (nunca rompe el resto de /api/riot/overview). */
+  DB?: D1Database;
+}
 
 interface PagesContext {
   request: Request;
-  env: RiotEnvironment;
+  env: Env;
+  /** Deja completar el registro del snapshot tras enviar la respuesta — nunca añade latencia al camino crítico público (mismo criterio de coste que el resto de /api/riot/overview). */
+  waitUntil: (promise: Promise<unknown>) => void;
 }
+
+const logObservation = (event: { event: string; reason: string; puuid?: string }) => {
+  console.info({ scope: 'rank-history', ...event });
+};
+
+/**
+ * Efecto secundario de esta petición pública: si Riot devuelve rango
+ * real, intenta registrar un snapshot (Night Shift 2026-09-09, Fase C).
+ * NUNCA bloquea ni puede romper la respuesta de overview — el histórico
+ * es un extra, no una dependencia. Reutiliza el PUUID ya cacheado por
+ * `getRiotOverview` en esta misma petición (0 llamadas Riot nuevas).
+ */
+const recordRankSnapshotIfPossible = async (
+  env: Env,
+  data: Awaited<ReturnType<typeof getRiotOverview>>,
+) => {
+  if (!data.ranked.available) return;
+  // Sin binding DB (estado real de producción hoy: D1 aún no aprovisionado),
+  // ni siquiera merece la pena resolver el PUUID — `recordObservationIfDue`
+  // se degradaría igual, pero así no se hace ni ese trabajo de más en cada
+  // petición (Night Shift 2026-09-09, Fase F — hallazgo de hardening).
+  if (!env.DB) return;
+  try {
+    const puuid = await resolveSelfAccountPuuid(env);
+    if (!puuid) return;
+    const repository = new D1RankSnapshotRepository(env.DB);
+    await recordObservationIfDue(
+      repository,
+      {
+        puuid,
+        queueType: riotDefaults.queueType,
+        tier: data.ranked.tier,
+        rank: data.ranked.rank,
+        leaguePoints: data.ranked.leaguePoints,
+        wins: data.ranked.wins ?? 0,
+        losses: data.ranked.losses ?? 0,
+        observedAt: data.updatedAt,
+        source: 'overview',
+      },
+      logObservation,
+    );
+  } catch (error) {
+    // Ver comentario arriba: nunca debe afectar la respuesta real.
+    console.warn({
+      scope: 'rank-history',
+      event: 'unexpected-error',
+      message: error instanceof Error ? error.message : String(error),
+    });
+  }
+};
 
 const keyLengthBand = (length: number) => {
   if (length === 0) return '0';
@@ -26,7 +90,7 @@ const logDiagnostic = (diagnostic: RiotDiagnosticEvent) => {
   else console.info(payload);
 };
 
-export const onRequest = async ({ request, env }: PagesContext) => {
+export const onRequest = async ({ request, env, waitUntil }: PagesContext) => {
   if (request.method !== 'GET') {
     return new Response('Method not allowed', {
       status: 405,
@@ -49,6 +113,7 @@ export const onRequest = async ({ request, env }: PagesContext) => {
   });
   try {
     const data = await getRiotOverview(env, logDiagnostic);
+    waitUntil(recordRankSnapshotIfPossible(env, data));
     const body: RiotPublicResponse = {
       ok: true,
       data,

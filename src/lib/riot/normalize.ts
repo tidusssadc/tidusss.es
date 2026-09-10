@@ -7,6 +7,10 @@ import type {
   RiotMatchDto,
   RiotParticipantDto,
 } from './types';
+import type { KnownPlayerIdentity } from './live-types';
+
+/** Resolutor de Identity Registry (Night Shift 2026-09-09, Fase E) — mismo patrón curried que `identityFor` en `live.ts`, para no acoplar este módulo a `config/known-players` directamente. */
+export type MatchIdentityResolver = (puuid: string | undefined) => KnownPlayerIdentity | undefined;
 
 /**
  * Exportados (no solo locales de este módulo): `live-normalize.ts` los
@@ -122,6 +126,8 @@ export const normalizeMatch = (
   championUrl: (name: string) => string,
   itemUrl: (id: number) => string,
   summonerSpellUrl: (name: string) => string,
+  /** Opcional a propósito: sin resolutor (o sin match real), ningún participante lleva `identity` — nunca rompe partidas ya normalizadas en otros llamadores. */
+  identityFor?: MatchIdentityResolver,
 ): RecentMatch | null => {
   const info = match.info;
   const participant = info?.participants?.find((item) => item.puuid === puuid);
@@ -163,6 +169,13 @@ export const normalizeMatch = (
       items: playerItems,
       itemImageUrls: playerItems.map(itemUrl),
       position: player.teamPosition || player.individualPosition || undefined,
+      // Nunca al propio Tidusss (no es un "encuentro" consigo mismo) — el
+      // PUUID nunca sale de aquí hacia el cliente, solo decide si el
+      // participante lleva o no una `identity` ya resuelta.
+      identity:
+        player.puuid && player.puuid !== puuid
+          ? identityFor?.(player.puuid)
+          : undefined,
     };
   };
   const teams = (info.teams ?? []).map((team) => ({

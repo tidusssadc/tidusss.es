@@ -88,6 +88,25 @@ export const madridTime = (value?: string) => {
     : undefined;
 };
 
+/**
+ * Fecha corta absoluta ("9 sept 2026") — a diferencia de `relativeTime`,
+ * nunca cambia de forma según lo lejos que esté `now`. La usa el
+ * histórico de rango (Night Shift 2026-09-09, `src/lib/rank-history`)
+ * para "Seguimiento desde...", donde una fecha fija es más honesta que
+ * "hace 3 meses" (que se queda desactualizada en cada visita futura).
+ */
+export const madridDate = (value?: string) => {
+  const date = validDate(value);
+  return date
+    ? new Intl.DateTimeFormat('es-ES', {
+        timeZone: MADRID_TIME_ZONE,
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+      }).format(date)
+    : undefined;
+};
+
 export const elapsedDuration = (value?: string, now = new Date()) => {
   const date = validDate(value);
   if (!date) return undefined;

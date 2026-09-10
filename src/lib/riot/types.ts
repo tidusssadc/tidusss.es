@@ -1,3 +1,5 @@
+import type { KnownPlayerIdentity } from './live-types';
+
 export type RiotDataState =
   'available' | 'partial' | 'unranked' | 'no-recent-matches';
 
@@ -88,6 +90,15 @@ export interface MatchParticipant {
   itemImageUrls: string[];
   /** `teamPosition`/`individualPosition` de Riot — ausente si Riot no la devolvió, nunca inventada. Permite identificar de forma fiable al support aliado (UTILITY) o al ADC rival (BOTTOM) de una partida. */
   position?: string;
+  /**
+   * Encuentros PRO/STREAMER (Night Shift 2026-09-09, Fase E) — solo si el
+   * PUUID exacto de este participante está en el Identity Registry
+   * curado (`config/known-players.ts`, mismo matcher que "Partida en
+   * curso"). Nunca inferida por nombre/campeón, nunca para el propio
+   * Tidusss. Mismo tipo público que ya expone `LiveParticipant.identity`
+   * — no se inventa un segundo concepto de "identidad conocida".
+   */
+  identity?: KnownPlayerIdentity;
 }
 
 export interface MatchTeam {

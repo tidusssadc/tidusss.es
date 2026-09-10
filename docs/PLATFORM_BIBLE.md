@@ -1,5 +1,14 @@
 # PLATFORM BIBLE — tidusss.es
 
+> ⚠️ **Parcialmente desactualizado (auditoría de julio de 2026).** Para el estado **actual** —
+> qué existe hoy, qué está cerrado, qué está bloqueado — usa [`docs/agent/CURRENT_STATE.md`](agent/CURRENT_STATE.md).
+> Este documento sigue siendo la mejor fuente para el **"por qué"**: visión de producto,
+> filosofía, y el log append-only de decisiones arquitectónicas (§11). Lo que ya NO refleja la
+> realidad: `/live` se llama ahora `/competitivo` y fue rediseñado; existen `/campeones`,
+> `/tier-list`, `/academia`, `/pregunta`, Match Timeline, histórico de rango (`src/lib/rank-history`),
+> Encuentros PRO/STREAMER e Identity Registry; la identidad de Tidusss es **ADC main, no "OTP
+> Lucian"** (ver [`docs/agent/PRODUCT.md`](agent/PRODUCT.md)).
+>
 > **Estado:** v1.7 · Rama `main`, commit `6487c70` (catálogo a 173 campeones + Centro de Campeones ya publicados), con los cambios de las Fases 5-6 (guía editorial de Lucian, arquitectura + contenido real del parche 26.14) documentados aquí sin commitear todavía. Historial: diseño de dominio de **The League Laboratory** (§5.13, §6 Capítulo III, ADR-004) → **The Official Tidusss ADC Tier List** en `/tier-list` (ADR-005) → refactor del registro a fábrica pura (ADR-006) → **Explorador de Campeones** con 4 campeones curados (ADR-007) → separación Catálogo/Editorial y escalado real a **173 campeones** generados desde Data Dragon (ADR-008, ADR-009) → blindaje del catálogo con pruebas automatizadas nativas (ADR-010) → **Centro de Campeones** en `/campeones` (ADR-011) → arquitectura de guía editorial completa de Lucian (ADR-012) → **contenido real de Tidusss para el parche 26.14** — build, runas, sinergias (ADR-013). Ver [`docs/league-laboratory.md`](league-laboratory.md) §12-§17 para el detalle completo.
 > **Naturaleza de este documento:** es la fuente de verdad del producto. No es un README ni una guía de instalación — eso sigue viviendo en [`README.md`](../README.md). Este documento describe **qué es** tidusss.es, **por qué** está construido como está, y **qué reglas** debe respetar cualquier trabajo futuro.
 > **Vive y muta.** Cada decisión arquitectónica relevante, cada capítulo de roadmap que se cierre, cada convención nueva, se añade aquí. No se reescribe la historia: se amplía. La sección 11 (Decisiones arquitectónicas) es un log append-only.

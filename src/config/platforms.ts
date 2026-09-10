@@ -26,4 +26,6 @@ export const integrationEndpoints = {
   twitch: '/api/twitch/status',
   /** Base para `GET {riotMatchesBase}/{matchId}/timeline` — bajo demanda, nunca precargado (ver `MatchCard.astro`/`timeline-render.ts`). */
   riotMatchesBase: '/api/riot/matches',
+  /** Histórico de rango observado (Night Shift 2026-09-09) — lectura pública, se degrada sola sin storage configurado. */
+  riotRankHistory: '/api/riot/rank-history',
 } as const;

@@ -3,6 +3,7 @@ import {
   riotDefaults,
   type RiotEnvironment,
 } from '../../config/riot';
+import { findKnownPlayerIdentity, knownPlayerIdentities } from '../../config/known-players';
 import { analyzeRecentSoloQueue, analyzeTodaySoloQueue } from './analytics';
 import { cached } from './cache';
 import { createRiotClient, type RiotDiagnosticLogger } from './client';
@@ -16,6 +17,7 @@ import { normalizeMatch, normalizeRanked } from './normalize';
 import { buildProfilePerformance } from './performance';
 import { normalizeMatchTimeline } from './timeline-normalize';
 import type {
+  RankedSummary,
   RiotAccountDto,
   RiotLeagueEntryDto,
   RiotMatchDto,
@@ -155,6 +157,12 @@ export const getRiotOverview = async (
       urls.champion,
       urls.item,
       urls.summonerSpell,
+      // Encuentros PRO/STREAMER (Fase E) — mismo Identity Registry curado
+      // y el mismo matcher exacto-por-PUUID que ya usa "Partida en curso"
+      // (`live.ts`), sin llamada Riot adicional: opera sobre el match que
+      // ya se acaba de traer/cachear.
+      (participantPuuid) =>
+        findKnownPlayerIdentity(participantPuuid, undefined, knownPlayerIdentities),
     );
     return match ? [match] : [];
   });
@@ -204,6 +212,99 @@ export const getRiotOverview = async (
           ? 'no-recent-matches'
           : 'available',
     source: 'Riot Games API',
+  };
+};
+
+/**
+ * El PUUID real de Tidusss, solo — para el histórico de rango (Night
+ * Shift 2026-09-09, `src/lib/rank-history`), que necesita una identidad
+ * técnica estable pero NUNCA debe volver a resolver la cuenta por su
+ * cuenta. Reutiliza `resolveSelfAccount` (misma clave de caché de 24h
+ * que ya calienta `getRiotOverview`/`getRiotLiveGame`) — en el caso real
+ * (se llama justo después de un `getRiotOverview` en la misma petición),
+ * esto es una lectura de caché de memoria, cero llamadas Riot nuevas.
+ * El PUUID nunca se expone en `RiotOverview` (tipo público del cliente).
+ */
+export const resolveSelfAccountPuuid = async (
+  environment: RiotEnvironment,
+  diagnostics?: RiotDiagnosticLogger,
+): Promise<string | undefined> => {
+  const config = getRiotConfig(environment);
+  if (!config.apiKey) return undefined;
+  const client = createRiotClient({ apiKey: config.apiKey, diagnostics });
+  const regionalBase = `https://${config.regionalRoute}.api.riotgames.com`;
+  try {
+    const account = await resolveSelfAccount(client, regionalBase, config);
+    return account.value.puuid;
+  } catch {
+    return undefined;
+  }
+};
+
+export interface RiotRankObservation {
+  puuid: string;
+  ranked: RankedSummary;
+  /** Momento real de la observación (ISO 8601 UTC) — generado aquí, nunca heredado de una caché stale. */
+  observedAt: string;
+  /** `true` solo si LEAGUE-V4 se sirvió stale tras un fallo (nunca un fallo silencioso: el snapshot sigue siendo dato real, solo no fresco). */
+  rankedStale: boolean;
+}
+
+/**
+ * Camino LIGERO para el histórico de rango (Night Shift cierre §18/§19).
+ * SOLO resuelve:
+ *   - cuenta/PUUID  → ACCOUNT-V1  (misma clave `riot:account:*`, caché 24h)
+ *   - rango Solo/Duo → LEAGUE-V4  (misma clave `riot:ranked:{puuid}`, caché 10min)
+ *
+ * NUNCA toca SUMMONER-V4, MATCH-V5 (ids ni detalle), Match Timeline ni
+ * Data Dragon. El cron de snapshots corre cada ~30 min y no puede
+ * permitirse el `getRiotOverview` completo (hasta 30 detalles de partida)
+ * solo para leer LP. Comparte exactamente las claves de caché de
+ * `getRiotOverview`, así que una visita reciente a /competitivo y este
+ * cron se aprovechan mutuamente cuando caen en el mismo isolate — nunca
+ * se afirma que esa caché esté garantizada compartida entre isolates
+ * (misma advertencia que el resto de `src/lib/riot`).
+ */
+export const getRiotRankObservation = async (
+  environment: RiotEnvironment,
+  diagnostics?: RiotDiagnosticLogger,
+): Promise<RiotRankObservation> => {
+  const config = getRiotConfig(environment);
+  if (!config.apiKey)
+    throw new RiotApiError(
+      'RIOT_API_KEY_MISSING',
+      503,
+      undefined,
+      'configuration',
+    );
+  const client = createRiotClient({ apiKey: config.apiKey, diagnostics });
+  const regionalBase = `https://${config.regionalRoute}.api.riotgames.com`;
+  const platformBase = `https://${config.platformRoute}.api.riotgames.com`;
+
+  const account = await resolveSelfAccount(client, regionalBase, config);
+  const puuid = account.value.puuid;
+  if (!puuid)
+    throw new RiotApiError('RIOT_INVALID_RESPONSE', 502, undefined, 'account');
+
+  const leagueEntries = await cached(
+    `riot:ranked:${puuid}`,
+    10 * MINUTE,
+    6 * HOUR,
+    () =>
+      client.get<RiotLeagueEntryDto[]>(
+        `${platformBase}/lol/league/v4/entries/by-puuid/${encode(puuid)}`,
+        {
+          phase: 'league',
+          endpoint: 'LEAGUE-V4 /lol/league/v4/entries/by-puuid/{puuid}',
+        },
+      ),
+  );
+
+  return {
+    puuid,
+    ranked: normalizeRanked(leagueEntries.value),
+    observedAt: new Date().toISOString(),
+    rankedStale: leagueEntries.stale,
   };
 };
 

@@ -1,0 +1,118 @@
+---
+import { integrationEndpoints } from '../../config/platforms';
+import { RANK_CHART_WIDTH, RANK_CHART_HEIGHT } from '../../lib/rank-history/render';
+---
+
+<!--
+  Evolución de rango observada (Night Shift 2026-09-09, Fase D). Fetch
+  propio a `/api/riot/rank-history` (mismo patrón que `PerformanceProfile`:
+  cada bloque pide solo lo que necesita) — nunca bloquea ni depende del
+  fetch de `/api/riot/overview` de "01 · Ahora". Sin binding D1 configurado
+  el endpoint responde `available:false` y este bloque queda oculto por
+  completo (`hidden`, nunca un mensaje de error) — no hay nada roto que
+  reportar, solo una función todavía sin aprovisionar.
+
+  El sparkline dibuja `rankOrdinal` (tier→division→LP aplanado, ver
+  `src/lib/rank-history/rank-order.ts`), NUNCA el LP crudo — un eje de LP
+  directo mentiría (Diamond I 80 LP quedaría "por encima" de Master 0 LP).
+  Ese número nunca se imprime en ningún sitio; el texto que ve el usuario
+  siempre sale de tier/rank/LP reales.
+-->
+<div class="rank-evolution" data-rank-evolution data-riot-rank-history={integrationEndpoints.riotRankHistory} hidden>
+  <div class="rank-evolution-empty" data-rank-evolution-empty hidden>
+    <strong>Seguimiento de rango activado.</strong>
+    <span>Todavía no hay historial suficiente — volverá en cuanto haya más de una observación real.</span>
+  </div>
+
+  <div class="rank-evolution-body" data-rank-evolution-body hidden>
+    <div class="rank-evolution-head">
+      <strong data-rank-evolution-current></strong>
+      <span data-rank-evolution-lp></span>
+    </div>
+    <div class="rank-evolution-chart-wrap" data-rank-evolution-chart hidden>
+      <svg
+        class="rank-evolution-chart"
+        viewBox={`0 0 ${RANK_CHART_WIDTH} ${RANK_CHART_HEIGHT}`}
+        role="img"
+        aria-label="Evolución de rango observada"
+      >
+        <path data-rank-evolution-path></path>
+      </svg>
+    </div>
+    <p class="rank-evolution-meta" data-rank-evolution-peak hidden></p>
+    <p class="rank-evolution-meta" data-rank-evolution-since hidden></p>
+    <p class="rank-evolution-meta rank-evolution-transition" data-rank-evolution-transition hidden></p>
+  </div>
+</div>
+
+<script>
+  import { buildRankEvolutionView } from '../../lib/rank-history/render';
+  import { buildSparklinePath } from '../../lib/rank-history/chart';
+  import type { RankHistoryPublicResponse } from '../../../functions/api/riot/rank-history';
+
+  const root = document.querySelector<HTMLElement>('[data-rank-evolution]');
+
+  if (root) {
+    const text = (selector: string, value: string) => {
+      const node = root.querySelector<HTMLElement>(selector);
+      if (node) node.textContent = value;
+    };
+    const visible = (selector: string, show: boolean) => {
+      const node = root.querySelector<HTMLElement>(selector);
+      if (node) node.hidden = !show;
+    };
+
+    const render = (payload: RankHistoryPublicResponse) => {
+      if (!payload.ok) {
+        root.hidden = true;
+        return;
+      }
+      const view = buildRankEvolutionView(payload.data);
+      root.hidden = view.state === 'hidden';
+      if (view.state === 'hidden') return;
+
+      visible('[data-rank-evolution-empty]', view.state === 'empty');
+      visible('[data-rank-evolution-body]', view.state !== 'empty');
+      if (view.state === 'empty') return;
+
+      text('[data-rank-evolution-current]', view.currentLabel ?? 'Sin clasificar');
+      text('[data-rank-evolution-lp]', view.currentLpLabel ?? '');
+      visible('[data-rank-evolution-lp]', Boolean(view.currentLpLabel));
+
+      text('[data-rank-evolution-since]', view.sinceLabel ?? '');
+      visible('[data-rank-evolution-since]', Boolean(view.sinceLabel));
+
+      visible('[data-rank-evolution-chart]', view.state === 'chart');
+      visible('[data-rank-evolution-peak]', Boolean(view.peakLabel));
+      visible('[data-rank-evolution-transition]', Boolean(view.latestTransitionLabel));
+      if (view.state === 'chart') {
+        text('[data-rank-evolution-peak]', view.peakLabel ?? '');
+        text('[data-rank-evolution-transition]', view.latestTransitionLabel ?? '');
+        const path = root.querySelector('[data-rank-evolution-path]');
+        if (path) path.setAttribute('d', buildSparklinePath(view.points));
+      }
+    };
+
+    const load = async () => {
+      try {
+        const response = await fetch(root.dataset.riotRankHistory!);
+        const payload = (await response.json()) as RankHistoryPublicResponse;
+        render(payload);
+      } catch {
+        // Fallo real de red (no la respuesta honesta `available:false` del
+        // propio endpoint, que ya llega como JSON 200) — el bloque
+        // simplemente no aparece; el resto de Competitivo sigue intacto.
+        root.hidden = true;
+      }
+    };
+
+    void load();
+
+    // Solo en `astro dev` (eliminado del bundle de producción, mismo
+    // patrón que `PerformanceProfile.astro`/`LiveGameModule.astro`): fuerza
+    // el render con datos sintéticos para QA visual sin tocar D1 real.
+    if (import.meta.env.DEV) {
+      (window as unknown as { __rankEvolutionDebugRender?: typeof render }).__rankEvolutionDebugRender = render;
+    }
+  }
+</script>

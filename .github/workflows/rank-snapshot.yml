@@ -1,0 +1,54 @@
+# Dispara la observación del histórico de rango de /competitivo.
+#
+# Scheduler elegido (ver docs/operations/rank-history.md §5): un workflow
+# programado que hace UN POST al endpoint protegido ya construido
+# (functions/api/riot/rank-snapshot-cron.ts). Cero recursos nuevos en
+# Cloudflare, cero wrangler.toml, versionado y trivial de apagar.
+#
+# Los workflows `schedule` SOLO corren desde la rama por defecto (main):
+# esto no hace nada mientras viva en una rama de trabajo.
+#
+# Requiere el secret de repositorio RANK_SNAPSHOT_CRON_SECRET (mismo valor
+# que la variable server-side en Cloudflare Pages). Mientras D1 o el
+# secreto no estén configurados, el run informa y termina en verde
+# (no ensucia la pestaña Actions durante el alta); una vez todo operativo,
+# un fallo real de Riot/servidor sí marca el run en rojo.
+
+name: rank snapshot
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch: {}
+
+permissions: {}
+
+concurrency:
+  group: rank-snapshot
+  cancel-in-progress: false
+
+jobs:
+  observe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: POST /api/riot/rank-snapshot-cron
+        env:
+          SECRET: ${{ secrets.RANK_SNAPSHOT_CRON_SECRET }}
+        run: |
+          if [ -z "$SECRET" ]; then
+            echo "::warning::RANK_SNAPSHOT_CRON_SECRET no configurado — alta pendiente (docs/operations/rank-history.md §4)."
+            exit 0
+          fi
+          code=$(curl -sS -o /tmp/body.json -w '%{http_code}' --max-time 60 \
+            -X POST https://tidusss.es/api/riot/rank-snapshot-cron \
+            -H "Authorization: Bearer $SECRET")
+          echo "HTTP $code"
+          cat /tmp/body.json || true
+          echo
+          case "$code" in
+            2??) exit 0 ;;
+            401) echo "::warning::401 — el secreto del repo no coincide con el de Cloudflare, o falta la variable server-side." ; exit 0 ;;
+            503) echo "::warning::503 — D1 aún no aprovisionado/enlazado (docs/operations/rank-history.md §1-3)." ; exit 0 ;;
+            *)   echo "::error::respuesta inesperada del endpoint de snapshot" ; exit 1 ;;
+          esac
