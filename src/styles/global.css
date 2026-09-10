@@ -2374,10 +2374,9 @@
     background: rgb(255 255 255 / 1.5%);
     transform: translate3d(0, -2px, 0);
   }
-  /* Patrones es secundario: sin "lift" ni realce al pasar por encima. */
-  .patterns-module:hover {
-    border-color: rgb(255 255 255 / 6%);
-    background: rgb(255 255 255 / 1%);
+  /* En el grid, las dos columnas de una fila no se "levantan" (el lift
+     desalinea la fila) — solo el realce de borde. */
+  .control-grid > .live-module:hover {
     transform: none;
   }
 }
@@ -4295,6 +4294,9 @@
     border-color: rgb(214 181 107 / 17%);
     background: rgb(255 255 255 / 1.5%);
     transform: translate3d(0, -2px, 0);
+  }
+  [data-motion-ready] .control-grid > .live-module.is-visible:hover {
+    transform: none;
   }
 }
 @media (max-width: 767px) {
