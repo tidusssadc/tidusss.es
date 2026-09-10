@@ -25,7 +25,7 @@ import { RANK_CHART_WIDTH, RANK_CHART_HEIGHT } from '../../lib/rank-history/rend
   </div>
 
   <div class="rank-evolution-body" data-rank-evolution-body hidden>
-    <div class="rank-evolution-head">
+    <div class="rank-evolution-head" data-rank-evolution-head hidden>
       <strong data-rank-evolution-current></strong>
       <span data-rank-evolution-lp></span>
     </div>
@@ -75,6 +75,11 @@ import { RANK_CHART_WIDTH, RANK_CHART_HEIGHT } from '../../lib/rank-history/rend
       visible('[data-rank-evolution-body]', view.state !== 'empty');
       if (view.state === 'empty') return;
 
+      // El rango actual ya está en la franja de identidad de "01 Ahora"
+      // (Rediseño V3). Con un solo snapshot, la cabecera repetiría esa
+      // misma cifra: se muestra solo cuando el sparkline ya aporta algo
+      // distinto (state === 'chart').
+      visible('[data-rank-evolution-head]', view.state === 'chart');
       text('[data-rank-evolution-current]', view.currentLabel ?? 'Sin clasificar');
       text('[data-rank-evolution-lp]', view.currentLpLabel ?? '');
       visible('[data-rank-evolution-lp]', Boolean(view.currentLpLabel));

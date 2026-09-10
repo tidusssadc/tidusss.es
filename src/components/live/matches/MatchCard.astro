@@ -36,6 +36,19 @@ import MatchYourBuild from './MatchYourBuild.astro';
             <span data-match-relative></span>
           </div>
         </div>
+        <div class="match-row-vs" data-match-vs hidden>
+          <span class="match-row-vs-label" aria-hidden="true">vs</span>
+          <img
+            class="match-row-vs-champion"
+            data-match-vs-champion
+            width="22"
+            height="22"
+            alt=""
+            loading="lazy"
+            decoding="async"
+          />
+          <span class="encounter-badge" data-match-vs-badge hidden></span>
+        </div>
         <div class="match-row-meta">
           <div class="match-row-kda">
             <strong data-match-score></strong>

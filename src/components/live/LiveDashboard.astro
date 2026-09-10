@@ -18,19 +18,8 @@ import { resolvedMatchVideoContent } from '../../lib/resolved-match-video-conten
 >
   <section class="live-intro">
     <div class="live-container">
-      <p class="eyebrow">El Laboratorio / Competitivo</p>
-      <h1>El centro competitivo de Tidusss.</h1>
-      <p>Rango, rendimiento y Champion Pool reales de SoloQ.</p>
-      <img
-        class="live-hero-signature"
-        src="/images/brand/lucian/lucian-high-noon-standing.webp"
-        width="634"
-        height="792"
-        alt=""
-        aria-hidden="true"
-        decoding="async"
-        fetchpriority="high"
-      />
+      <p class="eyebrow">Tidusss · Competitivo</p>
+      <p class="live-intro-line">Rango, forma y Champion Pool reales de SoloQ — datos de la Riot API para <strong>Tidusss#FFX</strong>.</p>
     </div>
   </section>
 
@@ -38,8 +27,12 @@ import { resolvedMatchVideoContent } from '../../lib/resolved-match-video-conten
     <LiveGameModule />
   </div>
 
-  <div class="live-container live-grid">
-    <section class="live-module live-module--wide status-module" aria-labelledby="solo-title">
+  <div class="live-container live-stack">
+    <section
+      class="live-module live-module--wide status-module"
+      aria-labelledby="solo-title"
+      data-status-module
+    >
       <header class="live-module-head">
         <div>
           <span>01 / Ahora</span><h2 id="solo-title">Estado competitivo</h2>
@@ -62,51 +55,72 @@ import { resolvedMatchVideoContent } from '../../lib/resolved-match-video-conten
         aria-live="polite"
       >
       </p>
-      <div class="profile-context">
-        <strong data-riot-id>Tidusss#FFX</strong><span>EUW · Solo/Duo</span>
-      </div>
-      <div class="today-rank">
-        <div>
-          <strong
-            data-rank
-            class="data-skeleton"
-            aria-label="Actualizando rango">&nbsp;</strong
-          ><span data-lp class="data-skeleton data-skeleton--line">&nbsp;</span>
-        </div>
-        <p data-activity class="data-skeleton data-skeleton--copy">&nbsp;</p>
+
+      <div class="rank-identity">
         <img
-          class="rank-emblem"
-          data-rank-emblem
-          width="640"
-          height="512"
+          class="rank-identity-crest"
+          data-rank-crest
+          width="72"
+          height="72"
           alt=""
           aria-hidden="true"
           decoding="async"
           hidden
         />
-      </div>
-      <div class="season-record" data-season-record hidden>
-        <span data-season-record-line></span>
-      </div>
-      <RankEvolution />
-      <div class="today-metrics" data-today-metrics hidden>
-        <div><strong data-today-games></strong><span>Partidas hoy</span></div>
-        <div>
-          <strong data-today-record></strong><span>Victorias · Derrotas</span>
-        </div>
-        <div><strong data-today-wr></strong><span>Win rate</span></div>
-        <div><strong data-today-kda></strong><span>KDA medio</span></div>
-      </div>
-      <div class="today-foot" data-today-foot hidden>
-        <p><span>Campeón del día</span><strong data-today-champion></strong></p>
-        <p><span>Racha actual</span><strong data-today-streak></strong></p>
-        <p>
-          <span>Variación de LP</span><strong data-lp-delta
-            >Pendiente</strong
+        <span class="rank-identity-tier-wrap">
+          <strong
+            data-rank
+            class="rank-identity-tier data-skeleton"
+            aria-label="Actualizando rango">&nbsp;</strong
           >
-          <small>Se mostrará en cuanto haya una medición previa con la que compararla.</small>
-        </p>
+          <span
+            data-lp
+            class="rank-identity-lp data-skeleton data-skeleton--line">&nbsp;</span
+          >
+        </span>
+        <span class="rank-identity-account">
+          <strong data-riot-id>Tidusss#FFX</strong>
+          <span>EUW · Solo/Duo</span>
+        </span>
       </div>
+
+      <div class="status-body">
+        <div class="status-col status-col--evolution" data-status-evolution>
+          <p class="status-col-label">Evolución</p>
+          <RankEvolution />
+        </div>
+
+        <div class="status-col status-col--today" data-today-metrics hidden>
+          <p class="status-col-label">Hoy</p>
+          <div class="today-headline">
+            <strong data-today-record></strong>
+            <span data-activity class="data-skeleton data-skeleton--copy">&nbsp;</span>
+          </div>
+          <ul class="today-figs">
+            <li><strong data-today-games></strong><span>Partidas</span></li>
+            <li><strong data-today-wr></strong><span>Win rate</span></li>
+            <li><strong data-today-kda></strong><span>KDA</span></li>
+          </ul>
+          <p class="today-tags">
+            <span>Racha <strong data-today-streak></strong></span>
+            <span>Campeón <strong data-today-champion></strong></span>
+          </p>
+        </div>
+
+        <div class="status-col status-col--season">
+          <p class="status-col-label">Temporada</p>
+          <div class="season-record" data-season-record hidden>
+            <strong data-season-record-line></strong>
+          </div>
+          <p class="status-note">
+            <span>Variación de LP</span><strong data-lp-delta>Pendiente</strong>
+          </p>
+          <p class="status-note status-note--muted">
+            Se mostrará en cuanto haya una medición previa con la que compararla.
+          </p>
+        </div>
+      </div>
+
       <div class="today-empty" data-today-empty hidden>
         <strong>Sin clasificatorias hoy.</strong>
         <p>
@@ -114,17 +128,6 @@ import { resolvedMatchVideoContent } from '../../lib/resolved-match-video-conten
           Europe/Madrid.
         </p>
         <p data-last-competitive hidden></p>
-        <img
-          class="today-empty-signature"
-          data-today-empty-signature
-          width="669"
-          height="714"
-          alt=""
-          aria-hidden="true"
-          decoding="async"
-          loading="lazy"
-          hidden
-        />
       </div>
       <div class="live-empty" data-riot-error hidden>
         <strong>Clasificación temporalmente no disponible.</strong>
@@ -455,26 +458,19 @@ import { resolvedMatchVideoContent } from '../../lib/resolved-match-video-conten
       ?.classList.remove('data-skeleton', 'data-skeleton--copy');
     visible('[data-riot-error]', false);
     visible('[data-today-metrics]', today.games > 0);
-    visible('[data-today-foot]', today.games > 0);
     visible('[data-today-empty]', today.games === 0);
-    const emblem = root?.querySelector<HTMLImageElement>('[data-rank-emblem]');
-    const emptySignature = root?.querySelector<HTMLImageElement>(
-      '[data-today-empty-signature]',
-    );
+    // El emblema de rango es ahora una insignia pequeña y nítida en la
+    // franja de identidad — información ("qué rango"), no un fondo
+    // decorativo. Se muestra siempre que haya un asset para el tier real.
+    const crest = root?.querySelector<HTMLImageElement>('[data-rank-crest]');
     const rankAsset = rankAssetFor(ranked.tier);
-    if (emblem) {
-      emblem.hidden = today.games === 0 || !rankAsset;
+    if (crest) {
+      crest.hidden = !rankAsset;
       if (
-        !emblem.hidden &&
         rankAsset &&
-        emblem.src !== new URL(rankAsset.src, location.href).href
+        crest.src !== new URL(rankAsset.src, location.href).href
       )
-        emblem.src = rankAsset.src;
-    }
-    if (emptySignature) {
-      emptySignature.hidden = today.games > 0;
-      if (!emptySignature.hidden && !emptySignature.src)
-        emptySignature.src = '/images/brand/lucian/lucian-high-noon-ready.webp';
+        crest.src = rankAsset.src;
     }
 
     if (today.games > 0) {
@@ -549,8 +545,7 @@ import { resolvedMatchVideoContent } from '../../lib/resolved-match-video-conten
     const results = await Promise.allSettled([loadRiot(), loadFeed()]);
     if (results[0].status === 'rejected') {
       riotFailed = true;
-      visible('[data-rank-emblem]', false);
-      visible('[data-today-empty-signature]', false);
+      visible('[data-rank-crest]', false);
       // Un único mensaje compacto (aquí, en el propio rango) en vez del
       // mismo fallo repetido en 3-4 frases distintas de esta sección: el
       // bloque separado `.live-empty` (`[data-riot-error]`) ya no se

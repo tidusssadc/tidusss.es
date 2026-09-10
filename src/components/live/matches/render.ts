@@ -207,6 +207,24 @@ const fillTeam = (
     );
 };
 
+/**
+ * ADC rival de la partida (equipo contrario, `position === 'BOTTOM'`) —
+ * derivado de datos que Riot ya trajo en `match.teams`, cero llamadas
+ * nuevas. La `identity` (PRO/STREAMER) ya viene resuelta server-side por
+ * PUUID exacto (`normalizeMatch`), nunca se infiere aquí.
+ */
+const enemyLaner = (match: RecentMatch): MatchParticipant | undefined => {
+  const enemy = match.teams.find((team) => team.teamId !== match.teamId);
+  return enemy?.participants.find((p) => (p.position ?? '').toUpperCase() === 'BOTTOM');
+};
+
+const encounterLabel = (identity: NonNullable<MatchParticipant['identity']>) =>
+  identity.isPro && identity.isStreamer
+    ? 'PRO / STREAMER'
+    : identity.isPro
+      ? 'PRO'
+      : 'STREAMER';
+
 const killParticipation = (match: RecentMatch) => {
   const team = match.teams.find(({ teamId }) => teamId === match.teamId);
   if (!team) return undefined;
@@ -271,6 +289,26 @@ const renderCard = (
   if (championImage) {
     championImage.src = match.championImageUrl ?? '';
     championImage.alt = match.championName;
+  }
+  // ADC rival + insignia de encuentro (Rediseño V3 §9/§10): en la fila
+  // colapsada, no en una sección aparte. Solo si Riot trajo la posición.
+  const enemy = enemyLaner(match);
+  const vs = query<HTMLElement>(card, '[data-match-vs]');
+  if (vs && enemy) {
+    vs.hidden = false;
+    const vsChampion = query<HTMLImageElement>(vs, '[data-match-vs-champion]');
+    if (vsChampion) {
+      vsChampion.src = enemy.championImageUrl ?? '';
+      vsChampion.alt = `Rival: ${enemy.championName}`;
+    }
+    const vsBadge = query<HTMLElement>(vs, '[data-match-vs-badge]');
+    if (vsBadge && enemy.identity) {
+      vsBadge.hidden = false;
+      vsBadge.textContent = encounterLabel(enemy.identity);
+      vsBadge.title = [enemy.identity.displayName, enemy.identity.team, enemy.identity.role]
+        .filter(Boolean)
+        .join(' · ');
+    }
   }
   setText(
     card,

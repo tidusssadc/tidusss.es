@@ -234,8 +234,12 @@ const adcRosterNames = getAdcRoster(registry).map((entry) => entry.catalogEntry.
       const container = performanceRoot.querySelector('[data-window-stats]');
       if (!container) return;
       container.replaceChildren(
-        ...STAT_TILES.map(({ key, label, format }) => {
+        ...STAT_TILES.map(({ key, label, format }, index) => {
           const tile = el('div', 'stat-tile');
+          // WR y KDA lideran la lectura (Rediseño V3 §6): tratamiento
+          // tipográfico mayor. El resto (KP/CS/Oro/Daño por min) son el
+          // contexto, no seis cifras del mismo peso.
+          tile.classList.toggle('stat-tile--lead', index < 2);
           const value = el('strong');
           value.textContent = format(window[key] as number | undefined);
           const caption = el('span');
@@ -293,7 +297,22 @@ const adcRosterNames = getAdcRoster(registry).map((entry) => entry.catalogEntry.
       );
     };
 
-    // --- 03 · Champion Pool — el foco visual de este sprint. ---
+    // --- 03 · Champion Pool — el foco visual (Rediseño V3 §7). ---
+
+    /**
+     * Arte de carga del campeón (Data Dragon, misma CDN que los iconos que
+     * ya se cargan — 0 llamadas Riot nuevas, no cuenta contra el rate
+     * limit). Se deriva la clave del propio `championImageUrl`
+     * (`.../champion/{Key}.png`), nunca del nombre visible, que para
+     * algunos campeones difiere de la clave.
+     */
+    const championLoadingArt = (iconUrl?: string): string | undefined => {
+      if (!iconUrl) return undefined;
+      const key = iconUrl.split('/').pop()?.replace(/\.png$/i, '');
+      return key
+        ? `https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${key}_0.jpg`
+        : undefined;
+    };
 
     const championCard = (
       champion: ChampionPerformance,
@@ -301,15 +320,23 @@ const adcRosterNames = getAdcRoster(registry).map((entry) => entry.catalogEntry.
       isFeature = false,
     ): HTMLLIElement => {
       const item = el('li', variant === 'hero' ? 'pool-card' : 'pool-secondary-item');
-      // El campeón más jugado real (nunca hardcodeado) actúa como pieza
-      // visual principal del Champion Pool — arte más grande, misma
-      // información, más peso compositivo (encargo Visual Pass §10).
+      // El campeón más jugado real (nunca hardcodeado) es la pieza visual
+      // principal: arte de carga a sangre, no un icono de 84px.
       item.classList.toggle('pool-card--feature', isFeature);
-      if (champion.championImageUrl) {
+      const art = isFeature ? championLoadingArt(champion.championImageUrl) : undefined;
+      if (art) {
+        const image = el('img', 'pool-card-splash');
+        image.src = art;
+        image.alt = '';
+        image.setAttribute('aria-hidden', 'true');
+        image.loading = 'lazy';
+        image.decoding = 'async';
+        item.append(image);
+      } else if (champion.championImageUrl) {
         const image = el('img', 'pool-card-art');
         image.src = champion.championImageUrl;
         image.alt = champion.championName;
-        const size = isFeature ? 84 : variant === 'hero' ? 56 : 32;
+        const size = variant === 'hero' ? 56 : 32;
         image.width = size;
         image.height = size;
         image.loading = 'lazy';
@@ -320,32 +347,41 @@ const adcRosterNames = getAdcRoster(registry).map((entry) => entry.catalogEntry.
       const name = el('strong');
       name.textContent = champion.championName;
       body.append(name);
-      if (variant === 'hero') {
-        const record = el('span', 'pool-card-record');
-        record.textContent = `${champion.games} partidas · ${champion.wins}V ${champion.losses}D`;
-        const stats = el('div', 'pool-card-stats');
-        const stat = (value: string, label: string) => {
-          const wrap = el('div');
-          const strong = el('strong');
-          strong.textContent = value;
-          const span = el('span');
-          span.textContent = label;
-          wrap.append(strong, span);
-          return wrap;
-        };
-        stats.append(
-          stat(percent(champion.winRate), 'WR'),
-          stat(decimal(champion.averageKda), 'KDA'),
-          stat(decimal1(champion.averageDamagePerMinute), 'DPM'),
-          stat(decimal1(champion.averageCsPerMinute), 'CSM'),
-        );
-        body.append(record, stats);
-      } else {
+      if (variant !== 'hero') {
         const record = el('span', 'pool-card-record');
         record.textContent = `${champion.games} ${champion.games === 1 ? 'partida' : 'partidas'} · ${percent(champion.winRate)} WR`;
         body.append(record);
+        item.append(body);
+        return item;
       }
-      item.append(body);
+
+      const record = el('span', 'pool-card-record');
+      record.textContent = `${champion.games} partidas · ${champion.wins}V ${champion.losses}D`;
+      body.append(record);
+      const stats = el('div', 'pool-card-stats');
+      const stat = (value: string, label: string) => {
+        const wrap = el('div');
+        const strong = el('strong');
+        strong.textContent = value;
+        const span = el('span');
+        span.textContent = label;
+        wrap.append(strong, span);
+        return wrap;
+      };
+      stats.append(
+        stat(percent(champion.winRate), 'WR'),
+        stat(decimal(champion.averageKda), 'KDA'),
+        stat(decimal1(champion.averageDamagePerMinute), 'DPM'),
+        stat(decimal1(champion.averageCsPerMinute), 'CSM'),
+      );
+      if (isFeature) {
+        // Feature: las stats van dentro del cuerpo, sobre el escrim del arte.
+        body.append(stats);
+        item.append(body);
+      } else {
+        // Fila compacta: [icono] [nombre + record] [stats] como columnas del grid.
+        item.append(body, stats);
+      }
       return item;
     };
 

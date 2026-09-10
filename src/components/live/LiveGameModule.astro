@@ -311,7 +311,13 @@
       root.hidden = false;
     };
 
+    // Rediseño V3 §5: cuando hay partida en curso, la página cambia de
+    // estado — `[data-in-game]` en la raíz deja que el CSS dé protagonismo
+    // a este módulo y haga receder "01 · Ahora".
+    const liveRoot = document.querySelector<HTMLElement>('[data-live-root]');
+
     const applyResult = (result: LiveGameResult) => {
+      liveRoot?.toggleAttribute('data-in-game', result.status === 'in_game');
       if (result.status === lastStatus) {
         if (result.status === 'in_game') renderGame(result);
         return;
