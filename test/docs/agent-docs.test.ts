@@ -87,10 +87,12 @@ test('CURRENT_STATE.md lleva "Last verified commit" y "Last verified date"', () 
   assert.match(cs, /Last verified date/);
 });
 
-test('CURRENT_STATE.md deja claro que D1 está en código pero NO aprovisionado', () => {
+test('CURRENT_STATE.md refleja que D1 ya está aprovisionada y que el histórico empieza en el primer snapshot real', () => {
   const cs = readFileSync(join(repoRoot, 'docs/agent/CURRENT_STATE.md'), 'utf8');
   assert.match(cs, /D1/);
-  assert.match(cs, /NOT YET PROVISIONED|no aprovisionad/i);
+  assert.match(cs, /aprovisionad/i);
+  // La regla dura de RULES.md §DATOS: el histórico nunca se reconstruye hacia atrás.
+  assert.match(cs, /nunca se reconstruye|empieza en el primer snapshot real/i);
 });
 
 test('tasks/current.md sigue siendo una plantilla neutra (sin tarea activa commiteada)', () => {

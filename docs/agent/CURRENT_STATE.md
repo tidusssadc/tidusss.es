@@ -4,7 +4,7 @@
 > cerrado, qué está en progreso, qué está bloqueado, cuál es el HEAD esperado, qué falta de
 > infraestructura, qué NO tocar.
 >
-> **Last verified commit:** `99e86a2` (`main`) · rediseño en curso en `design/competitive-v3`
+> **Last verified commit:** `734ea8f` (`design/competitive-v3`) · V4 Control Room en curso en `design/competitive-v4-control-room`
 > **Last verified date:** 2026-09-10
 > **`main`:** `99e86a2` — la Night Shift de 2026-09-09 **ya está mergeada** (merge `99e86a2`).
 >
@@ -17,8 +17,9 @@
 
 | | |
 |---|---|
-| `main` | `99e86a2` — merge de `night-shift/2026-09-09` (histórico de rango, Encuentros PRO/STREAMER, hardening de coste Riot, D1 + scheduler inertes, docs/agent) sobre el Page Design Rework de /competitivo |
-| Rama de trabajo actual | `design/competitive-v3` — rediseño visual V3 de /competitivo (composición, sin datos ni endpoints nuevos). **Sin merge.** |
+| `main` | `99e86a2` — merge de `night-shift/2026-09-09` (histórico de rango, Encuentros PRO/STREAMER, hardening de coste Riot, D1 + scheduler, docs/agent) sobre el Page Design Rework de /competitivo |
+| `design/competitive-v3` | `734ea8f` — rediseño visual V3 de /competitivo + modo de fixture QA para el preview. **Sin merge.** |
+| Rama de trabajo actual | `design/competitive-v4-control-room` — V4 "SoloQ Control Room": recomposición de /competitivo (command bar, sesión de hoy como módulo, evolución LP con más peso, historial con filtros + cargar anteriores). Sin datos ni endpoints Riot nuevos. **Sin merge.** |
 | Regla | nunca mergear ni `push --force` sin instrucción explícita del product owner |
 
 ---
@@ -59,8 +60,9 @@ Endpoints (`functions/api/`): `riot/overview` · `riot/live` · `riot/matches/[m
 
 | Área | Estado |
 |---|---|
-| **/competitivo** (`src/components/live/LiveDashboard.astro`) | 5 secciones: `01 Ahora` · `02 Rendimiento` · `03 Campeones` · `04 Patrones` · `05 Historial`. Fetch propio por bloque a `/api/riot/overview`. |
-| **Match History** (`05 Historial`, `src/components/live/matches/`) | 10 partidas iniciales. Fila densa + detalle expandible (patrón `<template>` + `render.ts`, cero hidratación). 3 niveles de profundidad: fila / expandido / timeline. |
+| **/competitivo** (`src/components/live/LiveDashboard.astro`) | En `main`: 5 secciones apiladas (`01 Ahora` … `05 Historial`). En `design/competitive-v4-control-room`: recompuesto como "Control Room" (command bar sticky + grid asimétrico: sesión / evolución LP / forma por campeón / rendimiento / historial). Fetch propio por bloque a `/api/riot/overview`, sin llamadas Riot nuevas. |
+| **Match History** (`src/components/live/matches/`) | Fila densa + detalle expandible (patrón `<template>` + `render.ts`, cero hidratación). 3 niveles: fila / expandido / timeline. En `main` 10 partidas fijas; en V4, 10 iniciales + "cargar anteriores" hasta 20 (todas ya en el payload, +0 llamadas Riot) + filtros client-side (resultado / campeón). |
+| **Rank History (histórico de rango)** (`src/lib/rank-history/`, `functions/api/riot/rank-history.ts` + `rank-snapshot-cron.ts`, `RankEvolution.astro`, `migrations/0001_rank_snapshots.sql`) | **D1 `tidusss-competitive` aprovisionada en Production**, binding `DB` configurado. Primer snapshot real observado: `MASTER 554 LP`, 2026-09-10. El histórico **empieza ahí** — nada anterior se reconstruye. `rank-history` sirve `available:true` con los snapshots reales; sin `DB` (p. ej. preview) sigue degradando a `available:false`. |
 | **Match Timeline** (`functions/api/riot/matches/[matchId]/timeline.ts`, `MatchTimelinePanel.astro`) | **on-demand** — 0 llamadas en la carga normal. 30 días de caché. Sin agregación. |
 | **PRO/STREAMER Encounters** (`src/lib/riot/normalize.ts` → `MatchParticipant.identity`, badge en `MatchExpanded`) | V1. Matching por PUUID exacto contra el Identity Registry existente, colapsando multi-cuenta. +0 llamadas Riot (usa el PUUID que Riot ya trae en cada partida). Sin narrativa inventada. |
 | **Riot integration** (`src/lib/riot/*`, `functions/api/riot/{overview,live}.ts`) | Account-V1 (24h) + Summoner-V4 (6h) + League-V4 (10min) + Match-V5 ids (5min) + Match-V5 detalle (24h/7d) + Data Dragon. Caché en memoria por isolate. |
@@ -70,8 +72,7 @@ Endpoints (`functions/api/`): `riot/overview` · `riot/live` · `riot/matches/[m
 
 | Cosa | Estado | Bloqueo |
 |---|---|---|
-| **Rank History (histórico de rango)** | Código **completo** (`src/lib/rank-history/`, `functions/api/riot/rank-history.ts` + `rank-snapshot-cron.ts`, `src/components/live/RankEvolution.astro`, `migrations/0001_rank_snapshots.sql`). Tests verdes. | **D1 no aprovisionado.** Sin binding `DB` → `rank-history` responde `available:false` y `RankEvolution` no se renderiza. Nada roto, nada inventado. |
-| **Snapshot scheduler** | `.github/workflows/rank-snapshot.yml` ya en `main`. | El workflow corre pero termina en verde mientras falten `RANK_SNAPSHOT_CRON_SECRET` (Cloudflare + GitHub) y D1. Se vuelve operativo al configurar ambos + primer snapshot manual (`docs/operations/rank-history.md`). |
+| **Snapshot scheduler** | `.github/workflows/rank-snapshot.yml` en `main`. | Operativo en cuanto `RANK_SNAPSHOT_CRON_SECRET` esté en Cloudflare + GitHub. Hasta entonces `POST /api/riot/rank-snapshot-cron` sigue protegido y el histórico solo crece con las visitas reales a `/api/riot/overview` (`waitUntil` → snapshot si hay `DB`). |
 
 ### DORMANT — código/tipos preparados, sin consumidor real
 
@@ -87,16 +88,17 @@ Endpoints (`functions/api/`): `riot/overview` · `riot/live` · `riot/matches/[m
 
 ---
 
-## Infraestructura que falta
+## Infraestructura
 
 | Pieza | Estado | Para qué |
 |---|---|---|
-| **D1 `tidusss-competitive`** | no creada | histórico de rango |
-| Binding `DB` en Cloudflare Pages | no configurado | idem |
-| `RANK_SNAPSHOT_CRON_SECRET` (Cloudflare + GitHub Secret) | no configurado | proteger `POST /api/riot/rank-snapshot-cron` |
-| Scheduler activo | inerte hasta merge a `main` | observación sin visitas |
+| **D1 `tidusss-competitive`** + binding `DB` (Cloudflare Pages, Production) | **aprovisionada.** Primer snapshot real: `MASTER 554 LP`, 2026-09-10. | histórico de rango |
+| `RANK_SNAPSHOT_CRON_SECRET` (Cloudflare + GitHub Secret) | **pendiente** | proteger `POST /api/riot/rank-snapshot-cron` y activar el cron de observación sin visitas |
 
-Runbook con pasos exactos: **`docs/operations/rank-history.md`**.
+Con `DB` ya configurada, `/api/riot/overview` (`waitUntil`) escribe un snapshot cuando cambia el rango
+o pasa la ventana de heartbeat, así que el histórico ya crece con el tráfico real aunque el cron aún
+no esté activo. **El histórico empieza en el primer snapshot real (2026-09-10) — nunca se reconstruye
+hacia atrás.** Runbook: **`docs/operations/rank-history.md`**.
 Persistencia de propósito general (KV/Cache API para `src/lib/riot/cache.ts`): anticipada en `docs/riot-api.md`, **no** empezada, "si el tráfico lo requiere".
 
 ---
@@ -111,6 +113,9 @@ Cloudflare Pages con integración Git a `github.com/tidusssadc/tidusss.es`. Buil
 
 | Commit | Qué |
 |---|---|
+| `design/competitive-v4-control-room` | V4 "SoloQ Control Room" de /competitivo (rama, sin merge) — recomposición sin datos ni endpoints Riot nuevos |
+| `734ea8f` | `design/competitive-v3` — modo de fixture QA para el preview de Cloudflare |
+| `5982202` | `design/competitive-v3` — rediseño visual V3 de /competitivo |
 | `99e86a2` | **(= `main`)** merge de `night-shift/2026-09-09` |
 | `06987c0` | sistema de docs para agentes (`CLAUDE.md`, `docs/agent/`, `tasks/`, plantillas PR/issue) — sin cambio de producto |
 | `10575c4` | setup D1 producción + scheduler (docs + workflow, inertes) |

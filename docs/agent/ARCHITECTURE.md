@@ -113,7 +113,7 @@ cron del histórico NO arrastre Match-V5** — hay tests de aislamiento que lo g
 | Qué | Estado |
 |---|---|
 | Caché Riot en memoria (`cache.ts`) | **en uso**. Por isolate. Migrar a KV/Cache API está anticipado en `docs/riot-api.md` pero **no** empezado ("si el tráfico lo requiere"). |
-| **D1 `tidusss-competitive`** (histórico de rango) | **IMPLEMENTED IN CODE / NOT YET PROVISIONED.** `src/lib/rank-history/` + `migrations/0001_rank_snapshots.sql` listos. Sin binding `DB` → todo se degrada solo. Aprovisionamiento: `docs/operations/rank-history.md`. |
+| **D1 `tidusss-competitive`** (histórico de rango) | **PROVISIONED (Production).** Binding `DB` configurado; primer snapshot real `MASTER 554 LP`, 2026-09-10 (el histórico empieza ahí, nunca se reconstruye). `src/lib/rank-history/` + `migrations/0001_rank_snapshots.sql`. Sin `DB` (preview de rama) todo sigue degradando solo (`available:false`). Runbook: `docs/operations/rank-history.md`. |
 | KV / Durable Objects / Supabase | **no existen.** No asumas ninguno. |
 
 `src/lib/rank-history/` sigue patrón dominio → repositorio → adaptador:
