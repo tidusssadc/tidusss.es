@@ -13,6 +13,8 @@ class FakeRepository implements RankSnapshotRepository {
   rows: RankSnapshot[] = [];
   nextId = 1;
   failOnInsert = false;
+  /** Simula que otra invocación ganó la carrera y D1 hizo `INSERT OR IGNORE` (changes: 0). */
+  conflictOnInsert = false;
 
   async listRecent(puuid: string, queueType: RankHistoryQueue, limit: number) {
     return this.rows
@@ -31,8 +33,9 @@ class FakeRepository implements RankSnapshotRepository {
     const list = await this.listRecent(puuid, queueType, 1000);
     return list[list.length - 1]?.observedAt;
   }
-  async insert(snapshot: NewRankSnapshot): Promise<RankSnapshot> {
+  async insert(snapshot: NewRankSnapshot): Promise<RankSnapshot | null> {
     if (this.failOnInsert) throw new Error('simulated storage failure');
+    if (this.conflictOnInsert) return null;
     const row: RankSnapshot = { id: this.nextId++, ...snapshot };
     this.rows.push(row);
     return row;
@@ -143,6 +146,13 @@ test('recordObservationIfDue: fallo real de storage en el insert nunca lanza —
   repo.failOnInsert = true;
   const result = await recordObservationIfDue(repo, candidate());
   assert.deepEqual(result, { inserted: false, reason: 'storage-unavailable' });
+});
+
+test('recordObservationIfDue: colisión de idempotencia (insert devuelve null) → inserted:false, reason:"duplicate", nunca lanza', async () => {
+  const repo = new FakeRepository();
+  repo.conflictOnInsert = true;
+  const result = await recordObservationIfDue(repo, candidate());
+  assert.deepEqual(result, { inserted: false, reason: 'duplicate' });
 });
 
 test('recordObservationIfDue: dos invocaciones "simultáneas" (misma decisión ya tomada) no producen inconsistencia visible al llamador', async () => {

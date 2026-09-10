@@ -45,7 +45,17 @@ export const recordObservationIfDue = async (
       });
       return { inserted: false, reason: decision.reason };
     }
-    await repository.insert(candidate);
+    const inserted = await repository.insert(candidate);
+    if (inserted === null) {
+      // Otra invocación escribió esta misma observación primero (encargo
+      // §16). No es un error ni un fallo — el dato ya está.
+      diagnostics?.({
+        event: 'skipped',
+        reason: 'duplicate',
+        puuid: candidate.puuid,
+      });
+      return { inserted: false, reason: 'duplicate' };
+    }
     diagnostics?.({
       event: 'recorded',
       reason: decision.reason,

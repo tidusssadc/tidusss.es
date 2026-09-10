@@ -1,10 +1,9 @@
 import type { RiotEnvironment } from '../../../src/config/riot';
 import { riotDefaults } from '../../../src/config/riot';
 import {
-  getRiotOverview,
+  getRiotRankObservation,
   publicRiotError,
   RiotApiError,
-  resolveSelfAccountPuuid,
   type RiotDiagnosticEvent,
 } from '../../../src/lib/riot';
 import {
@@ -15,7 +14,7 @@ import {
 
 interface Env extends RiotEnvironment {
   DB?: D1Database;
-  /** Secreto compartido — nunca se acepta una escritura sin él (encargo §33/§34). */
+  /** Secreto compartido — nunca se acepta una escritura sin él (encargo §14/§33/§34). */
   RANK_SNAPSHOT_CRON_SECRET?: string;
 }
 
@@ -31,24 +30,25 @@ const logDiagnostic = (diagnostic: RiotDiagnosticEvent) => {
 };
 
 /**
- * `POST /api/riot/rank-snapshot-cron` — vía secundaria de observación
- * (encargo §19/§20/§21), para que el histórico crezca aunque nadie
- * visite la web. Diseñado para ser llamado por un disparador externo
- * (Cloudflare Cron Trigger de un Worker aparte, o un servicio de cron
- * externo) — NO se activa solo. Requiere `RANK_SNAPSHOT_CRON_SECRET`
- * exacto en `Authorization: Bearer {secreto}`; sin él, 401 inmediato,
- * sin tocar Riot ni D1. Nunca acepta PUUID/datos del body — siempre
- * resuelve la única cuenta configurada del servidor (nunca un proxy de
- * escritura arbitraria, encargo §33/§34).
+ * `POST /api/riot/rank-snapshot-cron` — vía principal de observación del
+ * histórico de rango (encargo cierre §12/§13/§19), para que crezca aunque
+ * nadie visite tidusss.es. Diseñado para un disparador EXTERNO (workflow
+ * programado de GitHub Actions, o un Cron Trigger de un Worker aparte) —
+ * nunca se activa solo. Requiere `RANK_SNAPSHOT_CRON_SECRET` exacto en
+ * `Authorization: Bearer {secreto}`; sin él, 401 inmediato sin tocar Riot
+ * ni D1.
  *
- * Coste Riot: reutiliza exactamente `getRiotOverview` (la misma
- * orquestación cacheada que `/api/riot/overview`) — nunca duplica
- * lógica Riot (encargo §29). En frío: la misma llamada real que ya
- * documenta `docs/riot-api.md` para overview. En caliente (el cron
- * corre más a menudo que el TTL de la caché de ranked, 10 min): 0
- * llamadas Riot nuevas, solo lectura de caché de memoria del isolate
- * que lo ejecute — nunca se afirma que esa caché esté garantizada
- * compartida entre invocaciones (encargo §11).
+ * NUNCA acepta PUUID/cola/datos del body — siempre observa la única
+ * cuenta configurada del servidor (`Tidusss#FFX`), nunca es un proxy de
+ * escritura arbitraria (encargo §15/§33/§34).
+ *
+ * COSTE RIOT (encargo cierre §18/§19 — punto crítico): usa
+ * `getRiotRankObservation`, el camino LIGERO — ACCOUNT-V1 (caché 24h) +
+ * LEAGUE-V4 (caché 10min) y NADA MÁS. Nunca SUMMONER-V4, nunca MATCH-V5
+ * (ni ids ni detalle), nunca Match Timeline, nunca Data Dragon. En
+ * caliente (el cron corre cada ~30min, la caché de ranked dura 10min):
+ * como mucho 1 llamada real a LEAGUE-V4, y normalmente 0 a ACCOUNT-V1.
+ * Ver el test de aislamiento en `test/api/rank-snapshot-cron.test.ts`.
  */
 export const onRequest = async ({ request, env }: PagesContext) => {
   if (request.method !== 'POST') {
@@ -58,7 +58,10 @@ export const onRequest = async ({ request, env }: PagesContext) => {
     });
   }
   const secret = env.RANK_SNAPSHOT_CRON_SECRET?.trim();
-  const provided = request.headers.get('Authorization')?.replace(/^Bearer\s+/i, '').trim();
+  const provided = request.headers
+    .get('Authorization')
+    ?.replace(/^Bearer\s+/i, '')
+    .trim();
   if (!secret || !provided || provided !== secret) {
     return Response.json(
       { ok: false, error: { code: 'UNAUTHORIZED', message: 'Not authorized.' } },
@@ -67,39 +70,65 @@ export const onRequest = async ({ request, env }: PagesContext) => {
   }
   if (!env.DB) {
     return Response.json(
-      { ok: false, error: { code: 'STORAGE_NOT_CONFIGURED', message: 'No D1 binding.' } },
+      {
+        ok: false,
+        error: { code: 'STORAGE_NOT_CONFIGURED', message: 'No D1 binding.' },
+      },
       { status: 503, headers: { 'X-Robots-Tag': 'noindex, nofollow' } },
     );
   }
   try {
-    const data = await getRiotOverview(env, logDiagnostic);
-    if (!data.ranked.available) {
+    const observation = await getRiotRankObservation(env, logDiagnostic);
+    const { ranked, puuid, observedAt } = observation;
+
+    if (!ranked.available) {
       return Response.json(
-        { ok: true, data: { recorded: false, reason: 'no-rank-data' } },
+        {
+          ok: true,
+          data: {
+            observed: { available: false },
+            recorded: false,
+            reason: 'no-rank-data',
+            observedAt,
+          },
+        },
         { headers: { 'X-Robots-Tag': 'noindex, nofollow' } },
       );
     }
-    const puuid = await resolveSelfAccountPuuid(env, logDiagnostic);
-    if (!puuid) {
-      return Response.json(
-        { ok: false, error: { code: 'ACCOUNT_UNRESOLVED', message: 'Could not resolve account.' } },
-        { status: 503, headers: { 'X-Robots-Tag': 'noindex, nofollow' } },
-      );
-    }
+
     const repository = new D1RankSnapshotRepository(env.DB);
     const result = await recordObservationIfDue(repository, {
       puuid,
       queueType: riotDefaults.queueType,
-      tier: data.ranked.tier,
-      rank: data.ranked.rank,
-      leaguePoints: data.ranked.leaguePoints,
-      wins: data.ranked.wins ?? 0,
-      losses: data.ranked.losses ?? 0,
-      observedAt: data.updatedAt,
+      tier: ranked.tier,
+      rank: ranked.rank,
+      leaguePoints: ranked.leaguePoints,
+      wins: ranked.wins ?? 0,
+      losses: ranked.losses ?? 0,
+      observedAt,
       source: 'cron',
     });
+
+    // Diagnóstico mínimo útil (encargo §28): qué se observó, si se
+    // guardó y por qué. NUNCA el PUUID, el secreto ni la API key.
     return Response.json(
-      { ok: true, data: result },
+      {
+        ok: true,
+        data: {
+          observed: {
+            available: true,
+            tier: ranked.tier ?? null,
+            rank: ranked.rank ?? null,
+            leaguePoints: ranked.leaguePoints ?? null,
+            wins: ranked.wins ?? 0,
+            losses: ranked.losses ?? 0,
+            stale: observation.rankedStale,
+          },
+          recorded: result.inserted,
+          reason: result.reason,
+          observedAt,
+        },
+      },
       { headers: { 'X-Robots-Tag': 'noindex, nofollow' } },
     );
   } catch (error) {

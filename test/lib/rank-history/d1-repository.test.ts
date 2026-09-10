@@ -115,8 +115,8 @@ test('insert: guarda y devuelve el snapshot con id real asignado', async () => {
     observedAt: '2026-09-09T10:00:00.000Z',
     source: 'overview',
   });
-  assert.equal(saved.id, 1);
-  assert.equal(saved.tier, 'MASTER');
+  assert.equal(saved!.id, 1);
+  assert.equal(saved!.tier, 'MASTER');
 });
 
 test('getLatest: 0 snapshots devuelve undefined honesto, no lanza', async () => {
@@ -147,7 +147,7 @@ test('getFirstObservedAt: devuelve el timestamp del snapshot más antiguo real',
 
 test('getPeak: Master+ (sin division) se guarda con rank=undefined y se traduce correctamente de vuelta', async () => {
   const saved = await repo.insert({ puuid: 'p', queueType: 'RANKED_SOLO_5x5', tier: 'MASTER', rank: undefined, leaguePoints: 100, wins: 1, losses: 0, observedAt: '2026-09-01T00:00:00.000Z', source: 'overview' });
-  assert.equal(saved.rank, undefined);
+  assert.equal(saved!.rank, undefined);
   const peak = await repo.getPeak('p', 'RANKED_SOLO_5x5');
   assert.equal(peak!.rank, undefined);
   assert.equal(peak!.tier, 'MASTER');

@@ -40,6 +40,11 @@ export interface RecordObservationResult {
     | 'changed'
     | 'heartbeat-elapsed'
     | 'unchanged'
+    // La política de dedupe decidió escribir, pero D1 ya tenía una fila
+    // con el mismo (puuid, queue_type, observed_at) — otra invocación se
+    // adelantó por milisegundos. Backstop de idempotencia (encargo §16),
+    // nunca un error.
+    | 'duplicate'
     | 'storage-unavailable'
     | 'no-rank-data';
 }
@@ -71,5 +76,11 @@ export interface RankSnapshotRepository {
     puuid: string,
     queueType: RankHistoryQueue,
   ): Promise<string | undefined>;
-  insert(snapshot: NewRankSnapshot): Promise<RankSnapshot>;
+  /**
+   * Inserta el snapshot. Devuelve la fila persistida, o `null` si otra
+   * invocación ya había escrito una con el mismo
+   * (puuid, queue_type, observed_at) — backstop de idempotencia (encargo
+   * §16), nunca lanza por ese caso.
+   */
+  insert(snapshot: NewRankSnapshot): Promise<RankSnapshot | null>;
 }

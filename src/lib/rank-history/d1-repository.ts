@@ -109,10 +109,14 @@ export class D1RankSnapshotRepository implements RankSnapshotRepository {
     return row?.observed_at;
   }
 
-  async insert(snapshot: NewRankSnapshot): Promise<RankSnapshot> {
+  async insert(snapshot: NewRankSnapshot): Promise<RankSnapshot | null> {
+    // `OR IGNORE`: si otra invocación ya escribió una fila con el mismo
+    // (puuid, queue_type, observed_at) (restricción UNIQUE de la
+    // migración), este INSERT no hace nada y `meta.changes` vuelve 0 —
+    // backstop de idempotencia (encargo §16), nunca un error.
     const result = await this.db
       .prepare(
-        `INSERT INTO rank_snapshots (puuid, queue_type, tier, rank, league_points, wins, losses, observed_at, source)
+        `INSERT OR IGNORE INTO rank_snapshots (puuid, queue_type, tier, rank, league_points, wins, losses, observed_at, source)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .bind(
@@ -127,6 +131,7 @@ export class D1RankSnapshotRepository implements RankSnapshotRepository {
         snapshot.source,
       )
       .run();
+    if (result.meta?.changes === 0) return null;
     const id = result.meta?.last_row_id;
     if (id === undefined)
       throw new Error('D1RankSnapshotRepository.insert: no last_row_id returned');

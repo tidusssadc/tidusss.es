@@ -17,6 +17,7 @@ import { normalizeMatch, normalizeRanked } from './normalize';
 import { buildProfilePerformance } from './performance';
 import { normalizeMatchTimeline } from './timeline-normalize';
 import type {
+  RankedSummary,
   RiotAccountDto,
   RiotLeagueEntryDto,
   RiotMatchDto,
@@ -238,6 +239,73 @@ export const resolveSelfAccountPuuid = async (
   } catch {
     return undefined;
   }
+};
+
+export interface RiotRankObservation {
+  puuid: string;
+  ranked: RankedSummary;
+  /** Momento real de la observación (ISO 8601 UTC) — generado aquí, nunca heredado de una caché stale. */
+  observedAt: string;
+  /** `true` solo si LEAGUE-V4 se sirvió stale tras un fallo (nunca un fallo silencioso: el snapshot sigue siendo dato real, solo no fresco). */
+  rankedStale: boolean;
+}
+
+/**
+ * Camino LIGERO para el histórico de rango (Night Shift cierre §18/§19).
+ * SOLO resuelve:
+ *   - cuenta/PUUID  → ACCOUNT-V1  (misma clave `riot:account:*`, caché 24h)
+ *   - rango Solo/Duo → LEAGUE-V4  (misma clave `riot:ranked:{puuid}`, caché 10min)
+ *
+ * NUNCA toca SUMMONER-V4, MATCH-V5 (ids ni detalle), Match Timeline ni
+ * Data Dragon. El cron de snapshots corre cada ~30 min y no puede
+ * permitirse el `getRiotOverview` completo (hasta 30 detalles de partida)
+ * solo para leer LP. Comparte exactamente las claves de caché de
+ * `getRiotOverview`, así que una visita reciente a /competitivo y este
+ * cron se aprovechan mutuamente cuando caen en el mismo isolate — nunca
+ * se afirma que esa caché esté garantizada compartida entre isolates
+ * (misma advertencia que el resto de `src/lib/riot`).
+ */
+export const getRiotRankObservation = async (
+  environment: RiotEnvironment,
+  diagnostics?: RiotDiagnosticLogger,
+): Promise<RiotRankObservation> => {
+  const config = getRiotConfig(environment);
+  if (!config.apiKey)
+    throw new RiotApiError(
+      'RIOT_API_KEY_MISSING',
+      503,
+      undefined,
+      'configuration',
+    );
+  const client = createRiotClient({ apiKey: config.apiKey, diagnostics });
+  const regionalBase = `https://${config.regionalRoute}.api.riotgames.com`;
+  const platformBase = `https://${config.platformRoute}.api.riotgames.com`;
+
+  const account = await resolveSelfAccount(client, regionalBase, config);
+  const puuid = account.value.puuid;
+  if (!puuid)
+    throw new RiotApiError('RIOT_INVALID_RESPONSE', 502, undefined, 'account');
+
+  const leagueEntries = await cached(
+    `riot:ranked:${puuid}`,
+    10 * MINUTE,
+    6 * HOUR,
+    () =>
+      client.get<RiotLeagueEntryDto[]>(
+        `${platformBase}/lol/league/v4/entries/by-puuid/${encode(puuid)}`,
+        {
+          phase: 'league',
+          endpoint: 'LEAGUE-V4 /lol/league/v4/entries/by-puuid/{puuid}',
+        },
+      ),
+  );
+
+  return {
+    puuid,
+    ranked: normalizeRanked(leagueEntries.value),
+    observedAt: new Date().toISOString(),
+    rankedStale: leagueEntries.stale,
+  };
 };
 
 // --- Match Timeline (Match-V5 Timeline) — on-demand, nunca en la ruta
