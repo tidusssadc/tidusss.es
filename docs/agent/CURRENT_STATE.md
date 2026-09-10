@@ -4,9 +4,9 @@
 > cerrado, qué está en progreso, qué está bloqueado, cuál es el HEAD esperado, qué falta de
 > infraestructura, qué NO tocar.
 >
-> **Last verified commit:** `06987c0` (rama `night-shift/2026-09-09`)
+> **Last verified commit:** `99e86a2` (`main`) · rediseño en curso en `design/competitive-v3`
 > **Last verified date:** 2026-09-10
-> **`main`:** `c6c29d9` — la Night Shift de 2026-09-09 **no está mergeada**.
+> **`main`:** `99e86a2` — la Night Shift de 2026-09-09 **ya está mergeada** (merge `99e86a2`).
 >
 > No guardes aquí datos que cambian a diario (LP actual, última partida, nº de subs, nº exacto
 > de tests). Si un número lo necesitas, verifícalo en el repo.
@@ -17,9 +17,8 @@
 
 | | |
 |---|---|
-| Rama de trabajo actual | `night-shift/2026-09-09` @ `10575c4` (pusheada a `origin`, **sin merge**) |
-| `main` | `c6c29d9` — "Page Design Rework" de /competitivo |
-| Contenido de la rama vs `main` | histórico de rango (código), Encuentros PRO/STREAMER, hardening de coste Riot, setup de D1 + scheduler (inertes), y este sistema de docs/agent |
+| `main` | `99e86a2` — merge de `night-shift/2026-09-09` (histórico de rango, Encuentros PRO/STREAMER, hardening de coste Riot, D1 + scheduler inertes, docs/agent) sobre el Page Design Rework de /competitivo |
+| Rama de trabajo actual | `design/competitive-v3` — rediseño visual V3 de /competitivo (composición, sin datos ni endpoints nuevos). **Sin merge.** |
 | Regla | nunca mergear ni `push --force` sin instrucción explícita del product owner |
 
 ---
@@ -72,8 +71,7 @@ Endpoints (`functions/api/`): `riot/overview` · `riot/live` · `riot/matches/[m
 | Cosa | Estado | Bloqueo |
 |---|---|---|
 | **Rank History (histórico de rango)** | Código **completo** (`src/lib/rank-history/`, `functions/api/riot/rank-history.ts` + `rank-snapshot-cron.ts`, `src/components/live/RankEvolution.astro`, `migrations/0001_rank_snapshots.sql`). Tests verdes. | **D1 no aprovisionado.** Sin binding `DB` → `rank-history` responde `available:false` y `RankEvolution` no se renderiza. Nada roto, nada inventado. |
-| **Snapshot scheduler** | `.github/workflows/rank-snapshot.yml` en la rama. | **Inerte**: los workflows `schedule` solo corren desde `main`. Se activa al mergear + configurar `RANK_SNAPSHOT_CRON_SECRET` (Cloudflare + GitHub) + primer snapshot manual. |
-| **Merge de `night-shift/2026-09-09` a `main`** | pendiente de revisión del product owner | decisión humana |
+| **Snapshot scheduler** | `.github/workflows/rank-snapshot.yml` ya en `main`. | El workflow corre pero termina en verde mientras falten `RANK_SNAPSHOT_CRON_SECRET` (Cloudflare + GitHub) y D1. Se vuelve operativo al configurar ambos + primer snapshot manual (`docs/operations/rank-history.md`). |
 
 ### DORMANT — código/tipos preparados, sin consumidor real
 
@@ -109,10 +107,11 @@ Cloudflare Pages con integración Git a `github.com/tidusssadc/tidusss.es`. Buil
 
 ---
 
-## Commits recientes relevantes (rama night-shift)
+## Commits recientes relevantes
 
 | Commit | Qué |
 |---|---|
+| `99e86a2` | **(= `main`)** merge de `night-shift/2026-09-09` |
 | `06987c0` | sistema de docs para agentes (`CLAUDE.md`, `docs/agent/`, `tasks/`, plantillas PR/issue) — sin cambio de producto |
 | `10575c4` | setup D1 producción + scheduler (docs + workflow, inertes) |
 | `3fcd626` | hardening: camino ligero Riot para el cron (§18 — antes arrastraba `getRiotOverview` entero) + idempotencia (`UNIQUE` + `INSERT OR IGNORE`) |
