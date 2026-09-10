@@ -53,8 +53,11 @@
 </section>
 
 <script>
+  import { installCompetitiveQaIfRequested } from '../../lib/dev/competitive-qa';
   import type { LiveGame, LiveGameResult, LiveParticipant } from '../../lib/riot/live-types';
   import { rankAssetFor } from '../../config/rank-assets';
+
+  installCompetitiveQaIfRequested();
 
   const root = document.querySelector<HTMLElement>('[data-live-game-module]');
   const announcer = document.querySelector<HTMLElement>('[data-live-game-announcer]');

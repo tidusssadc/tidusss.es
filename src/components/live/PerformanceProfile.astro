@@ -165,6 +165,7 @@ const adcRosterNames = getAdcRoster(registry).map((entry) => entry.catalogEntry.
 </section>
 
 <script>
+  import { installCompetitiveQaIfRequested } from '../../lib/dev/competitive-qa';
   import type { RiotPublicResponse } from '../../lib/riot';
   import {
     splitChampionsByAdcRoster,
@@ -182,6 +183,8 @@ const adcRosterNames = getAdcRoster(registry).map((entry) => entry.catalogEntry.
     SupportSynergyEntry,
     TrendPoint,
   } from '../../lib/riot';
+
+  installCompetitiveQaIfRequested();
 
   const performanceRoot = document.querySelector<HTMLElement>('[data-performance-profile]');
   const poolRoot = document.querySelector<HTMLElement>('[data-champion-pool]');

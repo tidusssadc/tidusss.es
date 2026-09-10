@@ -46,9 +46,12 @@ import { RANK_CHART_WIDTH, RANK_CHART_HEIGHT } from '../../lib/rank-history/rend
 </div>
 
 <script>
+  import { installCompetitiveQaIfRequested } from '../../lib/dev/competitive-qa';
   import { buildRankEvolutionView } from '../../lib/rank-history/render';
   import { buildSparklinePath } from '../../lib/rank-history/chart';
   import type { RankHistoryPublicResponse } from '../../../functions/api/riot/rank-history';
+
+  installCompetitiveQaIfRequested();
 
   const root = document.querySelector<HTMLElement>('[data-rank-evolution]');
 

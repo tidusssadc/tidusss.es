@@ -172,6 +172,7 @@ import { resolvedMatchVideoContent } from '../../lib/resolved-match-video-conten
 </main>
 
 <script>
+  import { installCompetitiveQaIfRequested } from '../../lib/dev/competitive-qa';
   import { madridTime, relativeTime, updatedAgo } from '../../lib/time';
   import { rankAssetFor } from '../../config/rank-assets';
   import { renderMatchCards } from './matches/render';
@@ -181,6 +182,10 @@ import { resolvedMatchVideoContent } from '../../lib/resolved-match-video-conten
     YouTubeFeedResult,
     YouTubeVideo,
   } from '../../types/content';
+
+  // Modo de QA visual (rama design/competitive-v3): no-op salvo en un
+  // preview con `?qa=competitive-v3`. Se llama antes que cualquier fetch.
+  installCompetitiveQaIfRequested();
 
   const root = document.querySelector<HTMLElement>('[data-live-root]');
   const reducedMotion = window.matchMedia(
