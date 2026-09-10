@@ -107,3 +107,35 @@ test('la respuesta pública nunca expone el PUUID', async () => {
     globalThis.fetch = original;
   }
 });
+
+test('AISLAMIENTO Riot: el endpoint de LECTURA solo puede tocar ACCOUNT-V1 — nunca League/Match/Summoner/Timeline/Data Dragon', async () => {
+  // Guardrail de coste (encargo PROJECT AGENT SYSTEM §16): `rank-history` lee
+  // D1, no Riot. La única resolución permitida es la cuenta (caché 24h,
+  // compartida). Si una regresión futura arrastra otra familia Riot aquí,
+  // este test debe fallar.
+  const original = globalThis.fetch;
+  const urls: string[] = [];
+  globalThis.fetch = (async (input: unknown) => {
+    const url = String(input);
+    urls.push(url);
+    if (url.includes('/riot/account/v1/accounts/by-riot-id/'))
+      return jsonResponse(200, { puuid: SELF_PUUID, gameName: 'Tidusss', tagLine: 'FFX' });
+    return jsonResponse(500, { message: `unexpected riot call in rank-history: ${url}` });
+  }) as unknown as typeof fetch;
+  try {
+    await onRequest({ request: get(), env: { ...ENV_BASE, DB: new FakeD1() } });
+    for (const url of urls) {
+      assert.ok(url.includes('/riot/account/v1/'), `llamada Riot no permitida en rank-history: ${url}`);
+      assert.ok(!url.includes('/lol/league/v4/'), `rank-history NO puede llamar a LEAGUE-V4: ${url}`);
+      assert.ok(!url.includes('/lol/match/v5/'), `rank-history NO puede llamar a MATCH-V5: ${url}`);
+      assert.ok(!url.includes('/lol/summoner/v4/'), `rank-history NO puede llamar a SUMMONER-V4: ${url}`);
+      assert.ok(!url.includes('/timeline'), `rank-history NO puede llamar a Timeline: ${url}`);
+      assert.ok(
+        !url.includes('ddragon') && !url.includes('versions.json') && !url.includes('/cdn/'),
+        `rank-history NO puede llamar a Data Dragon: ${url}`,
+      );
+    }
+  } finally {
+    globalThis.fetch = original;
+  }
+});

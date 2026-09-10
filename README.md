@@ -2,7 +2,11 @@
 
 Web oficial de Tidusss, creador de contenido español de League of Legends y jugador Master ADC. Lucian es uno de sus campeones principales, no su única identidad.
 
-La portada presenta la marca y `/live` reúne la actividad actual de YouTube, Twitch y SoloQ en una vista ligera construida con Astro y JavaScript nativo.
+La portada presenta la marca y `/competitivo` reúne el rango, el rendimiento y el historial de SoloQ, con datos reales de la Riot API. Construido con Astro y TypeScript nativo, sin framework de UI.
+
+## Para agentes de IA (Claude Code)
+
+Empieza por **[`CLAUDE.md`](CLAUDE.md)** y **[`docs/agent/`](docs/agent/)** — contexto persistente, estado actual, reglas y flujo de trabajo. No hace falta pegar contexto en cada conversación.
 
 ## Requisitos
 
