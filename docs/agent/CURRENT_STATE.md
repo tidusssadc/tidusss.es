@@ -4,8 +4,8 @@
 > cerrado, qué está en progreso, qué está bloqueado, cuál es el HEAD esperado, qué falta de
 > infraestructura, qué NO tocar.
 >
-> **Last verified commit:** `734ea8f` (`design/competitive-v3`) · V4 Control Room en curso en `design/competitive-v4-control-room`
-> **Last verified date:** 2026-09-10
+> **Last verified commit:** `99273da` (`design/competitive-v4-control-room`) · Preview de esa rama verificado y documentado
+> **Last verified date:** 2026-09-14
 > **`main`:** `99e86a2` — la Night Shift de 2026-09-09 **ya está mergeada** (merge `99e86a2`).
 >
 > No guardes aquí datos que cambian a diario (LP actual, última partida, nº de subs, nº exacto
@@ -20,6 +20,7 @@
 | `main` | `99e86a2` — merge de `night-shift/2026-09-09` (histórico de rango, Encuentros PRO/STREAMER, hardening de coste Riot, D1 + scheduler, docs/agent) sobre el Page Design Rework de /competitivo |
 | `design/competitive-v3` | `734ea8f` — rediseño visual V3 de /competitivo + modo de fixture QA para el preview. **Sin merge.** |
 | Rama de trabajo actual | `design/competitive-v4-control-room` — V4 "SoloQ Control Room": recomposición de /competitivo (command bar, sesión de hoy como módulo, evolución LP con más peso, historial con filtros + cargar anteriores). Sin datos ni endpoints Riot nuevos. **Sin merge.** |
+| Preview real de `design/competitive-v4-control-room` | `https://design-competitive-v4-contro.tidusss-es.pages.dev` (verificado con `curl` — 200, HTML idéntico al deployment por hash). **No** `design-competitive-v4-control-room...` (34 caracteres): Cloudflare Pages trunca el alias de rama a 28 caracteres, así que ese alias "obvio" no existe (404). El deployment por hash de cada push (`wrangler pages deployment list --project-name tidusss-es`) siempre es fiable; el alias de rama solo si el nombre de rama, ya en minúsculas y con `/`→`-`, cabe en 28 caracteres. |
 | Regla | nunca mergear ni `push --force` sin instrucción explícita del product owner |
 
 ---
