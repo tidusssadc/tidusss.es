@@ -9,6 +9,7 @@ import {
   getVideoForMatch,
   validateMatchVideoLinks,
 } from '../../../lib/match-video-links';
+import { madridTime } from '../../../lib/time';
 import type { YouTubeVideo } from '../../../types/content';
 import { wireTimeline } from './timeline-render';
 
@@ -26,6 +27,14 @@ interface MatchRenderOptions {
   emptyState?: { label: string; title: string; detail: string };
   /** Base de `/api/riot/matches` — Match Timeline se pide siempre bajo demanda, nunca al renderizar la tarjeta. */
   matchesBase: string;
+  /**
+   * "ÚLTIMA" (encargo §14) solo se marca sobre la primera fila cuando la
+   * lista es realmente cronológica sin filtrar — con un filtro de
+   * resultado/campeón activo, la primera fila es "la última victoria" o
+   * "la última con Lucian", no "la partida más reciente", y decirle
+   * "ÚLTIMA" sería engañoso.
+   */
+  showLatestTag?: boolean;
 }
 
 const query = <T extends Element>(root: ParentNode, selector: string) =>
@@ -294,6 +303,18 @@ const renderDuel = (
   if (selfItems) fillDuelItems(selfItems, match.itemImageUrls);
   const enemyItems = query<HTMLElement>(duel, '[data-duel-enemy-items]');
   if (enemyItems) fillDuelItems(enemyItems, enemy.itemImageUrls);
+
+  const support = query<HTMLElement>(duel, '[data-duel-support]');
+  const allySupport = match.teams
+    .find((team) => team.teamId === match.teamId)
+    ?.participants.find((p) => (p.position ?? '').toUpperCase() === 'UTILITY');
+  if (support) {
+    support.hidden = !allySupport;
+    if (allySupport) {
+      setText(duel, '[data-duel-support-name]', allySupport.displayName);
+      setText(duel, '[data-duel-support-champion]', allySupport.championName);
+    }
+  }
 };
 
 const fillTeam = (
@@ -398,6 +419,8 @@ const renderCard = (
   );
   setText(card, '[data-match-champion]', match.championName);
   setText(card, '[data-match-position]', match.position);
+  const latestTag = query<HTMLElement>(card, '[data-match-latest]');
+  if (latestTag) latestTag.hidden = !(index === 0 && options.showLatestTag);
   const championImage = query<HTMLImageElement>(
     card,
     '[data-match-champion-image]',
@@ -432,18 +455,11 @@ const renderCard = (
     `${match.kills} / ${match.deaths} / ${match.assists}`,
   );
   setText(card, '[data-match-kda]', `KDA ${match.kda.toFixed(2)}`);
-  setText(card, '[data-match-cs]', String(match.cs));
   setText(
     card,
     '[data-match-csm]',
     String(match.csPerMinute).replace('.', ','),
   );
-  setText(
-    card,
-    '[data-match-damage]',
-    options.formatNumber(match.damageToChampions),
-  );
-  setText(card, '[data-match-gold]', options.formatNumber(match.goldEarned));
   setText(card, '[data-match-vision]', String(match.visionScore));
   const participation = killParticipation(match);
   setText(
@@ -471,7 +487,10 @@ const renderCard = (
   const time = query<HTMLTimeElement>(card, '[data-match-time]');
   if (time) {
     time.dateTime = match.playedAt;
-    time.textContent = options.relativeTime(match.playedAt) ?? '';
+    // Hora exacta, no relativa — `[data-match-relative]` (junto al
+    // resultado) ya cubre "hace cuánto"; repetir el mismo "hace 3h" aquí
+    // era la misma información dos veces en la misma fila (encargo §11).
+    time.textContent = madridTime(match.playedAt) ?? '';
   }
   fillCompactItems(card, '[data-item-slot]', match.itemImageUrls);
   fillRunes(card, match.runes, match.matchId);

@@ -39,9 +39,26 @@
           <span class="duel-items-label">Objetos</span>
           <div class="duel-items-row duel-items-row--enemy" data-duel-enemy-items aria-label="Objetos del rival"></div>
         </div>
+        <!--
+          Support aliado (encargo Signature §10): acompaña al duelo en vez
+          de perderse sin marcar entre los otros 8 jugadores de "Resto de
+          la partida" — el mismo dato que ya trae `MatchTeam`, solo
+          destacado (posición UTILITY del propio equipo).
+        -->
+        <p class="duel-support" data-duel-support hidden>
+          Con <strong data-duel-support-name></strong> · <span data-duel-support-champion></span>
+        </p>
       </div>
       <p class="duel-empty" data-duel-empty hidden>Riot no reportó la posición del ADC rival en esta partida — sin duelo identificable.</p>
     </div>
+
+    <!--
+      "Mi build" acompaña al duelo (encargo §10) — antes vivía después de
+      Resto de la partida/vídeo/Timeline, como si fuera lo último que
+      importa de MI partida. Slot con nombre para que MatchCard.astro
+      pueda posicionarlo aquí sin duplicar el propio MatchExpanded.
+    -->
+    <slot name="build" />
 
     <div class="profile-subhead match-teams-head">
       <h3>Resto de la partida</h3>

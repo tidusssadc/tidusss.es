@@ -347,6 +347,7 @@ import { resolvedMatchVideoContent } from '../../lib/resolved-match-video-conten
       reducedMotion,
       videos: matchVideoPool,
       matchesBase: root?.dataset.riotMatchesBase ?? '/api/riot/matches',
+      showLatestTag: historyResult === 'all' && !historyChampion,
       emptyState: riotFailed
         ? {
             label: 'Sin conexión con Riot',

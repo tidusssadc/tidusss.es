@@ -3195,15 +3195,25 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  flex: 0 1 20rem;
+  flex: 0 1 21.5rem;
   min-width: 0;
+}
+/* Clúster del matchup (encargo Signature §11-12): mi portrait + VS +
+   rival, uno junto al otro — la primera cosa que se lee en la fila. */
+.match-row-matchup {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.5rem;
 }
 .match-row-meta {
   position: relative;
   z-index: 1;
   display: flex;
   align-items: baseline;
-  gap: 1.5rem;
+  gap: 1.25rem;
   flex: 0 0 auto;
 }
 .match-row-hit {
@@ -3262,12 +3272,41 @@
   white-space: nowrap;
 }
 .match-row-identity small {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
   margin-top: 0.18rem;
   color: var(--lp-text-mute);
   font-size: 0.57rem;
   letter-spacing: 0.03em;
   text-transform: uppercase;
+}
+/* "ÚLTIMA" (encargo §14): etiqueta editorial PERMANENTE sobre la primera
+   fila cuando es literalmente la partida más reciente sin filtrar —
+   distinta del resaltado dorado temporal de `[data-newest]` (que solo
+   aparece cuando la partida llega con la página ya abierta). Las dos
+   pueden coexistir, nunca se contradicen. */
+.match-row-latest-tag {
+  padding: 0.04rem 0.32rem;
+  border: 1px solid rgb(214 181 107 / 35%);
+  border-radius: 2px;
+  color: var(--lp-gold);
+  font-size: 0.5rem;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+}
+.match-row-latest-tag[hidden] {
+  display: none;
+}
+/* Resultado + LP como un solo par visual (encargo §13): la recompensa de
+   la partida, no un dato perdido al final de las métricas. */
+.match-row-outcome {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.65rem;
 }
 .match-row-result {
   position: relative;
@@ -3275,7 +3314,7 @@
   display: flex;
   flex-direction: column;
   flex: 0 0 auto;
-  min-width: 4.8rem;
+  min-width: 4.2rem;
 }
 .match-row-result-dot {
   display: inline-block;
@@ -3374,8 +3413,6 @@
   position: relative;
   z-index: 1;
   flex: 0 0 auto;
-  min-width: 3.9rem;
-  text-align: right;
 }
 .match-row-lp strong {
   display: inline-block;
@@ -3430,30 +3467,35 @@
   height: 100%;
   object-fit: cover;
 }
-/* Insignia de vídeo: ahora una esquina sobre el retrato, no un icono
-   suelto entre las métricas (encargo §13). */
-.match-row-video {
-  position: absolute;
-  right: -4px;
-  bottom: -4px;
+/* Insignia editorial de vídeo (encargo Signature §16): contenido
+   diferencial, no un icono microscópico en una esquina — una píldora
+   legible con el mismo lenguaje visual que PRO/STREAMER, nunca un CTA de
+   YouTube a todo color. */
+.match-row-video-pill {
+  position: relative;
+  z-index: 1;
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
-  justify-content: center;
-  width: 1.15rem;
-  height: 1.15rem;
-  border: 2px solid var(--lp-bg);
-  border-radius: 50%;
-  background: var(--lp-gold);
-  color: #0c1019;
+  gap: 0.3rem;
+  padding: 0.2rem 0.5rem;
+  border: 1px solid rgb(214 181 107 / 35%);
+  border-radius: 999px;
+  color: #f2dcae;
+  font-size: 0.56rem;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: rgb(214 181 107 / 8%);
 }
-.match-row-video[hidden] {
+.match-row-video-pill[hidden] {
   display: none;
 }
-.match-row-video svg {
-  width: 0.6rem;
-  height: 0.6rem;
+.match-row-video-pill svg {
+  width: 0.55rem;
+  height: 0.55rem;
 }
-.match-row-video path {
+.match-row-video-pill path {
   fill: currentColor;
 }
 .match-row-chevron {
@@ -3470,16 +3512,18 @@
 .match-row:has([data-match-expand][aria-expanded='true']) .match-row-chevron {
   transform: rotate(225deg);
 }
-/* --- Detalle expandido: "tu partida" (Nivel 2) --- */
+/* --- Detalle expandido: "tu build" (Nivel 2) — acompaña al duelo
+   (encargo Signature §10), ya no es una caja aparte después del resto de
+   la partida. Solo 2 columnas: lo que el duelo NO cubre (participación,
+   visión) — CS/Daño/Oro viven en `.match-duel`, no se repiten aquí. --- */
 .match-your-build {
-  margin-bottom: 1.5rem;
-  padding-bottom: 1.5rem;
-  border-bottom: 1px solid rgb(255 255 255 / 6%);
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--lp-border-soft, rgb(255 255 255 / 6%));
 }
 .match-your-build-stats {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 1rem;
+  display: flex;
+  gap: 2rem;
 }
 .match-your-build-stats dt {
   color: #4f5c70;
@@ -3843,6 +3887,19 @@
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
+.duel-support {
+  margin-top: 0.7rem;
+  color: var(--lp-text-mute);
+  font-size: 0.62rem;
+  text-align: center;
+}
+.duel-support strong {
+  color: var(--lp-text-soft);
+  font-weight: 650;
+}
+.duel-support[hidden] {
+  display: none;
+}
 .duel-empty {
   color: var(--lp-text-mute);
   font-size: 0.66rem;
@@ -3964,13 +4021,15 @@
   letter-spacing: 0.02em;
 }
 /* --- Matchup de la fila: "[yo] VS [rival]" como un duo real, no una
-   nota al pie (encargo Art Direction §13: "matchup visual"). --- */
+   nota al pie (encargo Art Direction §13, reforzado en Signature §11-12:
+   el rival ya no es un icono accesorio — su portrait crece y vive pegado
+   al mío, mismo clúster visual). --- */
 .match-row-vs {
   position: relative;
   z-index: 1;
   display: flex;
   align-items: center;
-  gap: 0.45rem;
+  gap: 0.4rem;
   flex: 0 0 auto;
 }
 .match-row-vs[hidden] {
@@ -3983,8 +4042,8 @@
   letter-spacing: 0.08em;
 }
 .match-row-vs-champion {
-  width: 2rem;
-  height: 2rem;
+  width: 2.375rem;
+  height: 2.375rem;
   border: 2px solid var(--lp-border);
   background: #0d121d;
   object-fit: cover;
@@ -4155,10 +4214,20 @@
   justify-content: space-between;
   gap: 1rem;
 }
+.timeline-evolution-overline {
+  display: block;
+  color: var(--lp-gold, #d6b56b);
+  font-size: 0.56rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
 .timeline-evolution-head h4,
 .timeline-moments h4 {
+  margin-top: 0.15rem;
   color: #dbe1ea;
-  font-size: 0.74rem;
+  font-size: 0.8rem;
+  font-weight: 650;
 }
 .timeline-metric-toggle {
   display: flex;
@@ -4181,11 +4250,18 @@
   outline: 2px solid #d6b56b;
   outline-offset: 2px;
 }
+/* MATCH FLOW (encargo Signature §7-8): el host necesita `position:
+   relative` — el tooltip de hover se ancla a él, no al SVG (el SVG se
+   reemplaza entero en cada toggle Oro/CS, el host no). */
+[data-timeline-chart] {
+  position: relative;
+}
 .timeline-chart-svg {
   display: block;
   width: 100%;
   height: auto;
   margin-top: 0.85rem;
+  touch-action: pan-y;
 }
 .timeline-chart-axis {
   fill: #59667a;
@@ -4202,49 +4278,130 @@
   stroke-linejoin: round;
 }
 .timeline-chart-line-rival {
-  stroke: #6c7c95;
+  stroke: var(--lp-blue, #6c7c95);
   stroke-width: 1.75;
   stroke-dasharray: 4 3;
   stroke-linecap: round;
 }
-.timeline-chart-legend-self {
-  fill: #d6b56b;
-  font-size: 10px;
+/* Extremo con presencia (encargo §8): el último punto real rotulado con
+   su valor, no una línea que se corta en silencio. */
+.timeline-chart-endpoint-self {
+  fill: var(--lp-gold-bright, #f2dcae);
+  stroke: var(--lp-bg, #060913);
+  stroke-width: 1.5;
 }
-.timeline-chart-legend-rival {
+.timeline-chart-endpoint-rival {
+  fill: var(--lp-blue, #6c7c95);
+  stroke: var(--lp-bg, #060913);
+  stroke-width: 1.5;
+}
+.timeline-chart-endpoint-label-self {
+  fill: var(--lp-gold-bright, #f2dcae);
+  font-size: 10px;
+  font-weight: 700;
+}
+.timeline-chart-endpoint-label-rival {
   fill: #8793a6;
   font-size: 10px;
+}
+/* Marca @10 (encargo §8): mismo corte que el resumen de línea de arriba,
+   ahora visible en el propio gráfico — discreta, nunca un eje nuevo. */
+.timeline-chart-mark10 {
+  stroke: rgb(255 255 255 / 18%);
+  stroke-width: 1;
+  stroke-dasharray: 2 2;
+}
+.timeline-chart-mark10-label {
+  fill: #59667a;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.timeline-chart-legend-self {
+  fill: var(--lp-gold);
+}
+.timeline-chart-legend-rival {
+  fill: var(--lp-blue, #8793a6);
+}
+.timeline-chart-legend-text {
+  fill: #8793a6;
+  font-size: 10px;
+}
+.timeline-chart-cursor {
+  stroke: rgb(255 255 255 / 22%);
+  stroke-width: 1;
+  stroke-dasharray: 2 2;
+  display: none;
+}
+.timeline-chart-cursor.is-on {
+  display: block;
+}
+/* Tooltip de hover (encargo §8, "hover útil") — mismo patrón que el de
+   Evolución LP: HTML posicionado por %, nunca texto dentro del SVG (se
+   distorsionaría si el propio SVG se reescala de forma no uniforme). */
+.timeline-chart-tooltip {
+  position: absolute;
+  top: -0.35rem;
+  left: 0;
+  transform: translate(-50%, -100%);
+  padding: 0.35rem 0.55rem;
+  border: 1px solid rgb(255 255 255 / 12%);
+  background: rgb(9 12 20 / 96%);
+  pointer-events: none;
+  white-space: nowrap;
+}
+.timeline-chart-tooltip[hidden] {
+  display: none;
+}
+.timeline-chart-tooltip strong {
+  display: block;
+  color: #eef2f8;
+  font-size: 0.64rem;
+  font-variant-numeric: tabular-nums;
+}
+.timeline-chart-tooltip span {
+  display: block;
+  margin-top: 0.1rem;
+  color: #9aa5b8;
+  font-size: 0.56rem;
 }
 .timeline-chart-empty {
   margin-top: 0.85rem;
   color: #59667a;
   font-size: 0.62rem;
 }
-/* 03 · Momentos clave */
+/* 03 · Momentos clave (encargo Signature §9): cinta cronológica
+   compacta, horizontal — no un log vertical de hasta 15rem de alto. La
+   jerarquía distingue 3 familias (combate / objeto / objetivo), no 20
+   colores, y reutiliza el mismo lenguaje victoria/derrota del resto de
+   la página en vez de verde/rojo neón ad-hoc. */
 .timeline-moments {
   margin-top: 1.5rem;
 }
 .timeline-moments ol {
-  display: grid;
-  gap: 0.5rem;
+  display: flex;
+  gap: 0.6rem;
   margin-top: 0.85rem;
-  max-height: 15rem;
-  overflow-y: auto;
+  padding-bottom: 0.3rem;
+  overflow-x: auto;
+  scrollbar-width: thin;
 }
 .timeline-moment {
   display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  border-left: 2px solid rgb(255 255 255 / 14%);
-  padding: 0.35rem 0 0.35rem 0.85rem;
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 5.5rem;
+  max-width: 8rem;
+  border-top: 2px solid rgb(255 255 255 / 14%);
+  padding: 0.45rem 0.6rem 0.1rem;
   color: #a9b3c2;
-  font-size: 0.64rem;
-  transition: border-color 160ms ease;
+  font-size: 0.62rem;
+  line-height: 1.25;
 }
 .timeline-moment time {
-  flex-shrink: 0;
-  min-width: 2.4rem;
   color: #59667a;
+  font-size: 0.56rem;
   font-variant-numeric: tabular-nums;
 }
 .timeline-moment img {
@@ -4252,21 +4409,26 @@
   border-radius: 3px;
   background: #0d121d;
 }
+/* 3 familias, 4 tokens — todos ya establecidos en el resto de
+   /competitivo, ninguno nuevo (encargo §9, "sin meter 20 colores"):
+   combate en victoria/derrota/azul, objetivo reutiliza el mismo
+   victoria/derrota ("¿lo gané o lo perdí?"), objeto en dorado. */
 .timeline-moment--kill,
 .timeline-moment--objective-team {
-  border-left-color: #4caf82;
+  border-top-color: var(--lp-win, #7fb6da);
 }
-.timeline-moment--death {
-  border-left-color: #c96a6a;
+.timeline-moment--death,
+.timeline-moment--objective-enemy {
+  border-top-color: var(--lp-loss, #d194a0);
 }
 .timeline-moment--assist {
-  border-left-color: #6c8ecb;
+  border-top-color: var(--lp-blue, #6c8ecb);
 }
-.timeline-moment--objective-enemy {
-  border-left-color: #8793a6;
+.timeline-moment--item {
+  border-top-color: var(--lp-gold, #d6b56b);
 }
 .timeline-moment--multikill {
-  color: #f1d9a3;
+  color: var(--lp-gold-bright, #f1d9a3);
   font-weight: 700;
 }
 .timeline-moments-empty {
@@ -5009,48 +5171,62 @@
     row-gap: 0.6rem;
   }
   /* Match row en 375: bloque compacto de 2 filas reales (encargo Page
-     Design Rework §29-30) — nunca la fila de desktop encogida. Objetivo
-     orientativo 120-180px con buena legibilidad. */
+     Design Rework §29-30, reordenado en Signature §14 — "W/L, campeón,
+     KDA, LP, rival" primero) — nunca la fila de desktop encogida.
+     Objetivo orientativo 120-180px con buena legibilidad. */
   .match-row {
     flex-wrap: wrap;
-    row-gap: 0.55rem;
+    row-gap: 0.5rem;
     min-height: 0;
     padding: 0.8rem 0.75rem;
   }
   .match-row-top {
     display: flex;
     align-items: center;
-    gap: 0.7rem;
-    flex: 1 1 100%;
+    gap: 0.55rem;
+    flex: 1 1 auto;
+    min-width: 0;
   }
   .match-row-champion {
-    width: 38px;
-    height: 38px;
+    width: 34px;
+    height: 34px;
+  }
+  /* El rival ya NO se esconde en mobile (encargo §14: "rival" está en la
+     propia lista de prioridad) — un portrait pequeño basta, el "VS" en
+     texto sobra a este ancho (el propio icono ya comunica "contra quién"). */
+  .match-row-vs-label {
+    display: none;
+  }
+  .match-row-vs-champion {
+    width: 22px;
+    height: 22px;
+  }
+  .match-row-vs .encounter-badge {
+    display: none;
   }
   .match-row-identity {
     flex: 1 1 auto;
+    min-width: 0;
+  }
+  .match-row-outcome {
+    flex: 0 0 auto;
+    gap: 0.5rem;
   }
   .match-row-result {
-    flex: 0 0 auto;
+    min-width: 0;
     text-align: right;
-  }
-  /* En 375 la fila colapsada es de 2 líneas (§16): el rival ADC + la
-     insignia PRO/STREAMER quedan solo en el detalle expandido, no
-     empujan una tercera línea. */
-  .match-row-vs {
-    display: none;
   }
   /* Las métricas en su propia línea, repartidas a lo ancho — grid en vez
      de flex-no-wrap para que NUNCA desborden (Rediseño V3 §16, fix del
      overflow de 13px medido en el baseline). */
   .match-row-meta {
     display: grid;
-    grid-template-columns: auto auto auto auto;
+    grid-template-columns: auto auto auto;
     justify-content: space-between;
     align-items: baseline;
     gap: 0 0.6rem;
     flex: 1 1 100%;
-    padding-left: calc(38px + 0.7rem);
+    padding-left: calc(34px + 0.55rem);
   }
   .match-row-kda {
     min-width: 0;
@@ -5060,9 +5236,10 @@
     min-width: 0;
     text-align: left;
   }
-  .match-row-lp {
-    min-width: 0;
-    text-align: right;
+  .match-row-video-pill {
+    flex: 1 1 100%;
+    margin-left: calc(34px + 0.55rem);
+    width: fit-content;
   }
   /* Objetos: solo iconos reconocibles o nada — nunca microscópicos
      (encargo §31). A 375 no hay sitio real para 7 iconos legibles junto
@@ -5070,14 +5247,26 @@
   .match-row-items {
     display: none;
   }
-  .match-your-build-stats {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    row-gap: 0.85rem;
-  }
   .live-match-list .match-card-skeleton {
     grid-template-columns: 1fr;
     gap: 1rem;
     min-height: 6rem;
+  }
+  /* Prioridad real en mobile (encargo Signature §14): rango/sesión/
+     evolución primero (ya es el `.hero-panel`), luego HISTORIAL — es lo
+     que más se consulta a diario — y solo después forma por campeón/
+     rendimiento, que son más "por qué" que "qué pasó". En desktop el
+     orden documental ya es distinto (Historial cierra la página como
+     capítulo final) y no se toca — esto es puramente `order` visual,
+     `.live-stack` ya es un flex column. */
+  .live-stack > [data-history-module] {
+    order: 2;
+  }
+  .live-stack > [data-performance-profile] {
+    order: 3;
+  }
+  .live-stack > .related-gameplays {
+    order: 4;
   }
   /* Duelo en 375: cabeceras siguen enfrentadas (rompería la lectura
      "yo vs rival" si se apilaran verticalmente), pero cada fila
@@ -5204,9 +5393,17 @@
     flex-wrap: wrap;
     row-gap: 0.5rem;
   }
+  .match-row-outcome {
+    margin-left: auto;
+  }
   .match-row-meta {
     flex-basis: 100%;
     padding-left: calc(56px + 0.75rem);
+  }
+  .match-row-video-pill {
+    flex-basis: 100%;
+    margin-left: calc(56px + 0.75rem);
+    width: fit-content;
   }
   .match-teams {
     grid-template-columns: 1fr;
