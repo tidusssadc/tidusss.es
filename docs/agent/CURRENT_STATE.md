@@ -4,7 +4,7 @@
 > cerrado, qué está en progreso, qué está bloqueado, cuál es el HEAD esperado, qué falta de
 > infraestructura, qué NO tocar.
 >
-> **Last verified commit:** `adcbeee` (`design/competitive-ultimate`) · Preview de esa rama verificado y documentado
+> **Last verified commit:** `6b3421c` (`design/competitive-signature`) · Preview de esa rama verificado y documentado
 > **Last verified date:** 2026-09-14
 > **`main`:** `99e86a2` — la Night Shift de 2026-09-09 **ya está mergeada** (merge `99e86a2`).
 >
@@ -20,8 +20,10 @@
 | `main` | `99e86a2` — merge de `night-shift/2026-09-09` (histórico de rango, Encuentros PRO/STREAMER, hardening de coste Riot, D1 + scheduler, docs/agent) sobre el Page Design Rework de /competitivo |
 | `design/competitive-v3` | `734ea8f` — rediseño visual V3 de /competitivo + modo de fixture QA para el preview. **Sin merge.** |
 | `design/competitive-v4-control-room` | `5e1d2d5` — V4 "SoloQ Control Room": arquitectura de producto (command bar, sesión de hoy, evolución LP, historial con filtros). **Sin merge.** |
-| Rama de trabajo actual | `design/competitive-ultimate` — Art Direction Ultimate ("Tidusss Competitive Editorial"): misma arquitectura de V4, dirección visual reconstruida (hero panel, tokens de superficie/victoria-derrota, trend lanes, match rows con presencia real, live como evento). Sin datos ni endpoints Riot nuevos. **Sin merge.** |
-| Preview real de `design/competitive-ultimate` | `https://design-competitive-ultimate.tidusss-es.pages.dev` (verificado con `curl` — 200, HTML idéntico al deployment por hash). 27 caracteres tras slugificar → **no** se trunca (el límite de Cloudflare Pages es 28; ver fila de abajo, `v4-control-room` sí lo sufrió). Deployment por hash de cada push: `wrangler pages deployment list --project-name tidusss-es`. |
+| `design/competitive-ultimate` | `adcbeee` — Art Direction Ultimate ("Tidusss Competitive Editorial"): dirección visual reconstruida sobre la arquitectura de V4. **Sin merge.** |
+| Rama de trabajo actual | `design/competitive-signature` — Signature Pass ("make it obscenely good") sobre Ultimate: fusión del hero en una franja continua + command bar de dos estados, "¿Voy mejor o peor?" rehecho como gráfico de pendiente TODAS→20→10→5, Match Expanded reconstruido alrededor del duelo Tidusss vs ADC rival, marcadores de transición/sesión en Evolución LP, LIVE SUMMARY derivada en Partida en curso. Misma dirección, mismos datos — 0 llamadas Riot nuevas. **Sin merge.** |
+| Preview real de `design/competitive-signature` | `https://design-competitive-signature.tidusss-es.pages.dev` (verificado con `curl` — 200 en `/`, `/competitivo/` y las tres URLs de QA; HTML contiene `match-duel`/`hero-strip`, confirma que es el build nuevo). 28 caracteres tras slugificar → justo en el límite de Cloudflare Pages y **no** se trunca. Deployment por hash de cada push: `wrangler pages deployment list --project-name tidusss-es`. |
+| Preview real de `design/competitive-ultimate` | `https://design-competitive-ultimate.tidusss-es.pages.dev` (verificado con `curl` — 200, HTML idéntico al deployment por hash). 27 caracteres tras slugificar → **no** se trunca (el límite de Cloudflare Pages es 28; ver fila de abajo, `v4-control-room` sí lo sufrió). |
 | Preview real de `design/competitive-v4-control-room` | `https://design-competitive-v4-contro.tidusss-es.pages.dev` — alias TRUNCADO a 28 caracteres (el slug completo, `design-competitive-v4-control-room`, son 34). Verifica siempre con `curl` antes de dar por bueno un alias de rama; no lo derives de memoria. |
 | Regla | nunca mergear ni `push --force` sin instrucción explícita del product owner |
 
@@ -63,8 +65,9 @@ Endpoints (`functions/api/`): `riot/overview` · `riot/live` · `riot/matches/[m
 
 | Área | Estado |
 |---|---|
-| **/competitivo** (`src/components/live/LiveDashboard.astro`) | En `main`: 5 secciones apiladas (`01 Ahora` … `05 Historial`). En `design/competitive-ultimate` (arquitectura de `design/competitive-v4-control-room` + dirección visual reconstruida): command bar sticky + **hero panel** (identidad de rango/sesión/evolución LP como un solo sistema) + grid asimétrico (forma por campeón / rendimiento) + historial. Fetch propio por bloque a `/api/riot/overview`, sin llamadas Riot nuevas. |
-| **Match History** (`src/components/live/matches/`) | Fila densa + detalle expandible (patrón `<template>` + `render.ts`, cero hidratación). 3 niveles: fila / expandido / timeline. En `main` 10 partidas fijas; en `design/competitive-ultimate`, 10 iniciales + "cargar anteriores" hasta 20 (todas ya en el payload, +0 llamadas Riot) + filtros client-side (resultado / campeón) + tratamiento visual de resultado (veladura, anillo, chip de LP). |
+| **/competitivo** (`src/components/live/LiveDashboard.astro`) | En `main`: 5 secciones apiladas (`01 Ahora` … `05 Historial`). En `design/competitive-signature`: command bar de dos estados (mínimo mientras el hero es visible, completo cuando sale del viewport, sin duplicar dato) + **hero panel fusionado** (franja continua crest→LP→pico/sesión→session run→cuenta, luego Sesión de hoy / Evolución LP en un body de 2 columnas) + grid asimétrico (forma por campeón / rendimiento) + historial. Fetch propio por bloque a `/api/riot/overview`, sin llamadas Riot nuevas. |
+| **Match History** (`src/components/live/matches/`) | Fila densa + detalle expandible (patrón `<template>` + `render.ts`, cero hidratación). 3 niveles: fila / expandido / timeline. En `main` 10 partidas fijas; en `design/competitive-signature`, 10 iniciales + "cargar anteriores" hasta 20 (todas ya en el payload, +0 llamadas Riot) + filtros client-side (resultado / campeón) + tratamiento visual de resultado (veladura, anillo, chip de LP). Match Expanded reconstruido: el centro es el duelo Tidusss vs ADC rival (KDA/CS/oro/daño/objetos, barras espejadas, solo magnitud — nunca "ganó línea"), el resto de los 10 jugadores pasa a un bloque compacto y secundario debajo. |
+| **"¿Voy mejor o peor?"** (`PerformanceProfile.astro`) | Gráfico de pendiente por métrica (WR/KDA/CSM/DPM): TODAS→20→10→5, valor real en cada punto, delta vs. la base. Reemplaza los 4 sparklines casi paralelos de Ultimate. |
 | **Rank History (histórico de rango)** (`src/lib/rank-history/`, `functions/api/riot/rank-history.ts` + `rank-snapshot-cron.ts`, `RankEvolution.astro`, `migrations/0001_rank_snapshots.sql`) | **D1 `tidusss-competitive` aprovisionada en Production**, binding `DB` configurado. Primer snapshot real observado: `MASTER 554 LP`, 2026-09-10. El histórico **empieza ahí** — nada anterior se reconstruye. `rank-history` sirve `available:true` con los snapshots reales; sin `DB` (p. ej. preview) sigue degradando a `available:false`. |
 | **Match Timeline** (`functions/api/riot/matches/[matchId]/timeline.ts`, `MatchTimelinePanel.astro`) | **on-demand** — 0 llamadas en la carga normal. 30 días de caché. Sin agregación. |
 | **PRO/STREAMER Encounters** (`src/lib/riot/normalize.ts` → `MatchParticipant.identity`, badge en `MatchExpanded`) | V1. Matching por PUUID exacto contra el Identity Registry existente, colapsando multi-cuenta. +0 llamadas Riot (usa el PUUID que Riot ya trae en cada partida). Sin narrativa inventada. |
@@ -116,6 +119,7 @@ Cloudflare Pages con integración Git a `github.com/tidusssadc/tidusss.es`. Buil
 
 | Commit | Qué |
 |---|---|
+| `design/competitive-signature` | Signature Pass de /competitivo (rama, sin merge) — pulido sobre la dirección ya validada de Ultimate, misma arquitectura y mismos datos |
 | `design/competitive-ultimate` | Art Direction Ultimate de /competitivo (rama, sin merge) — dirección visual sobre la arquitectura de V4, sin datos ni endpoints Riot nuevos |
 | `5e1d2d5` | `design/competitive-v4-control-room` — V4 "SoloQ Control Room", arquitectura de producto |
 | `734ea8f` | `design/competitive-v3` — modo de fixture QA para el preview de Cloudflare |
