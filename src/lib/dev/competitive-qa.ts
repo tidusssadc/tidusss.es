@@ -429,6 +429,20 @@ const liveGameResponse = (): LiveGameResult => {
     ranked: { available: true, tier: 'MASTER', rank: 'I', leaguePoints: 320 + teamId, wins: 200, losses: 180, winRate: 53 },
     recentForm: isSelf ? { sampleSize: 5, wins: 3, losses: 2, winRate: 60, averageKda: 3.1 } : undefined,
   });
+  const blueTeam = [
+    p(100, 'Aatrox', false),
+    p(100, 'Viego', false),
+    p(100, 'Ahri', false),
+    p(100, 'Lucian', true),
+    p(100, 'Nautilus', false),
+  ];
+  const redTeam = [
+    p(200, 'Garen', false, { displayName: 'Thebausffs', role: 'TOP', isPro: false, isStreamer: true, streamUrl: 'https://twitch.tv/thebausffs' }),
+    p(200, 'LeeSin', false),
+    p(200, 'Syndra', false, { displayName: 'Caps', team: 'G2', role: 'MID', isPro: true, isStreamer: false }),
+    p(200, 'Caitlyn', false, { displayName: 'Rekkles', team: 'KC', role: 'ADC', isPro: true, isStreamer: true }),
+    p(200, 'Thresh', false),
+  ];
   return {
     status: 'in_game',
     updatedAt: iso(10_000),
@@ -443,28 +457,13 @@ const liveGameResponse = (): LiveGameResult => {
       gameStartedAt: iso(14 * 60 * 1000),
       gameLengthSeconds: 14 * 60,
       platformId: 'EUW1',
-      participants: [],
+      // Real Spectator-V5 trae el listado plano de 10 además de por equipo —
+      // se refleja aquí igual, para que la fixture ejercite el mismo código
+      // que producción (encargo Signature §24, LIVE SUMMARY).
+      participants: [...blueTeam, ...redTeam],
       teams: [
-        {
-          teamId: 100,
-          participants: [
-            p(100, 'Aatrox', false),
-            p(100, 'Viego', false),
-            p(100, 'Ahri', false),
-            p(100, 'Lucian', true),
-            p(100, 'Nautilus', false),
-          ],
-        },
-        {
-          teamId: 200,
-          participants: [
-            p(200, 'Garen', false, { displayName: 'Thebausffs', role: 'TOP', isPro: false, isStreamer: true, streamUrl: 'https://twitch.tv/thebausffs' }),
-            p(200, 'LeeSin', false),
-            p(200, 'Syndra', false, { displayName: 'Caps', team: 'G2', role: 'MID', isPro: true, isStreamer: false }),
-            p(200, 'Caitlyn', false, { displayName: 'Rekkles', team: 'KC', role: 'ADC', isPro: true, isStreamer: true }),
-            p(200, 'Thresh', false),
-          ],
-        },
+        { teamId: 100, participants: blueTeam },
+        { teamId: 200, participants: redTeam },
       ],
       bannedChampions: [
         { championId: 1, championName: 'Zed', championImageUrl: champIcon('Zed'), teamId: 100, pickTurn: 1 },

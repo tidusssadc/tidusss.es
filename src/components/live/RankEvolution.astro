@@ -66,10 +66,12 @@ import { RANK_CHART_WIDTH, RANK_CHART_HEIGHT } from '../../lib/rank-history/rend
           </linearGradient>
         </defs>
         <path data-rank-evolution-area class="rank-evolution-area"></path>
+        <line data-rank-evolution-session class="rank-evolution-session-line" y1="0" y2={RANK_CHART_HEIGHT}></line>
         <path data-rank-evolution-path class="rank-evolution-line"></path>
         <g data-rank-evolution-dots></g>
         <line data-rank-evolution-cursor class="rank-evolution-cursor" y1="0" y2={RANK_CHART_HEIGHT}></line>
       </svg>
+      <span class="rank-evolution-session-label" data-rank-evolution-session-label hidden>HOY</span>
       <div class="rank-evolution-tooltip" data-rank-evolution-tooltip hidden>
         <strong data-rank-evolution-tooltip-rank></strong>
         <span data-rank-evolution-tooltip-date></span>
@@ -82,7 +84,7 @@ import { RANK_CHART_WIDTH, RANK_CHART_HEIGHT } from '../../lib/rank-history/rend
 
 <script>
   import { installCompetitiveQaIfRequested } from '../../lib/dev/competitive-qa';
-  import { buildRankEvolutionView, RANK_CHART_HEIGHT } from '../../lib/rank-history/render';
+  import { buildRankEvolutionView, RANK_CHART_HEIGHT, RANK_CHART_WIDTH } from '../../lib/rank-history/render';
   import { buildSparklinePath } from '../../lib/rank-history/chart';
   import { madridDate } from '../../lib/time';
   import { formatRankLabel } from '../../lib/rank-history/format';
@@ -103,23 +105,29 @@ import { RANK_CHART_WIDTH, RANK_CHART_HEIGHT } from '../../lib/rank-history/rend
       if (node) node.hidden = !show;
     };
 
-    const drawDots = (points: RankChartPoint[]) => {
+    const drawDots = (points: RankChartPoint[], transitionIndices: number[]) => {
       const group = root.querySelector('[data-rank-evolution-dots]');
       if (!group) return;
       const peakIndex = points.reduce(
         (best, point, index) => (point.y < points[best]!.y ? index : best),
         0,
       );
+      const currentIndex = points.length - 1;
+      const transitionSet = new Set(transitionIndices);
       group.replaceChildren(
         ...points.map((point, index) => {
+          const isPeak = index === peakIndex;
+          const isCurrent = index === currentIndex;
+          const isTransition = transitionSet.has(index);
           const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
           dot.setAttribute('cx', point.x.toFixed(2));
           dot.setAttribute('cy', point.y.toFixed(2));
-          dot.setAttribute('r', index === peakIndex ? '3.4' : '2.2');
-          dot.setAttribute(
-            'class',
-            index === peakIndex ? 'rank-evolution-dot is-peak' : 'rank-evolution-dot',
-          );
+          dot.setAttribute('r', isCurrent ? '4' : isPeak || isTransition ? '3.4' : '2.2');
+          const classes = ['rank-evolution-dot'];
+          if (isPeak) classes.push('is-peak');
+          if (isCurrent) classes.push('is-current');
+          if (isTransition) classes.push('is-transition');
+          dot.setAttribute('class', classes.join(' '));
           return dot;
         }),
       );
@@ -144,11 +152,20 @@ import { RANK_CHART_WIDTH, RANK_CHART_HEIGHT } from '../../lib/rank-history/rend
         cursor.classList.add('is-on');
         tooltip.hidden = false;
         tooltip.style.left = `${(nearest.x / points[points.length - 1]!.x) * 100}%`;
+        // Delta día a día (encargo §8): diferencia real contra la
+        // observación anterior — nunca inventada si a cualquiera de las
+        // dos le falta el LP.
+        const nearestIndex = points.indexOf(nearest);
+        const previous = nearestIndex > 0 ? points[nearestIndex - 1] : undefined;
+        const delta =
+          previous?.leaguePoints !== undefined && nearest.leaguePoints !== undefined
+            ? nearest.leaguePoints - previous.leaguePoints
+            : undefined;
         text(
           '[data-rank-evolution-tooltip-rank]',
           `${formatRankLabel(nearest.tier, nearest.rank)}${
             nearest.leaguePoints === undefined ? '' : ` · ${nearest.leaguePoints} LP`
-          }`,
+          }${delta === undefined || delta === 0 ? '' : ` (${delta > 0 ? '+' : ''}${delta})`}`,
         );
         text(
           '[data-rank-evolution-tooltip-date]',
@@ -206,8 +223,29 @@ import { RANK_CHART_WIDTH, RANK_CHART_HEIGHT } from '../../lib/rank-history/rend
             `${linePath} L ${last.x.toFixed(2)} ${RANK_CHART_HEIGHT} L ${first.x.toFixed(2)} ${RANK_CHART_HEIGHT} Z`,
           );
         }
-        drawDots(view.points);
+        drawDots(view.points, view.transitionIndices);
         wireTooltip(view.points);
+
+        // Marcador de inicio de sesión (encargo §8): separa "antes de hoy"
+        // de "hoy" en el propio gráfico — solo si hay puntos anteriores a
+        // hoy que separar.
+        const sessionLine = root.querySelector<SVGLineElement>('[data-rank-evolution-session]');
+        const sessionLabel = root.querySelector<HTMLElement>('[data-rank-evolution-session-label]');
+        const sessionPoint =
+          view.sessionStartIndex === undefined ? undefined : view.points[view.sessionStartIndex];
+        if (sessionLine) {
+          sessionLine.classList.toggle('is-on', Boolean(sessionPoint));
+          if (sessionPoint) {
+            sessionLine.setAttribute('x1', String(sessionPoint.x));
+            sessionLine.setAttribute('x2', String(sessionPoint.x));
+          }
+        }
+        if (sessionLabel) {
+          sessionLabel.hidden = !sessionPoint;
+          if (sessionPoint) {
+            sessionLabel.style.left = `${(sessionPoint.x / RANK_CHART_WIDTH) * 100}%`;
+          }
+        }
       }
     };
 

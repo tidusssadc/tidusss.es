@@ -28,6 +28,7 @@
     <div class="live-game-status">
       <i class="live-dot" aria-hidden="true"></i>
       <strong id="live-game-title">Partida en curso</strong>
+      <span class="live-game-summary" data-live-game-summary hidden></span>
     </div>
     <div class="live-game-meta">
       <span data-live-game-queue></span>
@@ -254,7 +255,32 @@
       return item;
     };
 
+    // Línea LIVE SUMMARY (encargo Signature §24): una frase derivada de
+    // datos ya reales, nunca inventada. Spectator-V5 no trae posición de
+    // carril (a diferencia de Match-V5), así que no hay forma honesta de
+    // identificar "el ADC rival" aquí — se omite en vez de adivinarlo por
+    // el campeón o el orden de picks.
+    const buildSummaryLine = (game: LiveGame): string | undefined => {
+      const self = game.participants.find((participant) => participant.isSelf);
+      if (!self?.championName) return undefined;
+      const sideLabel = self.teamId === 100 ? 'Blue Side' : self.teamId === 200 ? 'Red Side' : undefined;
+      const knownCount = game.participants.filter((participant) => participant.identity).length;
+      const parts = [
+        self.championName,
+        sideLabel,
+        formatGameLength(game.gameLengthSeconds),
+        knownCount > 0 ? `${knownCount} ${knownCount === 1 ? 'conocido' : 'conocidos'}` : undefined,
+      ].filter((value): value is string => Boolean(value));
+      return parts.length ? parts.join(' · ') : undefined;
+    };
+
     const renderHeader = (game: LiveGame) => {
+      const summaryNode = root.querySelector<HTMLElement>('[data-live-game-summary]');
+      if (summaryNode) {
+        const summary = buildSummaryLine(game);
+        summaryNode.hidden = !summary;
+        if (summary) summaryNode.textContent = summary;
+      }
       const queueNode = root.querySelector('[data-live-game-queue]');
       if (queueNode) queueNode.textContent = game.queueLabel;
       const mapNode = root.querySelector('[data-live-game-map]');

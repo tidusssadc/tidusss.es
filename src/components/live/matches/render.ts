@@ -184,6 +184,118 @@ const participantRow = (
   return item;
 };
 
+// --- DUELO Tidusss vs ADC rival (encargo Signature §17-19): el centro del
+// análisis, con datos de fin de partida ya presentes en `match`/`enemy` —
+// nunca @10 (eso es Timeline-only, bajo demanda) y nunca lenguaje de
+// "ganaste línea"/"stomp", solo el número real de cada lado. ---
+const duelKda = (participant: MatchParticipant) =>
+  (participant.kills + participant.assists) / Math.max(1, participant.deaths);
+
+const duelRow = (
+  label: string,
+  selfValue: number,
+  enemyValue: number,
+  format: (value: number) => string,
+) => {
+  const row = document.createElement('li');
+  row.className = 'duel-row';
+  const max = Math.max(selfValue, enemyValue, 1);
+  const selfValueEl = document.createElement('strong');
+  selfValueEl.className = 'duel-value duel-value--self';
+  selfValueEl.textContent = format(selfValue);
+  const selfTrack = document.createElement('span');
+  selfTrack.className = 'duel-track duel-track--self';
+  const selfBar = document.createElement('i');
+  selfBar.style.width = `${Math.round((selfValue / max) * 100)}%`;
+  selfTrack.append(selfBar);
+  const labelEl = document.createElement('span');
+  labelEl.className = 'duel-label';
+  labelEl.textContent = label;
+  const enemyTrack = document.createElement('span');
+  enemyTrack.className = 'duel-track duel-track--enemy';
+  const enemyBar = document.createElement('i');
+  enemyBar.style.width = `${Math.round((enemyValue / max) * 100)}%`;
+  enemyTrack.append(enemyBar);
+  const enemyValueEl = document.createElement('strong');
+  enemyValueEl.className = 'duel-value duel-value--enemy';
+  enemyValueEl.textContent = format(enemyValue);
+  row.append(selfValueEl, selfTrack, labelEl, enemyTrack, enemyValueEl);
+  return row;
+};
+
+const fillDuelItems = (container: HTMLElement, urls: string[]) => {
+  container.replaceChildren(
+    ...urls.map((url, index) => {
+      const image = document.createElement('img');
+      image.width = 22;
+      image.height = 22;
+      image.loading = 'lazy';
+      image.decoding = 'async';
+      image.src = url;
+      image.alt = `Objeto ${index + 1}`;
+      return image;
+    }),
+  );
+};
+
+const renderDuel = (
+  card: HTMLElement,
+  match: RecentMatch,
+  enemy: MatchParticipant | undefined,
+  formatNumber: (value: number) => string,
+) => {
+  const duel = query<HTMLElement>(card, '[data-match-duel]');
+  if (!duel) return;
+  const body = query<HTMLElement>(duel, '[data-duel-body]');
+  const empty = query<HTMLElement>(duel, '[data-duel-empty]');
+  if (!enemy) {
+    if (body) body.hidden = true;
+    if (empty) empty.hidden = false;
+    return;
+  }
+  if (body) body.hidden = false;
+  if (empty) empty.hidden = true;
+
+  const selfChampion = query<HTMLImageElement>(duel, '[data-duel-self-champion]');
+  if (selfChampion) {
+    selfChampion.src = match.championImageUrl ?? '';
+    selfChampion.alt = match.championName;
+  }
+  setText(duel, '[data-duel-self-champion-name]', match.championName);
+
+  const enemyChampion = query<HTMLImageElement>(duel, '[data-duel-enemy-champion]');
+  if (enemyChampion) {
+    enemyChampion.src = enemy.championImageUrl ?? '';
+    enemyChampion.alt = enemy.championName;
+  }
+  setText(duel, '[data-duel-enemy-champion-name]', enemy.championName);
+  setText(duel, '[data-duel-enemy-name]', enemy.displayName);
+  const badge = query<HTMLElement>(duel, '[data-duel-enemy-badge]');
+  if (badge) {
+    badge.hidden = !enemy.identity;
+    if (enemy.identity) {
+      badge.textContent = encounterLabel(enemy.identity);
+      badge.title = [enemy.identity.displayName, enemy.identity.team, enemy.identity.role]
+        .filter(Boolean)
+        .join(' · ');
+    }
+  }
+
+  const rows = query<HTMLElement>(duel, '[data-duel-compare]');
+  if (rows)
+    rows.replaceChildren(
+      duelRow('KDA', match.kda, duelKda(enemy), (v) => v.toFixed(2).replace('.', ',')),
+      duelRow('CS', match.cs, enemy.cs, (v) => String(Math.round(v))),
+      duelRow('ORO', match.goldEarned, enemy.goldEarned, formatNumber),
+      duelRow('DAÑO', match.damageToChampions, enemy.damageToChampions, formatNumber),
+    );
+
+  const selfItems = query<HTMLElement>(duel, '[data-duel-self-items]');
+  if (selfItems) fillDuelItems(selfItems, match.itemImageUrls);
+  const enemyItems = query<HTMLElement>(duel, '[data-duel-enemy-items]');
+  if (enemyItems) fillDuelItems(enemyItems, enemy.itemImageUrls);
+};
+
 const fillTeam = (
   card: HTMLElement,
   team: MatchTeam | undefined,
@@ -420,6 +532,7 @@ const renderCard = (
     '[data-expanded-played]',
     options.relativeTime(match.playedAt) ?? '',
   );
+  renderDuel(card, match, enemy, options.formatNumber);
   fillTeam(
     card,
     match.teams.find((team) => team.teamId === 100),

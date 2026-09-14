@@ -84,16 +84,19 @@ import { resolvedMatchVideoContent } from '../../lib/resolved-match-video-conten
     <LiveGameModule />
 
     <!--
-      HERO PANEL (Art Direction Ultimate §6): identidad + sesión + evolución
-      como UN sistema, no dos rectángulos sueltos uno al lado del otro. Un
-      solo contenedor con divisores internos en vez de dos `.live-module`
-      independientes — el rango/LP tiene tratamiento de "hero data" (§7), la
-      sesión se lee como una micro-historia con pips W/L (§8, derivados de
-      `today.matches`, sin llamadas Riot nuevas), y la evolución de LP vive
-      pegada a esa misma narrativa en vez de aislada.
+      HERO PANEL (Signature Pass §4): identidad + sesión + evolución como UN
+      SOLO SISTEMA. Ultimate ya los unió en un contenedor, pero seguían
+      leyéndose como 3 columnas con divisores. Ahora es una franja de
+      identidad de ancho completo (`.hero-strip`: cresta → MASTER/LP → pico
+      → Δ sesión → session run → cuenta) seguida del cuerpo (sesión +
+      evolución) — se lee de arriba a abajo como una sola historia ("¿cómo
+      va el grind?"), no como 3 casillas de una tabla. El rango/LP tiene
+      tratamiento de "hero data" (§6), la sesión es una micro-historia con
+      un "session run" W/L (§7, derivado de `today.matches`, sin llamadas
+      Riot nuevas) que conecta visualmente con el Historial.
     -->
     <div class="hero-panel" data-hero-panel>
-      <div class="hero-identity">
+      <div class="hero-strip">
         <div class="hero-crest-wrap">
           <img
             class="hero-crest"
@@ -110,9 +113,6 @@ import { resolvedMatchVideoContent } from '../../lib/resolved-match-video-conten
           <strong data-rank-hero class="hero-tier data-skeleton data-skeleton--line" aria-label="Actualizando rango">&nbsp;</strong>
           <span data-lp-hero class="hero-lp data-skeleton data-skeleton--line" aria-hidden="true">&nbsp;</span>
         </div>
-        <p class="hero-account">
-          <strong data-riot-id-hero>Tidusss#FFX</strong><span>EUW · Solo/Duo</span>
-        </p>
         <dl class="hero-figures">
           <div data-hero-peak-row hidden>
             <dt>Pico observado</dt>
@@ -123,9 +123,13 @@ import { resolvedMatchVideoContent } from '../../lib/resolved-match-video-conten
             <dd data-hero-session></dd>
           </div>
         </dl>
-        <ol class="hero-pips" data-session-pips aria-label="Resultados de la sesión de hoy"></ol>
+        <ol class="hero-pips" data-session-pips aria-label="Resultados de la sesión de hoy, en orden cronológico"></ol>
+        <p class="hero-account">
+          <strong data-riot-id-hero>Tidusss#FFX</strong><span>EUW · Solo/Duo</span>
+        </p>
       </div>
 
+      <div class="hero-body">
       <section
         class="hero-session"
         aria-labelledby="session-title"
@@ -172,6 +176,7 @@ import { resolvedMatchVideoContent } from '../../lib/resolved-match-video-conten
       </section>
 
       <RankEvolution />
+      </div>
     </div>
 
     <PerformanceProfile />
@@ -793,16 +798,34 @@ import { resolvedMatchVideoContent } from '../../lib/resolved-match-video-conten
     ?.querySelector('[data-profile-refresh]')
     ?.addEventListener('click', () => refresh(true));
 
-  // Barra de comando "condensada" cuando queda pegada al hacer scroll — no
-  // pierde el contexto de rango/sesión mientras miras el Historial (§20). El
-  // shell es `position: sticky; top: 4.5rem`: en cuanto su `top` real llega a
-  // ~72px es que está pegado.
+  // Barra de comando: sin duplicar la identidad del hero panel (encargo
+  // Signature §5). Mientras el hero panel es visible, la barra sticky se
+  // queda en su estado MÍNIMO (cresta + tier, sin repetir LP/pico/sesión/
+  // racha/última — el hero ya lo dice todo, más grande y mejor). En cuanto
+  // el hero sale del viewport al hacer scroll (su borde inferior cruza la
+  // línea donde queda pegada la barra, ~73px), la barra pasa a su estado
+  // COMPLETO y adopta ese contexto por el resto de la página. Sin saltos de
+  // layout: ambos estados caben en la misma altura de línea, solo cambia
+  // qué contenido horizontal se muestra. `getBoundingClientRect()` + un
+  // listener de scroll pasivo con throttle a un frame — más barato y más
+  // predecible aquí que un `IntersectionObserver` con `rootMargin` (que
+  // dispara de forma perezosa/por lotes en algunos entornos).
   const commandBar = root?.querySelector<HTMLElement>('[data-command-bar]');
-  if (commandBar) {
-    const syncCondensed = () =>
-      commandBar.toggleAttribute('data-condensed', window.scrollY > 64);
-    window.addEventListener('scroll', syncCondensed, { passive: true });
-    syncCondensed();
+  const heroPanel = root?.querySelector<HTMLElement>('[data-hero-panel]');
+  if (commandBar && heroPanel) {
+    // Una lectura de layout (`getBoundingClientRect`) + una escritura de
+    // atributo — barato de sobra para correr en cada evento de scroll sin
+    // throttle propio. Se evita a propósito `requestAnimationFrame`: en
+    // pestañas en segundo plano el navegador puede pausarlo o diferirlo
+    // segundos, lo que dejaría la barra en el estado equivocado más tiempo
+    // del necesario para algo tan barato.
+    const syncFull = () => {
+      const heroVisible = heroPanel.getBoundingClientRect().bottom > 73;
+      commandBar.toggleAttribute('data-full', !heroVisible);
+    };
+    window.addEventListener('scroll', syncFull, { passive: true });
+    window.addEventListener('resize', syncFull, { passive: true });
+    syncFull();
   }
 
   root?.toggleAttribute('data-motion-ready', true);

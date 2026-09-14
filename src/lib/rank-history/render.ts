@@ -1,6 +1,6 @@
 import { buildRankChartPoints, type RankChartPoint } from './chart';
 import { formatRankLabel } from './format';
-import { madridDate, relativeTime } from '../time';
+import { isToday, madridDate, relativeTime } from '../time';
 import type { RankEvolutionSummary } from './evolution';
 
 /** Dimensiones del gráfico — compartidas entre el cálculo de puntos y el `viewBox` del SVG en el componente. V4: más alto para que la evolución de LP sea un módulo que apetezca mirar, no un sparkline de 64px. */
@@ -23,9 +23,13 @@ export interface RankEvolutionView {
   peakLabel?: string;
   latestTransitionLabel?: string;
   points: RankChartPoint[];
+  /** Índices (sobre `points`) donde Riot registró un cambio de tier/división real — encargo Signature §8, marcador en el propio gráfico, no solo en el texto de la última transición. */
+  transitionIndices: number[];
+  /** Índice del primer punto observado "hoy" (hora de Madrid) — `undefined` si no hay ninguno o si el gráfico entero es de hoy (nada que separar). */
+  sessionStartIndex?: number;
 }
 
-const HIDDEN_VIEW: RankEvolutionView = { state: 'hidden', points: [] };
+const HIDDEN_VIEW: RankEvolutionView = { state: 'hidden', points: [], transitionIndices: [] };
 
 const lpLabel = (leaguePoints?: number): string | undefined =>
   leaguePoints === undefined ? undefined : `${leaguePoints} LP`;
@@ -46,7 +50,7 @@ export const buildRankEvolutionView = (
   // aparece, igual que el resto de Competitivo cuando algo opcional falta.
   if (!summary.available) return HIDDEN_VIEW;
 
-  if (summary.sampleCount === 0) return { state: 'empty', points: [] };
+  if (summary.sampleCount === 0) return { state: 'empty', points: [], transitionIndices: [] };
 
   const current = summary.latest;
   const currentLabel = current ? formatRankLabel(current.tier, current.rank) : undefined;
@@ -56,7 +60,7 @@ export const buildRankEvolutionView = (
     : undefined;
 
   if (summary.sampleCount === 1) {
-    return { state: 'single', currentLabel, currentLpLabel, sinceLabel, points: [] };
+    return { state: 'single', currentLabel, currentLpLabel, sinceLabel, points: [], transitionIndices: [] };
   }
 
   const peakLabel = summary.peak
@@ -68,6 +72,21 @@ export const buildRankEvolutionView = (
     ? `${arrow(lastTransition.direction)} ${formatRankLabel(lastTransition.fromTier, lastTransition.fromRank)} → ${formatRankLabel(lastTransition.toTier, lastTransition.toRank)} · ${relativeTime(lastTransition.observedAt, new Date(now)) ?? ''}`.trim()
     : undefined;
 
+  const points = buildRankChartPoints(summary.points, RANK_CHART_WIDTH, RANK_CHART_HEIGHT);
+
+  // Marcador de transición (encargo §8): el `observedAt` de una transición
+  // coincide siempre con el de la observación "to" que la disparó — mismo
+  // dato, solo se busca su índice en `points` para pintarlo en el gráfico.
+  const transitionIndices = summary.transitions
+    .map((transition) => points.findIndex((point) => point.observedAt === transition.observedAt))
+    .filter((index) => index >= 0);
+
+  // Marcador de inicio de sesión (encargo §8): el primer punto observado
+  // "hoy" (hora de Madrid) separa visualmente "antes de hoy" de "hoy" — sin
+  // marcador si no hay ninguno o si el gráfico entero es de hoy.
+  const firstTodayIndex = points.findIndex((point) => isToday(point.observedAt, new Date(now)));
+  const sessionStartIndex = firstTodayIndex > 0 ? firstTodayIndex : undefined;
+
   return {
     state: 'chart',
     currentLabel,
@@ -75,6 +94,8 @@ export const buildRankEvolutionView = (
     sinceLabel,
     peakLabel,
     latestTransitionLabel,
-    points: buildRankChartPoints(summary.points, RANK_CHART_WIDTH, RANK_CHART_HEIGHT),
+    points,
+    transitionIndices,
+    sessionStartIndex,
   };
 };

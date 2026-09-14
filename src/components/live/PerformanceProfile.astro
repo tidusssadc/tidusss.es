@@ -194,45 +194,97 @@ const adcRosterNames = getAdcRoster(registry).map((entry) => entry.catalogEntry.
       return node;
     };
 
-    // --- Rendimiento reciente como TENDENCIA (encargo §15): para cada
-    // métrica, los valores de 5 / 10 / 20 / muestra como un mini-sparkline
-    // + el valor actual + una flecha de dirección (solo descriptivo, sin
-    // "form score" inventado). ---
+    // --- Rendimiento reciente como GRÁFICO DE PENDIENTE (encargo Signature
+    // §9): para cada métrica, la muestra completa y las ventanas de 20/10/5
+    // se leen como puntos de una misma línea — "TODAS" es la base, "5" es lo
+    // más reciente. La pregunta que responde es "¿la ventana más reciente
+    // está por encima o por debajo de la base?", con los valores reales
+    // etiquetados en cada punto — nunca una puntuación inventada. Con menos
+    // de 2 puntos disponibles no se dibuja línea (degradación honesta). ---
 
     interface TrendMetric {
       key: 'winRate' | 'averageKda' | 'averageCsPerMinute' | 'averageDamagePerMinute';
       label: string;
       format: (value?: number) => string;
+      deltaFormat: (delta: number) => string;
     }
     const TREND_METRICS: TrendMetric[] = [
-      { key: 'winRate', label: 'Win rate', format: percent },
-      { key: 'averageKda', label: 'KDA', format: decimal },
-      { key: 'averageCsPerMinute', label: 'CS/min', format: decimal1 },
-      { key: 'averageDamagePerMinute', label: 'Daño/min', format: (v) => (v === undefined ? '—' : String(Math.round(v))) },
+      { key: 'winRate', label: 'Win rate', format: percent, deltaFormat: (d) => `${Math.round(d)}%` },
+      { key: 'averageKda', label: 'KDA', format: decimal, deltaFormat: (d) => d.toFixed(2).replace('.', ',') },
+      { key: 'averageCsPerMinute', label: 'CS/min', format: decimal1, deltaFormat: (d) => d.toFixed(1).replace('.', ',') },
+      {
+        key: 'averageDamagePerMinute',
+        label: 'Daño/min',
+        format: (v) => (v === undefined ? '—' : String(Math.round(v))),
+        deltaFormat: (d) => String(Math.round(d)),
+      },
     ];
 
-    const sparkline = (values: number[]): SVGSVGElement => {
-      const width = 96;
-      const height = 30;
-      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-      svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
-      svg.setAttribute('class', 'trend-spark');
-      svg.setAttribute('preserveAspectRatio', 'none');
-      svg.setAttribute('aria-hidden', 'true');
-      if (values.length < 2) return svg;
+    // Geometría del gráfico — fija, en px, para que línea/puntos/etiquetas
+    // compartan el mismo sistema de coordenadas sin medir el DOM real.
+    const SLOPE_HEIGHT = 62;
+    const DOT_Y_TOP = 22;
+    const DOT_Y_BOTTOM = 40;
+    const CAPTION_Y = 48;
+
+    const slopeChart = (
+      metric: TrendMetric,
+      points: { x: number; value: number; windowLabel: string; sampleLabel: string }[],
+    ): HTMLElement => {
+      const wrap = el('div', 'trend-slope');
+      if (points.length < 2) {
+        const note = el('span', 'trend-item-note');
+        note.textContent = 'Sin ventanas de tendencia todavía (hacen falta 5+ partidas).';
+        wrap.append(note);
+        return wrap;
+      }
+      const values = points.map((p) => p.value);
       const min = Math.min(...values);
       const max = Math.max(...values);
-      const span = max - min || 1;
-      const points = values.map((value, index) => {
-        const x = (index / (values.length - 1)) * (width - 4) + 2;
-        const y = height - 3 - ((value - min) / span) * (height - 6);
-        return `${index === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`;
-      });
-      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-      path.setAttribute('d', points.join(' '));
-      path.setAttribute('class', 'trend-spark-line');
+      const yFor = (value: number) =>
+        max === min ? (DOT_Y_TOP + DOT_Y_BOTTOM) / 2 : DOT_Y_BOTTOM - ((value - min) / (max - min)) * (DOT_Y_BOTTOM - DOT_Y_TOP);
+
+      const svgNs = 'http://www.w3.org/2000/svg';
+      const svg = document.createElementNS(svgNs, 'svg');
+      svg.setAttribute('viewBox', `0 0 100 ${SLOPE_HEIGHT}`);
+      svg.setAttribute('preserveAspectRatio', 'none');
+      svg.setAttribute('class', 'trend-slope-line');
+      svg.setAttribute('aria-hidden', 'true');
+      const path = document.createElementNS(svgNs, 'path');
+      const d = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(2)} ${yFor(p.value).toFixed(2)}`).join(' ');
+      path.setAttribute('d', d);
+      const delta = values[values.length - 1]! - values[0]!;
+      const threshold = metric.key === 'winRate' ? 1.5 : 0.05;
+      const rising = delta > threshold;
+      const falling = delta < -threshold;
+      path.setAttribute('class', `trend-slope-line-path${rising ? ' is-up' : falling ? ' is-down' : ''}`);
       svg.append(path);
-      return svg;
+      wrap.append(svg);
+
+      points.forEach((point, index) => {
+        const isCurrent = index === points.length - 1;
+        const y = yFor(point.value);
+        const anchor = el('div', 'trend-slope-point');
+        anchor.classList.toggle('is-current', isCurrent);
+        anchor.classList.toggle('is-base', index === 0);
+        anchor.style.left = `${point.x}%`;
+
+        const value = el('span', 'trend-slope-value');
+        value.style.top = `${Math.max(0, y - 16)}px`;
+        value.textContent = metric.format(point.value);
+
+        const dot = el('span', 'trend-slope-dot');
+        dot.style.top = `${y}px`;
+
+        const caption = el('span', 'trend-slope-caption');
+        caption.style.top = `${CAPTION_Y}px`;
+        caption.textContent = point.windowLabel;
+
+        anchor.append(value, dot, caption);
+        wrap.append(anchor);
+      });
+
+      return wrap;
     };
 
     const renderTrend = (
@@ -241,36 +293,50 @@ const adcRosterNames = getAdcRoster(registry).map((entry) => entry.catalogEntry.
     ) => {
       const container = performanceRoot.querySelector('[data-trend-grid]');
       if (!container) return;
-      const ordered = [...trend].sort((a, b) => a.windowSize - b.windowSize);
+      // De más amplio (toda la muestra) a más reciente (ventana de 5).
+      const windows = [...trend].sort((a, b) => b.windowSize - a.windowSize);
       container.replaceChildren(
         ...TREND_METRICS.map((metric) => {
-          const series = [
-            ...ordered.map((point) => point[metric.key]),
-            full[metric.key],
-          ].filter((value): value is number => value !== undefined);
+          const raw: { value?: number; windowLabel: string; sampleLabel: string }[] = [
+            { value: full[metric.key], windowLabel: 'TODAS', sampleLabel: String(full.sampleSize) },
+            ...windows.map((w) => ({ value: w[metric.key], windowLabel: String(w.windowSize), sampleLabel: String(w.sampleSize) })),
+          ];
+          const present = raw.filter(
+            (p): p is { value: number; windowLabel: string; sampleLabel: string } => p.value !== undefined,
+          );
+          const points = present.map((p, index) => ({
+            ...p,
+            // Margen del 8% a cada lado: el valor del punto (más grande en
+            // el punto actual) se centra en su x y no debe invadir la
+            // columna del delta ni el borde del carril.
+            x: present.length > 1 ? 8 + (index / (present.length - 1)) * 84 : 50,
+          }));
+
           const item = el('li', 'trend-item');
           const head = el('div', 'trend-item-head');
           const value = el('strong');
-          const current = ordered[0]?.[metric.key] ?? full[metric.key];
-          value.textContent = metric.format(current);
+          value.textContent = metric.format(points[points.length - 1]?.value ?? full[metric.key]);
           const label = el('span', 'trend-item-label');
           label.textContent = metric.label;
           head.append(value, label);
-          item.append(head);
-          if (series.length >= 2) {
-            item.append(sparkline(series));
-            const delta = series[0]! - series[series.length - 1]!;
-            const dir = el('span', 'trend-item-dir');
-            const rising = delta > (metric.key === 'winRate' ? 1.5 : 0.05);
-            const falling = delta < -(metric.key === 'winRate' ? 1.5 : 0.05);
-            dir.textContent = rising ? '▲ sube' : falling ? '▼ baja' : '≈ estable';
-            dir.classList.toggle('is-up', rising);
-            dir.classList.toggle('is-down', falling);
-            item.append(dir);
+          item.append(head, slopeChart(metric, points));
+
+          if (points.length >= 2) {
+            const delta = points[points.length - 1]!.value - points[0]!.value;
+            const threshold = metric.key === 'winRate' ? 1.5 : 0.05;
+            const rising = delta > threshold;
+            const falling = delta < -threshold;
+            const badge = el('span', 'trend-item-delta');
+            const sign = delta > 0 ? '+' : delta < 0 ? '-' : '±';
+            badge.textContent = falling
+              ? `${sign}${metric.deltaFormat(Math.abs(delta))} vs. TODAS`
+              : rising
+                ? `${sign}${metric.deltaFormat(Math.abs(delta))} vs. TODAS`
+                : '≈ estable vs. TODAS';
+            badge.classList.toggle('is-up', rising);
+            badge.classList.toggle('is-down', falling);
+            item.append(badge);
           }
-          const scale = el('span', 'trend-item-scale');
-          scale.textContent = `5 · 10 · 20 · ${full.sampleSize}`;
-          item.append(scale);
           return item;
         }),
       );

@@ -5,6 +5,48 @@
       <span data-expanded-duration></span>
       <span data-expanded-played></span>
     </div>
+
+    <!--
+      DUELO (encargo Signature §17-19): el centro del análisis es
+      Tidusss vs el ADC rival, no dos cajas de equipo simétricas. Solo
+      datos de fin de partida ya presentes en `MatchParticipant`/
+      `RecentMatch` — sin @10 (eso vive solo en Timeline, bajo demanda).
+      Comparaciones puramente numéricas, nunca "ganaste línea"/"stomp".
+    -->
+    <div class="match-duel" data-match-duel>
+      <div data-duel-body>
+        <div class="duel-head">
+          <div class="duel-combatant duel-combatant--self">
+            <img class="duel-champion-art" data-duel-self-champion width="52" height="52" alt="" />
+            <div class="duel-combatant-identity">
+              <strong>Tidusss</strong>
+              <span data-duel-self-champion-name></span>
+            </div>
+          </div>
+          <span class="duel-vs">VS</span>
+          <div class="duel-combatant duel-combatant--enemy">
+            <div class="duel-combatant-identity duel-combatant-identity--enemy">
+              <strong data-duel-enemy-name></strong>
+              <span data-duel-enemy-champion-name></span>
+              <span class="encounter-badge" data-duel-enemy-badge hidden></span>
+            </div>
+            <img class="duel-champion-art" data-duel-enemy-champion width="52" height="52" alt="" />
+          </div>
+        </div>
+        <ul class="duel-compare" data-duel-compare aria-label="Comparativa Tidusss vs ADC rival"></ul>
+        <div class="duel-items">
+          <div class="duel-items-row duel-items-row--self" data-duel-self-items aria-label="Objetos de Tidusss"></div>
+          <span class="duel-items-label">Objetos</span>
+          <div class="duel-items-row duel-items-row--enemy" data-duel-enemy-items aria-label="Objetos del rival"></div>
+        </div>
+      </div>
+      <p class="duel-empty" data-duel-empty hidden>Riot no reportó la posición del ADC rival en esta partida — sin duelo identificable.</p>
+    </div>
+
+    <div class="profile-subhead match-teams-head">
+      <h3>Resto de la partida</h3>
+      <small>10 jugadores, contexto de equipo</small>
+    </div>
     <div class="match-teams">
       <section data-blue-section aria-label="Primer equipo">
         <header>
