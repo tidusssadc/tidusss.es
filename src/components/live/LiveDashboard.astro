@@ -83,9 +83,51 @@ import { resolvedMatchVideoContent } from '../../lib/resolved-match-video-conten
   <div class="live-container live-stack">
     <LiveGameModule />
 
-    <div class="control-grid control-grid--top">
+    <!--
+      HERO PANEL (Art Direction Ultimate §6): identidad + sesión + evolución
+      como UN sistema, no dos rectángulos sueltos uno al lado del otro. Un
+      solo contenedor con divisores internos en vez de dos `.live-module`
+      independientes — el rango/LP tiene tratamiento de "hero data" (§7), la
+      sesión se lee como una micro-historia con pips W/L (§8, derivados de
+      `today.matches`, sin llamadas Riot nuevas), y la evolución de LP vive
+      pegada a esa misma narrativa en vez de aislada.
+    -->
+    <div class="hero-panel" data-hero-panel>
+      <div class="hero-identity">
+        <div class="hero-crest-wrap">
+          <img
+            class="hero-crest"
+            data-rank-crest-hero
+            width="64"
+            height="64"
+            alt=""
+            aria-hidden="true"
+            decoding="async"
+            hidden
+          />
+        </div>
+        <div class="hero-rank">
+          <strong data-rank-hero class="hero-tier data-skeleton data-skeleton--line" aria-label="Actualizando rango">&nbsp;</strong>
+          <span data-lp-hero class="hero-lp data-skeleton data-skeleton--line" aria-hidden="true">&nbsp;</span>
+        </div>
+        <p class="hero-account">
+          <strong data-riot-id-hero>Tidusss#FFX</strong><span>EUW · Solo/Duo</span>
+        </p>
+        <dl class="hero-figures">
+          <div data-hero-peak-row hidden>
+            <dt>Pico observado</dt>
+            <dd data-hero-peak></dd>
+          </div>
+          <div data-hero-session-row hidden>
+            <dt>Sesión de hoy</dt>
+            <dd data-hero-session></dd>
+          </div>
+        </dl>
+        <ol class="hero-pips" data-session-pips aria-label="Resultados de la sesión de hoy"></ol>
+      </div>
+
       <section
-        class="live-module session-module"
+        class="hero-session"
         aria-labelledby="session-title"
         data-session-module
       >
@@ -402,26 +444,38 @@ import { resolvedMatchVideoContent } from '../../lib/resolved-match-video-conten
     else historyChampion = '';
   };
 
-  // --- Command bar ---
+  // --- Command bar + hero identity (mismo dato, dos lecturas: la barra
+  // sticky es utilidad de contexto; el hero es el "MASTER 554 LP" con peso
+  // real que pide el encargo §7 — ninguna de las dos inventa nada nuevo). ---
   const renderCommandBar = () => {
     if (!riotData) return;
     const { profile, ranked, today } = riotData;
     text('[data-riot-id]', profile.riotId);
+    text('[data-riot-id-hero]', profile.riotId);
     unskeleton('[data-rank]');
     unskeleton('[data-lp]');
+    unskeleton('[data-rank-hero]');
+    unskeleton('[data-lp-hero]');
     root?.querySelector('[data-rank]')?.classList.remove('live-stat-fallback');
+    root?.querySelector('[data-rank-hero]')?.classList.remove('live-stat-fallback');
     text('[data-rank]', ranked.tier ?? 'Sin clasificación');
+    text('[data-rank-hero]', ranked.tier ?? 'Sin clasificación');
     if (ranked.leaguePoints === undefined) {
       text('[data-lp]', '');
+      text('[data-lp-hero]', '');
       visible('[data-lp]', false);
+      visible('[data-lp-hero]', false);
     } else {
       visible('[data-lp]', true);
+      visible('[data-lp-hero]', true);
       text('[data-lp]', `${ranked.leaguePoints} LP`);
+      text('[data-lp-hero]', `${ranked.leaguePoints}`);
     }
 
-    const crest = root?.querySelector<HTMLImageElement>('[data-rank-crest]');
     const rankAsset = rankAssetFor(ranked.tier);
-    if (crest) {
+    for (const selector of ['[data-rank-crest]', '[data-rank-crest-hero]']) {
+      const crest = root?.querySelector<HTMLImageElement>(selector);
+      if (!crest) continue;
       crest.hidden = !rankAsset;
       if (rankAsset && crest.src !== new URL(rankAsset.src, location.href).href)
         crest.src = rankAsset.src;
@@ -436,25 +490,25 @@ import { resolvedMatchVideoContent } from '../../lib/resolved-match-video-conten
         ? undefined
         : { observedAt: riotData.updatedAt, tier: ranked.tier, rank: ranked.rank, leaguePoints: ranked.leaguePoints },
     );
+    const sessionValueText = !sessionDelta
+      ? 'pendiente de histórico'
+      : sessionDelta.tierChanged
+        ? `${sessionDelta.fromLabel} → ${sessionDelta.toLabel}`
+        : `${sessionDelta.delta >= 0 ? '+' : ''}${sessionDelta.delta} LP`;
     if (today.games === 0) {
       visible('[data-cb-session]', false);
-    } else if (sessionDelta) {
-      visible('[data-cb-session]', true);
-      text(
-        '[data-cb-session-value]',
-        sessionDelta.tierChanged
-          ? `${sessionDelta.fromLabel} → ${sessionDelta.toLabel}`
-          : `${sessionDelta.delta >= 0 ? '+' : ''}${sessionDelta.delta} LP`,
-      );
-      root
-        ?.querySelector('[data-cb-session]')
-        ?.classList.toggle('cb-fact--pos', sessionDelta.delta > 0);
-      root
-        ?.querySelector('[data-cb-session]')
-        ?.classList.toggle('cb-fact--neg', sessionDelta.delta < 0);
+      visible('[data-hero-session-row]', false);
     } else {
       visible('[data-cb-session]', true);
-      text('[data-cb-session-value]', 'pendiente de histórico');
+      visible('[data-hero-session-row]', true);
+      text('[data-cb-session-value]', sessionValueText);
+      text('[data-hero-session]', sessionValueText);
+      const positive = Boolean(sessionDelta) && sessionDelta!.delta > 0;
+      const negative = Boolean(sessionDelta) && sessionDelta!.delta < 0;
+      root?.querySelector('[data-cb-session]')?.classList.toggle('cb-fact--pos', positive);
+      root?.querySelector('[data-cb-session]')?.classList.toggle('cb-fact--neg', negative);
+      root?.querySelector('[data-hero-session-row]')?.classList.toggle('is-pos', positive);
+      root?.querySelector('[data-hero-session-row]')?.classList.toggle('is-neg', negative);
     }
 
     if (today.streak && today.streak.games >= 2) {
@@ -486,15 +540,43 @@ import { resolvedMatchVideoContent } from '../../lib/resolved-match-video-conten
   const renderRankHistoryFacts = (summary: RankEvolutionSummary) => {
     if (!summary.available) {
       visible('[data-cb-peak]', false);
+      visible('[data-hero-peak-row]', false);
       return;
     }
     rankPoints = summary.points;
     if (summary.peak) {
+      const peakLabel = formatRankLabel(summary.peak.tier, summary.peak.rank);
       visible('[data-cb-peak]', true);
-      text('[data-cb-peak-value]', formatRankLabel(summary.peak.tier, summary.peak.rank));
+      visible('[data-hero-peak-row]', true);
+      text('[data-cb-peak-value]', peakLabel);
+      text('[data-hero-peak]', peakLabel);
     }
-    // La barra de comando puede pintar el Δ de sesión ahora que hay puntos.
+    // La barra de comando y el hero pueden pintar el Δ de sesión ahora que hay puntos.
     renderCommandBar();
+  };
+
+  // --- Micro-secuencia W/L de la sesión (encargo Art Direction §8): los
+  // mismos `today.matches` que ya alimentan el resto de "Sesión de hoy",
+  // en orden cronológico (la primera partida del día a la izquierda) — 0
+  // llamadas Riot nuevas, mismo lenguaje de color que Match History. ---
+  const renderSessionPips = () => {
+    const list = root?.querySelector<HTMLElement>('[data-session-pips]');
+    if (!list) return;
+    const matches = riotData?.today.matches ?? [];
+    if (!matches.length) {
+      list.hidden = true;
+      list.replaceChildren();
+      return;
+    }
+    list.hidden = false;
+    list.replaceChildren(
+      ...[...matches].reverse().map((match) => {
+        const item = document.createElement('li');
+        item.className = match.win ? 'is-victory' : 'is-defeat';
+        item.title = `${match.win ? 'Victoria' : 'Derrota'} · ${match.championName}`;
+        return item;
+      }),
+    );
   };
 
   // --- Sesión de hoy ---
@@ -506,6 +588,7 @@ import { resolvedMatchVideoContent } from '../../lib/resolved-match-video-conten
     visible('[data-session-body]', hasGames && !riotFailed);
     visible('[data-session-empty]', !hasGames && !riotFailed);
     visible('[data-riot-error]', riotFailed);
+    renderSessionPips();
     if (riotFailed) return;
 
     if (!hasGames) {
@@ -654,19 +737,27 @@ import { resolvedMatchVideoContent } from '../../lib/resolved-match-video-conten
 
   const applyRiotFailure = () => {
     riotFailed = true;
-    const rankNode = root?.querySelector('[data-rank]');
-    rankNode?.classList.remove('data-skeleton', 'data-skeleton--line');
-    rankNode?.classList.add('live-stat-fallback');
+    for (const selector of ['[data-rank]', '[data-rank-hero]']) {
+      const rankNode = root?.querySelector(selector);
+      rankNode?.classList.remove('data-skeleton', 'data-skeleton--line');
+      rankNode?.classList.add('live-stat-fallback');
+      text(selector, 'Riot no disponible');
+    }
     unskeleton('[data-lp]');
+    unskeleton('[data-lp-hero]');
     unskeleton('[data-riot-updated]');
-    text('[data-rank]', 'Riot no disponible');
     text('[data-lp]', '');
+    text('[data-lp-hero]', '');
     visible('[data-lp]', false);
+    visible('[data-lp-hero]', false);
     visible('[data-cb-peak]', false);
+    visible('[data-hero-peak-row]', false);
     visible('[data-cb-session]', false);
+    visible('[data-hero-session-row]', false);
     visible('[data-cb-streak]', false);
     visible('[data-cb-last]', false);
     visible('[data-rank-crest]', false);
+    visible('[data-rank-crest-hero]', false);
     text('[data-riot-updated]', 'Reintentando…');
     renderSession();
     renderHistory();

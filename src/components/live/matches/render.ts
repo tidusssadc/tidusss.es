@@ -191,6 +191,10 @@ const fillTeam = (
   formatNumber: (value: number) => string,
 ) => {
   setText(card, `[data-${side}-result]`, team?.win ? 'Victoria' : 'Derrota');
+  // Mismo lenguaje visual de victoria/derrota que la fila colapsada
+  // (encargo Art Direction §15) — un atributo, no una clase por rama.
+  const section = query<HTMLElement>(card, `[data-${side}-section]`);
+  if (section && team) section.dataset.teamResult = team.win ? 'win' : 'loss';
   setText(
     card,
     `[data-${side}-objectives]`,

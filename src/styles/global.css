@@ -2111,11 +2111,54 @@
 }
 
 /* Tidusss Live: data-dense without adopting dashboard chrome. */
+/* =========================================================================
+   ART DIRECTION — "Tidusss Competitive Editorial" (encargo Art Direction
+   Ultimate). Sistema de tokens de /competitivo: no reemplaza la paleta
+   global (oro = actúa aquí, azul = interactivo, RULES.md/DESIGN.md), la
+   EXTIENDE con los tonos de victoria/derrota y niveles de superficie que
+   V4 no tenía — sin ellos, todo vivía en el mismo plano negro con borde
+   fino. Con moderación: superficies muy próximas entre sí, nunca
+   glassmorphism, nunca un halo por elemento.
+   ========================================================================= */
 .live-page {
+  --lp-bg: #060913;
+  --lp-surface: rgb(255 255 255 / 2%);
+  --lp-surface-raised: rgb(255 255 255 / 4.5%);
+  --lp-border: rgb(255 255 255 / 8%);
+  --lp-border-soft: rgb(255 255 255 / 6%);
+  --lp-gold: #d6b56b;
+  --lp-gold-bright: #f2dcae;
+  --lp-gold-wash: rgb(214 181 107 / 7%);
+  --lp-blue: #278cff;
+  /* Victoria/derrota: reconocibles al instante, pero desaturados —
+     esports premium, nunca verde fosforito / rojo alarma (encargo §18). */
+  --lp-win: #7fb6da;
+  --lp-win-strong: #a9d3ec;
+  --lp-win-wash: rgb(127 182 218 / 12%);
+  --lp-loss: #d194a0;
+  --lp-loss-strong: #e6b7c0;
+  --lp-loss-wash: rgb(209 148 160 / 12%);
+  --lp-text: #f2f5fa;
+  --lp-text-soft: #97a3b6;
+  --lp-text-mute: #5c6980;
   min-height: 100vh;
   padding: 4.5rem 0 7rem;
-  background: #060913;
+  position: relative;
+  isolation: isolate;
+  background: var(--lp-bg);
   color: #fff;
+}
+/* Profundidad ambiental (encargo §20): dos veladuras muy tenues, fijas al
+   viewport de la página — nunca un `blur()` decorativo, solo gradiente. */
+.live-page::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(ellipse 62rem 42rem at 12% -8%, rgb(214 181 107 / 6%), transparent 62%),
+    radial-gradient(ellipse 54rem 44rem at 104% 18%, rgb(39 140 255 / 5%), transparent 58%);
+  content: '';
+  pointer-events: none;
 }
 /* Ancho de /competitivo (Rediseño V3 §11). Un producto data-rich usa más
    ancho que una página editorial. Base 92rem (margen real en 1440); en
@@ -2332,9 +2375,11 @@
 }
 
 /* =========================================================================
-   V4 · CONTROL GRID — grid asimétrico de desktop (encargo §24). Rompe la
-   pila de 5 capítulos: sesión + evolución arriba, forma por campeón +
-   rendimiento en medio, historial a ancho completo abajo.
+   CONTROL GRID — grid asimétrico de desktop (encargo §24). Rompe la pila de
+   capítulos: forma por campeón + rendimiento en medio, historial a ancho
+   completo abajo. La fila de arriba (sesión/evolución) ya no es un
+   `.control-grid` — es el `.hero-panel` de más abajo (encargo Art Direction
+   §6: "que parezcan parte del mismo sistema", no dos cajas sueltas).
    ========================================================================= */
 .control-grid {
   display: grid;
@@ -2342,17 +2387,9 @@
   align-items: start;
 }
 @media (min-width: 1024px) {
-  .control-grid--top {
-    grid-template-columns: 7fr 5fr;
-  }
   .control-grid--mid {
     grid-template-columns: 5fr 7fr;
   }
-}
-/* Sin histórico de rango (sin binding D1) el módulo de evolución se
-   auto-oculta — la sesión ocupa el ancho, sin hueco. */
-.control-grid--top:has([data-rank-evolution][hidden]) {
-  grid-template-columns: 1fr;
 }
 .control-grid > .live-module {
   height: 100%;
@@ -2360,9 +2397,10 @@
 }
 .live-module {
   min-width: 0;
-  border: 1px solid rgb(255 255 255 / 8%);
+  border: 1px solid var(--lp-border);
   padding: clamp(1.15rem, 2.4vw, 1.75rem);
-  background: rgb(255 255 255 / 1%);
+  background: var(--lp-surface);
+  box-shadow: inset 0 1px rgb(255 255 255 / 3%);
   transition:
     transform 240ms cubic-bezier(0.22, 1, 0.36, 1),
     border-color 240ms ease,
@@ -2371,7 +2409,7 @@
 @media (hover: hover) {
   .live-module:hover {
     border-color: rgb(214 181 107 / 17%);
-    background: rgb(255 255 255 / 1.5%);
+    background: var(--lp-surface-raised);
     transform: translate3d(0, -2px, 0);
   }
   /* En el grid, las dos columnas de una fila no se "levantan" (el lift
@@ -2424,11 +2462,168 @@
   font-size: 0.62rem;
 }
 /* =========================================================================
-   V4 · SESIÓN DE HOY — módulo de primera clase (encargo §5). "Mi sesión":
-   record, WR/KDA/CS·min/daño·min de hoy (DERIVADOS, 0 llamadas Riot), racha,
-   campeón del día e insights deterministas. Sesión = día local Europe/Madrid.
+   HERO PANEL — identidad + sesión + evolución como un solo sistema
+   (encargo Art Direction §6/§7). Reemplaza el `.control-grid--top` de V4
+   (dos `.live-module` con gap entre ellos) por UN contenedor con divisores
+   internos: el rango/LP es la pieza más grande del panel (hero data, §7),
+   la sesión se lee como micro-historia (pips W/L, §8) y la evolución vive
+   pegada a esa misma narrativa. Superficie ligeramente elevada
+   (`--lp-surface-raised`) para diferenciarlo del resto de módulos.
    ========================================================================= */
-.session-module .live-module-head {
+.hero-panel {
+  display: grid;
+  border: 1px solid var(--lp-border);
+  background: var(--lp-surface-raised);
+  box-shadow: inset 0 1px rgb(255 255 255 / 4%);
+}
+@media (min-width: 1024px) {
+  .hero-panel {
+    /* 3 columnas REALES — los divisores son bordes de las propias columnas
+       (`border-left`), no elementos de grid: con hijos-divisor de por medio
+       el grid los cuenta como columnas propias y rompe el reparto 3-en-fila. */
+    grid-template-columns: minmax(15rem, 17rem) minmax(0, 1fr) minmax(17rem, 1fr);
+  }
+  .hero-panel > .hero-session,
+  .hero-panel > .evo-module {
+    border-left: 1px solid var(--lp-border-soft);
+  }
+}
+/* --- Identidad: cresta + tier + LP con peso real, nunca "un texto más"
+   (encargo §7) --- */
+.hero-identity {
+  position: relative;
+  padding: clamp(1.15rem, 2.4vw, 1.6rem);
+  overflow: hidden;
+}
+.hero-crest-wrap {
+  position: relative;
+  width: fit-content;
+}
+/* Halo puntual — UNA sola vez en toda la página, sobre la pieza de datos
+   más importante (DESIGN.md: "las sombras llevan el color del elemento…
+   y son puntuales"). No es decoración genérica, es ceremonia de rango. */
+.hero-crest-wrap::before {
+  position: absolute;
+  inset: -40%;
+  z-index: 0;
+  background: radial-gradient(circle, rgb(214 181 107 / 22%), transparent 68%);
+  content: '';
+}
+.hero-crest {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: clamp(3rem, 6vw, 4rem);
+  height: auto;
+  filter: saturate(1.05);
+}
+.hero-crest[hidden] {
+  display: none;
+}
+.hero-rank {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  margin-top: 0.85rem;
+}
+.hero-tier {
+  color: var(--lp-text);
+  font-size: clamp(1.9rem, 4vw, 2.5rem);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+}
+.hero-tier.live-stat-fallback {
+  font-size: 1.05rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  text-transform: none;
+  color: var(--lp-text-soft);
+}
+.hero-lp {
+  color: var(--lp-gold);
+  font-size: clamp(1.2rem, 2.6vw, 1.55rem);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.hero-lp::after {
+  margin-left: 0.3rem;
+  color: rgb(214 181 107 / 55%);
+  font-size: 0.6rem;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+  content: 'LP';
+}
+.hero-lp[hidden] {
+  display: none;
+}
+.hero-account {
+  margin-top: 0.5rem;
+  color: var(--lp-text-mute);
+  font-size: 0.66rem;
+}
+.hero-account strong {
+  margin-right: 0.4rem;
+  color: var(--lp-text-soft);
+}
+.hero-figures {
+  display: grid;
+  gap: 0.55rem;
+  margin-top: 1.1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--lp-border-soft);
+}
+.hero-figures > div[hidden] {
+  display: none;
+}
+.hero-figures dt {
+  color: var(--lp-text-mute);
+  font-size: 0.54rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+.hero-figures dd {
+  margin-top: 0.12rem;
+  color: #c9d2e0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.hero-figures div.is-pos dd {
+  color: var(--lp-win-strong);
+}
+.hero-figures div.is-neg dd {
+  color: var(--lp-loss-strong);
+}
+/* --- Pips de sesión: W/L de hoy en orden cronológico, mismo lenguaje de
+   color que Match History (encargo §8/§14: "coherencia visual", no
+   interacción). Solo derivado de `today.matches`, 0 llamadas nuevas. --- */
+.hero-pips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 1rem;
+}
+.hero-pips[hidden] {
+  display: none;
+}
+.hero-pips li {
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 50%;
+  background: var(--lp-win);
+}
+.hero-pips li.is-defeat {
+  background: var(--lp-loss);
+}
+/* --- Columna de sesión dentro del hero: sin chrome propio de `.live-module`
+   (ya lo aporta `.hero-panel`) --- */
+.hero-session {
+  min-width: 0;
+  padding: clamp(1.15rem, 2.4vw, 1.6rem);
+}
+.hero-session .live-module-head {
   margin-bottom: 0.4rem;
 }
 .session-headline {
@@ -2513,11 +2708,23 @@
 }
 
 /* =========================================================================
-   V4 · EVOLUCIÓN LP — módulo propio junto a la sesión (encargo §6). Ahora
-   que D1 está aprovisionada, la evolución de LP debe apetecer mirarla.
+   EVOLUCIÓN LP — tercera columna del hero panel (encargo §6/§9). Ahora que
+   D1 está aprovisionada, la evolución de LP debe apetecer mirarla: sin
+   chrome propio (ya lo aporta `.hero-panel`), gráfico más grande.
    ========================================================================= */
+.evo-module {
+  min-width: 0;
+  padding: clamp(1.15rem, 2.4vw, 1.6rem);
+}
 .evo-module[hidden] {
   display: none;
+}
+/* Sin histórico de rango (sin binding D1) la evolución se auto-oculta — la
+   sesión se reparte el ancho con la identidad, sin hueco muerto. */
+@media (min-width: 1024px) {
+  .hero-panel:has(.evo-module[hidden]) {
+    grid-template-columns: minmax(15rem, 17rem) minmax(0, 1fr);
+  }
 }
 .rank-evolution-empty {
   margin-top: 1rem;
@@ -2816,8 +3023,8 @@
 /* La partida más reciente cuando llega una nueva con la página abierta —
    marca sutil y temporal (encargo §8), respeta prefers-reduced-motion. */
 .match-row-item[data-newest] {
-  background: rgb(214 181 107 / 6%);
-  box-shadow: inset 3px 0 0 #d6b56b;
+  background: var(--lp-gold-wash);
+  box-shadow: inset 4px 0 0 var(--lp-gold);
 }
 @media (prefers-reduced-motion: no-preference) {
   .match-row-item[data-newest] {
@@ -2826,7 +3033,7 @@
   @keyframes match-newest-fade {
     0%,
     55% {
-      background: rgb(214 181 107 / 9%);
+      background: rgb(214 181 107 / 11%);
     }
     100% {
       background: rgb(214 181 107 / 0%);
@@ -2834,8 +3041,13 @@
   }
 }
 
-/* --- Match row (Page Design Rework §5-§13): una fila densa, no una card
-   completa. Nivel 1 de profundidad — solo lo que se escanea en <2s. --- */
+/* =========================================================================
+   MATCH ROW — "una partida, no un registro" (encargo Art Direction §13).
+   Antes: 3px de acento + texto. Ahora: veladura de resultado desde el
+   borde, retrato de campeón con anillo W/L, marcador de resultado, LP como
+   chip con fondo. Sigue siendo una FILA densa (~90-140px), no una card —
+   la densidad de Match History no se negocia, solo su lenguaje visual.
+   ========================================================================= */
 .live-match-list {
   margin-top: 1.25rem;
   display: grid;
@@ -2856,7 +3068,7 @@
      confirmado en /competitivo a 320-375px, corregido por estar acotado a
      Match History, nunca a un componente global). */
   min-width: 0;
-  border-top: 1px solid rgb(255 255 255 / 6%);
+  border-top: 1px solid var(--lp-border-soft);
   opacity: 0;
   transform: translate3d(0, 6px, 0);
   transition:
@@ -2865,7 +3077,7 @@
   transition-delay: calc(var(--match-index, 0) * 40ms);
 }
 .match-row-item:last-child {
-  border-bottom: 1px solid rgb(255 255 255 / 6%);
+  border-bottom: 1px solid var(--lp-border-soft);
 }
 .match-row-item.is-ready {
   opacity: 1;
@@ -2876,7 +3088,10 @@
 }
 @media (hover: hover) {
   .match-row-item:hover {
-    background: rgb(255 255 255 / 1.5%);
+    background: rgb(255 255 255 / 2%);
+  }
+  .match-row-item:hover .match-row-champion {
+    transform: scale(1.03);
   }
 }
 .match-row {
@@ -2885,7 +3100,22 @@
   align-items: center;
   gap: 1.1rem;
   min-height: 4.5rem;
-  padding: 0.7rem 0.9rem;
+  padding: 0.7rem 1rem 0.7rem 1.15rem;
+}
+/* Veladura de resultado: gradiente muy sutil desde el borde izquierdo,
+   nunca un fondo plano — el color reconoce el resultado sin gritarlo
+   (encargo §13/§18: reconocible al instante, nunca neón/alarma). */
+.match-row-wash {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+.is-victory .match-row-wash {
+  background: linear-gradient(90deg, rgb(127 182 218 / 16%), transparent 46%);
+}
+.is-defeat .match-row-wash {
+  background: linear-gradient(90deg, rgb(209 148 160 / 16%), transparent 46%);
 }
 /* Dos grupos internos (identidad / métricas) en vez de una fila plana de
    11 hijos directos — en desktop se ven como una sola fila (mismo gap,
@@ -2894,13 +3124,17 @@
    compacto de 2-3 filas", ver media query 767px) sin depender de que el
    contenido se rompa "solo" en el sitio correcto. */
 .match-row-top {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
-  gap: 0.7rem;
+  gap: 0.75rem;
   flex: 0 1 20rem;
   min-width: 0;
 }
 .match-row-meta {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: baseline;
   gap: 1.5rem;
@@ -2909,81 +3143,114 @@
 .match-row-hit {
   position: absolute;
   inset: 0;
+  z-index: 2;
   cursor: pointer;
 }
 .match-row-hit:focus-visible {
-  outline: 2px solid #d6b56b;
+  outline: 2px solid var(--lp-gold);
   outline-offset: -2px;
 }
 .match-row-accent {
+  position: relative;
+  z-index: 1;
   flex: 0 0 auto;
   align-self: stretch;
-  width: 3px;
-  background: #72acc5;
-  opacity: 0.75;
+  width: 4px;
+  background: var(--lp-win);
 }
 .is-defeat .match-row-accent {
-  background: #c48b94;
+  background: var(--lp-loss);
+}
+.match-row-portrait {
+  position: relative;
+  flex: 0 0 auto;
 }
 .match-row-champion {
-  flex: 0 0 auto;
-  width: 44px;
-  height: 44px;
-  border: 1px solid rgb(255 255 255 / 10%);
+  display: block;
+  width: 56px;
+  height: 56px;
+  border: 2px solid var(--lp-border);
   background: #0d121d;
   object-fit: cover;
+  transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.is-victory .match-row-champion {
+  border-color: rgb(127 182 218 / 45%);
+}
+.is-defeat .match-row-champion {
+  border-color: rgb(209 148 160 / 45%);
 }
 .match-row-identity {
+  position: relative;
+  z-index: 1;
   flex: 0 1 8rem;
   min-width: 0;
 }
 .match-row-identity strong {
   display: block;
   overflow: hidden;
-  font-size: 0.82rem;
+  font-size: 0.86rem;
+  font-weight: 600;
   letter-spacing: -0.01em;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .match-row-identity small {
   display: block;
-  margin-top: 0.15rem;
-  color: #647186;
-  font-size: 0.56rem;
-  text-transform: capitalize;
+  margin-top: 0.18rem;
+  color: var(--lp-text-mute);
+  font-size: 0.57rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
 }
 .match-row-result {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
   flex: 0 0 auto;
-  min-width: 4.6rem;
+  min-width: 4.8rem;
+}
+.match-row-result-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-bottom: 0.3rem;
+  border-radius: 50%;
+  background: var(--lp-win);
+}
+.is-defeat .match-row-result-dot {
+  background: var(--lp-loss);
 }
 .match-row-result strong {
-  display: block;
-  font-size: 0.66rem;
+  font-size: 0.68rem;
   font-weight: 800;
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 .is-victory .match-row-result strong {
-  color: #8ec1d6;
+  color: var(--lp-win-strong);
 }
 .is-defeat .match-row-result strong {
-  color: #d0a0a7;
+  color: var(--lp-loss-strong);
 }
 .match-row-result span {
   display: block;
-  margin-top: 0.2rem;
-  color: #59667a;
-  font-size: 0.56rem;
+  margin-top: 0.22rem;
+  color: var(--lp-text-mute);
+  font-size: 0.57rem;
 }
 .match-row-kda {
+  position: relative;
+  z-index: 1;
   flex: 0 0 auto;
   min-width: 6.75rem;
 }
 .match-row-kda strong {
   display: block;
-  color: #eef2f8;
-  font-size: 1.05rem;
-  font-weight: 640;
+  color: var(--lp-text);
+  font-size: 1.1rem;
+  font-weight: 660;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
   white-space: nowrap;
@@ -2991,11 +3258,13 @@
 .match-row-kda span {
   display: block;
   margin-top: 0.2rem;
-  color: #d6b56b;
-  font-size: 0.56rem;
+  color: var(--lp-gold);
+  font-size: 0.58rem;
   letter-spacing: 0.03em;
 }
 .match-row-metric {
+  position: relative;
+  z-index: 1;
   flex: 0 0 auto;
   min-width: 3.4rem;
   text-align: center;
@@ -3003,18 +3272,20 @@
 .match-row-metric strong {
   display: block;
   color: #cbd5e1;
-  font-size: 0.82rem;
+  font-size: 0.84rem;
   font-variant-numeric: tabular-nums;
 }
 .match-row-metric span {
   display: block;
-  margin-top: 0.15rem;
-  color: #4f5c70;
-  font-size: 0.5rem;
+  margin-top: 0.16rem;
+  color: var(--lp-text-mute);
+  font-size: 0.51rem;
   letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 .match-row-duration {
+  position: relative;
+  z-index: 1;
   flex: 0 0 auto;
   min-width: 3.6rem;
   text-align: center;
@@ -3022,45 +3293,59 @@
 .match-row-duration strong {
   display: block;
   color: #9aa6b8;
-  font-size: 0.72rem;
+  font-size: 0.74rem;
   font-variant-numeric: tabular-nums;
 }
 .match-row-duration time {
   display: block;
-  margin-top: 0.15rem;
-  color: #4f5c70;
-  font-size: 0.54rem;
+  margin-top: 0.16rem;
+  color: var(--lp-text-mute);
+  font-size: 0.55rem;
 }
+/* LP como chip con fondo — resultado secundario fuerte, no solo texto
+   coloreado (encargo §13: "LP como resultado secundario fuerte"). */
 .match-row-lp {
+  position: relative;
+  z-index: 1;
   flex: 0 0 auto;
-  min-width: 3.6rem;
+  min-width: 3.9rem;
   text-align: right;
 }
 .match-row-lp strong {
-  display: block;
-  color: #69768c;
-  font-size: 0.82rem;
-  font-weight: 700;
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  border-radius: 2px;
+  color: var(--lp-text-mute);
+  font-size: 0.78rem;
+  font-weight: 750;
   font-variant-numeric: tabular-nums;
 }
 [data-lp-positive] .match-row-lp strong {
-  color: #8ec1d6;
+  color: var(--lp-win-strong);
+  background: var(--lp-win-wash);
 }
 [data-lp-negative] .match-row-lp strong {
-  color: #d0a0a7;
+  color: var(--lp-loss-strong);
+  background: var(--lp-loss-wash);
 }
 [data-lp-pending] .match-row-lp strong {
-  color: #4f5c70;
+  padding: 0.2rem 0;
+  color: var(--lp-text-mute);
   font-size: 0.52rem;
   font-weight: 500;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+  background: none;
 }
 .match-row-items {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex: 1 1 auto;
   gap: 2px;
   min-width: 0;
+  padding-left: 1rem;
+  border-left: 1px solid var(--lp-border-soft);
   overflow: hidden;
 }
 .match-row-items i {
@@ -3079,23 +3364,35 @@
   height: 100%;
   object-fit: cover;
 }
+/* Insignia de vídeo: ahora una esquina sobre el retrato, no un icono
+   suelto entre las métricas (encargo §13). */
 .match-row-video {
-  flex: 0 0 auto;
-  width: 1.1rem;
-  height: 1.1rem;
-  color: #d6b56b;
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.15rem;
+  height: 1.15rem;
+  border: 2px solid var(--lp-bg);
+  border-radius: 50%;
+  background: var(--lp-gold);
+  color: #0c1019;
 }
 .match-row-video[hidden] {
   display: none;
 }
 .match-row-video svg {
-  width: 100%;
-  height: 100%;
+  width: 0.6rem;
+  height: 0.6rem;
 }
 .match-row-video path {
   fill: currentColor;
 }
 .match-row-chevron {
+  position: relative;
+  z-index: 1;
   flex: 0 0 auto;
   width: 0.4rem;
   height: 0.4rem;
@@ -3320,7 +3617,23 @@
 .match-expanded[data-open] .match-expanded-inner {
   padding-top: 1.5rem;
 }
-.match-expanded-summary,
+/* =========================================================================
+   MATCH ANALYSIS PANEL (encargo Art Direction §15) — de "lista" a "vamos a
+   analizar esta partida". Cabecera con presencia real, cada equipo con su
+   propio tinte de resultado (mismo lenguaje que la fila colapsada), sin
+   convertir cada dato en una caja aparte.
+   ========================================================================= */
+.match-expanded-summary {
+  display: flex;
+  gap: 1.1rem;
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid var(--lp-border-soft);
+  color: var(--lp-text-soft);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
 .match-objectives {
   display: flex;
   gap: 1rem;
@@ -3334,10 +3647,18 @@
   margin-top: 1.25rem;
 }
 .match-teams > section {
+  position: relative;
   min-width: 0;
-  border: 1px solid rgb(255 255 255 / 7%);
+  border: 1px solid var(--lp-border-soft);
+  border-top: 3px solid transparent;
   padding: clamp(1rem, 2vw, 1.35rem);
   background: rgb(255 255 255 / 0.45%);
+}
+[data-team-result='win'] {
+  border-top-color: var(--lp-win);
+}
+[data-team-result='loss'] {
+  border-top-color: var(--lp-loss);
 }
 .match-teams header {
   display: flex;
@@ -3345,15 +3666,24 @@
   gap: 1rem;
 }
 .match-teams header strong {
-  font-size: 0.78rem;
+  font-size: 0.8rem;
+  font-weight: 700;
 }
-.match-teams header span,
-.match-objectives {
-  color: #6c798d;
+.match-teams header span {
   font-size: 0.6rem;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+[data-team-result='win'] header span {
+  color: var(--lp-win-strong);
+}
+[data-team-result='loss'] header span {
+  color: var(--lp-loss-strong);
 }
 .match-objectives {
   margin-top: 0.45rem;
+  color: #6c798d;
 }
 .match-teams ol {
   margin-top: 1rem;
@@ -3390,15 +3720,16 @@
    dorado tenue, sin fondo. */
 .encounter-badge {
   flex: 0 0 auto;
-  padding: 0.08rem 0.38rem;
-  border: 1px solid rgb(214 181 107 / 32%);
+  padding: 0.1rem 0.42rem;
+  border: 1px solid rgb(214 181 107 / 38%);
   border-radius: 999px;
-  color: #cbb178;
+  color: #f2dcae;
   font-size: 0.5rem;
-  font-weight: 700;
-  letter-spacing: 0.03em;
+  font-weight: 750;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   white-space: nowrap;
+  background: rgb(214 181 107 / 10%);
 }
 .encounter-badge[hidden] {
   display: none;
@@ -3411,26 +3742,29 @@
   font-size: 0.52rem;
   letter-spacing: 0.02em;
 }
-/* --- Fila de Match History: "vs [icono rival] [PRO]" (§9/§10) --- */
+/* --- Matchup de la fila: "[yo] VS [rival]" como un duo real, no una
+   nota al pie (encargo Art Direction §13: "matchup visual"). --- */
 .match-row-vs {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.45rem;
   flex: 0 0 auto;
 }
 .match-row-vs[hidden] {
   display: none;
 }
 .match-row-vs-label {
-  color: #59667a;
-  font-size: 0.54rem;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  color: var(--lp-text-mute);
+  font-size: 0.52rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
 }
 .match-row-vs-champion {
-  width: 1.35rem;
-  height: 1.35rem;
-  border: 1px solid rgb(255 255 255 / 10%);
+  width: 2rem;
+  height: 2rem;
+  border: 2px solid var(--lp-border);
   background: #0d121d;
   object-fit: cover;
 }
@@ -3641,13 +3975,16 @@
   stroke-width: 1;
 }
 .timeline-chart-line-self {
-  stroke: #d6b56b;
-  stroke-width: 2;
+  stroke: var(--lp-gold);
+  stroke-width: 2.25;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 .timeline-chart-line-rival {
   stroke: #6c7c95;
-  stroke-width: 2;
+  stroke-width: 1.75;
   stroke-dasharray: 4 3;
+  stroke-linecap: round;
 }
 .timeline-chart-legend-self {
   fill: #d6b56b;
@@ -3677,10 +4014,11 @@
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  border-left: 2px solid rgb(255 255 255 / 12%);
-  padding: 0.3rem 0 0.3rem 0.75rem;
+  border-left: 2px solid rgb(255 255 255 / 14%);
+  padding: 0.35rem 0 0.35rem 0.85rem;
   color: #a9b3c2;
   font-size: 0.64rem;
+  transition: border-color 160ms ease;
 }
 .timeline-moment time {
   flex-shrink: 0;
@@ -3731,73 +4069,91 @@
   font-size: 0.56rem;
 }
 /* =========================================================================
-   V4 · RENDIMIENTO RECIENTE — como TENDENCIA, no como 4 cajas (encargo §15).
-   Para cada métrica: valor actual + mini-sparkline de 5/10/20/muestra +
-   dirección (sube / baja / estable). Solo descriptivo, sin "form score".
+   RENDIMIENTO RECIENTE — "trend lanes" (encargo Art Direction §12): un
+   carril por métrica, ancho completo, alineados en la misma cuadrícula —
+   una historia de tendencia, no cuatro tarjetas sueltas ni cuatro
+   mini-gráficos flotando. Solo descriptivo, sin "form score" inventado.
    ========================================================================= */
 .recent-performance .performance-loading {
   margin-top: 1.25rem;
 }
 .trend-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem 1.5rem;
+  gap: 0;
   margin-top: 1rem;
 }
 .trend-item {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: 8rem minmax(0, 1fr) auto;
+  grid-template-rows: auto auto;
   align-items: center;
-  gap: 0.35rem 0.7rem;
-  padding-bottom: 0.85rem;
-  border-bottom: 1px solid rgb(255 255 255 / 6%);
+  column-gap: 1.25rem;
+  padding: 0.7rem 0;
+  border-bottom: 1px solid var(--lp-border-soft);
+}
+.trend-item:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
 }
 .trend-item-head {
+  grid-column: 1;
+  grid-row: 1;
   display: flex;
   align-items: baseline;
   gap: 0.5rem;
 }
 .trend-item-head strong {
-  color: #f1f4f9;
-  font-size: 1.3rem;
-  font-weight: 640;
+  color: var(--lp-text);
+  font-size: 1.35rem;
+  font-weight: 660;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
 }
 .trend-item-label {
   color: #626f84;
-  font-size: 0.56rem;
+  font-size: 0.57rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
+/* El carril: ancho completo, con una línea base sutil que actúa de
+   referencia (no un eje numérico — sigue siendo un sparkline honesto). */
 .trend-spark {
-  grid-row: 1 / span 2;
   grid-column: 2;
-  width: 5rem;
-  height: 1.8rem;
+  grid-row: 1 / span 2;
+  width: 100%;
+  height: 2.4rem;
+  background-image: linear-gradient(rgb(255 255 255 / 7%) 1px, transparent 1px);
+  background-position: 0 100%;
+  background-size: 100% 1px;
+  background-repeat: no-repeat;
 }
 .trend-spark-line {
   fill: none;
-  stroke: #d6b56b;
-  stroke-width: 1.5;
+  stroke: var(--lp-gold);
+  stroke-width: 1.75;
   stroke-linecap: round;
   stroke-linejoin: round;
   vector-effect: non-scaling-stroke;
 }
 .trend-item-dir {
-  color: #7e8a9d;
-  font-size: 0.58rem;
-  font-weight: 600;
+  grid-column: 3;
+  grid-row: 1;
+  color: var(--lp-text-soft);
+  font-size: 0.6rem;
+  font-weight: 650;
+  text-align: right;
+  white-space: nowrap;
 }
 .trend-item-dir.is-up {
-  color: #8ec1d6;
+  color: var(--lp-win-strong);
 }
 .trend-item-dir.is-down {
-  color: #d0a0a7;
+  color: var(--lp-loss-strong);
 }
 .trend-item-scale {
   grid-column: 1;
-  color: #4f5c70;
+  grid-row: 2;
+  color: var(--lp-text-mute);
   font-size: 0.5rem;
   letter-spacing: 0.05em;
 }
@@ -3944,12 +4300,12 @@
 .pool-hero > .pool-card:not(.pool-card--feature) {
   grid-column: 2;
   display: grid;
-  grid-template-columns: 2.25rem minmax(0, 1fr) auto;
+  grid-template-columns: 2.75rem minmax(0, 1fr) auto;
   align-items: center;
-  gap: 0.7rem;
+  gap: 0.75rem;
   min-width: 0;
-  padding: 0.5rem 0;
-  border-top: 1px solid rgb(255 255 255 / 6%);
+  padding: 0.55rem 0;
+  border-top: 1px solid var(--lp-border-soft);
 }
 .pool-hero > .pool-card--feature + .pool-card,
 .pool-hero > .pool-card:not(.pool-card--feature):first-child {
@@ -3957,10 +4313,16 @@
 }
 .pool-card-art {
   flex-shrink: 0;
-  width: 2.25rem;
-  height: 2.25rem;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 1px solid var(--lp-border);
   border-radius: 4px;
   background: #0d121d;
+}
+/* El WR es el número que importa de un vistazo — mismo trato de "dato que
+   actúa" que el resto del sitio (dorado), no un valor más entre cuatro. */
+.pool-card-stats > div:first-child strong {
+  color: var(--lp-gold-bright);
 }
 .pool-card-body {
   min-width: 0;
@@ -4335,9 +4697,17 @@
   .session-figs {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  .trend-grid,
   .perf-context-grid {
     grid-template-columns: 1fr;
+  }
+  /* Carriles de tendencia en 375: la etiqueta se acorta y el carril ocupa
+     el resto — misma lógica, menos ancho. */
+  .trend-item {
+    grid-template-columns: 5.4rem minmax(0, 1fr) auto;
+    column-gap: 0.75rem;
+  }
+  .trend-item-head strong {
+    font-size: 1.15rem;
   }
   .history-filters {
     width: 100%;
@@ -4452,12 +4822,16 @@
   .pool-hero {
     grid-template-columns: 1fr;
   }
-  .pool-hero li.pool-card:first-child:not(:only-child) {
-    grid-column: auto;
+  /* Una sola columna real: sin esto, las filas secundarias conservan
+     `grid-column: 2` (regla de desktop, más específica que un simple
+     `.pool-hero > .pool-card` — hay que igualar esa especificidad, no solo
+     venir después) y el navegador crea una columna implícita estrecha: el
+     campeón dominante queda aplastado a la izquierda (hallazgo real, Art
+     Direction Ultimate, QA 375px). Sin "span 2" filas, "grid-row: auto"
+     evita el hueco que dejaría debajo del campeón principal (Visual Pass §31). */
+  .pool-hero > .pool-card:not(.pool-card--feature) {
+    grid-column: 1;
   }
-  /* Con una sola columna, "span 2" filas dejaría una fila vacía debajo
-     del campeón principal — nunca se convierte en una card de 600px,
-     pero tampoco dejamos un hueco (encargo Visual Pass §31). */
   .pool-card--feature {
     grid-row: auto;
     padding: 1.1rem;
@@ -4506,7 +4880,7 @@
   }
   .match-row-meta {
     flex-basis: 100%;
-    padding-left: calc(44px + 0.7rem);
+    padding-left: calc(56px + 0.75rem);
   }
   .match-teams {
     grid-template-columns: 1fr;
@@ -11607,11 +11981,23 @@ a.tool-card:focus-visible {
    completo hasta que hay partida activa real.
    ============================================================ */
 .live-game-module {
-  padding: 1.4rem 1.4rem 1.6rem;
-  border: 1px solid rgb(214 181 107 / 30%);
+  position: relative;
+  overflow: hidden;
+  padding: 1.5rem 1.5rem 1.7rem;
+  border: 1px solid rgb(214 181 107 / 32%);
   border-radius: 1rem;
   background: rgb(214 181 107 / 4%);
   box-shadow: inset 0 0 0 1px rgb(214 181 107 / 8%);
+}
+/* Franja superior tipo grafismo de retransmisión — LIVE = evento, no un
+   módulo más (encargo Art Direction §17). Puntual: es la única superficie
+   de toda la página con esta veladura. */
+.live-game-module::before {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--lp-gold), transparent 85%);
+  content: '';
 }
 /* --- Con partida en curso, la página se transforma (encargo §18): el
    módulo de "Partida en curso" es el protagonista y el resto del Control
@@ -11648,9 +12034,12 @@ a.tool-card:focus-visible {
   margin-bottom: 1.1rem;
 }
 .live-game-status {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 0.5rem;
+  padding: 0.3rem 0.75rem 0.3rem 0.6rem;
+  border-radius: 999px;
+  background: rgb(214 181 107 / 10%);
 }
 .live-game-status .live-dot {
   background: #d6b56b;
@@ -11658,10 +12047,10 @@ a.tool-card:focus-visible {
   animation: live-dot-pulse 1.8s ease-in-out infinite;
 }
 .live-game-status strong {
-  font-size: 0.95rem;
+  font-size: 1.05rem;
   font-weight: 800;
-  letter-spacing: 0.02em;
-  color: #f1d9a3;
+  letter-spacing: 0.03em;
+  color: var(--lp-gold-bright);
   text-transform: uppercase;
 }
 .live-game-meta {
@@ -11728,6 +12117,18 @@ a.tool-card:focus-visible {
 .live-game-participant[data-self] {
   border-color: rgb(214 181 107 / 45%);
   background: rgb(214 181 107 / 8%);
+}
+/* Tidusss, claramente identificado (encargo §17) — no solo un borde
+   dorado: el retrato crece y gana un anillo, como el resto de la página
+   trata al protagonista real de los datos. */
+.live-game-participant[data-self] .live-game-participant-champion {
+  width: 52px;
+  height: 52px;
+  border-color: rgb(214 181 107 / 55%);
+  border-width: 2px;
+}
+.live-game-participant[data-self] .live-game-participant-name {
+  color: var(--lp-gold-bright);
 }
 .live-game-participant:hover,
 .live-game-participant:focus-within {
