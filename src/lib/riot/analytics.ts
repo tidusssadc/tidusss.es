@@ -140,6 +140,17 @@ export const analyzeRecentSoloQueue = (
   };
 };
 
+/** % de kills del equipo en las que participó Tidusss — `undefined` si el equipo no sumó ninguna kill (división por cero, no un 0% real). */
+const matchKillParticipation = (match: RecentMatch): number | undefined => {
+  const team = match.teams.find(({ teamId }) => teamId === match.teamId);
+  const teamKills = team?.participants.reduce(
+    (sum, participant) => sum + participant.kills,
+    0,
+  );
+  if (!teamKills) return undefined;
+  return Number((((match.kills + match.assists) / teamKills) * 100).toFixed(1));
+};
+
 export const analyzeTodaySoloQueue = (
   allMatches: RecentMatch[],
 ): TodaySoloQueue => {
@@ -161,18 +172,30 @@ export const analyzeTodaySoloQueue = (
       : streakGames
     : 0;
   const elapsed = millisecondsSince(first?.playedAt) ?? Infinity;
+  // DERIVADO de las mismas partidas de hoy ya normalizadas — 0 llamadas Riot.
+  const killParticipationValues = matches
+    .map(matchKillParticipation)
+    .filter((value): value is number => value !== undefined);
   return {
     games: matches.length,
     wins,
     losses: matches.length - wins,
     winRate: performance.winRate,
     averageKda: performance.averageKda,
+    averageCsPerMinute: performance.averageCsPerMinute,
+    averageDamagePerMinute: average(
+      matches.map((match) => perMinute(match.damageToChampions, match.durationSeconds)),
+    ),
+    averageKillParticipation: average(killParticipationValues),
     mostPlayedChampion: performance.mostPlayedChampion,
     streak:
       first && streakLength
         ? { result: first.win ? 'win' : 'loss', games: streakLength }
         : undefined,
     lastPlayedAt: first?.playedAt,
+    // `matches` viene de `analyzeRecentSoloQueue` ordenado por `playedAt` desc,
+    // así que la última del array es la primera cronológica de la sesión.
+    firstPlayedAt: matches.at(-1)?.playedAt,
     activity: !first
       ? 'no-games'
       : elapsed <= 3 * 60 * 60_000

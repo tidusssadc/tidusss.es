@@ -65,6 +65,11 @@ const niceMax = (value: number) => {
   return step * magnitude;
 };
 
+const xFor = (timestampMs: number, durationMs: number, plotWidth: number) =>
+  PAD.left + (timestampMs / durationMs) * plotWidth;
+const yFor = (value: number, maxValue: number, plotHeight: number) =>
+  PAD.top + plotHeight - (value / maxValue) * plotHeight;
+
 const pathFor = (
   points: TimelineCurvePoint[],
   durationMs: number,
@@ -74,12 +79,33 @@ const pathFor = (
 ) =>
   points
     .map((point, index) => {
-      const x = PAD.left + (point.timestampMs / durationMs) * plotWidth;
-      const y = PAD.top + plotHeight - (point.value / maxValue) * plotHeight;
+      const x = xFor(point.timestampMs, durationMs, plotWidth);
+      const y = yFor(point.value, maxValue, plotHeight);
       return `${index === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`;
     })
     .join(' ');
 
+interface ChartBuild {
+  svg: string;
+  /** Geometría necesaria para el hover — nunca se recalcula el layout dos veces. */
+  self: TimelineCurvePoint[];
+  rival?: TimelineCurvePoint[];
+  rivalLabel?: string;
+  durationMs: number;
+  plotWidth: number;
+  plotHeight: number;
+  maxValue: number;
+  chartWidth: number;
+  formatValue: (value: number) => string;
+}
+
+// --- MATCH FLOW (encargo Signature §7-8): el gráfico deja de ser una
+// línea muda — extremo con presencia real (punto + valor final), marca
+// de @10 (mismo corte que el resumen de línea de arriba, ahora visible
+// en el propio gráfico) y un hover con crosshair que lee el minuto y
+// ambos valores. Nunca un área rellena entre líneas: con solo 1-2
+// observaciones por minuto, un fill sugeriría una continuidad que el
+// dato no tiene — precisión antes que decoración.
 const buildChartSvg = (
   self: TimelineCurvePoint[],
   rival: TimelineCurvePoint[] | undefined,
@@ -88,17 +114,17 @@ const buildChartSvg = (
   metricLabel: string,
   formatValue: (value: number) => string,
   chartWidth: number,
-): string | undefined => {
+): ChartBuild | undefined => {
   if (self.length < 2 || durationMs <= 0) return undefined;
   const plotWidth = chartWidth - PAD.left - PAD.right;
   const plotHeight = CHART_HEIGHT - PAD.top - PAD.bottom;
   const allValues = [...self, ...(rival ?? [])].map((point) => point.value);
   const maxValue = niceMax(Math.max(...allValues, 1));
   const selfPath = pathFor(self, durationMs, maxValue, plotWidth, plotHeight);
-  const rivalPath =
-    rival && rival.length >= 2
-      ? pathFor(rival, durationMs, maxValue, plotWidth, plotHeight)
-      : undefined;
+  const hasRival = Boolean(rival && rival.length >= 2);
+  const rivalPath = hasRival
+    ? pathFor(rival!, durationMs, maxValue, plotWidth, plotHeight)
+    : undefined;
 
   const yTicks = [0, 0.5, 1].map((fraction) => {
     const value = maxValue * fraction;
@@ -121,26 +147,117 @@ const buildChartSvg = (
     minute * 60_000 <= durationMs + 1000;
     minute += minuteStep
   ) {
-    const x = PAD.left + ((minute * 60_000) / durationMs) * plotWidth;
+    const x = xFor(minute * 60_000, durationMs, plotWidth);
     xTicks.push(
       `<text x="${x.toFixed(1)}" y="${CHART_HEIGHT - 4}" text-anchor="middle" class="timeline-chart-axis">${minute}'</text>`,
     );
   }
 
+  // Marca @10 (encargo §8): mismo corte que el resumen de línea de
+  // arriba — solo si la partida llegó a ese minuto.
+  const mark10 =
+    durationMs > 600_000
+      ? (() => {
+          const x = xFor(600_000, durationMs, plotWidth);
+          return `<line x1="${x.toFixed(1)}" y1="${PAD.top}" x2="${x.toFixed(1)}" y2="${PAD.top + plotHeight}" class="timeline-chart-mark10" />
+      <text x="${x.toFixed(1)}" y="${PAD.top - 2}" text-anchor="middle" class="timeline-chart-mark10-label">@10</text>`;
+        })()
+      : '';
+
+  // Extremo con presencia (encargo §8): el último punto real, no solo
+  // una línea que se corta — con su valor final rotulado.
+  const endpointFor = (points: TimelineCurvePoint[], variant: 'self' | 'rival') => {
+    const last = points[points.length - 1]!;
+    const x = xFor(last.timestampMs, durationMs, plotWidth);
+    const y = yFor(last.value, maxValue, plotHeight);
+    const anchor = x > chartWidth - PAD.right - 34 ? 'end' : 'start';
+    const dx = anchor === 'end' ? -7 : 7;
+    return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${variant === 'self' ? 3.6 : 2.6}" class="timeline-chart-endpoint-${variant}" />
+      <text x="${(x + dx).toFixed(1)}" y="${(y + 3).toFixed(1)}" text-anchor="${anchor}" class="timeline-chart-endpoint-label-${variant}">${formatValue(last.value)}</text>`;
+  };
+
   const legend = rivalPath
     ? `<g class="timeline-chart-legend">
-        <text x="${PAD.left}" y="12" class="timeline-chart-legend-self">— Tidusss</text>
-        <text x="${PAD.left + 78}" y="12" class="timeline-chart-legend-rival">— ${rivalLabel}</text>
+        <circle cx="${PAD.left + 3}" cy="8" r="3" class="timeline-chart-legend-self" />
+        <text x="${PAD.left + 10}" y="11" class="timeline-chart-legend-text">Tidusss</text>
+        <circle cx="${PAD.left + 75}" cy="8" r="3" class="timeline-chart-legend-rival" />
+        <text x="${PAD.left + 82}" y="11" class="timeline-chart-legend-text">${rivalLabel}</text>
       </g>`
     : '';
 
-  return `<svg viewBox="0 0 ${chartWidth} ${CHART_HEIGHT}" role="img" aria-label="Evolución de ${metricLabel} a lo largo de la partida${rivalLabel ? `, comparado con ${rivalLabel}` : ''}" class="timeline-chart-svg">
+  const svg = `<svg viewBox="0 0 ${chartWidth} ${CHART_HEIGHT}" role="img" aria-label="Evolución de ${metricLabel} a lo largo de la partida${rivalLabel ? `, comparado con ${rivalLabel}` : ''}" class="timeline-chart-svg" data-timeline-svg>
     ${yTicks.join('\n')}
     ${xTicks.join('\n')}
+    ${mark10}
     ${rivalPath ? `<path d="${rivalPath}" class="timeline-chart-line-rival" fill="none" />` : ''}
     <path d="${selfPath}" class="timeline-chart-line-self" fill="none" />
+    ${rivalPath ? endpointFor(rival!, 'rival') : ''}
+    ${endpointFor(self, 'self')}
     ${legend}
+    <line data-timeline-cursor class="timeline-chart-cursor" x1="0" x2="0" y1="${PAD.top}" y2="${PAD.top + plotHeight}" />
   </svg>`;
+
+  return { svg, self, rival: hasRival ? rival : undefined, rivalLabel, durationMs, plotWidth, plotHeight, maxValue, chartWidth, formatValue };
+};
+
+// --- Hover (encargo §8, "hover útil"): crosshair + tooltip HTML que lee
+// el minuto y ambos valores en ese punto — mismo patrón que el hover de
+// Evolución LP (`RankEvolution.astro`), sin depender de eventos que este
+// entorno a veces no dispara de forma fiable (rAF): lectura síncrona en
+// cada `pointermove`. ---
+const wireChartHover = (host: HTMLElement, build: ChartBuild) => {
+  const svg = host.querySelector<SVGSVGElement>('[data-timeline-svg]');
+  const cursor = host.querySelector<SVGLineElement>('[data-timeline-cursor]');
+  if (!svg || !cursor) return;
+  let tooltip = host.querySelector<HTMLElement>('[data-timeline-tooltip]');
+  if (!tooltip) {
+    tooltip = document.createElement('div');
+    tooltip.className = 'timeline-chart-tooltip';
+    tooltip.dataset.timelineTooltip = '';
+    host.append(tooltip);
+  }
+  const { self, rival, rivalLabel, durationMs, plotWidth, formatValue } = build;
+
+  const nearestIndex = (points: TimelineCurvePoint[], targetMs: number) =>
+    points.reduce(
+      (best, point, index) =>
+        Math.abs(point.timestampMs - targetMs) <
+        Math.abs(points[best]!.timestampMs - targetMs)
+          ? index
+          : best,
+      0,
+    );
+
+  const show = (clientX: number) => {
+    const rect = svg.getBoundingClientRect();
+    // El SVG se escala por CSS (`width:100%`) desde su viewBox real
+    // (`build.chartWidth`) — hay que deshacer esa escala para volver a
+    // coordenadas de usuario del SVG antes de restar el padding.
+    const scale = rect.width / build.chartWidth;
+    const svgX = (clientX - rect.left) / scale;
+    const ratio = Math.min(1, Math.max(0, (svgX - PAD.left) / plotWidth));
+    const targetMs = ratio * durationMs;
+    const selfPoint = self[nearestIndex(self, targetMs)]!;
+    const x = xFor(selfPoint.timestampMs, durationMs, plotWidth);
+    cursor.setAttribute('x1', String(x));
+    cursor.setAttribute('x2', String(x));
+    cursor.classList.add('is-on');
+    const minute = Math.round(selfPoint.timestampMs / 60_000);
+    const rivalPoint = rival ? rival[nearestIndex(rival, selfPoint.timestampMs)] : undefined;
+    tooltip!.hidden = false;
+    tooltip!.style.left = `${(x / build.chartWidth) * 100}%`;
+    tooltip!.innerHTML = `<strong>${minute}'</strong><span>Tidusss ${formatValue(selfPoint.value)}</span>${
+      rivalPoint ? `<span>${rivalLabel} ${formatValue(rivalPoint.value)}</span>` : ''
+    }`;
+  };
+  const hide = () => {
+    cursor.classList.remove('is-on');
+    tooltip!.hidden = true;
+  };
+
+  host.addEventListener('pointermove', (event) => show(event.clientX));
+  host.addEventListener('pointerleave', hide);
+  host.addEventListener('pointerdown', (event) => show(event.clientX));
 };
 
 // --- Momentos clave: un icono/etiqueta discreto por tipo de evento. ---
@@ -249,6 +366,10 @@ const renderTimeline = (
   );
   setStat('xp', timeline.laneCheckpoint10?.xp, timeline.laneComparison10?.xpDiff);
 
+  const evolutionTitle = query<HTMLElement>(panel, '[data-timeline-evolution-title]');
+  if (evolutionTitle)
+    evolutionTitle.textContent = hasRival ? `Tidusss vs ${rivalLabel}` : 'Evolución de Tidusss';
+
   const note = query<HTMLElement>(panel, '[data-timeline-summary-note]')!;
   note.textContent = !timeline.laneCheckpoint10
     ? 'Esta partida no llegó al minuto 10 — sin resumen de línea real que mostrar.'
@@ -264,7 +385,7 @@ const renderTimeline = (
     const self = metric === 'gold' ? timeline.goldCurve : timeline.csCurve;
     const rival =
       metric === 'gold' ? timeline.enemyAdcGoldCurve : timeline.enemyAdcCsCurve;
-    const svg = buildChartSvg(
+    const build = buildChartSvg(
       self,
       rival,
       rivalLabel,
@@ -276,9 +397,10 @@ const renderTimeline = (
           : String(Math.round(value)),
       chartHost.clientWidth || FALLBACK_CHART_WIDTH,
     );
-    chartHost.hidden = !svg;
-    chartEmpty.hidden = Boolean(svg);
-    chartHost.innerHTML = svg ?? '';
+    chartHost.hidden = !build;
+    chartEmpty.hidden = Boolean(build);
+    chartHost.innerHTML = build?.svg ?? '';
+    if (build) wireChartHover(chartHost, build);
   };
   renderChart('gold');
   toggle?.querySelectorAll<HTMLButtonElement>('[data-timeline-metric]').forEach((button) => {

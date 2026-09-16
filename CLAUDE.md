@@ -42,9 +42,9 @@ Documentación técnica de sistemas concretos: `docs/riot-api.md`, `docs/operati
 Home, Navbar global, Tier List, `/campeones`, contenido de Lucian/Jhin/Jinx, Academia, Pregunta, Search, grafo de contenido de YouTube, **el dataset del Identity Registry** (`src/config/known-players.generated.ts`), sitemap.
 Lista viva y motivos en `docs/agent/CURRENT_STATE.md`.
 
-## Infraestructura pendiente (no asumas que existe)
+## Infraestructura
 
-**D1 (histórico de rango): implementado en código, NO aprovisionado.** Sin binding `DB`, `src/lib/rank-history` se degrada solo (`available:false`, el bloque de UI no aparece). El scheduler (`.github/workflows/rank-snapshot.yml`) está inerte hasta que se mergee a `main` y se configuren los secretos. Guía: `docs/operations/rank-history.md`.
+**D1 (histórico de rango): APROVISIONADA en Production** (D1 `tidusss-competitive` + binding `DB`). Primer snapshot real observado: `MASTER 554 LP`, 2026-09-10 — el histórico **empieza ahí**, nada anterior se reconstruye. Sin `DB` (p. ej. un preview de rama), `src/lib/rank-history` sigue degradando solo (`available:false`, el bloque de UI no aparece). Pendiente: `RANK_SNAPSHOT_CRON_SECRET` para activar el cron de `.github/workflows/rank-snapshot.yml` (hasta entonces el histórico crece con las visitas reales a `/api/riot/overview`). Guía: `docs/operations/rank-history.md`.
 
 ## Metodología
 

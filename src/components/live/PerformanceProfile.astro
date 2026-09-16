@@ -9,13 +9,8 @@ import {
 } from '../../data/league-laboratory';
 
 /**
- * El roster ADC oficial de Tidusss (el mismo de la Tier List, "Champion
- * Pool" nunca mantiene una segunda lista a mano) se resuelve aquí, en
- * build time — server-side, gratis — y se pasa al cliente como una simple
- * lista de nombres (`dataDragonKey`, el mismo formato que usa
- * `ChampionPerformance.championName`, ambos vienen de Data Dragon). Así el
- * script del cliente no necesita importar el dominio de `league-laboratory`
- * completo solo para filtrar 25 nombres.
+ * El roster ADC oficial de Tidusss (el mismo de la Tier List) se resuelve
+ * aquí, en build time, y se pasa al cliente como una lista de nombres.
  */
 const registry = buildLabRegistry({
   catalog: championCatalog,
@@ -27,144 +22,129 @@ const adcRosterNames = getAdcRoster(registry).map((entry) => entry.catalogEntry.
 ---
 
 <!--
-  "Rendimiento" + "Champion Pool" + "Patrones" — Sprint Champion Analytics
-  de Competitivo V2. Un solo componente, un solo fetch a `/api/riot/overview`
-  (mismo dataset ya cacheado que el resto de Competitivo; un fetch más del
-  cliente no dispara ninguna llamada Riot nueva — ver `performance.ts`).
-  Todo lo que se pinta es DIRECTA/DERIVADA de Match-V5, nunca una
-  estimación ni un score propio.
+  V4: "Forma por campeón" (5) + "Rendimiento reciente" (7) en un grid
+  asimétrico, no dos secciones apiladas. La antigua sección "04 · Patrones"
+  se disuelve: support / ADC rival / lado / duración pasan a ser un bloque
+  "Contexto" COMPACTO dentro de Rendimiento (contexto de las últimas N, no un
+  slab propio). La actividad por día/franja se retira de la vista principal
+  (dato de "documentación", poco valor para consultar cada día).
+
+  Un solo fetch a `/api/riot/overview` — mismo dataset ya cacheado, 0
+  llamadas Riot nuevas.
 -->
-<section
-  class="live-module live-module--wide performance-profile"
-  aria-labelledby="performance-profile-title"
-  data-performance-profile
-  data-riot={integrationEndpoints.riot}
-  data-adc-roster={JSON.stringify(adcRosterNames)}
->
-  <header class="live-module-head">
-    <div>
-      <span>02 / Rendimiento</span>
-      <h2 id="performance-profile-title">Forma reciente</h2>
-    </div>
-    <small data-performance-sample>Actividad reciente</small>
-  </header>
-
-  <div
-    class="live-loading live-loading--row performance-loading"
-    data-performance-loading
-    aria-label="Actualizando rendimiento"
+<div class="control-grid control-grid--mid" data-performance-profile data-riot={integrationEndpoints.riot} data-adc-roster={JSON.stringify(adcRosterNames)}>
+  <section
+    class="live-module champion-form"
+    aria-labelledby="champion-form-title"
+    data-champion-pool
+    hidden
   >
-    <i></i><i></i><i></i>
-  </div>
+    <header class="live-module-head">
+      <div>
+        <span>Forma por campeón</span>
+        <h2 id="champion-form-title">Con qué está jugando</h2>
+      </div>
+      <small data-pool-sample></small>
+    </header>
 
-  <div data-performance-body hidden>
-    <div class="stat-row" data-window-stats></div>
-    <p class="stat-row-meta" data-window-meta></p>
+    <ol class="pool-hero" data-pool-hero></ol>
 
-    <div class="window-compare" data-window-compare></div>
-  </div>
-
-  <div class="compact-empty" data-performance-empty hidden>
-    <strong>La muestra reciente todavía no contiene partidas de Solo/Duo.</strong>
-    <span>Este bloque se completará en cuanto Riot devuelva actividad clasificatoria.</span>
-  </div>
-
-  <div class="live-empty" data-performance-error hidden>
-    <strong>Riot no responde ahora mismo.</strong>
-    <p>El resto de Competitivo sigue funcionando — este bloque se actualizará solo.</p>
-  </div>
-</section>
-
-<section
-  class="live-module live-module--wide champion-pool"
-  aria-labelledby="champion-pool-title"
-  data-champion-pool
-  hidden
->
-  <header class="live-module-head">
-    <div>
-      <span>03 / Campeones</span>
-      <h2 id="champion-pool-title">Champion Pool</h2>
-    </div>
-    <small data-pool-sample></small>
-  </header>
-
-  <ol class="pool-hero" data-pool-hero></ol>
-
-  <div class="profile-subhead">
-    <h3>Distribución</h3>
-    <small data-pool-distribution-note></small>
-  </div>
-  <div class="pool-distribution" data-pool-distribution></div>
-
-  <div data-pool-dpm-block hidden>
     <div class="profile-subhead">
-      <h3>Daño por minuto</h3>
-      <small>Solo campeones con muestra suficiente (3+ partidas)</small>
+      <h3>Reparto</h3>
+      <small data-pool-distribution-note></small>
     </div>
-    <ul class="dpm-chart" data-pool-dpm></ul>
-  </div>
+    <div class="pool-distribution" data-pool-distribution></div>
 
-  <div data-pool-secondary-block hidden>
-    <div class="profile-subhead">
-      <h3>Muestra pequeña</h3>
-      <small>1-2 partidas — todavía no representativo</small>
+    <div data-pool-dpm-block hidden>
+      <div class="profile-subhead">
+        <h3>Daño por minuto</h3>
+        <small>Solo campeones con 3+ partidas</small>
+      </div>
+      <ul class="dpm-chart" data-pool-dpm></ul>
     </div>
-    <ul class="pool-secondary" data-pool-secondary></ul>
-  </div>
 
-  <div data-pool-off-role-block hidden>
-    <div class="profile-subhead">
-      <h3>Fuera del rol ADC</h3>
-      <small>Partidas reales fuera del roster ADC — no protagonizan Champion Pool</small>
+    <div data-pool-secondary-block hidden>
+      <div class="profile-subhead">
+        <h3>Muestra pequeña</h3>
+        <small>1-2 partidas — todavía no representativo</small>
+      </div>
+      <ul class="pool-secondary" data-pool-secondary></ul>
     </div>
-    <ul class="pool-secondary" data-pool-off-role></ul>
-  </div>
-</section>
 
-<section
-  class="live-module live-module--wide patterns-module"
-  aria-labelledby="patterns-title"
-  data-patterns
-  hidden
->
-  <header class="live-module-head">
-    <div><span>04 / Patrones</span><h2 id="patterns-title">Patrones</h2></div>
-  </header>
+    <div data-pool-off-role-block hidden>
+      <div class="profile-subhead">
+        <h3>Fuera del rol ADC</h3>
+        <small>Partidas reales fuera del roster ADC</small>
+      </div>
+      <ul class="pool-secondary" data-pool-off-role></ul>
+    </div>
+  </section>
 
-  <div class="patterns-grid">
-    <div class="pattern-block">
-      <h3>Con support</h3>
-      <small data-performance-synergy-note></small>
-      <ul class="performance-relations" data-performance-synergy></ul>
-    </div>
-    <div class="pattern-block">
-      <h3>Vs. ADC rival</h3>
-      <small data-performance-matchups-note></small>
-      <ul class="performance-relations" data-performance-matchups></ul>
-    </div>
-    <div class="pattern-block">
-      <h3>Lado del mapa</h3>
-      <ul class="performance-bars" data-performance-side></ul>
-    </div>
-    <div class="pattern-block">
-      <h3>Duración</h3>
-      <p class="performance-duration-summary" data-performance-duration-summary></p>
-      <ul class="performance-bars" data-performance-duration></ul>
-    </div>
-  </div>
+  <section
+    class="live-module recent-performance"
+    aria-labelledby="recent-performance-title"
+    data-performance-block
+  >
+    <header class="live-module-head">
+      <div>
+        <span>Rendimiento reciente</span>
+        <h2 id="recent-performance-title">¿Voy mejor o peor?</h2>
+      </div>
+      <small data-performance-sample>Actividad reciente</small>
+    </header>
 
-  <div class="profile-subhead">
-    <h3>Actividad</h3>
-    <small>Europe/Madrid</small>
-  </div>
-  <div class="activity-compact">
-    <ul class="performance-bars" data-performance-weekday></ul>
-    <ul class="performance-bars" data-performance-hourband></ul>
-  </div>
-</section>
+    <div
+      class="live-loading live-loading--row performance-loading"
+      data-performance-loading
+      aria-label="Actualizando rendimiento"
+    >
+      <i></i><i></i><i></i>
+    </div>
+
+    <div data-performance-body hidden>
+      <ul class="trend-grid" data-trend-grid></ul>
+      <p class="stat-row-meta" data-window-meta></p>
+
+      <div class="perf-context" data-perf-context hidden>
+        <div class="profile-subhead">
+          <h3>Contexto de las últimas partidas</h3>
+          <small>Resultados con 3+ partidas — no implica causalidad.</small>
+        </div>
+        <div class="perf-context-grid">
+          <div class="perf-context-cell">
+            <h4>Con support</h4>
+            <ul class="perf-context-list" data-context-synergy></ul>
+          </div>
+          <div class="perf-context-cell">
+            <h4>Vs. ADC rival</h4>
+            <ul class="perf-context-list" data-context-matchups></ul>
+          </div>
+          <div class="perf-context-cell">
+            <h4>Lado del mapa</h4>
+            <ul class="perf-context-list" data-context-side></ul>
+          </div>
+          <div class="perf-context-cell">
+            <h4>Duración</h4>
+            <p class="perf-context-duration" data-context-duration></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="compact-empty" data-performance-empty hidden>
+      <strong>La muestra reciente todavía no contiene partidas de Solo/Duo.</strong>
+      <span>Este bloque se completará en cuanto Riot devuelva actividad clasificatoria.</span>
+    </div>
+
+    <div class="compact-empty" data-performance-error hidden>
+      <strong>Riot no responde ahora mismo.</strong>
+      <span>El resto del Control Room sigue funcionando — se actualiza solo.</span>
+    </div>
+  </section>
+</div>
 
 <script>
+  import { installCompetitiveQaIfRequested } from '../../lib/dev/competitive-qa';
   import type { RiotPublicResponse } from '../../lib/riot';
   import {
     splitChampionsByAdcRoster,
@@ -172,25 +152,24 @@ const adcRosterNames = getAdcRoster(registry).map((entry) => entry.catalogEntry.
     topChampionsByDamagePerMinute,
   } from '../../lib/riot';
   import type {
-    ActivityBucket,
     AdcMatchupEntry,
     ChampionPerformance,
-    DurationBucketEntry,
-    PerformanceWindow,
     ProfilePerformance,
     SideSplitEntry,
     SupportSynergyEntry,
     TrendPoint,
   } from '../../lib/riot';
 
-  const performanceRoot = document.querySelector<HTMLElement>('[data-performance-profile]');
-  const poolRoot = document.querySelector<HTMLElement>('[data-champion-pool]');
-  const patternsRoot = document.querySelector<HTMLElement>('[data-patterns]');
+  installCompetitiveQaIfRequested();
 
-  if (performanceRoot && poolRoot && patternsRoot) {
+  const gridRoot = document.querySelector<HTMLElement>('[data-performance-profile]');
+  const performanceRoot = document.querySelector<HTMLElement>('[data-performance-block]');
+  const poolRoot = document.querySelector<HTMLElement>('[data-champion-pool]');
+
+  if (gridRoot && performanceRoot && poolRoot) {
     let adcRosterNames: string[] = [];
     try {
-      adcRosterNames = JSON.parse(performanceRoot.dataset.adcRoster ?? '[]');
+      adcRosterNames = JSON.parse(gridRoot.dataset.adcRoster ?? '[]');
     } catch {
       adcRosterNames = [];
     }
@@ -200,11 +179,8 @@ const adcRosterNames = getAdcRoster(registry).map((entry) => entry.catalogEntry.
     const decimal1 = (value?: number) =>
       value === undefined ? '—' : String(value).replace('.', ',');
     const percent = (value?: number) => (value === undefined ? '—' : `${value}%`);
-    const durationLabel = (seconds?: number) => {
-      if (seconds === undefined) return '—';
-      const minutes = Math.round(seconds / 60);
-      return `${minutes} min`;
-    };
+    const durationLabel = (seconds?: number) =>
+      seconds === undefined ? '—' : `${Math.round(seconds / 60)} min`;
     const text = (root: HTMLElement, selector: string, value: string) => {
       const node = root.querySelector<HTMLElement>(selector);
       if (node) node.textContent = value;
@@ -218,82 +194,162 @@ const adcRosterNames = getAdcRoster(registry).map((entry) => entry.catalogEntry.
       return node;
     };
 
-    // --- 02 · Rendimiento — tipografía grande + una comparativa compacta,
-    // nunca seis cajas idénticas (encargo §17). ---
+    // --- Rendimiento reciente como GRÁFICO DE PENDIENTE (encargo Signature
+    // §9): para cada métrica, la muestra completa y las ventanas de 20/10/5
+    // se leen como puntos de una misma línea — "TODAS" es la base, "5" es lo
+    // más reciente. La pregunta que responde es "¿la ventana más reciente
+    // está por encima o por debajo de la base?", con los valores reales
+    // etiquetados en cada punto — nunca una puntuación inventada. Con menos
+    // de 2 puntos disponibles no se dibuja línea (degradación honesta). ---
 
-    const STAT_TILES: Array<{ key: keyof PerformanceWindow; label: string; format: (v?: number) => string }> = [
-      { key: 'winRate', label: 'WR', format: percent },
-      { key: 'averageKda', label: 'KDA', format: decimal },
-      { key: 'averageKillParticipation', label: 'KP', format: (v) => (v === undefined ? '—' : `${decimal1(v)}%`) },
-      { key: 'averageCsPerMinute', label: 'CS/MIN', format: decimal1 },
-      { key: 'averageGoldPerMinute', label: 'ORO/MIN', format: decimal1 },
-      { key: 'averageDamagePerMinute', label: 'DAÑO/MIN', format: decimal1 },
+    interface TrendMetric {
+      key: 'winRate' | 'averageKda' | 'averageCsPerMinute' | 'averageDamagePerMinute';
+      label: string;
+      format: (value?: number) => string;
+      deltaFormat: (delta: number) => string;
+    }
+    const TREND_METRICS: TrendMetric[] = [
+      { key: 'winRate', label: 'Win rate', format: percent, deltaFormat: (d) => `${Math.round(d)}%` },
+      { key: 'averageKda', label: 'KDA', format: decimal, deltaFormat: (d) => d.toFixed(2).replace('.', ',') },
+      { key: 'averageCsPerMinute', label: 'CS/min', format: decimal1, deltaFormat: (d) => d.toFixed(1).replace('.', ',') },
+      {
+        key: 'averageDamagePerMinute',
+        label: 'Daño/min',
+        format: (v) => (v === undefined ? '—' : String(Math.round(v))),
+        deltaFormat: (d) => String(Math.round(d)),
+      },
     ];
 
-    const renderStatRow = (window: PerformanceWindow, windowLabel: string) => {
-      const container = performanceRoot.querySelector('[data-window-stats]');
-      if (!container) return;
-      container.replaceChildren(
-        ...STAT_TILES.map(({ key, label, format }) => {
-          const tile = el('div', 'stat-tile');
-          const value = el('strong');
-          value.textContent = format(window[key] as number | undefined);
-          const caption = el('span');
-          caption.textContent = label;
-          tile.append(value, caption);
-          return tile;
-        }),
-      );
-      text(
-        performanceRoot,
-        '[data-window-meta]',
-        window.sampleSize
-          ? `${windowLabel} · ${window.sampleSize} partidas · ${window.wins}V ${window.losses}D · ${durationLabel(window.averageDurationSeconds)} de media`
-          : 'Sin partidas en la muestra',
-      );
+    // Geometría del gráfico — fija, en px, para que línea/puntos/etiquetas
+    // compartan el mismo sistema de coordenadas sin medir el DOM real.
+    const SLOPE_HEIGHT = 62;
+    const DOT_Y_TOP = 22;
+    const DOT_Y_BOTTOM = 40;
+    const CAPTION_Y = 48;
+
+    const slopeChart = (
+      metric: TrendMetric,
+      points: { x: number; value: number; windowLabel: string; sampleLabel: string }[],
+    ): HTMLElement => {
+      const wrap = el('div', 'trend-slope');
+      if (points.length < 2) {
+        const note = el('span', 'trend-item-note');
+        note.textContent = 'Sin ventanas de tendencia todavía (hacen falta 5+ partidas).';
+        wrap.append(note);
+        return wrap;
+      }
+      const values = points.map((p) => p.value);
+      const min = Math.min(...values);
+      const max = Math.max(...values);
+      const yFor = (value: number) =>
+        max === min ? (DOT_Y_TOP + DOT_Y_BOTTOM) / 2 : DOT_Y_BOTTOM - ((value - min) / (max - min)) * (DOT_Y_BOTTOM - DOT_Y_TOP);
+
+      const svgNs = 'http://www.w3.org/2000/svg';
+      const svg = document.createElementNS(svgNs, 'svg');
+      svg.setAttribute('viewBox', `0 0 100 ${SLOPE_HEIGHT}`);
+      svg.setAttribute('preserveAspectRatio', 'none');
+      svg.setAttribute('class', 'trend-slope-line');
+      svg.setAttribute('aria-hidden', 'true');
+      const path = document.createElementNS(svgNs, 'path');
+      const d = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(2)} ${yFor(p.value).toFixed(2)}`).join(' ');
+      path.setAttribute('d', d);
+      const delta = values[values.length - 1]! - values[0]!;
+      const threshold = metric.key === 'winRate' ? 1.5 : 0.05;
+      const rising = delta > threshold;
+      const falling = delta < -threshold;
+      path.setAttribute('class', `trend-slope-line-path${rising ? ' is-up' : falling ? ' is-down' : ''}`);
+      svg.append(path);
+      wrap.append(svg);
+
+      points.forEach((point, index) => {
+        const isCurrent = index === points.length - 1;
+        const y = yFor(point.value);
+        const anchor = el('div', 'trend-slope-point');
+        anchor.classList.toggle('is-current', isCurrent);
+        anchor.classList.toggle('is-base', index === 0);
+        anchor.style.left = `${point.x}%`;
+
+        const value = el('span', 'trend-slope-value');
+        value.style.top = `${Math.max(0, y - 16)}px`;
+        value.textContent = metric.format(point.value);
+
+        const dot = el('span', 'trend-slope-dot');
+        dot.style.top = `${y}px`;
+
+        const caption = el('span', 'trend-slope-caption');
+        caption.style.top = `${CAPTION_Y}px`;
+        caption.textContent = point.windowLabel;
+
+        anchor.append(value, dot, caption);
+        wrap.append(anchor);
+      });
+
+      return wrap;
     };
 
-    /** 5/10/20/muestra completa en una sola fila compacta — nunca tres dashboards (encargo §18). */
-    interface ComparePoint {
-      label: string;
-      winRate?: number;
-      averageKda?: number;
-      averageDamagePerMinute?: number;
-    }
-
-    const renderWindowCompare = (trend: TrendPoint[], full: PerformanceWindow) => {
-      const container = performanceRoot.querySelector('[data-window-compare]');
+    const renderTrend = (
+      trend: TrendPoint[],
+      full: { winRate?: number; averageKda?: number; averageCsPerMinute?: number; averageDamagePerMinute?: number; sampleSize: number },
+    ) => {
+      const container = performanceRoot.querySelector('[data-trend-grid]');
       if (!container) return;
-      const points: ComparePoint[] = [
-        ...trend.map((point) => ({
-          label: `Últimas ${point.windowSize}`,
-          winRate: point.winRate,
-          averageKda: point.averageKda,
-          averageDamagePerMinute: point.averageDamagePerMinute,
-        })),
-        {
-          label: `Muestra (${full.sampleSize})`,
-          winRate: full.winRate,
-          averageKda: full.averageKda,
-          averageDamagePerMinute: full.averageDamagePerMinute,
-        },
-      ];
+      // De más amplio (toda la muestra) a más reciente (ventana de 5).
+      const windows = [...trend].sort((a, b) => b.windowSize - a.windowSize);
       container.replaceChildren(
-        ...points.map((point) => {
-          const item = el('div', 'window-compare-item');
-          const label = el('span', 'window-compare-label');
-          label.textContent = point.label;
-          const wr = el('strong');
-          wr.textContent = percent(point.winRate);
-          const meta = el('span', 'window-compare-meta');
-          meta.textContent = `${decimal(point.averageKda)} KDA · ${decimal1(point.averageDamagePerMinute)} DPM`;
-          item.append(label, wr, meta);
+        ...TREND_METRICS.map((metric) => {
+          const raw: { value?: number; windowLabel: string; sampleLabel: string }[] = [
+            { value: full[metric.key], windowLabel: 'TODAS', sampleLabel: String(full.sampleSize) },
+            ...windows.map((w) => ({ value: w[metric.key], windowLabel: String(w.windowSize), sampleLabel: String(w.sampleSize) })),
+          ];
+          const present = raw.filter(
+            (p): p is { value: number; windowLabel: string; sampleLabel: string } => p.value !== undefined,
+          );
+          const points = present.map((p, index) => ({
+            ...p,
+            // Margen del 8% a cada lado: el valor del punto (más grande en
+            // el punto actual) se centra en su x y no debe invadir la
+            // columna del delta ni el borde del carril.
+            x: present.length > 1 ? 8 + (index / (present.length - 1)) * 84 : 50,
+          }));
+
+          const item = el('li', 'trend-item');
+          const head = el('div', 'trend-item-head');
+          const value = el('strong');
+          value.textContent = metric.format(points[points.length - 1]?.value ?? full[metric.key]);
+          const label = el('span', 'trend-item-label');
+          label.textContent = metric.label;
+          head.append(value, label);
+          item.append(head, slopeChart(metric, points));
+
+          if (points.length >= 2) {
+            const delta = points[points.length - 1]!.value - points[0]!.value;
+            const threshold = metric.key === 'winRate' ? 1.5 : 0.05;
+            const rising = delta > threshold;
+            const falling = delta < -threshold;
+            const badge = el('span', 'trend-item-delta');
+            const sign = delta > 0 ? '+' : delta < 0 ? '-' : '±';
+            badge.textContent = falling
+              ? `${sign}${metric.deltaFormat(Math.abs(delta))} vs. TODAS`
+              : rising
+                ? `${sign}${metric.deltaFormat(Math.abs(delta))} vs. TODAS`
+                : '≈ estable vs. TODAS';
+            badge.classList.toggle('is-up', rising);
+            badge.classList.toggle('is-down', falling);
+            item.append(badge);
+          }
           return item;
         }),
       );
     };
 
-    // --- 03 · Champion Pool — el foco visual de este sprint. ---
+    // --- Forma por campeón (antes "Champion Pool") ---
+    const championLoadingArt = (iconUrl?: string): string | undefined => {
+      if (!iconUrl) return undefined;
+      const key = iconUrl.split('/').pop()?.replace(/\.png$/i, '');
+      return key
+        ? `https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${key}_0.jpg`
+        : undefined;
+    };
 
     const championCard = (
       champion: ChampionPerformance,
@@ -301,15 +357,21 @@ const adcRosterNames = getAdcRoster(registry).map((entry) => entry.catalogEntry.
       isFeature = false,
     ): HTMLLIElement => {
       const item = el('li', variant === 'hero' ? 'pool-card' : 'pool-secondary-item');
-      // El campeón más jugado real (nunca hardcodeado) actúa como pieza
-      // visual principal del Champion Pool — arte más grande, misma
-      // información, más peso compositivo (encargo Visual Pass §10).
       item.classList.toggle('pool-card--feature', isFeature);
-      if (champion.championImageUrl) {
+      const art = isFeature ? championLoadingArt(champion.championImageUrl) : undefined;
+      if (art) {
+        const image = el('img', 'pool-card-splash');
+        image.src = art;
+        image.alt = '';
+        image.setAttribute('aria-hidden', 'true');
+        image.loading = 'lazy';
+        image.decoding = 'async';
+        item.append(image);
+      } else if (champion.championImageUrl) {
         const image = el('img', 'pool-card-art');
         image.src = champion.championImageUrl;
         image.alt = champion.championName;
-        const size = isFeature ? 84 : variant === 'hero' ? 56 : 32;
+        const size = variant === 'hero' ? 56 : 32;
         image.width = size;
         image.height = size;
         image.loading = 'lazy';
@@ -320,32 +382,39 @@ const adcRosterNames = getAdcRoster(registry).map((entry) => entry.catalogEntry.
       const name = el('strong');
       name.textContent = champion.championName;
       body.append(name);
-      if (variant === 'hero') {
-        const record = el('span', 'pool-card-record');
-        record.textContent = `${champion.games} partidas · ${champion.wins}V ${champion.losses}D`;
-        const stats = el('div', 'pool-card-stats');
-        const stat = (value: string, label: string) => {
-          const wrap = el('div');
-          const strong = el('strong');
-          strong.textContent = value;
-          const span = el('span');
-          span.textContent = label;
-          wrap.append(strong, span);
-          return wrap;
-        };
-        stats.append(
-          stat(percent(champion.winRate), 'WR'),
-          stat(decimal(champion.averageKda), 'KDA'),
-          stat(decimal1(champion.averageDamagePerMinute), 'DPM'),
-          stat(decimal1(champion.averageCsPerMinute), 'CSM'),
-        );
-        body.append(record, stats);
-      } else {
+      if (variant !== 'hero') {
         const record = el('span', 'pool-card-record');
         record.textContent = `${champion.games} ${champion.games === 1 ? 'partida' : 'partidas'} · ${percent(champion.winRate)} WR`;
         body.append(record);
+        item.append(body);
+        return item;
       }
-      item.append(body);
+
+      const record = el('span', 'pool-card-record');
+      record.textContent = `${champion.games} partidas · ${champion.wins}V ${champion.losses}D`;
+      body.append(record);
+      const stats = el('div', 'pool-card-stats');
+      const stat = (value: string, label: string) => {
+        const wrap = el('div');
+        const strong = el('strong');
+        strong.textContent = value;
+        const span = el('span');
+        span.textContent = label;
+        wrap.append(strong, span);
+        return wrap;
+      };
+      stats.append(
+        stat(percent(champion.winRate), 'WR'),
+        stat(decimal(champion.averageKda), 'KDA'),
+        stat(decimal1(champion.averageDamagePerMinute), 'DPM'),
+        stat(decimal1(champion.averageCsPerMinute), 'CSM'),
+      );
+      if (isFeature) {
+        body.append(stats);
+        item.append(body);
+      } else {
+        item.append(body, stats);
+      }
       return item;
     };
 
@@ -355,7 +424,7 @@ const adcRosterNames = getAdcRoster(registry).map((entry) => entry.catalogEntry.
       poolRoot.hidden = !hasAny;
       if (!hasAny) return;
 
-      text(poolRoot, '[data-pool-sample]', `${sampleSize} ${sampleSize === 1 ? 'partida analizada' : 'partidas analizadas'}`);
+      text(poolRoot, '[data-pool-sample]', `${sampleSize} ${sampleSize === 1 ? 'partida' : 'partidas'}`);
 
       const { primary, secondary } = tierChampionsBySampleSize(adcChampions);
 
@@ -388,7 +457,7 @@ const adcRosterNames = getAdcRoster(registry).map((entry) => entry.catalogEntry.
       text(
         poolRoot,
         '[data-pool-distribution-note]',
-        top ? `${top.championName} es el más jugado: ${Math.round((top.games / totalGames) * 100)}% de la muestra` : '',
+        top ? `${top.championName}: ${Math.round((top.games / totalGames) * 100)}% de la muestra` : '',
       );
 
       const dpmBlock = poolRoot.querySelector<HTMLElement>('[data-pool-dpm-block]');
@@ -437,116 +506,90 @@ const adcRosterNames = getAdcRoster(registry).map((entry) => entry.catalogEntry.
       if (offRoleList) offRoleList.replaceChildren(...offRoleChampions.map((c) => championCard(c, 'secondary')));
     };
 
-    // --- 04 · Patrones — resultados, nunca causalidad. ---
-
-    const renderBar = (
-      container: Element | null,
-      items: Array<{ label: string; games: number; percentage?: number; winRate?: number }>,
-      emptyCopy: string,
-    ) => {
-      if (!container) return;
-      if (!items.length) {
-        const item = el('li', 'performance-bars-empty');
-        item.textContent = emptyCopy;
-        container.replaceChildren(item);
-        return;
+    // --- Contexto (antes "04 · Patrones"), compacto, dentro de Rendimiento ---
+    const contextRow = (label: string, value: string, imageUrl?: string) => {
+      const item = el('li');
+      if (imageUrl) {
+        const image = el('img');
+        image.src = imageUrl;
+        image.alt = '';
+        image.width = 20;
+        image.height = 20;
+        image.loading = 'lazy';
+        image.decoding = 'async';
+        item.append(image);
       }
-      container.replaceChildren(
-        ...items.map((entry) => {
-          const item = el('li');
-          const label = el('span');
-          label.textContent = entry.label;
-          const bar = el('i');
-          bar.style.width = `${entry.percentage ?? Math.min(100, entry.games * 10)}%`;
-          const value = el('strong');
-          value.textContent = entry.winRate === undefined ? `${entry.games}` : `${entry.games} · ${entry.winRate}% WR`;
-          item.append(label, bar, value);
-          return item;
-        }),
-      );
+      const name = el('span');
+      name.textContent = label;
+      const strong = el('strong');
+      strong.textContent = value;
+      item.append(name, strong);
+      return item;
+    };
+    const emptyRow = (copy: string) => {
+      const item = el('li', 'performance-bars-empty');
+      item.textContent = copy;
+      return item;
     };
 
-    const renderRelations = (
-      selector: string,
-      entries: Array<{ label: string; games: number; winRate?: number; imageUrl?: string }>,
-    ) => {
-      const list = patternsRoot.querySelector(selector);
-      if (!list) return;
-      if (!entries.length) {
-        const item = el('li', 'performance-bars-empty');
-        item.textContent = 'Todavía sin muestra suficiente (mínimo 3 partidas juntas).';
-        list.replaceChildren(item);
-        return;
-      }
-      list.replaceChildren(
-        ...entries.map((entry) => {
-          const item = el('li');
-          if (entry.imageUrl) {
-            const image = el('img');
-            image.src = entry.imageUrl;
-            image.alt = '';
-            image.width = 24;
-            image.height = 24;
-            image.loading = 'lazy';
-            image.decoding = 'async';
-            item.append(image);
-          }
-          const name = el('span');
-          name.textContent = entry.label;
-          const value = el('strong');
-          value.textContent = `${entry.games} · ${entry.winRate ?? 0}% WR`;
-          item.append(name, value);
-          return item;
-        }),
-      );
-    };
-
-    const renderPatterns = (performance: ProfilePerformance) => {
+    const renderContext = (performance: ProfilePerformance) => {
+      const context = performanceRoot.querySelector<HTMLElement>('[data-perf-context]');
+      if (!context) return;
       const hasAny =
         performance.supportSynergy.length > 0 ||
         performance.adcMatchups.length > 0 ||
         performance.sideSplit.length > 0 ||
-        performance.duration.buckets.length > 0 ||
-        performance.activityByWeekday.length > 0;
-      patternsRoot.hidden = !hasAny;
+        performance.duration.buckets.length > 0;
+      context.hidden = !hasAny;
       if (!hasAny) return;
 
-      text(patternsRoot, '[data-performance-synergy-note]', 'Resultados con 3+ partidas juntas — no implica causalidad.');
-      renderRelations(
-        '[data-performance-synergy]',
-        performance.supportSynergy.map((entry: SupportSynergyEntry) => ({ label: entry.supportName, games: entry.games, winRate: entry.winRate })),
-      );
-      text(patternsRoot, '[data-performance-matchups-note]', 'Historial de resultados, no teoría de matchup.');
-      renderRelations(
-        '[data-performance-matchups]',
-        performance.adcMatchups.map((entry: AdcMatchupEntry) => ({ label: `vs ${entry.enemyChampionName}`, games: entry.games, winRate: entry.winRate, imageUrl: entry.enemyChampionImageUrl })),
-      );
-      renderBar(
-        patternsRoot.querySelector('[data-performance-side]'),
-        performance.sideSplit.map((entry: SideSplitEntry) => ({ label: entry.side === 'blue' ? 'Azul' : 'Rojo', games: entry.games, percentage: Math.min(100, entry.games * 12), winRate: entry.winRate })),
-        'Sin muestra suficiente.',
-      );
-      renderBar(
-        patternsRoot.querySelector('[data-performance-duration]'),
-        performance.duration.buckets.map((bucket: DurationBucketEntry) => ({ label: bucket.label, games: bucket.games, percentage: Math.min(100, bucket.games * 12), winRate: bucket.winRate })),
-        'Sin partidas suficientes para desglosar por duración.',
-      );
+      const synergy = context.querySelector('[data-context-synergy]');
+      if (synergy)
+        synergy.replaceChildren(
+          ...(performance.supportSynergy.length
+            ? performance.supportSynergy
+                .slice(0, 3)
+                .map((entry: SupportSynergyEntry) =>
+                  contextRow(entry.supportName, `${entry.games} · ${entry.winRate ?? 0}% WR`),
+                )
+            : [emptyRow('Sin 3+ partidas con un mismo support.')]),
+        );
+
+      const matchups = context.querySelector('[data-context-matchups]');
+      if (matchups)
+        matchups.replaceChildren(
+          ...(performance.adcMatchups.length
+            ? performance.adcMatchups
+                .slice(0, 3)
+                .map((entry: AdcMatchupEntry) =>
+                  contextRow(
+                    `vs ${entry.enemyChampionName}`,
+                    `${entry.games} · ${entry.winRate ?? 0}% WR`,
+                    entry.enemyChampionImageUrl,
+                  ),
+                )
+            : [emptyRow('Sin 3+ partidas contra un mismo ADC.')]),
+        );
+
+      const side = context.querySelector('[data-context-side]');
+      if (side)
+        side.replaceChildren(
+          ...(performance.sideSplit.length
+            ? performance.sideSplit.map((entry: SideSplitEntry) =>
+                contextRow(
+                  entry.side === 'blue' ? 'Azul' : 'Rojo',
+                  `${entry.games} · ${entry.winRate ?? 0}% WR`,
+                ),
+              )
+            : [emptyRow('Sin muestra.')]),
+        );
+
       text(
-        patternsRoot,
-        '[data-performance-duration-summary]',
+        performanceRoot,
+        '[data-context-duration]',
         performance.duration.averageSeconds === undefined
           ? 'Sin muestra suficiente.'
-          : `Media: ${durationLabel(performance.duration.averageSeconds)} · Victorias: ${durationLabel(performance.duration.averageWinSeconds)} · Derrotas: ${durationLabel(performance.duration.averageLossSeconds)}`,
-      );
-      renderBar(
-        patternsRoot.querySelector('[data-performance-weekday]'),
-        performance.activityByWeekday.map((entry: ActivityBucket) => ({ label: entry.label, games: entry.games, percentage: Math.min(100, entry.games * 12), winRate: entry.winRate })),
-        'Sin actividad registrada.',
-      );
-      renderBar(
-        patternsRoot.querySelector('[data-performance-hourband]'),
-        performance.activityByHourBand.map((entry: ActivityBucket) => ({ label: entry.label, games: entry.games, percentage: Math.min(100, entry.games * 12), winRate: entry.winRate })),
-        'Sin actividad registrada.',
+          : `Media ${durationLabel(performance.duration.averageSeconds)} · Victorias ${durationLabel(performance.duration.averageWinSeconds)} · Derrotas ${durationLabel(performance.duration.averageLossSeconds)}`,
       );
     };
 
@@ -559,22 +602,30 @@ const adcRosterNames = getAdcRoster(registry).map((entry) => entry.catalogEntry.
       text(
         performanceRoot,
         '[data-performance-sample]',
-        `${performance.sampleSize} ${performance.sampleSize === 1 ? 'partida analizada' : 'partidas analizadas'}`,
+        `${performance.sampleSize} ${performance.sampleSize === 1 ? 'partida' : 'partidas'}`,
       );
       poolRoot.hidden = !hasSample;
-      patternsRoot.hidden = !hasSample;
       if (!hasSample) return;
 
-      const recentLabel = performance.windowRecent.sampleSize < 20 ? 'Muestra disponible' : 'Últimas 20';
-      renderStatRow(performance.windowRecent, recentLabel);
-      renderWindowCompare(performance.trend, performance.windowFull);
+      renderTrend(performance.trend, {
+        winRate: performance.windowFull.winRate,
+        averageKda: performance.windowFull.averageKda,
+        averageCsPerMinute: performance.windowFull.averageCsPerMinute,
+        averageDamagePerMinute: performance.windowFull.averageDamagePerMinute,
+        sampleSize: performance.windowFull.sampleSize,
+      });
+      text(
+        performanceRoot,
+        '[data-window-meta]',
+        `${performance.windowRecent.sampleSize} recientes · ${performance.windowRecent.wins}V ${performance.windowRecent.losses}D · ${durationLabel(performance.windowRecent.averageDurationSeconds)} de media`,
+      );
+      renderContext(performance);
       renderChampionPool(performance.champions, performance.sampleSize);
-      renderPatterns(performance);
     };
 
     const load = async () => {
       try {
-        const response = await fetch(performanceRoot.dataset.riot!);
+        const response = await fetch(gridRoot.dataset.riot!);
         const payload = (await response.json()) as RiotPublicResponse;
         if (!payload.ok) throw new Error(payload.error.code);
         render(payload.data.performance);
@@ -584,7 +635,6 @@ const adcRosterNames = getAdcRoster(registry).map((entry) => entry.catalogEntry.
         performanceRoot.querySelector<HTMLElement>('[data-performance-empty]')!.hidden = false;
         performanceRoot.querySelector<HTMLElement>('[data-performance-error]')!.hidden = false;
         poolRoot.hidden = true;
-        patternsRoot.hidden = true;
       }
     };
 
@@ -594,9 +644,6 @@ const adcRosterNames = getAdcRoster(registry).map((entry) => entry.catalogEntry.
       if (!document.hidden) void load();
     });
 
-    // Solo en `astro dev` (eliminado del bundle de producción): fuerza el
-    // render con datos sintéticos para QA visual sin tocar la red real —
-    // mismo patrón que `LiveGameModule.astro`.
     if (import.meta.env.DEV) {
       (window as unknown as { __performanceProfileDebugRender?: typeof render }).__performanceProfileDebugRender = render;
     }

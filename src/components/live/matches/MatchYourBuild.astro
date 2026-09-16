@@ -5,18 +5,28 @@ import SummonersRow from './SummonersRow.astro';
 
 <!--
   Nivel 2 de profundidad (encargo Page Design Rework §21): el detalle real
-  de TU partida — stats secundarias, runas, hechizos — que antes vivía
-  siempre visible en la fila colapsada y ahora solo aparece al expandir.
-  Mismos datos que ya existían en Match normal, nunca duplicados con la
-  fila compacta (que ya muestra KDA/CS por minuto).
+  de TU partida — runas, hechizos, distinciones — que antes vivía siempre
+  visible en la fila colapsada y ahora solo aparece al expandir.
+
+  Signature §10: CS/Daño/Oro se retiraron de aquí — desde que existe el
+  duelo Tidusss vs ADC rival (`.match-duel`), mostrarlos otra vez en esta
+  misma vista era el mismo dato dos veces. Lo que queda es lo que el
+  duelo NO cubre: participación en kills, visión, y el build real.
+
+  Revisión visual final: este bloque vivía sin ningún rótulo — dos
+  números y dos filas de iconos flotando entre el duelo y "Resto de la
+  partida", sin contexto para una lectura de 2 segundos. Mismo patrón
+  `.profile-subhead` que ya usan "Resto de la partida" y "Contexto de
+  las últimas partidas" — coherencia, no una idea nueva.
 -->
 <div class="match-your-build">
+  <div class="profile-subhead">
+    <h3>Tu build</h3>
+    <small>Participación, visión, runas y hechizos</small>
+  </div>
   <div class="match-badges" data-match-badges hidden aria-label="Distinciones de la partida"></div>
   <dl class="match-your-build-stats">
-    <div><dt>CS</dt><dd data-match-cs></dd></div>
     <div><dt>Participación</dt><dd data-match-participation></dd></div>
-    <div><dt>Daño</dt><dd data-match-damage></dd></div>
-    <div><dt>Oro</dt><dd data-match-gold></dd></div>
     <div><dt>Visión</dt><dd data-match-vision></dd></div>
   </dl>
   <div class="match-your-build-assets">

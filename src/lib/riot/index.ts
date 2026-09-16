@@ -418,6 +418,7 @@ export const getMatchTimeline = async (
 export * from './analytics';
 export * from './cache';
 export * from './errors';
+export * from './insights';
 export * from './normalize';
 export * from './performance';
 export * from './timeline-normalize';

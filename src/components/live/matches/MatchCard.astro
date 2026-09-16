@@ -6,34 +6,68 @@ import MatchYourBuild from './MatchYourBuild.astro';
 ---
 
 <!--
-  Match row — no una card completa (encargo Page Design Rework §7). Nivel 1
-  de profundidad: solo lo que se escanea en <2s (resultado/campeón/KDA/CS/
-  duración/fecha/LP real/objetos). Todo lo demás (stats secundarias reales,
-  runas, hechizos) vive en el detalle expandido (Nivel 2) — nunca duplicado
-  en las dos capas.
+  Match row — "una partida, no un registro" (encargo Art Direction §13).
+  Nivel 1 de profundidad: solo lo que se escanea en <2s (resultado/campeón/
+  KDA/CS/duración/fecha/LP real/objetos), con presencia visual real de W/L
+  y del enfrentamiento — no solo texto. Todo lo demás (stats secundarias,
+  runas, hechizos) vive en el detalle expandido (Nivel 2), nunca duplicado.
 -->
 <template data-match-card-template>
   <li class="match-row-item" data-match-card>
     <article>
       <div class="match-row">
+        <span class="match-row-wash" aria-hidden="true"></span>
         <span class="match-row-accent" aria-hidden="true"></span>
         <div class="match-row-top">
-          <img
-            class="match-row-champion"
-            data-match-champion-image
-            width="48"
-            height="48"
-            alt=""
-            loading="lazy"
-            decoding="async"
-          />
+          <!--
+            Matchup como un único clúster (encargo Signature §11-12): mi
+            portrait + VS + rival, uno junto al otro, leído en un vistazo —
+            antes el rival vivía al final de la fila, lejos de "mi campeón",
+            y parecía un icono accesorio.
+          -->
+          <div class="match-row-matchup">
+            <span class="match-row-portrait">
+              <img
+                class="match-row-champion"
+                data-match-champion-image
+                width="56"
+                height="56"
+                alt=""
+                loading="lazy"
+                decoding="async"
+              />
+            </span>
+            <div class="match-row-vs" data-match-vs hidden>
+              <span class="match-row-vs-label" aria-hidden="true">VS</span>
+              <img
+                class="match-row-vs-champion"
+                data-match-vs-champion
+                width="38"
+                height="38"
+                alt=""
+                loading="lazy"
+                decoding="async"
+              />
+              <span class="encounter-badge" data-match-vs-badge hidden></span>
+            </div>
+          </div>
           <div class="match-row-identity">
             <strong data-match-champion></strong>
-            <small data-match-position></small>
+            <small><span data-match-position></span><span class="match-row-latest-tag" data-match-latest hidden>ÚLTIMA</span></small>
           </div>
+        </div>
+        <!--
+          LP como recompensa de la partida (encargo §13): emparejado con el
+          resultado, no perdido al final entre métricas secundarias.
+        -->
+        <div class="match-row-outcome">
           <div class="match-row-result">
+            <i class="match-row-result-dot" aria-hidden="true"></i>
             <strong data-match-status></strong>
             <span data-match-relative></span>
+          </div>
+          <div class="match-row-lp" data-match-lp-chip>
+            <strong data-match-lp>Pendiente</strong>
           </div>
         </div>
         <div class="match-row-meta">
@@ -49,10 +83,18 @@ import MatchYourBuild from './MatchYourBuild.astro';
             <strong data-match-context-duration></strong>
             <time data-match-time></time>
           </div>
-          <div class="match-row-lp">
-            <strong data-match-lp>Pendiente</strong>
-          </div>
         </div>
+        <!--
+          Vídeo asociado (encargo §16): contenido diferencial de
+          tidusss.es — insignia editorial legible, nunca un icono
+          microscópico ni un CTA de YouTube.
+        -->
+        <span class="match-row-video-pill" data-match-video-badge hidden>
+          <svg viewBox="0 0 16 16" aria-hidden="true">
+            <path d="m6.2 4.8 4.2 3.2-4.2 3.2V4.8Z"></path>
+          </svg>
+          <span>Vídeo</span>
+        </span>
         <div class="match-row-items" data-match-items-compact aria-hidden="true">
           {
             Array.from({ length: 7 }, (_, index) => (
@@ -62,11 +104,6 @@ import MatchYourBuild from './MatchYourBuild.astro';
             ))
           }
         </div>
-        <span class="match-row-video" data-match-video-badge hidden aria-hidden="true">
-          <svg viewBox="0 0 16 16" aria-hidden="true">
-            <path d="m6.2 4.8 4.2 3.2-4.2 3.2V4.8Z"></path>
-          </svg>
-        </span>
         <i class="match-row-chevron" aria-hidden="true"></i>
         <button
           type="button"
@@ -78,7 +115,7 @@ import MatchYourBuild from './MatchYourBuild.astro';
         </button>
       </div>
       <MatchExpanded>
-        <MatchYourBuild />
+        <MatchYourBuild slot="build" />
         <MatchVideoPanel />
         <MatchTimelinePanel />
       </MatchExpanded>
