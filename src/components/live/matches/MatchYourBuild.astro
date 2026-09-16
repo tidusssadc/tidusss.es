@@ -12,8 +12,18 @@ import SummonersRow from './SummonersRow.astro';
   duelo Tidusss vs ADC rival (`.match-duel`), mostrarlos otra vez en esta
   misma vista era el mismo dato dos veces. Lo que queda es lo que el
   duelo NO cubre: participación en kills, visión, y el build real.
+
+  Revisión visual final: este bloque vivía sin ningún rótulo — dos
+  números y dos filas de iconos flotando entre el duelo y "Resto de la
+  partida", sin contexto para una lectura de 2 segundos. Mismo patrón
+  `.profile-subhead` que ya usan "Resto de la partida" y "Contexto de
+  las últimas partidas" — coherencia, no una idea nueva.
 -->
 <div class="match-your-build">
+  <div class="profile-subhead">
+    <h3>Tu build</h3>
+    <small>Participación, visión, runas y hechizos</small>
+  </div>
   <div class="match-badges" data-match-badges hidden aria-label="Distinciones de la partida"></div>
   <dl class="match-your-build-stats">
     <div><dt>Participación</dt><dd data-match-participation></dd></div>
