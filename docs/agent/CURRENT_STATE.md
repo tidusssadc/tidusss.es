@@ -4,8 +4,8 @@
 > cerrado, qué está en progreso, qué está bloqueado, cuál es el HEAD esperado, qué falta de
 > infraestructura, qué NO tocar.
 >
-> **Last verified commit:** `ee273d2` (`design/competitive-signature`) · Preview de esa rama verificado y documentado
-> **Last verified date:** 2026-09-14
+> **Last verified commit:** `92749f5` (`design/competitive-signature`) · Aceptación visual final con Chrome headless real (CDP) — 11 capturas A-K, revisión crítica, 1 corrección pequeña aplicada (rótulo "Tu build")
+> **Last verified date:** 2026-09-16
 > **`main`:** `99e86a2` — la Night Shift de 2026-09-09 **ya está mergeada** (merge `99e86a2`).
 >
 > No guardes aquí datos que cambian a diario (LP actual, última partida, nº de subs, nº exacto
